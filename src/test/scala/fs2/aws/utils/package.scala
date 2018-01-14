@@ -8,10 +8,10 @@ import com.amazonaws.SdkClientException
 import com.amazonaws.services.s3.model.{AmazonS3Exception, GetObjectRequest, S3ObjectInputStream}
 import fs2.aws.internal.Internal.S3Client
 import org.apache.http.client.methods.HttpRequestBase
-import java.util.zip.{GZIPOutputStream}
+import java.util.zip.GZIPOutputStream
 
 package object utils {
-  val testJson : String =
+  val testJson =
     """{"test": 1}
       |{"test": 2}
       |{"test": 3}
@@ -19,26 +19,26 @@ package object utils {
       |{"test": 5}
       |{"test": 6}
       |{"test": 7}
-      |{"test": 8}""".stripMargin
-  val testAvro : String =
+      |{"test": 8}""".stripMargin.getBytes
+  val testAvro =
     """
       | hey
-    """.stripMargin
-  val testJsonGzip: String = {
+    """.stripMargin.getBytes
+  val testJsonGzip = {
     val bos = new ByteArrayOutputStream(testJson.length)
     val gzip = new GZIPOutputStream(bos)
-    gzip.write(testJson.getBytes)
+    gzip.write(testJson)
     gzip.close()
     val compressed = bos.toByteArray
     bos.close()
-    new String(compressed)
+    compressed
   }
 
   val s3TestClient: S3Client[IO] = new S3Client[IO] {
     override def getObjectContent(getObjectRequest: GetObjectRequest)(implicit e: Effect[IO]) : IO[S3ObjectInputStream] = getObjectRequest match {
       case goe: GetObjectRequest => {
         val is : InputStream = {
-          val fileContent: String =
+          val fileContent =
             if(goe.getBucketName == "json" && goe.getKey == "file")
               testJson
             else if (goe.getBucketName == "avro" && goe.getKey == "file")
@@ -50,8 +50,8 @@ package object utils {
           goe.getRange match {
             case Array(x, y) =>
               if (x >= fileContent.length) throw new AmazonS3Exception("Invalid range")
-              else if (y > fileContent.length) new ByteArrayInputStream(fileContent.substring(x.toInt, fileContent.length).getBytes)
-              else new ByteArrayInputStream(fileContent.substring(x.toInt, y.toInt).getBytes)
+              else if (y > fileContent.length) new ByteArrayInputStream(fileContent.slice(x.toInt, fileContent.length))
+              else new ByteArrayInputStream(fileContent.slice(x.toInt, y.toInt))
           }
         }
 
