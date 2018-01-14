@@ -1,13 +1,14 @@
 package fs2
 package aws
 
-import java.io.{ByteArrayInputStream, InputStream}
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, InputStream}
 
 import cats.effect.{Effect, IO}
 import com.amazonaws.SdkClientException
 import com.amazonaws.services.s3.model.{AmazonS3Exception, GetObjectRequest, S3ObjectInputStream}
 import fs2.aws.internal.Internal.S3Client
 import org.apache.http.client.methods.HttpRequestBase
+import java.util.zip.{GZIPOutputStream}
 
 package object utils {
   val testJson : String =
@@ -23,8 +24,15 @@ package object utils {
     """
       | hey
     """.stripMargin
-  val testJsonGzip : String = """??[Zfile.json?V*I-.Q?R0?媆?????Hl$?)?
-                                        |                                     ?m?Ķ??x?`""".stripMargin
+  val testJsonGzip: String = {
+    val bos = new ByteArrayOutputStream(testJson.length)
+    val gzip = new GZIPOutputStream(bos)
+    gzip.write(testJson.getBytes)
+    gzip.close()
+    val compressed = bos.toByteArray
+    bos.close()
+    new String(compressed)
+  }
 
   val s3TestClient: S3Client[IO] = new S3Client[IO] {
     override def getObjectContent(getObjectRequest: GetObjectRequest)(implicit e: Effect[IO]) : IO[S3ObjectInputStream] = getObjectRequest match {
