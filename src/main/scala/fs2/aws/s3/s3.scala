@@ -5,8 +5,9 @@ import java.io.InputStream
 
 import cats.effect.Effect
 import cats.implicits._
-import com.amazonaws.services.s3.model.{AmazonS3Exception, GetObjectRequest, S3ObjectInputStream}
+import com.amazonaws.services.s3.model._
 import fs2.aws.internal.Internal._
+import scala.collection.JavaConverters._
 
 package object s3 {
   def readS3FileMultipart[F[_]](bucket: String, key: String, chunkSize: Int, s3Client: S3Client[F] = new S3Client[F] {})(implicit F: Effect[F]): fs2.Stream[F, Byte] = {
@@ -33,8 +34,33 @@ package object s3 {
           case None => fs2.Pull.done
         })
 
-
     go(0).stream
 
   }
+
+  def uploadS3FileMultipart[F[_]](bucket: String, key: String, objectMetadata: Option[ObjectMetadata], s3Client: S3Client[F] = new S3Client[F] {})(implicit F: Effect[F]): fs2.Sink[F, Byte] = {
+    in => {
+      val imuF: F[InitiateMultipartUploadResult] = objectMetadata match {
+          case Some(o) => s3Client.initiateMultipartUpload(new InitiateMultipartUploadRequest(bucket, key, o))
+          case None => s3Client.initiateMultipartUpload(new InitiateMultipartUploadRequest(bucket, key))
+        }
+      val mui: F[MultiPartUploadInfo] = imuF.flatMap(imu => F.pure(MultiPartUploadInfo(imu.getUploadId, List())))
+      fs2.Stream.eval(mui)
+        .flatMap(m =>
+          in.chunks.zipWithIndex
+            .through(uploadPart(m.uploadId))
+            .fold[List[PartETag]](List())(_ :+ _)
+            .to(completeUpload(m.uploadId))
+        )
+
+    }
+    def uploadPart(uploadId: String): fs2.Pipe[F, (Chunk[Byte], Long), PartETag] =
+      _.flatMap({case (c, i) => fs2.Stream.eval(s3Client.uploadPart(new UploadPartRequest().withBucketName(bucket).withKey(key).withUploadId(uploadId).withPartNumber(i.toInt).with).flatMap(r => F.delay(r.getPartETag)))})
+    def completeUpload(uploadId: String): fs2.Sink[F, List[PartETag]] =
+      _.flatMap(parts => fs2.Stream.eval_(s3Client.completeMultipartUpload(new CompleteMultipartUploadRequest(bucket, key, uploadId, parts.asJava))))
+  }
+
+
+
+
 }
