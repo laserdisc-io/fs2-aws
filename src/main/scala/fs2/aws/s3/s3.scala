@@ -1,12 +1,13 @@
 package fs2
 package aws
 
-import java.io.InputStream
+import java.io.{ByteArrayInputStream, InputStream}
 
 import cats.effect.Effect
 import cats.implicits._
 import com.amazonaws.services.s3.model._
 import fs2.aws.internal.Internal._
+
 import scala.collection.JavaConverters._
 
 package object s3 {
@@ -55,7 +56,7 @@ package object s3 {
 
     }
     def uploadPart(uploadId: String): fs2.Pipe[F, (Chunk[Byte], Long), PartETag] =
-      _.flatMap({case (c, i) => fs2.Stream.eval(s3Client.uploadPart(new UploadPartRequest().withBucketName(bucket).withKey(key).withUploadId(uploadId).withPartNumber(i.toInt).with).flatMap(r => F.delay(r.getPartETag)))})
+      _.flatMap({case (c, i) => fs2.Stream.eval(s3Client.uploadPart(new UploadPartRequest().withBucketName(bucket).withKey(key).withUploadId(uploadId).withPartNumber(i.toInt).withInputStream(new ByteArrayInputStream(c.toArray))).flatMap(r => F.delay(r.getPartETag)))})
     def completeUpload(uploadId: String): fs2.Sink[F, List[PartETag]] =
       _.flatMap(parts => fs2.Stream.eval_(s3Client.completeMultipartUpload(new CompleteMultipartUploadRequest(bucket, key, uploadId, parts.asJava))))
   }
