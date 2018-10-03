@@ -20,8 +20,18 @@ class S3Spec extends FlatSpec with Matchers {
       .compile
       .toVector
       .unsafeRunSync
-      .reduce(_+_)
-      .concat("")
-      .trim should be("""{"test": 1}{"test": 2}{"test": 3}{"test": 4}{"test": 5}{"test": 6}{"test": 7}{"test": 8}""")
+      .reduce(_ + _)
+      .concat("") should be("""{"test": 1}{"test": 2}{"test": 3}{"test": 4}{"test": 5}{"test": 6}{"test": 7}{"test": 8}""")
+  }
+
+  "big chunk size but small entire text" should "be trimmed to content" in {
+    readS3FileMultipart[IO]("resources", "jsontest1.json", 25, s3TestClient)
+      .through(fs2.text.utf8Decode)
+      .through(fs2.text.lines)
+      .compile
+      .toVector
+      .unsafeRunSync
+      .reduce(_ + _)
+      .concat("") should be("""{"test": 1}""")
   }
 }

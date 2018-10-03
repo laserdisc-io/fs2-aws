@@ -10,19 +10,23 @@ object Internal {
   private[aws] trait S3Client[F[_]] {
     private val client = AmazonS3ClientBuilder.defaultClient
 
-    def getObjectContent(getObjectRequest: GetObjectRequest)(implicit F: Effect[F]) : F[S3ObjectInputStream] =
+    def getObjectContent(getObjectRequest: GetObjectRequest)(
+        implicit F: Effect[F]): F[S3ObjectInputStream] =
       F.delay(client.getObject(getObjectRequest).getObjectContent)
 
-    def initiateMultipartUpload(initiateMultipartUploadRequest: InitiateMultipartUploadRequest)(implicit F: Effect[F]) : F[InitiateMultipartUploadResult] =
+    def initiateMultipartUpload(initiateMultipartUploadRequest: InitiateMultipartUploadRequest)(
+        implicit F: Effect[F]): F[InitiateMultipartUploadResult] =
       F.delay(client.initiateMultipartUpload(initiateMultipartUploadRequest))
 
-    def uploadPart(uploadPartRequest: UploadPartRequest)(implicit F: Effect[F]): F[UploadPartResult] =
+    def uploadPart(uploadPartRequest: UploadPartRequest)(
+        implicit F: Effect[F]): F[UploadPartResult] =
       F.delay(client.uploadPart(uploadPartRequest))
 
-    def completeMultipartUpload(completeMultipartUploadRequest: CompleteMultipartUploadRequest)(implicit F: Effect[F]) : F[CompleteMultipartUploadResult] =
+    def completeMultipartUpload(completeMultipartUploadRequest: CompleteMultipartUploadRequest)(
+        implicit F: Effect[F]): F[CompleteMultipartUploadResult] =
       F.delay(client.completeMultipartUpload(completeMultipartUploadRequest))
 
   }
 
-  private[aws] case class MultiPartUploadInfo(uploadId : String, partETags: List[PartETag])
+  private[aws] case class MultiPartUploadInfo(uploadId: String, partETags: List[PartETag])
 }

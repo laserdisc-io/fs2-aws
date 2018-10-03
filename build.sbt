@@ -1,5 +1,6 @@
 name := "fs2-aws"
-version := "0.0.1"
+organization := "com.hbc"
+version := "0.0.2-SNAPSHOT"
 
 scalaVersion := "2.12.7"
 
@@ -15,11 +16,10 @@ scalacOptions ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "co.fs2" %% "fs2-core" % "0.10.0-RC1",
-  "co.fs2" %% "fs2-io" % "0.10.0-RC1",
+  "co.fs2" %% "fs2-core" % "0.10.6",
+  "co.fs2" %% "fs2-io" % "0.10.6",
   "com.amazonaws" % "aws-java-sdk" % "1.11.261",
   "org.scalatest" %% "scalatest" % "3.0.4" % "test"
 )
 
 addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.3")
-resolvers += "Artima Maven Repository" at "http://repo.artima.com/releases"
