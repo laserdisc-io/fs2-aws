@@ -24,9 +24,9 @@ package object s3 {
           case Right(s) => F.delay(s.abort())
         }
         .flatMap {
-          case Right(s) =>
+          case Right(s3_is) =>
             fs2.Pull.eval(F.delay {
-              val is: InputStream = s
+              val is: InputStream = s3_is
               val buf             = new Array[Byte](chunkSize)
               val len             = is.read(buf)
               Some(Chunk.bytes(buf, 0, len))
