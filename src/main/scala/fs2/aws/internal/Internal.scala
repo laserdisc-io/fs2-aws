@@ -15,7 +15,7 @@ import scala.util.control.Exception
 object Internal {
 
   private[aws] trait S3Client[F[_]] {
-    private val client = AmazonS3ClientBuilder.defaultClient
+    private lazy val client = AmazonS3ClientBuilder.defaultClient
 
     def getObjectContent(getObjectRequest: GetObjectRequest)(
         implicit F: Effect[F]): F[Either[Throwable, S3ObjectInputStream]] =
@@ -40,7 +40,7 @@ object Internal {
   private[aws] trait KinesisProducerClient[F[_]] {
     implicit def byteList2ByteBuffer(l: List[Byte]): ByteBuffer = ByteBuffer.wrap(l.toArray)
 
-    private val client = new KinesisProducer
+    private lazy val client = new KinesisProducer
 
     def putData(streamName: String, partitionKey: String, data: List[Byte])(implicit F: Effect[F]): F[ListenableFuture[UserRecordResult]] =
       F.delay(client.addUserRecord(streamName, partitionKey, data))
