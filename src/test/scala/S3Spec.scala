@@ -7,7 +7,6 @@ class S3Spec extends FlatSpec with Matchers {
 
   ignore should "stdout the jsonfile" in {
     readS3FileMultipart[IO]("resources", "jsontest.json", 25, s3TestClient)
-      .through(fs2.io.stdout)
       .compile
       .toVector
       .unsafeRunSync should be(Vector())
