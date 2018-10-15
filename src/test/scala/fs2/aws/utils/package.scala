@@ -6,8 +6,11 @@ import java.io._
 import cats.effect.{Effect, IO}
 import com.amazonaws.SdkClientException
 import com.amazonaws.services.s3.model.{AmazonS3Exception, GetObjectRequest, S3ObjectInputStream}
-import fs2.aws.internal.Internal.S3Client
+import fs2.aws.internal.Internal._
 import org.apache.http.client.methods.HttpRequestBase
+// import com.amazonaws.services.kinesis.producer.{UserRecordResult, Attempt}
+// import com.google.common.util.concurrent.{ListenableFuture, SettableFuture}
+// import scala.collection.JavaConverters._
 
 import scala.io.Source
 
@@ -43,4 +46,15 @@ package object utils {
       case _ => throw new SdkClientException("Invalid GetObjectRequest")
     }
   }
+
+  // val kinesisProducerTestClient: KinesisProducerClient[IO] = new KinesisProducerClient[IO] {
+  //   override def putData(streamName: String, partitionKey: String, data: List[Byte])(implicit e: Effect[IO]): IO[ListenableFuture[UserRecordResult]] = {
+  //     KinesisStub.save(data)
+  //     IO {
+  //       val future: SettableFuture[UserRecordResult] = SettableFuture.create()
+  //       future.set(new UserRecordResult(List[Attempt]().asJava, "seq #", "shard #", true))
+  //       future
+  //     }
+  //   }
+  // }
 }
