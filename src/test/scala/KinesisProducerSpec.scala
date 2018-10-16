@@ -34,11 +34,12 @@ class KinesisProducerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     }
   }
 
-  "Publishing data to a Kinesis stream" should "successfully save data to the stream and return the successful result" in new KinesisProducerTestContext {
+  "Publishing data to a Kinesis stream via writeToKinesis" should "successfully save data to the stream and return the successful result" in new KinesisProducerTestContext {
     val output = fs2.Stream
       .eval(IO.pure("someData"))
       .flatMap(i => fs2.Stream.emits(i.toString.getBytes))
       .through(writeToKinesis[IO]("test-stream", "partition-key", kinesisProducerTestClient))
+      .attempt
       .compile
       .toVector
       .unsafeRunSync
@@ -50,7 +51,20 @@ class KinesisProducerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     KinesisStub._data.head should be("someData".getBytes)
   }
 
-  "error thrown when writing to stream" should "return the exception wrapped in an Either" in new KinesisProducerTestContext {
+  "Publishing data to a Kinesis stream via writeToKinesis_" should "successfully save data to the stream" in new KinesisProducerTestContext {
+    fs2.Stream
+      .eval(IO.pure("someData"))
+      .flatMap(i => fs2.Stream.emits(i.toString.getBytes))
+      .to(writeToKinesis_[IO]("test-stream", "partition-key", kinesisProducerTestClient))
+      .compile
+      .toVector
+      .unsafeRunSync
+
+    KinesisStub._data.size should be(1)
+    KinesisStub._data.head should be("someData".getBytes)
+  }
+
+  "error thrown when invoking writeToKinesis" should "return an error in the stream" in new KinesisProducerTestContext {
     override val ops = IO {
       throw new Exception("couldn't connect to kinesis")
     }
@@ -59,6 +73,7 @@ class KinesisProducerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
       .eval(IO.pure("someData"))
       .flatMap(i => fs2.Stream.emits(i.toString.getBytes))
       .through(writeToKinesis[IO]("test-stream", "partition-key", kinesisProducerTestClient))
+      .attempt
       .compile
       .toVector
       .unsafeRunSync
@@ -66,5 +81,21 @@ class KinesisProducerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     output.size should be(1)
     output.head.isLeft should be(true)
     output.head.left.get.getMessage should be("couldn't connect to kinesis")
+  }
+
+  "error thrown when invoking writeToKinesis_" should "return an error in the stream" in new KinesisProducerTestContext {
+    override val ops = IO {
+      throw new Exception("couldn't connect to kinesis")
+    }
+
+    assertThrows[Exception] {
+      fs2.Stream
+        .eval(IO.pure("someData"))
+        .flatMap(i => fs2.Stream.emits(i.toString.getBytes))
+        .to(writeToKinesis_[IO]("test-stream", "partition-key", kinesisProducerTestClient))
+        .compile
+        .toVector
+        .unsafeRunSync
+    }
   }
 }
