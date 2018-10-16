@@ -23,7 +23,8 @@ libraryDependencies ++= Seq(
   "co.fs2"        %% "fs2-io"                 % fs2Version,
   "com.amazonaws" % "aws-java-sdk"            % "1.11.427",
   "com.amazonaws" % "amazon-kinesis-producer" % "0.12.9",
-  "org.scalatest" %% "scalatest"              % "3.0.4" % "test"
+  "com.amazonaws" % "amazon-kinesis-client"   % "1.9.2",
+  "org.scalatest" %% "scalatest"              % "3.0.4" %       "test"
 )
 
 addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.3")
