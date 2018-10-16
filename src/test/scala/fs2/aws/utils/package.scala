@@ -6,13 +6,11 @@ import java.io._
 import cats.effect.{Effect, IO}
 import com.amazonaws.SdkClientException
 import com.amazonaws.services.s3.model.{AmazonS3Exception, GetObjectRequest, S3ObjectInputStream}
-import fs2.aws.internal.Internal.S3Client
+import fs2.aws.internal.Internal._
 import org.apache.http.client.methods.HttpRequestBase
-
 import scala.io.Source
 
 package object utils {
-
   val s3TestClient: S3Client[IO] = new S3Client[IO] {
     override def getObjectContent(getObjectRequest: GetObjectRequest)(implicit e: Effect[IO]): IO[Either[Throwable, S3ObjectInputStream]] = getObjectRequest match {
       case goe: GetObjectRequest => {

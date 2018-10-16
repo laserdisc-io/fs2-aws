@@ -1,3 +1,7 @@
+package fs2
+package aws
+
+
 import cats.effect.IO
 import org.scalatest.{FlatSpec, Matchers}
 import fs2.aws.s3._
