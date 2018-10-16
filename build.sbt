@@ -15,10 +15,12 @@ scalacOptions ++= Seq(
   "-Ypartial-unification" // allow the compiler to unify type constructors of different arities
 )
 
+val fs2Version = "1.0.0"
+
 libraryDependencies ++= Seq(
-  "co.fs2" %% "fs2-core" % "0.10.6",
-  "co.fs2" %% "fs2-io" % "0.10.6",
-  "com.amazonaws" % "aws-java-sdk" % "1.11.261",
+  "co.fs2" %% "fs2-core" % fs2Version,
+  "co.fs2" %% "fs2-io" % fs2Version,
+  "com.amazonaws" % "aws-java-sdk" % "1.11.427",
   "org.scalatest" %% "scalatest" % "3.0.4" % "test"
 )
 

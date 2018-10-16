@@ -34,7 +34,7 @@ package object s3 {
           case Left(_) => fs2.Pull.eval(F.delay(None))
         }
         .flatMap {
-          case Some(o) => fs2.Pull.outputChunk(o) >> go(offset + o.size)
+          case Some(o) => fs2.Pull.output(o) >> go(offset + o.size)
           case None    => fs2.Pull.done
         }
 
