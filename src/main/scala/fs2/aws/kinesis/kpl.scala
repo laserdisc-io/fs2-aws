@@ -66,32 +66,8 @@ package object publisher {
     streamName: String,
     partitionKey: String,
     producer: KinesisProducerClient[F] = new KinesisProducerClient[F] {}
-  )(implicit F: Effect[F], ec: ExecutionContext): fs2.Sink[F, Byte] = {
-
-    // Evaluate the operation of invoking the Kinesis client
-    def write: fs2.Pipe[F, List[Byte], ListenableFuture[UserRecordResult]] =
-      _.flatMap { case byteArray =>
-        fs2.Stream.eval(producer.putData(streamName, partitionKey, byteArray))
-      }
-
-    // Register the returned future, returning Unit
-    def registerCallback: fs2.Sink[F, ListenableFuture[UserRecordResult]] =
-      _.map { case f =>
-        Effect[F].async[UserRecordResult] { cb =>
-          Futures.addCallback(
-            f,
-            new FutureCallback[UserRecordResult] {
-              override def onFailure(t: Throwable): Unit = cb(Left(t))
-              override def onSuccess(result: UserRecordResult): Unit = cb(Right(result))
-            },
-            (command: Runnable) => ec.execute(command))
-        }
-      }
-
-    _.chunks
-      .flatMap(m => fs2.Stream(m.toList)) // Flatten chunks to list of bytes
-      .fold[List[Byte]](List())(_ ++ _) // Drain the source completely so that all bytes are aggregated into a single List
-      .through(write)
-      .through(registerCallback)
+  )(implicit F: Effect[F], ec: ExecutionContext, concurrent: Concurrent[F]): fs2.Sink[F, Byte] = {
+    _.through(writeToKinesis(streamName, partitionKey, producer))
+      .map(_ => ())
   }
 }
