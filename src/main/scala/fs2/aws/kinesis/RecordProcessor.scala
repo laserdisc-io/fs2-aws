@@ -4,12 +4,11 @@ package kinesis
 
 import com.amazonaws.services.kinesis.clientlibrary.interfaces._
 import com.amazonaws.services.kinesis.clientlibrary.types._
-import com.amazonaws.services.kinesis.model.Record
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.ShutdownReason
 import scala.collection.JavaConverters._
 
 
-private[kinesis] class RecordProcessor(cb: Record => Unit) extends v2.IRecordProcessor {
+private[kinesis] class RecordProcessor(cb: CommittableRecord => Unit) extends v2.IRecordProcessor {
    private var shardId: String = _
    private var extendedSequenceNumber: ExtendedSequenceNumber = _
    var shutdown: Option[ShutdownReason] = None
@@ -17,7 +16,7 @@ private[kinesis] class RecordProcessor(cb: Record => Unit) extends v2.IRecordPro
 
   def getShardId = shardId
   def getSequenceNumber = extendedSequenceNumber
-
+  def isShutdown = shutdown.isDefined
 
    override def initialize(initializationInput: InitializationInput): Unit = {
      shardId = initializationInput.getShardId
@@ -26,7 +25,18 @@ private[kinesis] class RecordProcessor(cb: Record => Unit) extends v2.IRecordPro
 
    override def processRecords(processRecordsInput: ProcessRecordsInput): Unit = {
      latestCheckpointer = Some(processRecordsInput.getCheckpointer)
-     processRecordsInput.getRecords.asScala.foreach(cb)
+     processRecordsInput.getRecords.asScala.foreach { record =>
+       cb(
+         CommittableRecord(
+           shardId,
+           extendedSequenceNumber,
+           processRecordsInput.getMillisBehindLatest,
+           record,
+           recordProcessor = this,
+           processRecordsInput.getCheckpointer
+         )
+       )
+     }
    }
 
    override def shutdown(shutdownInput: ShutdownInput): Unit = {
