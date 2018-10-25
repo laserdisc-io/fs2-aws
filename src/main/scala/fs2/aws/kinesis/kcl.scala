@@ -2,6 +2,7 @@ package fs2
 package aws
 package kinesis
 
+import fs2.internal._
 import fs2.concurrent.Queue
 import cats.effect.{ConcurrentEffect, IO, Timer}
 import cats.implicits._
@@ -45,22 +46,21 @@ package object kcl {
   def checkpointRecords[F[_]](
     checkpointSettings: KinesisWorkerCheckpointSettings = KinesisWorkerCheckpointSettings.defaultInstance
   )(implicit F: ConcurrentEffect[F], timer: Timer[F]): fs2.Pipe[F, CommittableRecord, Record] = {
-    _.groupAdjacentBy(_.shardId) // ("shard-id", Chunk(Seq[CommittableRecord])) -- A stream with 2 chunks
-      .flatMap(c => Stream.chunk(c._2))
-      .map{i => println(i);i}
-      .groupWithin(checkpointSettings.maxBatchSize, checkpointSettings.maxBatchWait)
-      .map(_.toList.max)
-    .map{i => println(i);i}
-      .mapAsync(1) { cr =>
-      F.async[Record](_ =>
-        if (cr.canCheckpoint) {
-          Right(cr.checkpoint)
-        }
-        else
-          Left(throw new Exception("record processor shutdown"))
-      )
-    }
-
+    _.through(groupBy(r => F.delay(r.shardId)))
+      .map { case (k, st) =>
+        st.tupleLeft(k)
+          .groupWithin(checkpointSettings.maxBatchSize, checkpointSettings.maxBatchWait)
+          .map(_.toList.max)
+          .mapAsync(1) { cr =>
+            F.async[Record](_ =>
+              if (cr._2.canCheckpoint) {
+                Right(cr._2.checkpoint)
+              }
+              else
+                Left(throw new Exception("record processor shutdown"))
+            )
+          }
+      }.parJoinUnbounded
   }
 
   def checkpointRecords_[F[_]](
