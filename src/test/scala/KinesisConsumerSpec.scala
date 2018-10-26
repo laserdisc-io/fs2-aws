@@ -10,7 +10,10 @@ import kinesis.kcl._
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
-import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.{IRecordProcessorFactory, IRecordProcessor}
+import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.{
+  IRecordProcessorFactory,
+  IRecordProcessor
+}
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{Worker, ShutdownReason}
 import com.amazonaws.services.kinesis.clientlibrary.types._
@@ -27,11 +30,12 @@ import scala.collection.JavaConverters._
 
 class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach with Eventually {
 
-  implicit val ec: ExecutionContext = ExecutionContext.global
-  implicit val timer: Timer[IO] = IO.timer(ec)
+  implicit val ec: ExecutionContext             = ExecutionContext.global
+  implicit val timer: Timer[IO]                 = IO.timer(ec)
   implicit val ioContextShift: ContextShift[IO] = IO.contextShift(ec)
 
-  "KinesisWorker source" should "successfully read data from the Kinesis stream" in new WorkerContext with TestData {
+  "KinesisWorker source" should "successfully read data from the Kinesis stream" in new WorkerContext
+  with TestData {
     recordProcessor.initialize(initializationInput)
     recordProcessor.processRecords(recordsInput)
 
@@ -46,14 +50,16 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     }
   }
 
-  it should "not shutdown the worker if the stream is drained but has not failed" in new WorkerContext with TestData {
+  it should "not shutdown the worker if the stream is drained but has not failed" in new WorkerContext
+  with TestData {
     recordProcessor.initialize(initializationInput)
     recordProcessor.processRecords(recordsInput)
 
     eventually(verify(mockWorker, times(0)).shutdown())
   }
 
-  it should "shutdown the worker if the stream terminates" in new WorkerContext(errorStream = true) with TestData {
+  it should "shutdown the worker if the stream terminates" in new WorkerContext(errorStream = true)
+  with TestData {
     recordProcessor.initialize(initializationInput)
     recordProcessor.processRecords(recordsInput)
 
@@ -62,46 +68,43 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
 
   it should "not drop messages in case of back-pressure" in new WorkerContext with TestData {
     // Create and send 10 records (to match buffer size)
-    for(i <- 1 to 10) {
+    for (i <- 1 to 10) {
       val record = mock(classOf[Record])
       when(record.getSequenceNumber).thenReturn(i.toString)
-      recordProcessor.processRecords(
-        recordsInput.withRecords(List(record).asJava))
+      recordProcessor.processRecords(recordsInput.withRecords(List(record).asJava))
     }
 
     // Should process all 10 messages
-    eventually(output.size shouldBe(10))
+    eventually(output.size shouldBe (10))
 
     // Send a batch that exceeds the internal buffer size
-    for(i <- 1 to 50) {
+    for (i <- 1 to 50) {
       val record = mock(classOf[Record])
       when(record.getSequenceNumber).thenReturn(i.toString)
-      recordProcessor.processRecords(
-        recordsInput.withRecords(List(record).asJava))
+      recordProcessor.processRecords(recordsInput.withRecords(List(record).asJava))
     }
 
     // Should process all 50 messages
-    eventually(output.size shouldBe(60))
+    eventually(output.size shouldBe (60))
 
     eventually(verify(mockWorker, times(0)).shutdown())
   }
 
-  it should "not drop messages in case of back-pressure with multiple shard workers" in new WorkerContext with TestData {
+  it should "not drop messages in case of back-pressure with multiple shard workers" in new WorkerContext
+  with TestData {
     recordProcessor.initialize(initializationInput)
     recordProcessor2.initialize(initializationInput.withShardId("shard2"))
 
     // Create and send 10 records (to match buffer size)
-    for(i <- 1 to 5) {
+    for (i <- 1 to 5) {
       val record = mock(classOf[Record])
       when(record.getSequenceNumber).thenReturn(i.toString)
-      recordProcessor.processRecords(
-        recordsInput.withRecords(List(record).asJava))
-      recordProcessor2.processRecords(
-        recordsInput.withRecords(List(record).asJava))
+      recordProcessor.processRecords(recordsInput.withRecords(List(record).asJava))
+      recordProcessor2.processRecords(recordsInput.withRecords(List(record).asJava))
     }
 
     // Should process all 10 messages
-    eventually(output.size shouldBe(10))
+    eventually(output.size shouldBe (10))
 
     // Each shard is assigned its own worker thread, so we get messages
     // from each thread simultaneously.
@@ -119,11 +122,10 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     simulateWorkerThread(recordProcessor2)
 
     // Should process all 50 messages
-    eventually(output.size shouldBe(60))
+    eventually(output.size shouldBe (60))
 
     eventually(verify(mockWorker, times(0)).shutdown())
   }
-
 
   "KinesisWorker checkpoint pipe" should "checkpoint batch of records with same sequence number" in new KinesisWorkerCheckpointContext {
     val input = (1 to 3) map { i =>
@@ -223,28 +225,33 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     val failure = new RuntimeException()
     when(checkpointer.checkpoint(record)).thenThrow(failure)
 
-    fs2.Stream.emits(Seq(input))
+    fs2.Stream
+      .emits(Seq(input))
       .through(checkpointRecords[IO](settings))
       .attempt
       .compile
       .toVector
-      .unsafeRunSync.head.isLeft should be(true)
+      .unsafeRunSync
+      .head
+      .isLeft should be(true)
 
     eventually(verify(checkpointer).checkpoint(input.record))
   }
 
-
-  private abstract class WorkerContext(backpressureTimeout: FiniteDuration = 1.minute, errorStream: Boolean = false) {
+  private abstract class WorkerContext(backpressureTimeout: FiniteDuration = 1.minute,
+                                       errorStream: Boolean = false) {
 
     var output: List[CommittableRecord] = List()
 
     protected val mockWorker = mock(classOf[Worker])
 
-    when(mockWorker.run()).thenAnswer(new Answer[Unit] { override def answer(invocation: InvocationOnMock): Unit = () })
+    when(mockWorker.run()).thenAnswer(new Answer[Unit] {
+      override def answer(invocation: InvocationOnMock): Unit = ()
+    })
 
     var recordProcessorFactory: IRecordProcessorFactory = _
-    var recordProcessor: IRecordProcessor = _
-    var recordProcessor2: IRecordProcessor = _
+    var recordProcessor: IRecordProcessor               = _
+    var recordProcessor2: IRecordProcessor              = _
 
     val builder = { x: IRecordProcessorFactory =>
       recordProcessorFactory = x
@@ -258,7 +265,7 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     val stream =
       readFromKinesisStream[IO](builder, config)
         .through(_.evalMap(i => IO(output = output :+ i)))
-        .map(i => if(errorStream) throw new Exception("boom") else i)
+        .map(i => if (errorStream) throw new Exception("boom") else i)
         .compile
         .toVector
         .unsafeRunAsync(_ => ())
@@ -287,12 +294,14 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
   }
 
   private trait KinesisWorkerCheckpointContext {
-    val recordProcessor = new RecordProcessor(_ => ())
+    val recordProcessor    = new RecordProcessor(_ => ())
     val checkpointerShard1 = mock(classOf[IRecordProcessorCheckpointer])
-    val settings = KinesisCheckpointSettings(maxBatchSize = 100, maxBatchWait = 500.millis).right.get
+    val settings =
+      KinesisCheckpointSettings(maxBatchSize = 100, maxBatchWait = 500.millis).right.get
 
     def startStream(input: Seq[CommittableRecord]) =
-      fs2.Stream.emits(input)
+      fs2.Stream
+        .emits(input)
         .through(checkpointRecords[IO](settings))
         .compile
         .toVector

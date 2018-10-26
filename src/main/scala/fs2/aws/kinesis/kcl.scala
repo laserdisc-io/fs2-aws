@@ -9,14 +9,17 @@ import cats.effect.{ConcurrentEffect, IO, Timer}
 import cats.implicits._
 
 import com.amazonaws.services.kinesis.model.Record
-import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{Worker, KinesisClientLibConfiguration}
+import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{
+  Worker,
+  KinesisClientLibConfiguration
+}
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.IRecordProcessorFactory
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 
 package object kcl {
   private def defaultWorker(
-    recordProcessorFactory: IRecordProcessorFactory,
-    workerConfiguration: KinesisClientLibConfiguration
+      recordProcessorFactory: IRecordProcessorFactory,
+      workerConfiguration: KinesisClientLibConfiguration
   ): Worker = {
     new Worker.Builder()
       .recordProcessorFactory(recordProcessorFactory)
@@ -33,8 +36,8 @@ package object kcl {
     *  @return an infinite fs2 Stream that emits Kinesis Records
     */
   def readFromKinesisStream[F[_]](
-    appName: String,
-    streamName: String
+      appName: String,
+      streamName: String
   )(implicit F: ConcurrentEffect[F]): fs2.Stream[F, CommittableRecord] = {
     val workerConfig = new KinesisClientLibConfiguration(
       appName,
@@ -58,14 +61,14 @@ package object kcl {
     *  @return an infinite fs2 Stream that emits Kinesis Records
     */
   def readFromKinesisStream[F[_]](
-    workerConfig: KinesisClientLibConfiguration,
-    streamConfig: KinesisStreamSettings = KinesisStreamSettings.defaultInstance
+      workerConfig: KinesisClientLibConfiguration,
+      streamConfig: KinesisStreamSettings = KinesisStreamSettings.defaultInstance
   )(implicit F: ConcurrentEffect[F]): fs2.Stream[F, CommittableRecord] = {
     readFromKinesisStream(defaultWorker(_, workerConfig), streamConfig)
   }
 
-/** Intialize a worker and start streaming records from a Kinesis stream
-  * On stream finish (due to error or other), worker will be shutdown
+  /** Intialize a worker and start streaming records from a Kinesis stream
+    * On stream finish (due to error or other), worker will be shutdown
     *
     *  @tparam F effect type of the fs2 stream
     *  @param workerFactory function to create a Worker from a IRecordProcessorFactory
@@ -73,8 +76,8 @@ package object kcl {
     *  @return an infinite fs2 Stream that emits Kinesis Records
     */
   private[aws] def readFromKinesisStream[F[_]](
-    workerFactory: => IRecordProcessorFactory => Worker,
-    streamConfig: KinesisStreamSettings
+      workerFactory: => IRecordProcessorFactory => Worker,
+      streamConfig: KinesisStreamSettings
   )(implicit F: ConcurrentEffect[F]): fs2.Stream[F, CommittableRecord] = {
 
     // Initialize a KCL worker which appends to the internal stream queue on message receipt
@@ -82,7 +85,8 @@ package object kcl {
       workerFactory(
         new IRecordProcessorFactory {
           override def createProcessor() =
-            new RecordProcessor(record => F.runAsync(queue.enqueue1(record))(_ => IO.unit).unsafeRunSync)
+            new RecordProcessor(
+              record => F.runAsync(queue.enqueue1(record))(_ => IO.unit).unsafeRunSync)
         }
       )
     }
@@ -92,7 +96,8 @@ package object kcl {
     for {
       buffer <- Stream.eval(Queue.bounded[F, CommittableRecord](streamConfig.bufferSize))
       worker = instantiateWorker(buffer)
-      stream <- buffer.dequeue concurrently Stream.eval(worker.map(_.run)) onFinalize(worker.map(_.shutdown))
+      stream <- buffer.dequeue concurrently Stream.eval(worker.map(_.run)) onFinalize (worker.map(
+        _.shutdown))
     } yield stream
   }
 
@@ -106,22 +111,23 @@ package object kcl {
     *  @return a stream of Record types representing checkpointed messages
     */
   def checkpointRecords[F[_]](
-    checkpointSettings: KinesisCheckpointSettings = KinesisCheckpointSettings.defaultInstance
+      checkpointSettings: KinesisCheckpointSettings = KinesisCheckpointSettings.defaultInstance
   )(implicit F: ConcurrentEffect[F], timer: Timer[F]): fs2.Pipe[F, CommittableRecord, Record] = {
-    _.through(groupBy(r => F.delay(r.shardId)))
-      .map { case (k, st) =>
+    _.through(groupBy(r => F.delay(r.shardId))).map {
+      case (k, st) =>
         st.tupleLeft(k)
           .groupWithin(checkpointSettings.maxBatchSize, checkpointSettings.maxBatchWait)
           .map(_.toList.max)
           .mapAsync(1) { cr =>
-            F.async[Record](_ =>
-              if (cr._2.canCheckpoint)
-                Right(cr._2.checkpoint)
-              else
-                Left(new KinesisCheckpointException("Record processor has been shutdown and therefore cannot checkpoint records"))
-            )
+            F.async[Record](
+              _ =>
+                if (cr._2.canCheckpoint)
+                  Right(cr._2.checkpoint)
+                else
+                  Left(new KinesisCheckpointException(
+                    "Record processor has been shutdown and therefore cannot checkpoint records")))
           }
-      }.parJoinUnbounded
+    }.parJoinUnbounded
   }
 
   /** Sink to checkpoint records in Kinesis, marking them as processed
@@ -134,7 +140,7 @@ package object kcl {
     *  @return a Sink that accepts a stream of CommittableRecords
     */
   def checkpointRecords_[F[_]](
-    checkpointSettings: KinesisCheckpointSettings = KinesisCheckpointSettings.defaultInstance
+      checkpointSettings: KinesisCheckpointSettings = KinesisCheckpointSettings.defaultInstance
   )(implicit F: ConcurrentEffect[F], timer: Timer[F]): fs2.Sink[F, CommittableRecord] = {
     _.through(checkpointRecords(checkpointSettings))
       .map(_ => ())

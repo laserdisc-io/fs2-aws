@@ -16,8 +16,8 @@ class KinesisStreamSettings private (val bufferSize: Int)
   *  @param maxBatchWait the maximum amount of time to wait before checkpointing the cluster of records
   */
 class KinesisCheckpointSettings private (
-  val maxBatchSize: Int,
-  val maxBatchWait: FiniteDuration
+    val maxBatchSize: Int,
+    val maxBatchWait: FiniteDuration
 )
 
 object KinesisStreamSettings {
@@ -33,13 +33,15 @@ object KinesisStreamSettings {
 object KinesisCheckpointSettings {
   val defaultInstance = new KinesisCheckpointSettings(1000, 10.seconds)
 
-  def apply(maxBatchSize: Int, maxBatchWait: FiniteDuration): Either[Throwable, KinesisCheckpointSettings] =
+  def apply(maxBatchSize: Int,
+            maxBatchWait: FiniteDuration): Either[Throwable, KinesisCheckpointSettings] =
     (maxBatchSize, maxBatchWait) match {
-      case (s,_) if s <= 0 =>
+      case (s, _) if s <= 0 =>
         Left(new IllegalArgumentException("Max batch size must be greater than 0"))
       case (_, w) if w <= 0.milliseconds =>
-        Left(new IllegalArgumentException("Max batch wait must be greater than 0 milliseconds. To checkpoint immediately, pass 1 to the max batch size."))
-      case (s,w) =>
+        Left(new IllegalArgumentException(
+          "Max batch wait must be greater than 0 milliseconds. To checkpoint immediately, pass 1 to the max batch size."))
+      case (s, w) =>
         Right(new KinesisCheckpointSettings(s, w))
     }
 }

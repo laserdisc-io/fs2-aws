@@ -57,8 +57,8 @@ object Internal {
     *  @param selector partitioning function based on the element
     *  @return a FS2 pipe producing a new sub-stream of elements grouped by the selector
     */
-  def groupBy[F[_], A, K](selector: A => F[K])(implicit F: Concurrent[F]): Pipe[F, A, (K, Stream[F, A])] = {
-    in =>
+  def groupBy[F[_], A, K](selector: A => F[K])(
+      implicit F: Concurrent[F]): Pipe[F, A, (K, Stream[F, A])] = { in =>
     Stream.eval(Ref.of[F, Map[K, Queue[F, Option[A]]]](Map.empty)).flatMap { st =>
       val cleanup = {
         import alleycats.std.all._
@@ -68,15 +68,19 @@ object Internal {
       (in ++ Stream.eval_(cleanup))
         .evalMap { el =>
           (selector(el), st.get).mapN { (key, queues) =>
-            queues.get(key).fold {
-              for {
-                newQ <- Queue.unbounded[F, Option[A]] // Create a new queue
-                _ <- st.modify(x => (x + (key -> newQ), x)) // Update the ref of queues
-                _ <- newQ.enqueue1(el.some)
-              } yield (key -> newQ.dequeue.unNoneTerminate).some
-            }(_.enqueue1(el.some) as None)
+            queues
+              .get(key)
+              .fold {
+                for {
+                  newQ <- Queue.unbounded[F, Option[A]] // Create a new queue
+                  _    <- st.modify(x => (x + (key -> newQ), x)) // Update the ref of queues
+                  _    <- newQ.enqueue1(el.some)
+                } yield (key -> newQ.dequeue.unNoneTerminate).some
+              }(_.enqueue1(el.some) as None)
           }.flatten
-        }.unNone.onFinalize(cleanup)
+        }
+        .unNone
+        .onFinalize(cleanup)
     }
   }
 }
