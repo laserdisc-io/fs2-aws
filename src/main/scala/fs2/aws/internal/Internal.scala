@@ -80,7 +80,7 @@ object Internal {
               .fold {
                 for {
                   newQ <- Queue.unbounded[F, Option[A]] // Create a new queue
-                  _    <- queueMap.modify(queues => (queues + (key -> newQ), queues)) // Update the ref of queues
+                  _    <- queueMap.modify(queues => (queues + (key -> newQ), queues))
                   _    <- newQ.enqueue1(elem.some) // Enqueue the element lifted into an Option to the new queue
                 } yield (key -> newQ.dequeue.unNoneTerminate).some
               }(_.enqueue1(elem.some) as None)
