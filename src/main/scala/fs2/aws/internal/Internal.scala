@@ -42,7 +42,8 @@ object Internal {
 
     private lazy val client = new KinesisProducer
 
-    def putData(streamName: String, partitionKey: String, data: List[Byte])(implicit F: Effect[F]): F[ListenableFuture[UserRecordResult]] =
+    def putData(streamName: String, partitionKey: String, data: List[Byte])(
+        implicit F: Effect[F]): F[ListenableFuture[UserRecordResult]] =
       F.delay(client.addUserRecord(streamName, partitionKey, data))
   }
 }

@@ -22,29 +22,34 @@ package object publisher {
     *  @return a Pipe that accepts a stream of bytes and returns UserRecordResults
     */
   def writeToKinesis[F[_]](
-    streamName: String,
-    partitionKey: String,
-    producer: KinesisProducerClient[F] = new KinesisProducerClient[F] {}
-  )(implicit F: Effect[F], ec: ExecutionContext, concurrent: Concurrent[F]): fs2.Pipe[F, Byte, UserRecordResult] = {
+      streamName: String,
+      partitionKey: String,
+      producer: KinesisProducerClient[F] = new KinesisProducerClient[F] {}
+  )(implicit F: Effect[F],
+    ec: ExecutionContext,
+    concurrent: Concurrent[F]): fs2.Pipe[F, Byte, UserRecordResult] = {
 
     // Evaluate the operation of invoking the Kinesis client
     def write: fs2.Pipe[F, List[Byte], ListenableFuture[UserRecordResult]] =
-      _.flatMap { case byteArray =>
-        fs2.Stream.eval(producer.putData(streamName, partitionKey, byteArray))
+      _.flatMap {
+        case byteArray =>
+          fs2.Stream.eval(producer.putData(streamName, partitionKey, byteArray))
       }
 
     // Register the returned future, returning the UserRecordResult
     def registerCallback: fs2.Pipe[F, ListenableFuture[UserRecordResult], UserRecordResult] =
-      _.mapAsync(1) { case f =>
-        Effect[F].async[UserRecordResult] { cb =>
-          Futures.addCallback(
-            f,
-            new FutureCallback[UserRecordResult] {
-              override def onFailure(t: Throwable): Unit = cb(Left(t))
-              override def onSuccess(result: UserRecordResult): Unit = cb(Right(result))
-            },
-            (command: Runnable) => ec.execute(command))
-        }
+      _.mapAsync(1) {
+        case f =>
+          Effect[F].async[UserRecordResult] { cb =>
+            Futures.addCallback(
+              f,
+              new FutureCallback[UserRecordResult] {
+                override def onFailure(t: Throwable): Unit             = cb(Left(t))
+                override def onSuccess(result: UserRecordResult): Unit = cb(Right(result))
+              },
+              (command: Runnable) => ec.execute(command)
+            )
+          }
       }
 
     _.chunks
@@ -63,9 +68,9 @@ package object publisher {
     *  @return a Sink that accepts a stream of bytes
     */
   def writeToKinesis_[F[_]](
-    streamName: String,
-    partitionKey: String,
-    producer: KinesisProducerClient[F] = new KinesisProducerClient[F] {}
+      streamName: String,
+      partitionKey: String,
+      producer: KinesisProducerClient[F] = new KinesisProducerClient[F] {}
   )(implicit F: Effect[F], ec: ExecutionContext, concurrent: Concurrent[F]): fs2.Sink[F, Byte] = {
     _.through(writeToKinesis(streamName, partitionKey, producer))
       .map(_ => ())
