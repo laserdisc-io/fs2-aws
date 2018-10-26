@@ -1,0 +1,11 @@
+# default
+*       @dmateusp
+
+# s3
+src/main/scala/fs2/aws/s3/ @semenodm
+
+# kinesis
+src/main/scala/fs2/aws/kinesis/ @kiambogo
+
+# internal
+src/main/scala/fs2/aws/internal @semenodm @kiambogo
