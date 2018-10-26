@@ -20,4 +20,7 @@ scala:
    - 2.12.7
 
 script:
-   - sbt ++$TRAVIS_SCALA_VERSION test scalafmtCheck scalafmtSbtCheck
+   - sbt ++$TRAVIS_SCALA_VERSION clean coverage test scalafmtCheck scalafmtSbtCheck
+
+after_success:
+   - sbt ++$TRAVIS_SCALA_VERSION coverageReport coveralls

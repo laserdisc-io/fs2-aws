@@ -28,3 +28,7 @@ libraryDependencies ++= Seq(
 )
 
 addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.3")
+
+// coverage
+coverageMinimum := 40
+coverageFailOnMinimum := true
