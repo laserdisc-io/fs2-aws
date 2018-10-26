@@ -8,4 +8,5 @@ project/plugins/project/
 .history
 .cache
 .lib/
+local.*
 .DS_Store
