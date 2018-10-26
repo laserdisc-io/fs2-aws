@@ -1,4 +1,7 @@
 # fs2-aws
+[![Build Status](https://travis-ci.com/dmateusp/fs2-aws.svg?branch=master)](https://travis-ci.com/dmateusp/fs2-aws)
+
+
 fs2 Streaming utilities for interacting with AWS
 
 ## S3
