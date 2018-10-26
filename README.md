@@ -4,11 +4,9 @@
 
 fs2 Streaming utilities for interacting with AWS
 
-## S3
-* Downloading / reading an `S3` file to `Byte`s, the size of each part downloaded is the `chunkSize`
-`readS3FileMultipart[F[_]](bucket: String, key: String, chunkSize: Int, s3Client: S3Client[F] = new S3Client[F] {})(implicit F: Effect[F]): fs2.Stream[F, Byte]`
+## Scope of the project
 
-* Uploading multipart `Byte`s to `S3`, the size of each part uploaded is the `chunkSize` `uploadS3FileMultipart[F[_]](bucket: String, key: String, chunkSize: Int, s3Client: S3Client[F] = new S3Client[F] {})(implicit F: Effect[F]): fs2.Sink[F, Byte]`
+fs2-aws provides an [fs2](https://github.com/functional-streams-for-scala/fs2) interface to AWS services
 
 ## Kinesis
 ### Streaming records from Kinesis with KCL
