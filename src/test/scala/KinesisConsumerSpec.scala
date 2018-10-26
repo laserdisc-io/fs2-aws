@@ -25,6 +25,7 @@ import org.mockito.Mockito._
 
 import java.util.Date
 import java.nio.ByteBuffer
+import java.util.concurrent.Semaphore
 import scala.concurrent.Future
 import scala.collection.JavaConverters._
 
@@ -36,6 +37,7 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
 
   "KinesisWorker source" should "successfully read data from the Kinesis stream" in new WorkerContext
   with TestData {
+    semaphore.acquire()
     recordProcessor.initialize(initializationInput)
     recordProcessor.processRecords(recordsInput)
 
@@ -48,18 +50,22 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
       commitableRecord.shardId shouldBe initializationInput.getShardId
       commitableRecord.millisBehindLatest shouldBe recordsInput.getMillisBehindLatest
     }
+    semaphore.release()
   }
 
   it should "not shutdown the worker if the stream is drained but has not failed" in new WorkerContext
   with TestData {
+    semaphore.acquire()
     recordProcessor.initialize(initializationInput)
     recordProcessor.processRecords(recordsInput)
 
     eventually(verify(mockWorker, times(0)).shutdown())
+    semaphore.release()
   }
 
   it should "shutdown the worker if the stream terminates" in new WorkerContext(errorStream = true)
   with TestData {
+    semaphore.acquire()
     recordProcessor.initialize(initializationInput)
     recordProcessor.processRecords(recordsInput)
 
@@ -67,6 +73,7 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
   }
 
   it should "not drop messages in case of back-pressure" in new WorkerContext with TestData {
+    semaphore.acquire()
     // Create and send 10 records (to match buffer size)
     for (i <- 1 to 10) {
       val record = mock(classOf[Record])
@@ -88,10 +95,12 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     eventually(output.size shouldBe (60))
 
     eventually(verify(mockWorker, times(0)).shutdown())
+    semaphore.release()
   }
 
   it should "not drop messages in case of back-pressure with multiple shard workers" in new WorkerContext
   with TestData {
+    semaphore.acquire()
     recordProcessor.initialize(initializationInput)
     recordProcessor2.initialize(initializationInput.withShardId("shard2"))
 
@@ -123,6 +132,7 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
 
     // Should have processed all 60 messages
     eventually(output.size shouldBe (60))
+    semaphore.release()
   }
 
   "KinesisWorker checkpoint pipe" should "checkpoint batch of records with same sequence number" in new KinesisWorkerCheckpointContext {
@@ -142,7 +152,9 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
 
     startStream(input)
 
-    eventually(verify(checkpointerShard1).checkpoint(input.last.record))
+    eventually(timeout(1.second)) {
+      verify(checkpointerShard1).checkpoint(input.last.record)
+    }
   }
 
   it should "checkpoint batch of records of different shards" in new KinesisWorkerCheckpointContext {
@@ -239,6 +251,8 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
   private abstract class WorkerContext(backpressureTimeout: FiniteDuration = 1.minute,
                                        errorStream: Boolean = false) {
 
+    val semaphore = new Semaphore(1)
+    semaphore.acquire()
     var output: List[CommittableRecord] = List()
 
     protected val mockWorker = mock(classOf[Worker])
@@ -259,6 +273,7 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
       recordProcessorFactory = x
       recordProcessor = x.createProcessor()
       recordProcessor2 = x.createProcessor()
+      semaphore.release()
       mockWorker
     }
 
