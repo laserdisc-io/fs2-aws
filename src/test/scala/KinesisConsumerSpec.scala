@@ -247,6 +247,10 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
       override def answer(invocation: InvocationOnMock): Unit = ()
     })
 
+    when(mockWorker.shutdown()).thenAnswer(new Answer[Unit] {
+      override def answer(invocation: InvocationOnMock): Unit = ()
+    })
+
     var recordProcessorFactory: IRecordProcessorFactory = _
     var recordProcessor: IRecordProcessor               = _
     var recordProcessor2: IRecordProcessor              = _
