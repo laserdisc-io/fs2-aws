@@ -253,7 +253,7 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
       mockWorker
     }
 
-    val config = KinesisWorkerStreamSettings(bufferSize = 10, backpressureTimeout = 1.second)
+    val config = KinesisStreamSettings(bufferSize = 10).right.get
 
     val stream =
       readFromKinesisStream[IO](builder, config)
@@ -289,7 +289,7 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
   private trait KinesisWorkerCheckpointContext {
     val recordProcessor = new RecordProcessor(_ => ())
     val checkpointerShard1 = mock(classOf[IRecordProcessorCheckpointer])
-    val settings = KinesisWorkerCheckpointSettings(maxBatchSize = 100, maxBatchWait = 500.millis)
+    val settings = KinesisCheckpointSettings(maxBatchSize = 100, maxBatchWait = 500.millis).right.get
 
     def startStream(input: Seq[CommittableRecord]) =
       fs2.Stream.emits(input)
