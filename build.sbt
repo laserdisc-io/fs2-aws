@@ -1,6 +1,5 @@
 name := "fs2-aws"
-organization := "com.hbc"
-version := "0.0.2-SNAPSHOT"
+organization := "io.github"
 
 scalaVersion := "2.12.7"
 
@@ -32,3 +31,21 @@ addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.3")
 // coverage
 coverageMinimum := 40
 coverageFailOnMinimum := true
+
+// sonatype
+licenses := Seq("MIT" -> url("https://github.com/dmateusp/fs2-aws/blob/master/LICENSE"))
+developers := List(
+  Developer(id = "dmateusp",
+            name = "Daniel Mateus Pires",
+            email = "dmateusp@gmail.com",
+            url = url("https://github.com/dmateusp"))
+)
+homepage := Some(url("https://github.com/dmateusp/fs2-aws"))
+scmInfo := Some(
+  ScmInfo(url("https://github.com/dmateusp/fs2-aws"),
+          "scm:git:git@github.com:dmateusp/fs2-aws.git"))
+
+// These are the sbt-release-early settings to configure
+pgpPublicRing := file("./travis/local.pubring.asc")
+pgpSecretRing := file("./travis/local.secring.asc")
+releaseEarlyWith := SonatypePublisher
