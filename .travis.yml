@@ -24,3 +24,8 @@ script:
 
 after_success:
    - sbt ++$TRAVIS_SCALA_VERSION coverageReport coveralls
+
+# These branches only will run build on commit
+branches:
+  only:
+  - master
