@@ -84,7 +84,7 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
       recordProcessor.processRecords(recordsInput.withRecords(List(record).asJava))
     }
 
-    // Should process all 50 messages
+    // Should have processed all 60 messages
     eventually(output.size shouldBe (60))
 
     eventually(verify(mockWorker, times(0)).shutdown())
@@ -121,10 +121,8 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     simulateWorkerThread(recordProcessor)
     simulateWorkerThread(recordProcessor2)
 
-    // Should process all 50 messages
+    // Should have processed all 60 messages
     eventually(output.size shouldBe (60))
-
-    eventually(verify(mockWorker, times(0)).shutdown())
   }
 
   "KinesisWorker checkpoint pipe" should "checkpoint batch of records with same sequence number" in new KinesisWorkerCheckpointContext {
