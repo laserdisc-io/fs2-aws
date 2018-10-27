@@ -15,9 +15,9 @@ class KinesisProducerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
   }
 
   trait KinesisProducerTestContext {
-    implicit val ec: ExecutionContext = ExecutionContext.global
+    implicit val ec: ExecutionContext             = ExecutionContext.global
     implicit val ioContextShift: ContextShift[IO] = IO.contextShift(ec)
-    implicit val timer: Timer[IO] = IO.timer(ec)
+    implicit val timer: Timer[IO]                 = IO.timer(ec)
     import fs2.aws.internal.Internal._
 
     val ops = IO {
@@ -27,7 +27,8 @@ class KinesisProducerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     }
 
     val kinesisProducerTestClient: KinesisProducerClient[IO] = new KinesisProducerClient[IO] {
-      override def putData(streamName: String, partitionKey: String, data: List[Byte])(implicit e: Effect[IO]): IO[ListenableFuture[UserRecordResult]] = {
+      override def putData(streamName: String, partitionKey: String, data: List[Byte])(
+          implicit e: Effect[IO]): IO[ListenableFuture[UserRecordResult]] = {
         KinesisStub.save(data)
         ops
       }
