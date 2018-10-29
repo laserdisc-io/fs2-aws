@@ -5,10 +5,22 @@
 fs2 Streaming utilities for interacting with AWS
 
 ## S3
-* Downloading / reading an `S3` file to `Byte`s, the size of each part downloaded is the `chunkSize`
-`readS3FileMultipart[F[_]](bucket: String, key: String, chunkSize: Int, s3Client: S3Client[F] = new S3Client[F] {})(implicit F: Effect[F]): fs2.Stream[F, Byte]`
+### Streaming a file from S3
+Creates a stream of `Byte`s; size of each part downlaoded is the `chunkSize`.
 
-* Uploading multipart `Byte`s to `S3`, the size of each part uploaded is the `chunkSize` `uploadS3FileMultipart[F[_]](bucket: String, key: String, chunkSize: Int, s3Client: S3Client[F] = new S3Client[F] {})(implicit F: Effect[F]): fs2.Sink[F, Byte]`
+Example using IO for effects (any monad `F <: Effect` can be used):
+```scala
+val stream: fs2.Stream[IO, Byte] = readS3FileMultipart[IO](bucket: String, key: String, chunkSize: Int)
+```
+
+### Writing to a file in S3
+A Pipe and Sink allow for writing a stream of `Byte`s to S3; size of each part uploaded is the `chunkSize`.
+
+Example using IO for effects (any monad `F <: Effect` can be used):
+```scala
+someByteStream
+  .uploadS3FileMultipart[IO](bucket: String, key: String, chunkSize: Int)
+```
 
 ## Kinesis
 ### Streaming records from Kinesis with KCL
