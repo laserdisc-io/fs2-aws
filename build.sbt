@@ -21,9 +21,12 @@ val fs2Version = "1.0.0"
 libraryDependencies ++= Seq(
   "co.fs2"        %% "fs2-core"               % fs2Version,
   "co.fs2"        %% "fs2-io"                 % fs2Version,
+  "org.typelevel" %% "alleycats-core"         % "1.4.0",
   "com.amazonaws" % "aws-java-sdk"            % "1.11.427",
   "com.amazonaws" % "amazon-kinesis-producer" % "0.12.9",
-  "org.scalatest" %% "scalatest"              % "3.0.4" % "test"
+  "com.amazonaws" % "amazon-kinesis-client"   % "1.9.2",
+  "org.scalatest" %% "scalatest"              % "3.0.4" % Test,
+  "org.mockito"   % "mockito-core"            % "2.23.0" % Test
 )
 
 addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.3")
