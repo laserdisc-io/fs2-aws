@@ -35,7 +35,10 @@ addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.3")
 coverageMinimum := 40
 coverageFailOnMinimum := true
 
-// sonatype
+// publish
+publishTo := Some(
+  "Sonatype Nexus" at "https://oss.sonatype.org/service/local/staging/deploy/maven2")
+
 licenses := Seq("MIT" -> url("https://github.com/dmateusp/fs2-aws/blob/master/LICENSE"))
 developers := List(
   Developer(id = "dmateusp",
@@ -48,7 +51,29 @@ scmInfo := Some(
   ScmInfo(url("https://github.com/dmateusp/fs2-aws"),
           "scm:git:git@github.com:dmateusp/fs2-aws.git"))
 
-// These are the sbt-release-early settings to configure
-pgpPublicRing := file("./travis/local.pubring.asc")
-pgpSecretRing := file("./travis/local.secring.asc")
-releaseEarlyWith := SonatypePublisher
+// release
+import ReleaseTransformations._
+
+// signed releases
+pgpPublicRing := file(".travis/local.pubring.asc")
+pgpSecretRing := file(".travis/local.secring.asc")
+releasePublishArtifactsAction := PgpKeys.publishSigned.value
+pgpPassphrase := sys.env.get("PGP_PASS").map(_.toCharArray)
+credentials += Credentials("Sonatype Nexus Repository Manager",
+                           "oss.sonatype.org",
+                           sys.env("SONATYPE_USERNAME"),
+                           sys.env("SONATYPE_PASSWORD"))
+
+// release steps
+releaseProcess := Seq[ReleaseStep](
+  inquireVersions,
+  setReleaseVersion,
+  tagRelease,
+  publishArtifacts,
+  pushChanges
+)
+
+// automatic versioning
+majorRegexes := Seq("\\[?breaking\\]?.*".r, "\\[?major\\]?.*".r)
+minorRegexes := Seq(".*".r)
+bugfixRegexes := Seq("\\[?bugfix\\]?.*".r, "\\[?fix\\]?.*".r)
