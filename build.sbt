@@ -36,7 +36,7 @@ coverageMinimum := 40
 coverageFailOnMinimum := true
 
 // publish
-publishTo := Some("https://oss.sonatype.org/service/local/staging/deploy/maven2")
+publishTo := Some("Sonatype Nexus" at "https://oss.sonatype.org/service/local/staging/deploy/maven2")
 
 licenses := Seq("MIT" -> url("https://github.com/dmateusp/fs2-aws/blob/master/LICENSE"))
 developers := List(
