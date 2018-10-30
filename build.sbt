@@ -59,7 +59,7 @@ pgpPublicRing := file(".travis/local.pubring.asc")
 pgpSecretRing := file(".travis/local.secring.asc")
 releasePublishArtifactsAction := PgpKeys.publishSigned.value
 pgpPassphrase := sys.env.get("PGP_PASS").map(_.toCharArray)
-credentials += Credentials("Sonatype Nexus",
+credentials += Credentials("Sonatype Nexus Repository Manager",
                            "oss.sonatype.org",
                            sys.env("SONATYPE_USERNAME"),
                            sys.env("SONATYPE_PASSWORD"))
