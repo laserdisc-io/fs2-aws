@@ -61,8 +61,8 @@ releasePublishArtifactsAction := PgpKeys.publishSigned.value
 pgpPassphrase := sys.env.get("PGP_PASS").map(_.toCharArray)
 credentials += Credentials("Sonatype Nexus Repository Manager",
                            "oss.sonatype.org",
-                           sys.env("SONATYPE_USERNAME"),
-                           sys.env("SONATYPE_PASSWORD"))
+                           sys.env.get("SONATYPE_USERNAME").getOrElse(""),
+                           sys.env.get("SONATYPE_PASSWORD").getOrElse(""))
 
 // release steps
 releaseProcess := Seq[ReleaseStep](
