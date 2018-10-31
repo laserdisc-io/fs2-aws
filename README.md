@@ -10,7 +10,8 @@ Creates a stream of `Byte`s; size of each part downlaoded is the `chunkSize`.
 
 Example using IO for effects (any monad `F <: Effect` can be used):
 ```scala
-val stream: fs2.Stream[IO, Byte] = readS3FileMultipart[IO](bucket: String, key: String, chunkSize: Int)
+readS3FileMultipart[IO]("testBucket", "testFile", 25)
+  .through(io.file.writeAll(Paths.get("testFile.txt")))
 ```
 
 ### Writing to a file in S3
@@ -18,8 +19,9 @@ A Pipe and Sink allow for writing a stream of `Byte`s to S3; size of each part u
 
 Example using IO for effects (any monad `F <: Effect` can be used):
 ```scala
-someByteStream
-  .uploadS3FileMultipart[IO](bucket: String, key: String, chunkSize: Int)
+Stream("test data")
+  .flatMap(_.getBytes)
+  .uploadS3FileMultipart[IO]("testBucket", "testFile", 25)
 ```
 
 ## Kinesis
