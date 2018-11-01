@@ -41,11 +41,10 @@ object Internal {
   private[aws] case class MultiPartUploadInfo(uploadId: String, partETags: List[PartETag])
 
   private[aws] trait KinesisProducerClient[F[_]] {
-    implicit def byteList2ByteBuffer(l: List[Byte]): ByteBuffer = ByteBuffer.wrap(l.toArray)
 
     private lazy val client = new KinesisProducer
 
-    def putData(streamName: String, partitionKey: String, data: List[Byte])(
+    def putData(streamName: String, partitionKey: String, data: ByteBuffer)(
         implicit F: Effect[F]): F[ListenableFuture[UserRecordResult]] =
       F.delay(client.addUserRecord(streamName, partitionKey, data))
   }

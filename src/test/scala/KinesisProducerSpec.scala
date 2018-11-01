@@ -1,6 +1,7 @@
 package fs2
 package aws
 
+import java.nio.ByteBuffer
 import cats.effect.{IO, Effect, ContextShift, Timer}
 import org.scalatest.{FlatSpec, Matchers, BeforeAndAfterEach}
 import fs2.aws.kinesis.publisher._
@@ -27,7 +28,7 @@ class KinesisProducerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     }
 
     val kinesisProducerTestClient: KinesisProducerClient[IO] = new KinesisProducerClient[IO] {
-      override def putData(streamName: String, partitionKey: String, data: List[Byte])(
+      override def putData(streamName: String, partitionKey: String, data: ByteBuffer)(
           implicit e: Effect[IO]): IO[ListenableFuture[UserRecordResult]] = {
         KinesisStub.save(data)
         ops
@@ -38,8 +39,8 @@ class KinesisProducerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
   "Publishing data to a Kinesis stream via writeToKinesis" should "successfully save data to the stream and return the successful result" in new KinesisProducerTestContext {
     val output = fs2.Stream
       .eval(IO.pure("someData"))
-      .flatMap(i => fs2.Stream.emits(i.toString.getBytes))
-      .through(writeToKinesis[IO]("test-stream", "partition-key", kinesisProducerTestClient))
+      .flatMap(i => fs2.Stream.emit(("partitionKey", ByteBuffer.wrap(i.toString.getBytes))))
+      .through(writeToKinesis[IO]("test-stream", kinesisProducerTestClient))
       .attempt
       .compile
       .toVector
@@ -49,20 +50,20 @@ class KinesisProducerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     output.head.isRight should be(true)
 
     KinesisStub._data.size should be(1)
-    KinesisStub._data.head should be("someData".getBytes)
+    KinesisStub._data.head should be(ByteBuffer.wrap("someData".getBytes))
   }
 
   "Publishing data to a Kinesis stream via writeToKinesis_" should "successfully save data to the stream" in new KinesisProducerTestContext {
     fs2.Stream
       .eval(IO.pure("someData"))
-      .flatMap(i => fs2.Stream.emits(i.toString.getBytes))
-      .to(writeToKinesis_[IO]("test-stream", "partition-key", kinesisProducerTestClient))
+      .flatMap(i => fs2.Stream.emit(("partitionKey", ByteBuffer.wrap(i.toString.getBytes))))
+      .to(writeToKinesis_[IO]("test-stream", kinesisProducerTestClient))
       .compile
       .toVector
       .unsafeRunSync
 
     KinesisStub._data.size should be(1)
-    KinesisStub._data.head should be("someData".getBytes)
+    KinesisStub._data.head should be(ByteBuffer.wrap("someData".getBytes))
   }
 
   "error thrown when invoking writeToKinesis" should "return an error in the stream" in new KinesisProducerTestContext {
@@ -72,8 +73,8 @@ class KinesisProducerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
 
     val output = fs2.Stream
       .eval(IO.pure("someData"))
-      .flatMap(i => fs2.Stream.emits(i.toString.getBytes))
-      .through(writeToKinesis[IO]("test-stream", "partition-key", kinesisProducerTestClient))
+      .flatMap(i => fs2.Stream.emit(("partitionKey", ByteBuffer.wrap(i.toString.getBytes))))
+      .through(writeToKinesis[IO]("test-stream", kinesisProducerTestClient))
       .attempt
       .compile
       .toVector
@@ -92,11 +93,12 @@ class KinesisProducerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     assertThrows[Exception] {
       fs2.Stream
         .eval(IO.pure("someData"))
-        .flatMap(i => fs2.Stream.emits(i.toString.getBytes))
-        .to(writeToKinesis_[IO]("test-stream", "partition-key", kinesisProducerTestClient))
+        .flatMap(i => fs2.Stream.emit(("partitionKey", ByteBuffer.wrap(i.toString.getBytes))))
+        .to(writeToKinesis_[IO]("test-stream", kinesisProducerTestClient))
         .compile
         .toVector
         .unsafeRunSync
     }
   }
+
 }
