@@ -15,7 +15,7 @@ import com.amazonaws.services.kinesis.producer.{
   UserRecordResult,
   KinesisProducerConfiguration
 }
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
+import com.amazonaws.auth.{AWSCredentialsProviderChain, DefaultAWSCredentialsProviderChain}
 import com.google.common.util.concurrent.ListenableFuture
 
 import scala.util.control.Exception
@@ -47,12 +47,13 @@ object Internal {
 
   private[aws] trait KinesisProducerClient[F[_]] {
 
-    val credentials = new DefaultAWSCredentialsProviderChain()
-    val region      = "us-east-1"
+    val credentials: AWSCredentialsProviderChain = new DefaultAWSCredentialsProviderChain()
+    val region: Option[String]                   = None
 
     private lazy val config: KinesisProducerConfiguration = new KinesisProducerConfiguration()
       .setCredentialsProvider(credentials)
-      .setRegion(region)
+
+    region.map(r => config.setRegion(r))
 
     private lazy val client = new KinesisProducer(config)
 
