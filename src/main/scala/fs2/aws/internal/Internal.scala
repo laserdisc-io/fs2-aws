@@ -10,7 +10,12 @@ import cats.effect.{Concurrent, Effect}
 import cats.effect.concurrent.Ref
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.model._
-import com.amazonaws.services.kinesis.producer.{KinesisProducer, UserRecordResult}
+import com.amazonaws.services.kinesis.producer.{
+  KinesisProducer,
+  UserRecordResult,
+  KinesisProducerConfiguration
+}
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.google.common.util.concurrent.ListenableFuture
 
 import scala.util.control.Exception
@@ -42,9 +47,16 @@ object Internal {
 
   private[aws] trait KinesisProducerClient[F[_]] {
 
-    private lazy val client = new KinesisProducer
+    val credentials = new DefaultAWSCredentialsProviderChain()
+    val region      = "us-east-1"
 
-    def putData(streamName: String, partitionKey: String, data: ByteBuffer)(
+    private lazy val config: KinesisProducerConfiguration = new KinesisProducerConfiguration()
+      .setCredentialsProvider(credentials)
+      .setRegion(region)
+
+    private lazy val client = new KinesisProducer(config)
+
+    private[aws] def putData(streamName: String, partitionKey: String, data: ByteBuffer)(
         implicit F: Effect[F]): F[ListenableFuture[UserRecordResult]] =
       F.delay(client.addUserRecord(streamName, partitionKey, data))
   }
