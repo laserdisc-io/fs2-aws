@@ -1,5 +1,5 @@
 name := "fs2-aws"
-organization := "io.github"
+organization := "io.github.dmateusp"
 
 scalaVersion := "2.12.7"
 
