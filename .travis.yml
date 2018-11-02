@@ -9,7 +9,7 @@ scala:
 
 branches:
   only:
-    - master
+    - remove_autoversion
 
 script:
   - sbt ++$TRAVIS_SCALA_VERSION clean coverage test scalafmtCheck scalafmtSbtCheck
@@ -38,10 +38,10 @@ deploy:
   - provider: script
     skip_cleanup: true
     script:
-      - git checkout master;
+      - git checkout remove_autoversion;
           sbt ++$TRAVIS_SCALA_VERSION "release with-defaults"
     on:
-      branch: master
+      branch: remove_autoversion
 
 before_cache:
   - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
