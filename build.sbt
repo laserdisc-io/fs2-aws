@@ -68,7 +68,10 @@ credentials += Credentials("Sonatype Nexus Repository Manager",
 // release steps
 releaseProcess := Seq[ReleaseStep](
   inquireVersions,
+  setReleaseVersion,
+  commitReleaseVersion,
   tagRelease,
+  pushChanges,
   publishArtifacts
 )
 
