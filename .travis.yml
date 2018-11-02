@@ -40,8 +40,6 @@ deploy:
     script:
       - git checkout fix_auto_version_issue;
           sbt ++$TRAVIS_SCALA_VERSION "release with-defaults"
-    on:
-      tags: true
 
 before_cache:
   - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
