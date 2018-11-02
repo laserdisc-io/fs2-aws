@@ -55,7 +55,6 @@ scmInfo := Some(
 import ReleaseTransformations._
 
 // signed releases
-enablePlugins(GitVersioning)
 
 pgpPublicRing := file(".travis/local.pubring.asc")
 pgpSecretRing := file(".travis/local.secring.asc")
