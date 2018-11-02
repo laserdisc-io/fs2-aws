@@ -4,7 +4,6 @@ import cats.effect.Effect
 import com.amazon.sqs.javamessaging.{ProviderConfiguration, SQSConnection, SQSConnectionFactory}
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder
 import eu.timepit.refined.auto._
-import fs2.aws.SqsConfig
 import javax.jms.{MessageListener, Session}
 
 import scala.language.higherKinds
@@ -15,7 +14,7 @@ class SQSConsumerBuilder[F[_]](val sqsConfig: SqsConfig, val listener: MessageLi
   val start: F[SQSConsumer[F]] = {
     F.delay {
       new SQSConsumer[F] {
-        override val callback = listener
+        override val callback: MessageListener = listener
 
         val connectionFactory = new SQSConnectionFactory(
           new ProviderConfiguration(),
