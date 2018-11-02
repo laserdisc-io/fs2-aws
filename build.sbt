@@ -75,3 +75,5 @@ releaseProcess := Seq[ReleaseStep](
   publishArtifacts
 )
 
+releaseTagComment := s"Releasing ${(version in ThisBuild).value}"
+releaseCommitMessage := s"[skip travis] Setting version to ${(version in ThisBuild).value}"
