@@ -68,13 +68,7 @@ credentials += Credentials("Sonatype Nexus Repository Manager",
 // release steps
 releaseProcess := Seq[ReleaseStep](
   inquireVersions,
-  setReleaseVersion,
   tagRelease,
-  publishArtifacts,
-  pushChanges
+  publishArtifacts
 )
 
-// automatic versioning
-majorRegexes := Seq("\\[?breaking\\]?.*".r, "\\[?major\\]?.*".r)
-minorRegexes := Seq(".*".r)
-bugfixRegexes := Seq("\\[?bugfix\\]?.*".r, "\\[?fix\\]?.*".r)
