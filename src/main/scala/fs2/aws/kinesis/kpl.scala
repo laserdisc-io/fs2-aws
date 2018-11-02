@@ -2,6 +2,7 @@ package fs2
 package aws
 package kinesis
 
+import java.nio.ByteBuffer
 import cats.effect.{Effect, Concurrent}
 import fs2.aws.internal.Internal._
 import com.google.common.util.concurrent.{ListenableFuture, FutureCallback, Futures}
@@ -13,26 +14,24 @@ import scala.concurrent.ExecutionContext
   */
 package object publisher {
 
-  /** Writes the bytestream to a Kinesis stream via a Pipe
+  /** Writes the (partitionKey, ByteBuffer) to a Kinesis stream via a Pipe
     *
     *  @tparam F effect type of the stream
     *  @param streamName the name of the Kinesis stream to write to
-    *  @param partitionKey the partitionKey to use to determine which shard to write to
     *  @param producer kinesis producer client to use
-    *  @return a Pipe that accepts a stream of bytes and returns UserRecordResults
+    *  @return a Pipe that accepts a tuple consisting of the partition key string and a ByteBuffer of data  and returns UserRecordResults
     */
   def writeToKinesis[F[_]](
       streamName: String,
-      partitionKey: String,
       producer: KinesisProducerClient[F] = new KinesisProducerClient[F] {}
   )(implicit F: Effect[F],
     ec: ExecutionContext,
-    concurrent: Concurrent[F]): fs2.Pipe[F, Byte, UserRecordResult] = {
+    concurrent: Concurrent[F]): fs2.Pipe[F, (String, ByteBuffer), UserRecordResult] = {
 
     // Evaluate the operation of invoking the Kinesis client
-    def write: fs2.Pipe[F, List[Byte], ListenableFuture[UserRecordResult]] =
+    def write: fs2.Pipe[F, (String, ByteBuffer), ListenableFuture[UserRecordResult]] =
       _.flatMap {
-        case byteArray =>
+        case (partitionKey, byteArray) =>
           fs2.Stream.eval(producer.putData(streamName, partitionKey, byteArray))
       }
 
@@ -52,10 +51,7 @@ package object publisher {
           }
       }
 
-    _.chunks
-      .flatMap(m => fs2.Stream(m.toList)) // Flatten chunks to list of bytes
-      .fold[List[Byte]](List())(_ ++ _) // Drain the source completely so that all bytes are aggregated into a single List
-      .through(write)
+    _.through(write)
       .through(registerCallback)
   }
 
@@ -69,10 +65,11 @@ package object publisher {
     */
   def writeToKinesis_[F[_]](
       streamName: String,
-      partitionKey: String,
       producer: KinesisProducerClient[F] = new KinesisProducerClient[F] {}
-  )(implicit F: Effect[F], ec: ExecutionContext, concurrent: Concurrent[F]): fs2.Sink[F, Byte] = {
-    _.through(writeToKinesis(streamName, partitionKey, producer))
+  )(implicit F: Effect[F],
+    ec: ExecutionContext,
+    concurrent: Concurrent[F]): fs2.Sink[F, (String, ByteBuffer)] = {
+    _.through(writeToKinesis(streamName, producer))
       .map(_ => ())
   }
 }

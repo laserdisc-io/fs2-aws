@@ -1,5 +1,5 @@
 name := "fs2-aws"
-organization := "io.github"
+organization := "io.github.dmateusp"
 
 scalaVersion := "2.12.7"
 
@@ -55,25 +55,25 @@ scmInfo := Some(
 import ReleaseTransformations._
 
 // signed releases
+
 pgpPublicRing := file(".travis/local.pubring.asc")
 pgpSecretRing := file(".travis/local.secring.asc")
 releasePublishArtifactsAction := PgpKeys.publishSigned.value
 pgpPassphrase := sys.env.get("PGP_PASS").map(_.toCharArray)
 credentials += Credentials("Sonatype Nexus Repository Manager",
                            "oss.sonatype.org",
-                           sys.env("SONATYPE_USERNAME"),
-                           sys.env("SONATYPE_PASSWORD"))
+                           sys.env.get("SONATYPE_USERNAME").getOrElse(""),
+                           sys.env.get("SONATYPE_PASSWORD").getOrElse(""))
 
 // release steps
 releaseProcess := Seq[ReleaseStep](
   inquireVersions,
   setReleaseVersion,
+  commitReleaseVersion,
   tagRelease,
   publishArtifacts,
   pushChanges
 )
 
-// automatic versioning
-majorRegexes := Seq("\\[?breaking\\]?.*".r, "\\[?major\\]?.*".r)
-minorRegexes := Seq(".*".r)
-bugfixRegexes := Seq("\\[?bugfix\\]?.*".r, "\\[?fix\\]?.*".r)
+releaseTagComment := s"Releasing ${(version in ThisBuild).value}"
+releaseCommitMessage := s"[skip travis] Setting version to ${(version in ThisBuild).value}"

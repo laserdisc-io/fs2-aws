@@ -43,13 +43,16 @@ readFromKinesisStream[IO]("appName", "streamName")
 ```
 
 ### Publishing records to Kinesis with KPL
-A Pipe and Sink allow for writing a stream of bytes to a Kinesis stream.
+A Pipe and Sink allow for writing a stream of tuple2 (paritionKey, ByteBuffer) to a Kinesis stream.
 
 Example:
 ```scala
-someStream
-  .to(writeToKinesis_[IO]("streamName", "partitionKey"))
+Stream("testData")
+  .map { d => ("partitionKey", ByteBuffer.wrap(d.getBytes))}
+  .to(writeToKinesis_[IO]("streamName"))
 ```
+
+AWS credential chain and region can be configured by overriding the respective fields in the KinesisProducerClient parameter to `writeToKinesis`. Defaults to using the default AWS credentials chain and `us-east-1` for region.
 
 ## Kinesis Firehose
 **TODO:** Stream get data, Stream send data
