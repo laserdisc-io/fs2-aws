@@ -71,8 +71,8 @@ releaseProcess := Seq[ReleaseStep](
   setReleaseVersion,
   commitReleaseVersion,
   tagRelease,
-  pushChanges,
-  publishArtifacts
+  publishArtifacts,
+  pushChanges
 )
 
 releaseTagComment := s"Releasing ${(version in ThisBuild).value}"
