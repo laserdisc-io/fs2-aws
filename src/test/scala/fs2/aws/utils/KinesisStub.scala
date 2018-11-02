@@ -1,12 +1,14 @@
 package fs2
 package aws
 
+import java.nio.ByteBuffer
+
 object KinesisStub {
-  var _data: List[List[Byte]] = List()
+  var _data: List[ByteBuffer] = List()
 
   def clear() = _data = List()
 
-  def save(data: List[Byte]) = {
+  def save(data: ByteBuffer) = {
     _data = _data :+ data
   }
 }
