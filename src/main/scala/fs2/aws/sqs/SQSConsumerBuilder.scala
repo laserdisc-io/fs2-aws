@@ -12,9 +12,9 @@ class SQSConsumerBuilder[F[_]](val sqsConfig: SqsConfig, val listener: MessageLi
     implicit F: Effect[F])
     extends ConsumerBuilder[F] {
 
-  val start: F[SQSConsumer[F]] = {
+  val start: F[SQSConsumer] = {
     F.delay {
-      new SQSConsumer[F] {
+      new SQSConsumer {
         override val callback: MessageListener = listener
 
         val connectionFactory = new SQSConnectionFactory(

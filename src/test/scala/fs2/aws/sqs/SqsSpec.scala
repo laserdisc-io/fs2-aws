@@ -32,8 +32,8 @@ class SqsSpec extends AsyncFlatSpec with Matchers with MockitoSugar {
           msgListener = listener
           listenerReadiness.countDown()
           new ConsumerBuilder[IO] {
-            override def start: IO[SQSConsumer[IO]] =
-              IO.delay(new SQSConsumer[IO] {
+            override def start: IO[SQSConsumer] =
+              IO.delay(new SQSConsumer {
                 override def callback: MessageListener = listener
 
                 override def startConsumer(): Unit = ()
