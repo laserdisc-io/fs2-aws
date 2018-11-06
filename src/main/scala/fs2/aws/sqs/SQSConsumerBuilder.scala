@@ -9,7 +9,8 @@ import javax.jms.{MessageListener, Session}
 import scala.language.higherKinds
 
 class SQSConsumerBuilder[F[_]](val sqsConfig: SqsConfig, val listener: MessageListener)(
-    implicit F: Effect[F]) {
+    implicit F: Effect[F])
+    extends ConsumerBuilder[F] {
 
   val start: F[SQSConsumer[F]] = {
     F.delay {
@@ -34,12 +35,6 @@ class SQSConsumerBuilder[F[_]](val sqsConfig: SqsConfig, val listener: MessageLi
         }
       }
     }
-  }
-
-  def serve[A](stream: fs2.Stream[F, A]): fs2.Stream[F, A] = {
-    fs2.Stream
-      .bracket(start)(con => F.delay(con.shutdown()))
-      .flatMap(con => fs2.Stream.eval(F.delay(con.startConsumer())).drain ++ stream)
   }
 }
 
