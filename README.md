@@ -12,10 +12,24 @@ The design goals are the same as fs2:
 > compositionality, expressiveness, resource safety, and speed
 
 ## S3
-* Downloading / reading an `S3` file to `Byte`s, the size of each part downloaded is the `chunkSize`
-`readS3FileMultipart[F[_]](bucket: String, key: String, chunkSize: Int, s3Client: S3Client[F] = new S3Client[F] {})(implicit F: Effect[F]): fs2.Stream[F, Byte]`
+### Streaming a file from S3
+Creates a stream of `Byte`s; size of each part downlaoded is the `chunkSize`.
 
-* Uploading multipart `Byte`s to `S3`, the size of each part uploaded is the `chunkSize` `uploadS3FileMultipart[F[_]](bucket: String, key: String, chunkSize: Int, s3Client: S3Client[F] = new S3Client[F] {})(implicit F: Effect[F]): fs2.Sink[F, Byte]`
+Example using IO for effects (any monad `F <: Effect` can be used):
+```scala
+readS3FileMultipart[IO]("testBucket", "testFile", 25)
+  .through(io.file.writeAll(Paths.get("testFile.txt")))
+```
+
+### Writing to a file in S3
+A Pipe and Sink allow for writing a stream of `Byte`s to S3; size of each part uploaded is the `chunkSize`.
+
+Example using IO for effects (any monad `F <: Effect` can be used):
+```scala
+Stream("test data")
+  .flatMap(_.getBytes)
+  .uploadS3FileMultipart[IO]("testBucket", "testFile", 25)
+```
 
 ## Kinesis
 ### Streaming records from Kinesis with KCL
