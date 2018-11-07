@@ -4,6 +4,13 @@
 
 fs2 Streaming utilities for interacting with AWS
 
+## Scope of the project
+
+fs2-aws provides an [fs2](https://github.com/functional-streams-for-scala/fs2) interface to AWS services
+
+The design goals are the same as fs2:
+> compositionality, expressiveness, resource safety, and speed
+
 ## S3
 ### Streaming a file from S3
 Creates a stream of `Byte`s; size of each part downlaoded is the `chunkSize`.
