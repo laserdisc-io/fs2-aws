@@ -26,7 +26,7 @@ package object publisher {
     */
   def writeToKinesis[F[_]](
       streamName: String,
-      producer: Producer[F] = new KinesisProducerClient[F]
+      producer: KinesisProducerClient[F] = new KinesisProducerClient[F] {}
   )(implicit F: Effect[F],
     ec: ExecutionContext,
     concurrent: Concurrent[F]): fs2.Pipe[F, (String, ByteBuffer), UserRecordResult] = {
@@ -59,18 +59,9 @@ package object publisher {
       .through(registerCallback)
   }
 
-  /** Writes the (partitionKey, payload) to a Kinesis stream via a Pipe
-    *
-    * @tparam F effect type of the stream
-    * @tparam I type of payload
-    * @param streamName the name of the Kinesis stream to write to
-    * @param producer   kinesis producer client to use
-    * @param encoder implicit I => ByteBuffer encoder
-    * @return a Pipe that accepts a tuple consisting of the partition key string and a ByteBuffer of data  and returns UserRecordResults
-    */
-  def writeObjectToKinesis[F[_], I](
+  def writeToKinesis1[F[_], I](
       streamName: String,
-      producer: Producer[F] = new KinesisProducerClient[F]
+      producer: KinesisProducerClient[F] = new KinesisProducerClient[F] {}
   )(implicit F: Effect[F] with Monad[F],
     ec: ExecutionContext,
     concurrent: Concurrent[F],
@@ -118,7 +109,7 @@ package object publisher {
     */
   def writeToKinesis_[F[_]](
       streamName: String,
-      producer: Producer[F] = new KinesisProducerClient[F]
+      producer: KinesisProducerClient[F] = new KinesisProducerClient[F] {}
   )(implicit F: Effect[F],
     ec: ExecutionContext,
     concurrent: Concurrent[F]): fs2.Sink[F, (String, ByteBuffer)] = {
