@@ -1,4 +1,6 @@
-package fs2.aws.sqs
+package fs2
+package aws
+package sqs
 
 import com.amazon.sqs.javamessaging.SQSConnection
 import javax.jms.MessageListener

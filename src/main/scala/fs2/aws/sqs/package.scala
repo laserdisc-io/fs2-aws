@@ -1,14 +1,14 @@
 package fs2
+package aws
 
 import cats.effect.{ConcurrentEffect, IO}
-import fs2.aws.sqs.{ConsumerBuilder, ReceiverCallback, SqsConfig}
 import fs2.concurrent.Queue
 import javax.jms.{Message, MessageListener}
 
-package object aws {
+package object sqs {
 
-  def sqsStream[F[_], O](sqsConfig: SqsConfig,
-                         builder: (SqsConfig, MessageListener) => ConsumerBuilder[F])(
+  def readFromSQS[F[_], O](sqsConfig: SqsConfig,
+                           builder: (SqsConfig, MessageListener) => ConsumerBuilder[F])(
       implicit F: ConcurrentEffect[F],
       decoder: Message => Either[Throwable, O]): fs2.Stream[F, O] = {
     for {

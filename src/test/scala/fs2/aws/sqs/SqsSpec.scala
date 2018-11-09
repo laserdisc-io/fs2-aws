@@ -1,4 +1,6 @@
-package fs2.aws.sqs
+package fs2
+package aws
+package sqs
 
 import java.util.concurrent.CountDownLatch
 
@@ -6,7 +8,6 @@ import cats.effect.{ContextShift, IO}
 import com.amazon.sqs.javamessaging.SQSConnection
 import com.amazon.sqs.javamessaging.message.SQSTextMessage
 import eu.timepit.refined.auto._
-import fs2.aws
 import javax.jms.{Message, MessageListener, TextMessage}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{AsyncFlatSpec, Matchers}
@@ -25,29 +26,25 @@ class SqsSpec extends AsyncFlatSpec with Matchers with MockitoSugar {
   "SQS endpoint" should "stream messages" in {
 
     val listenerReadiness = new CountDownLatch(1)
-    val res = aws
-      .sqsStream[IO, Int](
-        SqsConfig("dummy"),
-        (_, listener) => {
-          msgListener = listener
-          listenerReadiness.countDown()
-          new ConsumerBuilder[IO] {
-            override def start: IO[SQSConsumer] =
-              IO.delay(new SQSConsumer {
-                override def callback: MessageListener = listener
+    val res = readFromSQS[IO, Int](
+      SqsConfig("dummy"),
+      (_, listener) => {
+        msgListener = listener
+        listenerReadiness.countDown()
+        new ConsumerBuilder[IO] {
+          override def start: IO[SQSConsumer] =
+            IO.delay(new SQSConsumer {
+              override def callback: MessageListener = listener
 
-                override def startConsumer(): Unit = ()
+              override def startConsumer(): Unit = ()
 
-                override def shutdown(): Unit = ()
+              override def shutdown(): Unit = ()
 
-                override def connection: SQSConnection = mock[SQSConnection]
-              })
-          }
+              override def connection: SQSConnection = mock[SQSConnection]
+            })
         }
-      )
-      .take(4)
-      .compile
-      .toList
+      }
+    ).take(4).compile.toList
 
     val future = res.unsafeToFuture()
 

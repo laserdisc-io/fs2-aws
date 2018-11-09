@@ -1,4 +1,6 @@
-package fs2.aws.sqs
+package fs2
+package aws
+package sqs
 
 import cats.effect.Effect
 import com.amazon.sqs.javamessaging.{ProviderConfiguration, SQSConnection, SQSConnectionFactory}
