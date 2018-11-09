@@ -61,8 +61,28 @@ Stream("testData")
 
 AWS credential chain and region can be configured by overriding the respective fields in the KinesisProducerClient parameter to `writeToKinesis`. Defaults to using the default AWS credentials chain and `us-east-1` for region.
 
-## Kinesis Firehose
-**TODO:** Stream get data, Stream send data
-
 ## SQS
-**TODO:** Stream get SQS messages, Stream send SQS messages
+### Streaming messages from SQS
+Example showng how to stream messages from SQS:
+```scala
+import scala.util.control.Exception
+
+implicit val decoder: javax.jms.Message => Either[Throwable, String] = { msg =>
+  Exception.nonFatal either msg.asInstanceOf[TextMessage].getText
+}
+
+val sqsConfig = SqsConfig("queueName")
+
+readFromSQS[IO, String](
+  sqsConfig,
+  (config, callback) => SQSConsumerBuilder(config, callback))
+  .flatMap { s => fs2.Stream.emits(s.getBytes) }
+  .through(io.file.writeAll(Paths.get("sqsOutput.txt")))
+```
+
+
+### Publishing messages to SQS
+** TODO **
+
+## SNS
+** TODO **
