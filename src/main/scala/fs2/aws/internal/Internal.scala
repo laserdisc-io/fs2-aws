@@ -12,11 +12,12 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.model._
 import com.amazonaws.services.kinesis.producer.{
   KinesisProducer,
-  UserRecordResult,
-  KinesisProducerConfiguration
+  KinesisProducerConfiguration,
+  UserRecordResult
 }
 import com.amazonaws.auth.{AWSCredentialsProviderChain, DefaultAWSCredentialsProviderChain}
 import com.google.common.util.concurrent.ListenableFuture
+import fs2.aws.kinesis.Producer
 
 import scala.util.control.Exception
 
@@ -45,7 +46,7 @@ object Internal {
 
   private[aws] case class MultiPartUploadInfo(uploadId: String, partETags: List[PartETag])
 
-  private[aws] trait KinesisProducerClient[F[_]] {
+  final class KinesisProducerClient[F[_]] extends Producer[F] {
 
     val credentials: AWSCredentialsProviderChain = new DefaultAWSCredentialsProviderChain()
     val region: Option[String]                   = None
@@ -57,7 +58,7 @@ object Internal {
 
     private lazy val client = new KinesisProducer(config)
 
-    private[aws] def putData(streamName: String, partitionKey: String, data: ByteBuffer)(
+    override def putData(streamName: String, partitionKey: String, data: ByteBuffer)(
         implicit F: Effect[F]): F[ListenableFuture[UserRecordResult]] =
       F.delay(client.addUserRecord(streamName, partitionKey, data))
   }

@@ -1,5 +1,4 @@
-package fs2
-package aws
+package fs2.aws.utils
 
 import java.nio.ByteBuffer
 

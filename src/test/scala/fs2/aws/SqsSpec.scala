@@ -1,4 +1,4 @@
-package fs2.aws.sqs
+package fs2.aws
 
 import java.util.concurrent.CountDownLatch
 
@@ -7,6 +7,7 @@ import com.amazon.sqs.javamessaging.SQSConnection
 import com.amazon.sqs.javamessaging.message.SQSTextMessage
 import eu.timepit.refined.auto._
 import fs2.aws
+import fs2.aws.sqs.{ConsumerBuilder, SQSConsumer, SqsConfig}
 import javax.jms.{Message, MessageListener, TextMessage}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{AsyncFlatSpec, Matchers}

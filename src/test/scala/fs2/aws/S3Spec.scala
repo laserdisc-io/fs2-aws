@@ -2,9 +2,9 @@ package fs2
 package aws
 
 import cats.effect.IO
-import org.scalatest.{FlatSpec, Matchers}
 import fs2.aws.s3._
 import fs2.aws.utils._
+import org.scalatest.{FlatSpec, Matchers}
 
 class S3Spec extends FlatSpec with Matchers {
 

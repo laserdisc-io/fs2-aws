@@ -1,9 +1,10 @@
 package fs2
 package aws
 
-import internal.Internal._
-import cats.effect.{IO, ContextShift}
+import cats.effect.{ContextShift, IO}
+import fs2.aws.internal.Internal._
 import org.scalatest.{FlatSpec, Matchers}
+
 import scala.concurrent.ExecutionContext
 
 class InternalSpec extends FlatSpec with Matchers {
