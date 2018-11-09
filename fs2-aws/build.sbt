@@ -1,0 +1,23 @@
+name := "fs2-aws"
+
+scalaVersion := "2.12.7"
+val fs2Version    = "1.0.0"
+val AwsSdkVersion = "1.11.427"
+val cirisVersion  = "0.11.0"
+
+libraryDependencies ++= Seq(
+  "co.fs2"        %% "fs2-core"                     % fs2Version,
+  "co.fs2"        %% "fs2-io"                       % fs2Version,
+  "org.typelevel" %% "alleycats-core"               % "1.4.0",
+  "com.amazonaws" % "aws-java-sdk"                  % AwsSdkVersion,
+  "com.amazonaws" % "amazon-kinesis-producer"       % "0.12.9",
+  "com.amazonaws" % "amazon-kinesis-client"         % "1.9.2",
+  "org.scalatest" %% "scalatest"                    % "3.0.4" % Test,
+  "org.mockito"   % "mockito-core"                  % "2.23.0" % Test,
+  "com.amazonaws" % "aws-java-sdk-sqs"              % AwsSdkVersion excludeAll ("commons-logging", "commons-logging"),
+  "com.amazonaws" % "amazon-sqs-java-messaging-lib" % "1.0.4" excludeAll ("commons-logging", "commons-logging"),
+  "is.cir"        %% "ciris-core"                   % cirisVersion,
+  "is.cir"        %% "ciris-enumeratum"             % cirisVersion,
+  "is.cir"        %% "ciris-refined"                % cirisVersion,
+  "eu.timepit"    %% "refined"                      % "0.9.2"
+)
