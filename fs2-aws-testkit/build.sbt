@@ -6,6 +6,6 @@ val AwsSdkVersion = "1.11.427"
 val cirisVersion  = "0.11.0"
 
 libraryDependencies ++= Seq(
-  "org.scalatest" %% "scalatest"                    % "3.0.4",
-  "org.mockito"   % "mockito-core"                  % "2.23.0"
+  "org.scalatest" %% "scalatest"   % "3.0.4",
+  "org.mockito"   % "mockito-core" % "2.23.0"
 )

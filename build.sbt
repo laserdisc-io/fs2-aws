@@ -16,7 +16,7 @@ scalacOptions in ThisBuild ++= Seq(
   "-Ypartial-unification" // allow the compiler to unify type constructors of different arities
 )
 
-lazy val `fs2-aws` = (project in file("fs2-aws")).settings(name := "fs2-aws")
+lazy val `fs2-aws`         = (project in file("fs2-aws")).settings(name := "fs2-aws")
 lazy val `fs2-aws-testkit` = (project in file("fs2-aws-testkit")).dependsOn(`fs2-aws`)
 
 addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.3")
