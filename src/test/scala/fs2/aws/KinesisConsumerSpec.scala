@@ -1,33 +1,40 @@
 package fs2
 package aws
-package kinesis
 
-import cats.effect.{IO, ContextShift, Timer}
-import org.scalatest.{FlatSpec, Matchers, BeforeAndAfterEach}
+import cats.effect.{ContextShift, IO, Timer}
+import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
 import org.scalatest.concurrent.Eventually
 import org.mockito.Mockito._
 import kinesis.kcl._
+
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
-
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.{
-  IRecordProcessorFactory,
-  IRecordProcessor
+  IRecordProcessor,
+  IRecordProcessorFactory
 }
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer
-import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{Worker, ShutdownReason}
+import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{ShutdownReason, Worker}
 import com.amazonaws.services.kinesis.clientlibrary.types._
 import com.amazonaws.services.kinesis.model.Record
-
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
 import org.mockito.Mockito._
-
 import java.util.Date
 import java.nio.ByteBuffer
 import java.util.concurrent.Semaphore
+
+import fs2.aws.kinesis.{
+  CommittableRecord,
+  KinesisCheckpointSettings,
+  KinesisStreamSettings,
+  RecordProcessor
+}
+
 import scala.concurrent.Future
 import scala.collection.JavaConverters._
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
 class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach with Eventually {
 

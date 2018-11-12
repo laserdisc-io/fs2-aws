@@ -14,7 +14,7 @@ import scala.collection.JavaConverters._
   *  @constructor create a new instance with a callback function to perform on record receive
   *  @param cb callback function to run on record receive, passing the new CommittableRecord
   */
-private[kinesis] class RecordProcessor(cb: CommittableRecord => Unit) extends v2.IRecordProcessor {
+private[aws] class RecordProcessor(cb: CommittableRecord => Unit) extends v2.IRecordProcessor {
   private var shardId: String                                  = _
   private var extendedSequenceNumber: ExtendedSequenceNumber   = _
   var shutdown: Option[ShutdownReason]                         = None

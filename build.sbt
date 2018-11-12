@@ -73,6 +73,8 @@ credentials += Credentials("Sonatype Nexus Repository Manager",
                            sys.env.getOrElse("SONATYPE_USERNAME", ""),
                            sys.env.getOrElse("SONATYPE_PASSWORD", ""))
 
+publishArtifact in Test := true
+
 // release steps
 releaseProcess := Seq[ReleaseStep](
   inquireVersions,
