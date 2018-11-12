@@ -59,7 +59,6 @@ class KinesisProducerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
 
     KinesisStub._data.size should be(1)
     KinesisStub._data.head should be(ByteBuffer.wrap("someData".getBytes))
-    res should be(Vector("someData" -> result))
   }
 
   "Publishing data to a Kinesis stream via writeToKinesis1_" should "successfully save data to the stream bypassing original payload" in new KinesisProducerTestContext {
