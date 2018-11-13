@@ -67,44 +67,48 @@ AWS credential chain and region can be configured by overriding the respective f
 ## SQS
 Example
 ```scala
+implicit val messageDecoder: Message => Either[Throwable, Quote] = { sqs_msg =>
+    io.circe.parser.decode[Quote](sqs_msg.asInstanceOf[TextMessage].getText)
+}
 fs2.aws
-      .sqsStream[IO, InventoryOverrideRule](
+      .sqsStream[IO, Quote](
         sqsConfig,
         (config, callback) => SQSConsumerBuilder(config, callback))
-      .through(pipes.rulePipe(xa, kinesisConfig))
+      .through(...)
       .compile
       .drain
       .as(ExitCode.Success)
 ```
 
 Testing
-```scala
+```scala 
 //create stream for testing
 def stream(deferedListener: Deferred[IO, MessageListener]) =
             aws.sqs.testkit
-              .sqsStream[IO, InventoryOverrideRule](deferedListener)
+              .sqsStream[IO, Quote](deferedListener)
               .through(...)
               .take(2)
               .compile
               .toList
+              
 //create the program for testing the stream               
-val program : IO[List[(ItemMaster, MessageListener)]] = for {
+import io.circe.syntax._
+import io.circe.generic.auto._
+val quote = Quote(...)
+val program : IO[List[(Quote, MessageListener)]] = for {
             d <- Deferred[IO, MessageListener]
             r <- IO.racePair(stream(d), d.get).flatMap {
               case Right((streamFiber, listener)) =>
-                listener.onMessage(new SQSTextMessage(Printer.noSpaces.pretty(skn2_rule.asJson)))
+                //simulate SQS stream fan-in here
+                listener.onMessage(new SQSTextMessage(Printer.noSpaces.pretty(quote.asJson)))
                 streamFiber.join
               case _ => IO(Nil)
             }
           } yield r
           
 //Assert results
-val sknToTuple = program
+val result = program
             .unsafeRunSync()
-            .groupBy { case (item, rule) => item.skn_no }
-            .mapValues(_.head)
-          sknToTuple.get(item_1.skn_no).map(_._2).value.guid should be(skn1_rule.guid)
-          sknToTuple.get(item_2.skn_no).map(_._2).value.guid should be(skn2_rule.guid) 
-   } 
+result should be(...)
 ```
-**TODO:** Stream get SQS messages, Stream send SQS messages
+**TODO:** Stream send SQS messages
