@@ -65,4 +65,50 @@ AWS credential chain and region can be configured by overriding the respective f
 **TODO:** Stream get data, Stream send data
 
 ## SQS
-**TODO:** Stream get SQS messages, Stream send SQS messages
+Example
+```scala
+implicit val messageDecoder: Message => Either[Throwable, Quote] = { sqs_msg =>
+    io.circe.parser.decode[Quote](sqs_msg.asInstanceOf[TextMessage].getText)
+}
+fs2.aws
+      .sqsStream[IO, Quote](
+        sqsConfig,
+        (config, callback) => SQSConsumerBuilder(config, callback))
+      .through(...)
+      .compile
+      .drain
+      .as(ExitCode.Success)
+```
+
+Testing
+```scala 
+//create stream for testing
+def stream(deferedListener: Deferred[IO, MessageListener]) =
+            aws.sqs.testkit
+              .sqsStream[IO, Quote](deferedListener)
+              .through(...)
+              .take(2)
+              .compile
+              .toList
+              
+//create the program for testing the stream               
+import io.circe.syntax._
+import io.circe.generic.auto._
+val quote = Quote(...)
+val program : IO[List[(Quote, MessageListener)]] = for {
+            d <- Deferred[IO, MessageListener]
+            r <- IO.racePair(stream(d), d.get).flatMap {
+              case Right((streamFiber, listener)) =>
+                //simulate SQS stream fan-in here
+                listener.onMessage(new SQSTextMessage(Printer.noSpaces.pretty(quote.asJson)))
+                streamFiber.join
+              case _ => IO(Nil)
+            }
+          } yield r
+          
+//Assert results
+val result = program
+            .unsafeRunSync()
+result should be(...)
+```
+**TODO:** Stream send SQS messages
