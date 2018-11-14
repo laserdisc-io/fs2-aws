@@ -85,7 +85,7 @@ Testing
 ```scala 
 //create stream for testing
 def stream(deferedListener: Deferred[IO, MessageListener]) =
-            aws.sqs.testkit
+            aws.testkit
               .sqsStream[IO, Quote](deferedListener)
               .through(...)
               .take(2)

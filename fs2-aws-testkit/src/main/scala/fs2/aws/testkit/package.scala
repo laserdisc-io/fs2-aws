@@ -1,7 +1,9 @@
-package fs2.aws.sqs
+package fs2.aws
+
 import cats.effect.ConcurrentEffect
 import cats.effect.concurrent.Deferred
 import eu.timepit.refined.auto._
+import fs2.aws.sqs.SqsConfig
 import javax.jms.{Message, MessageListener}
 
 package object testkit {
