@@ -30,15 +30,16 @@ addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.3")
 publishTo in ThisBuild := Some(
   "Sonatype Nexus" at "https://oss.sonatype.org/service/local/staging/deploy/maven2")
 
-licenses := Seq("MIT" -> url("https://github.com/dmateusp/fs2-aws/blob/master/LICENSE"))
-developers := List(
+licenses in ThisBuild := Seq(
+  "MIT" -> url("https://github.com/dmateusp/fs2-aws/blob/master/LICENSE"))
+developers in ThisBuild := List(
   Developer(id = "dmateusp",
             name = "Daniel Mateus Pires",
             email = "dmateusp@gmail.com",
             url = url("https://github.com/dmateusp"))
 )
-homepage := Some(url("https://github.com/dmateusp/fs2-aws"))
-scmInfo := Some(
+homepage in ThisBuild := Some(url("https://github.com/dmateusp/fs2-aws"))
+scmInfo in ThisBuild := Some(
   ScmInfo(url("https://github.com/dmateusp/fs2-aws"),
           "scm:git:git@github.com:dmateusp/fs2-aws.git"))
 
