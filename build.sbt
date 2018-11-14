@@ -51,10 +51,10 @@ pgpPublicRing := file(".travis/local.pubring.asc")
 pgpSecretRing := file(".travis/local.secring.asc")
 releasePublishArtifactsAction := PgpKeys.publishSigned.value
 pgpPassphrase := sys.env.get("PGP_PASS").map(_.toCharArray)
-credentials += Credentials("Sonatype Nexus Repository Manager",
-                           "oss.sonatype.org",
-                           sys.env.getOrElse("SONATYPE_USERNAME", ""),
-                           sys.env.getOrElse("SONATYPE_PASSWORD", ""))
+credentials in ThisBuild += Credentials("Sonatype Nexus Repository Manager",
+                                        "oss.sonatype.org",
+                                        sys.env.getOrElse("SONATYPE_USERNAME", ""),
+                                        sys.env.getOrElse("SONATYPE_PASSWORD", ""))
 
 publishArtifact in ThisBuild in Test := true
 
