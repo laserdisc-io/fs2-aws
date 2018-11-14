@@ -48,10 +48,10 @@ import ReleaseTransformations._
 
 // signed releases
 
-pgpPublicRing := file(".travis/local.pubring.asc")
-pgpSecretRing := file(".travis/local.secring.asc")
-releasePublishArtifactsAction := PgpKeys.publishSigned.value
-pgpPassphrase := sys.env.get("PGP_PASS").map(_.toCharArray)
+pgpPublicRing in ThisBuild := file(".travis/local.pubring.asc")
+pgpSecretRing in ThisBuild := file(".travis/local.secring.asc")
+releasePublishArtifactsAction in ThisBuild := PgpKeys.publishSigned.value
+pgpPassphrase in ThisBuild := sys.env.get("PGP_PASS").map(_.toCharArray)
 credentials in ThisBuild += Credentials("Sonatype Nexus Repository Manager",
                                         "oss.sonatype.org",
                                         sys.env.getOrElse("SONATYPE_USERNAME", ""),
