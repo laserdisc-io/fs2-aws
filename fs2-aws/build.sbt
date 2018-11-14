@@ -6,6 +6,11 @@ coverageFailOnMinimum := true
 
 scalaVersion := "2.12.7"
 
+pgpPublicRing := file("../.travis/local.pubring.asc")
+pgpSecretRing := file("../.travis/local.secring.asc")
+releasePublishArtifactsAction := PgpKeys.publishSigned.value
+pgpPassphrase := sys.env.get("PGP_PASS").map(_.toCharArray)
+
 val fs2Version    = "1.0.0"
 val AwsSdkVersion = "1.11.427"
 val cirisVersion  = "0.11.0"
