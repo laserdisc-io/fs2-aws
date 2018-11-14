@@ -15,15 +15,16 @@ scalacOptions in ThisBuild ++= Seq(
   "-Xfatal-warnings", // turn compiler warnings into errors
   "-Ypartial-unification" // allow the compiler to unify type constructors of different arities
 )
+lazy val root = (project in file("."))
+  .aggregate(`fs2-aws`, `fs2-aws-testkit`)
+  .settings(
+    skip in publish := true
+  )
 
-lazy val `fs2-aws`         = (project in file("fs2-aws")).settings(name := "fs2-aws")
+lazy val `fs2-aws`         = (project in file("fs2-aws"))
 lazy val `fs2-aws-testkit` = (project in file("fs2-aws-testkit")).dependsOn(`fs2-aws`)
 
 addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.3")
-
-// coverage
-coverageMinimum := 40
-coverageFailOnMinimum := true
 
 // publish
 publishTo in ThisBuild := Some(

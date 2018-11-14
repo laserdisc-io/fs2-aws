@@ -1,6 +1,11 @@
 name := "fs2-aws"
 
+// coverage
+coverageMinimum := 40
+coverageFailOnMinimum := true
+
 scalaVersion := "2.12.7"
+
 val fs2Version    = "1.0.0"
 val AwsSdkVersion = "1.11.427"
 val cirisVersion  = "0.11.0"
