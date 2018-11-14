@@ -1,5 +1,5 @@
 # fs2-aws
-[![Build Status](https://travis-ci.com/dmateusp/fs2-aws.svg?branch=master)](https://travis-ci.com/dmateusp/fs2-aws)
+[![Build Status](https://travis-ci.com/saksdirect/fs2-aws.svg?branch=master)](https://travis-ci.com/saksdirect/fs2-aws)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.dmateusp/fs2-aws_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.github.dmateusp/fs2-aws_2.12)
 [![Coverage Status](https://coveralls.io/repos/github/dmateusp/fs2-aws/badge.svg?branch=master)](https://coveralls.io/github/dmateusp/fs2-aws?branch=master)
 
