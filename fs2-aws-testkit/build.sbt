@@ -2,8 +2,8 @@ name := "fs2-aws-testkit"
 
 scalaVersion := "2.12.7"
 
-pgpPublicRing := file("../.travis/local.pubring.asc")
-pgpSecretRing := file("../.travis/local.secring.asc")
+pgpPublicRing := file(".travis/local.pubring.asc")
+pgpSecretRing := file(".travis/local.secring.asc")
 releasePublishArtifactsAction := PgpKeys.publishSigned.value
 pgpPassphrase := sys.env.get("PGP_PASS").map(_.toCharArray)
 
