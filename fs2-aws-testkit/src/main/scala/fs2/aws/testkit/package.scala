@@ -14,4 +14,6 @@ package object testkit {
                       (_: SqsConfig, _: MessageListener) => new TestSqsConsumerBuilder[F],
                       Some(d))
   }
+
+  val TestRecordProcessor = new kinesis.RecordProcessor(_ => ())
 }
