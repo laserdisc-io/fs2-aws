@@ -41,6 +41,27 @@ val stream: Stream[IO, CommittableRecord] = readFromKinesisStream[IO]("appName",
 
 There are a number of other stream constructors available where you can provide more specific configuration for the KCL worker.
 
+#### Testing
+TODO: Implement better test consumer
+
+For now, you can stubbed CommitableRecord and create a fs2.Stream to emit these records:
+```scala
+val record = new Record()
+  .withApproximateArrivalTimestamp(new Date())
+  .withEncryptionType("encryption")
+  .withPartitionKey("partitionKey")
+  .withSequenceNumber("sequenceNum")
+  .withData(ByteBuffer.wrap("test".getBytes))
+
+val testRecord = CommittableRecord(
+  "shardId0",
+  mock[ExtendedSequenceNumber],
+  0L,
+  record,
+  mock[RecordProcessor],
+  mock[IRecordProcessorCheckpointer])
+```
+
 #### Checkpointing records
 Records must be checkpointed in Kinesis to keep track of which messages each consumer has received. Checkpointing a record in the KCL will automatically checkpoint all records upto that record. To checkpoint records, a Pipe and Sink are available. To help distinguish whether a record has been checkpointed or not, a CommittableRecord class exists to denote a record that hasn't been checkpointed, while the base Record class denotes a commited record.
 
