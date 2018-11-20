@@ -1,26 +1,53 @@
 sudo: false
-before_cache:
-- find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
-- find $HOME/.sbt        -name "*.lock"               -print -delete
-cache:
-  directories:
-  - "$HOME/.ivy2/cache"
-  - "$HOME/.sbt"
+
 language: scala
+
 jdk: oraclejdk8
+
 scala:
-- 2.12.7
-script:
-- sbt ++$TRAVIS_SCALA_VERSION clean coverage test scalafmtCheck scalafmtSbtCheck
-after_success:
-- sbt ++$TRAVIS_SCALA_VERSION coverageReport coveralls
-- if [ $TRAVIS_PULL_REQUEST = 'false' ]; then sbt ++$TRAVIS_SCALA_VERSION releaseEarly;
-  fi
-before_install:
-- if [ -n "${TRAVIS_TAG}" && $TRAVIS_PULL_REQUEST = 'false' ]; then openssl aes-256-cbc -K $encrypted_dcc5d8de5fcf_key
-  -iv $encrypted_dcc5d8de5fcf_iv -in travis/secrets.tar.enc -out travis/local.secrets.tar
-  -d; tar xv -C travis -f travis/secrets.tar; fi
+  - 2.12.7
+
 branches:
   only:
-  - master
-  - /^v.*$/
+    - master
+
+script:
+  - sbt ++$TRAVIS_SCALA_VERSION clean coverage test scalafmtCheck scalafmtSbtCheck
+
+after_success:
+  - sbt ++$TRAVIS_SCALA_VERSION coverageReport coveralls
+
+before_deploy:
+  # unencrypt creds
+  - openssl aes-256-cbc
+      -K $encrypted_dcc5d8de5fcf_key -iv $encrypted_dcc5d8de5fcf_iv
+      -in .travis/secrets.tar.enc -out .travis/local.secrets.tar -d;
+      tar xv -C .travis -f .travis/local.secrets.tar
+  # set up GitHub deployment ssh
+  - declare -r TMP_GITHUB_SSH="$(mktemp -u $HOME/.ssh/XXXXX)";
+      cp .travis/local.github_deploy_key $TMP_GITHUB_SSH;
+      chmod 600 "$TMP_GITHUB_SSH"
+       && printf "%s\n"
+            "Host github.com"
+            "  IdentityFile $TMP_GITHUB_SSH"
+            "  LogLevel ERROR" >> ~/.ssh/config
+  # use GitHub ssh repo
+  - git remote set-url origin git@github.com:dmateusp/fs2-aws.git
+
+deploy:
+  - provider: script
+    skip_cleanup: true
+    script:
+      - git checkout master;
+          sbt ++$TRAVIS_SCALA_VERSION "release with-defaults"
+    on:
+      branch: master
+
+before_cache:
+  - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
+  - find $HOME/.sbt        -name "*.lock"               -print -delete
+
+cache:
+  directories:
+    - "$HOME/.ivy2/cache"
+    - "$HOME/.sbt"
