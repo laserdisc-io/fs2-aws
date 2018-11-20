@@ -1,9 +1,9 @@
 name := "fs2-aws"
-organization := "io.github"
+organization in ThisBuild := "io.github.dmateusp"
 
 scalaVersion := "2.12.7"
 
-scalacOptions ++= Seq(
+scalacOptions in ThisBuild ++= Seq(
   "-encoding",
   "UTF-8", // source files are in UTF-8
   "-deprecation", // warn about use of deprecated APIs
@@ -15,40 +15,59 @@ scalacOptions ++= Seq(
   "-Xfatal-warnings", // turn compiler warnings into errors
   "-Ypartial-unification" // allow the compiler to unify type constructors of different arities
 )
+lazy val root = (project in file("."))
+  .aggregate(`fs2-aws`, `fs2-aws-testkit`)
+  .settings(
+    skip in publish := true
+  )
 
-val fs2Version = "1.0.0"
-
-libraryDependencies ++= Seq(
-  "co.fs2"        %% "fs2-core"               % fs2Version,
-  "co.fs2"        %% "fs2-io"                 % fs2Version,
-  "org.typelevel" %% "alleycats-core"         % "1.4.0",
-  "com.amazonaws" % "aws-java-sdk"            % "1.11.427",
-  "com.amazonaws" % "amazon-kinesis-producer" % "0.12.9",
-  "com.amazonaws" % "amazon-kinesis-client"   % "1.9.2",
-  "org.scalatest" %% "scalatest"              % "3.0.4" % Test,
-  "org.mockito"   % "mockito-core"            % "2.23.0" % Test
-)
+lazy val `fs2-aws`         = (project in file("fs2-aws"))
+lazy val `fs2-aws-testkit` = (project in file("fs2-aws-testkit")).dependsOn(`fs2-aws`)
 
 addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.3")
 
-// coverage
-coverageMinimum := 40
-coverageFailOnMinimum := true
+// publish
+publishTo in ThisBuild := Some(
+  "Sonatype Nexus" at "https://oss.sonatype.org/service/local/staging/deploy/maven2")
 
-// sonatype
-licenses := Seq("MIT" -> url("https://github.com/dmateusp/fs2-aws/blob/master/LICENSE"))
-developers := List(
+licenses in ThisBuild := Seq(
+  "MIT" -> url("https://github.com/dmateusp/fs2-aws/blob/master/LICENSE"))
+developers in ThisBuild := List(
   Developer(id = "dmateusp",
             name = "Daniel Mateus Pires",
             email = "dmateusp@gmail.com",
             url = url("https://github.com/dmateusp"))
 )
-homepage := Some(url("https://github.com/dmateusp/fs2-aws"))
-scmInfo := Some(
+homepage in ThisBuild := Some(url("https://github.com/dmateusp/fs2-aws"))
+scmInfo in ThisBuild := Some(
   ScmInfo(url("https://github.com/dmateusp/fs2-aws"),
           "scm:git:git@github.com:dmateusp/fs2-aws.git"))
 
-// These are the sbt-release-early settings to configure
-pgpPublicRing := file("./travis/local.pubring.asc")
-pgpSecretRing := file("./travis/local.secring.asc")
-releaseEarlyWith := SonatypePublisher
+// release
+import ReleaseTransformations._
+
+// signed releases
+
+pgpPublicRing in ThisBuild := file(".travis/local.pubring.asc")
+pgpSecretRing in ThisBuild := file(".travis/local.secring.asc")
+releasePublishArtifactsAction in ThisBuild := PgpKeys.publishSigned.value
+pgpPassphrase in ThisBuild := sys.env.get("PGP_PASS").map(_.toCharArray)
+credentials in ThisBuild += Credentials("Sonatype Nexus Repository Manager",
+                                        "oss.sonatype.org",
+                                        sys.env.getOrElse("SONATYPE_USERNAME", ""),
+                                        sys.env.getOrElse("SONATYPE_PASSWORD", ""))
+
+publishArtifact in ThisBuild in Test := true
+
+// release steps
+releaseProcess := Seq[ReleaseStep](
+  inquireVersions,
+  setReleaseVersion,
+  commitReleaseVersion,
+  tagRelease,
+  publishArtifacts,
+  pushChanges
+)
+
+releaseTagComment := s"Releasing ${(version in ThisBuild).value}"
+releaseCommitMessage := s"[skip travis] Setting version to ${(version in ThisBuild).value}"
