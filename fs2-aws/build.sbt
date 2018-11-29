@@ -25,7 +25,7 @@ libraryDependencies ++= Seq(
   "com.amazonaws" % "amazon-kinesis-producer"       % "0.12.9",
   "com.amazonaws" % "amazon-kinesis-client"         % "1.9.2",
   "org.scalatest" %% "scalatest"                    % "3.0.5" % Test,
-  "org.mockito"   % "mockito-core"                  % "2.23.0" % Test,
+  "org.mockito"   % "mockito-core"                  % "2.23.4" % Test,
   "com.amazonaws" % "aws-java-sdk-sqs"              % AwsSdkVersion excludeAll ("commons-logging", "commons-logging"),
   "com.amazonaws" % "amazon-sqs-java-messaging-lib" % "1.0.4" excludeAll ("commons-logging", "commons-logging"),
   "is.cir"        %% "ciris-core"                   % cirisVersion,
