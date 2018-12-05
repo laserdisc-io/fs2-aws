@@ -3,12 +3,13 @@ package aws
 
 import java.io.{ByteArrayInputStream, InputStream}
 
-import cats.effect.Effect
+import cats.effect.{ContextShift, Effect}
 import cats.implicits._
 import com.amazonaws.services.s3.model._
 import fs2.aws.internal.Internal._
 
 import scala.collection.JavaConverters._
+import scala.concurrent.ExecutionContext
 
 package object s3 {
   def readS3FileMultipart[F[_]](
@@ -18,10 +19,11 @@ package object s3 {
       s3Client: S3Client[F] = new S3Client[F] {})(implicit F: Effect[F]): fs2.Stream[F, Byte] = {
     def go(offset: Int)(implicit F: Effect[F]): fs2.Pull[F, Byte, Unit] =
       fs2.Pull
-        .acquire[F, Either[Throwable, S3ObjectInputStream]](s3Client.getObjectContent(
+        .acquire[F, Either[Throwable, S3ObjectInputStream]](s3Client.getObjectContentOrError(
           new GetObjectRequest(bucket, key).withRange(offset, offset + chunkSize))) {
-          case Left(_)  => F.delay(() => ())
-          case Right(s) => F.delay(s.abort())
+          //todo: properly log the error
+          case Left(e)  => F.delay(() => e.printStackTrace())
+          case Right(s) => F.delay(s.close())
         }
         .flatMap {
           case Right(s3_is) =>
@@ -29,7 +31,7 @@ package object s3 {
               val is: InputStream = s3_is
               val buf             = new Array[Byte](chunkSize)
               val len             = is.read(buf)
-              Some(Chunk.bytes(buf, 0, len))
+              if (len < 0) None else Some(Chunk.bytes(buf, 0, len))
             })
           case Left(_) => fs2.Pull.eval(F.delay(None))
         }
@@ -40,6 +42,17 @@ package object s3 {
 
     go(0).stream
 
+  }
+
+  def readS3File[F[_]](bucket: String,
+                       key: String,
+                       s3Client: S3Client[F] = new S3Client[F] {},
+                       blockingEC: ExecutionContext)(implicit F: Effect[F],
+                                                     cs: ContextShift[F]): fs2.Stream[F, Byte] = {
+    _root_.fs2.io.readInputStream[F](s3Client.getObjectContent(new GetObjectRequest(bucket, key)),
+                                     chunkSize = 8192,
+                                     blockingExecutionContext = blockingEC,
+                                     closeAfterUse = true)
   }
 
   def uploadS3FileMultipart[F[_]](
