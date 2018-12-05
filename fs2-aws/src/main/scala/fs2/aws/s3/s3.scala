@@ -58,6 +58,7 @@ package object s3 {
                   .withKey(key)
                   .withUploadId(uploadId)
                   .withPartNumber(i.toInt)
+                  .withPartSize(c.size)
                   .withInputStream(new ByteArrayInputStream(c.toArray)))
               .flatMap(r => F.delay(r.getPartETag)))
       })
