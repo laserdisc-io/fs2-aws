@@ -82,7 +82,7 @@ package object s3 {
           .eval(mui)
           .flatMap(
             m =>
-              in.chunks.zipWithIndex
+              in.chunks.zip(Stream.iterate(1L)(_ + 1))
                 .through(uploadPart(m.uploadId))
                 .fold[List[PartETag]](List())(_ :+ _)
                 .to(completeUpload(m.uploadId)))
