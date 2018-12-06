@@ -1,5 +1,4 @@
-package fs2
-package aws
+package fs2.aws
 
 import cats.effect.IO
 import fs2.aws.s3._
