@@ -2,6 +2,7 @@ package fs2
 package aws
 package internal
 
+import java.io.InputStream
 import java.nio.ByteBuffer
 
 import fs2.concurrent.Queue
@@ -26,9 +27,13 @@ object Internal {
   private[aws] trait S3Client[F[_]] {
     private lazy val client = AmazonS3ClientBuilder.defaultClient
 
-    def getObjectContent(getObjectRequest: GetObjectRequest)(
-        implicit F: Effect[F]): F[Either[Throwable, S3ObjectInputStream]] =
+    def getObjectContentOrError(getObjectRequest: GetObjectRequest)(
+        implicit F: Effect[F]): F[Either[Throwable, InputStream]] =
       F.delay(Exception.nonFatalCatch either client.getObject(getObjectRequest).getObjectContent)
+
+    def getObjectContent(getObjectRequest: GetObjectRequest)(
+        implicit F: Effect[F]): F[InputStream] =
+      F.delay(client.getObject(getObjectRequest).getObjectContent)
 
     def initiateMultipartUpload(initiateMultipartUploadRequest: InitiateMultipartUploadRequest)(
         implicit F: Effect[F]): F[InitiateMultipartUploadResult] =
