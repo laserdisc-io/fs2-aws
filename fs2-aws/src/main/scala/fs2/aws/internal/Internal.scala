@@ -28,7 +28,7 @@ object Internal {
     private lazy val client = AmazonS3ClientBuilder.defaultClient
 
     def getObjectContentOrError(getObjectRequest: GetObjectRequest)(
-        implicit F: Effect[F]): F[Either[Throwable, S3ObjectInputStream]] =
+        implicit F: Effect[F]): F[Either[Throwable, InputStream]] =
       F.delay(Exception.nonFatalCatch either client.getObject(getObjectRequest).getObjectContent)
 
     def getObjectContent(getObjectRequest: GetObjectRequest)(

@@ -19,7 +19,7 @@ package object s3 {
       s3Client: S3Client[F] = new S3Client[F] {})(implicit F: Effect[F]): fs2.Stream[F, Byte] = {
     def go(offset: Int)(implicit F: Effect[F]): fs2.Pull[F, Byte, Unit] =
       fs2.Pull
-        .acquire[F, Either[Throwable, S3ObjectInputStream]](s3Client.getObjectContentOrError(
+        .acquire[F, Either[Throwable, InputStream]](s3Client.getObjectContentOrError(
           new GetObjectRequest(bucket, key).withRange(offset, offset + chunkSize))) {
           //todo: properly log the error
           case Left(e)  => F.delay(() => e.printStackTrace())
@@ -46,9 +46,10 @@ package object s3 {
 
   def readS3File[F[_]](bucket: String,
                        key: String,
-                       s3Client: S3Client[F] = new S3Client[F] {},
-                       blockingEC: ExecutionContext)(implicit F: Effect[F],
-                                                     cs: ContextShift[F]): fs2.Stream[F, Byte] = {
+                       blockingEC: ExecutionContext,
+                       s3Client: S3Client[F] = new S3Client[F] {})(
+      implicit F: Effect[F],
+      cs: ContextShift[F]): fs2.Stream[F, Byte] = {
     _root_.fs2.io.readInputStream[F](s3Client.getObjectContent(new GetObjectRequest(bucket, key)),
                                      chunkSize = 8192,
                                      blockingExecutionContext = blockingEC,
