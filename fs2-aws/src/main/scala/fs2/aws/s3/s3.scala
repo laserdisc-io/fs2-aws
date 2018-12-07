@@ -1,7 +1,8 @@
 package fs2
 package aws
 
-import java.io.{ByteArrayInputStream, InputStream}
+import java.io.{BufferedReader, ByteArrayInputStream, InputStream, InputStreamReader}
+import java.util.Date
 
 import cats.effect.{ContextShift, Effect}
 import cats.implicits._
@@ -83,25 +84,50 @@ package object s3 {
           fs2.Stream.eval_(s3Client.completeMultipartUpload(
             new CompleteMultipartUploadRequest(bucket, key, uploadId, parts.asJava))))
 
-    in =>
-      {
-        val imuF: F[InitiateMultipartUploadResult] = objectMetadata match {
-          case Some(o) =>
-            s3Client.initiateMultipartUpload(new InitiateMultipartUploadRequest(bucket, key, o))
-          case None =>
-            s3Client.initiateMultipartUpload(new InitiateMultipartUploadRequest(bucket, key))
+    in => {
+      val imuF: F[InitiateMultipartUploadResult] = objectMetadata match {
+        case Some(o) =>
+          s3Client.initiateMultipartUpload(new InitiateMultipartUploadRequest(bucket, key, o))
+        case None =>
+          s3Client.initiateMultipartUpload(new InitiateMultipartUploadRequest(bucket, key))
+      }
+      val mui: F[MultiPartUploadInfo] =
+        imuF.flatMap(imu => F.pure(MultiPartUploadInfo(imu.getUploadId, List())))
+      fs2.Stream
+        .eval(mui)
+        .flatMap(
+          m =>
+            in.chunks
+              .zip(Stream.iterate(1L)(_ + 1))
+              .through(uploadPart(m.uploadId))
+              .fold[List[PartETag]](List())(_ :+ _)
+              .to(completeUpload(m.uploadId)))
+    }
+  }
+
+  def listObjectSummaries[F[_]](bucketName: String, s3Client: S3Client[F] = new S3Client[F] {})(
+      implicit F: Effect[F]): F[List[S3ObjectSummary]] = {
+    //TODO when bucket does not exist
+    //TODO when result is empty
+    val req = new ListObjectsV2Request().withBucketName(bucketName)
+    s3Client.s3ObjectSummaries(req)
+  }
+
+  def streamFilesAfter[F[_]](
+      bucketName: String,
+      date: Date,
+      s3Client: S3Client[F] = new S3Client[F] {})(implicit F: Effect[F]): F[List[String]] = {
+    val filesF = listObjectSummaries(bucketName)
+
+      filesF
+      .map(_.filter(_.getLastModified.after(date)).map(_.getKey))
+      .flatMap {
+        _.traverse { fileName =>
+          s3Client.getObject(new GetObjectRequest(bucketName, fileName)).map { obj =>
+            val br = new BufferedReader(new InputStreamReader(obj.getObjectContent))
+            scala.Stream.continually(br.readLine()).takeWhile(_ != null).mkString("\n")
+          }
         }
-        val mui: F[MultiPartUploadInfo] =
-          imuF.flatMap(imu => F.pure(MultiPartUploadInfo(imu.getUploadId, List())))
-        fs2.Stream
-          .eval(mui)
-          .flatMap(
-            m =>
-              in.chunks
-                .zip(Stream.iterate(1L)(_ + 1))
-                .through(uploadPart(m.uploadId))
-                .fold[List[PartETag]](List())(_ :+ _)
-                .to(completeUpload(m.uploadId)))
       }
   }
 }
