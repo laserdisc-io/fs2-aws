@@ -105,29 +105,9 @@ package object s3 {
     }
   }
 
-  def listObjectSummaries[F[_]](bucketName: String, s3Client: S3Client[F] = new S3Client[F] {})(
+  def listFiles[F[_]](bucketName: String, s3Client: S3Client[F] = new S3Client[F] {})(
       implicit F: Effect[F]): F[List[S3ObjectSummary]] = {
-    //TODO when bucket does not exist
-    //TODO when result is empty
     val req = new ListObjectsV2Request().withBucketName(bucketName)
     s3Client.s3ObjectSummaries(req)
-  }
-
-  def streamFilesAfter[F[_]](
-      bucketName: String,
-      date: Date,
-      s3Client: S3Client[F] = new S3Client[F] {})(implicit F: Effect[F]): F[List[String]] = {
-    val filesF = listObjectSummaries(bucketName)
-
-      filesF
-      .map(_.filter(_.getLastModified.after(date)).map(_.getKey))
-      .flatMap {
-        _.traverse { fileName =>
-          s3Client.getObject(new GetObjectRequest(bucketName, fileName)).map { obj =>
-            val br = new BufferedReader(new InputStreamReader(obj.getObjectContent))
-            scala.Stream.continually(br.readLine()).takeWhile(_ != null).mkString("\n")
-          }
-        }
-      }
   }
 }
