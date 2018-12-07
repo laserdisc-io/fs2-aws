@@ -104,4 +104,10 @@ package object s3 {
                 .to(completeUpload(m.uploadId)))
       }
   }
+
+  def listFiles[F[_]](bucketName: String, s3Client: S3Client[F] = new S3Client[F] {})(
+      implicit F: Effect[F]): Stream[F, List[S3ObjectSummary]] = {
+    val req = new ListObjectsV2Request().withBucketName(bucketName)
+    fs2.Stream.eval(s3Client.s3ObjectSummaries(req))
+  }
 }
