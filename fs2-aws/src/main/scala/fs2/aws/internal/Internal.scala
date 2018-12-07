@@ -11,7 +11,11 @@ import cats.effect.{Concurrent, Effect}
 import cats.effect.concurrent.Ref
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.model._
-import com.amazonaws.services.kinesis.producer.{KinesisProducer, KinesisProducerConfiguration, UserRecordResult}
+import com.amazonaws.services.kinesis.producer.{
+  KinesisProducer,
+  KinesisProducerConfiguration,
+  UserRecordResult
+}
 import com.amazonaws.auth.{AWSCredentialsProviderChain, DefaultAWSCredentialsProviderChain}
 import com.google.common.util.concurrent.ListenableFuture
 import fs2.aws.kinesis.Producer
@@ -44,7 +48,8 @@ object Internal {
         implicit F: Effect[F]): F[CompleteMultipartUploadResult] =
       F.delay(client.completeMultipartUpload(completeMultipartUploadRequest))
 
-    def s3ObjectSummaries(listObjectsV2Request: ListObjectsV2Request)(implicit F: Effect[F]): F[List[S3ObjectSummary]] =
+    def s3ObjectSummaries(listObjectsV2Request: ListObjectsV2Request)(
+        implicit F: Effect[F]): F[List[S3ObjectSummary]] =
       F.delay(client.listObjectsV2(listObjectsV2Request).getObjectSummaries.asScala.toList)
 
     def getObject(objectRequest: GetObjectRequest)(implicit F: Effect[F]): F[S3Object] = {

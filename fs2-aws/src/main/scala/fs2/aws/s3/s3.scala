@@ -1,8 +1,7 @@
 package fs2
 package aws
 
-import java.io.{BufferedReader, ByteArrayInputStream, InputStream, InputStreamReader}
-import java.util.Date
+import java.io.{ByteArrayInputStream, InputStream}
 
 import cats.effect.{ContextShift, Effect}
 import cats.implicits._
@@ -84,25 +83,26 @@ package object s3 {
           fs2.Stream.eval_(s3Client.completeMultipartUpload(
             new CompleteMultipartUploadRequest(bucket, key, uploadId, parts.asJava))))
 
-    in => {
-      val imuF: F[InitiateMultipartUploadResult] = objectMetadata match {
-        case Some(o) =>
-          s3Client.initiateMultipartUpload(new InitiateMultipartUploadRequest(bucket, key, o))
-        case None =>
-          s3Client.initiateMultipartUpload(new InitiateMultipartUploadRequest(bucket, key))
+    in =>
+      {
+        val imuF: F[InitiateMultipartUploadResult] = objectMetadata match {
+          case Some(o) =>
+            s3Client.initiateMultipartUpload(new InitiateMultipartUploadRequest(bucket, key, o))
+          case None =>
+            s3Client.initiateMultipartUpload(new InitiateMultipartUploadRequest(bucket, key))
+        }
+        val mui: F[MultiPartUploadInfo] =
+          imuF.flatMap(imu => F.pure(MultiPartUploadInfo(imu.getUploadId, List())))
+        fs2.Stream
+          .eval(mui)
+          .flatMap(
+            m =>
+              in.chunks
+                .zip(Stream.iterate(1L)(_ + 1))
+                .through(uploadPart(m.uploadId))
+                .fold[List[PartETag]](List())(_ :+ _)
+                .to(completeUpload(m.uploadId)))
       }
-      val mui: F[MultiPartUploadInfo] =
-        imuF.flatMap(imu => F.pure(MultiPartUploadInfo(imu.getUploadId, List())))
-      fs2.Stream
-        .eval(mui)
-        .flatMap(
-          m =>
-            in.chunks
-              .zip(Stream.iterate(1L)(_ + 1))
-              .through(uploadPart(m.uploadId))
-              .fold[List[PartETag]](List())(_ :+ _)
-              .to(completeUpload(m.uploadId)))
-    }
   }
 
   def listFiles[F[_]](bucketName: String, s3Client: S3Client[F] = new S3Client[F] {})(
