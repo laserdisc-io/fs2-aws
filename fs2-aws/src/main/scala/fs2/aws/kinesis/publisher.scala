@@ -21,11 +21,13 @@ package object publisher {
     *
     * @tparam F effect type of the stream
     * @param streamName the name of the Kinesis stream to write to
+    * @param parallelism number of concurrent writes to race simultaneously
     * @param producer   kinesis producer client to use
     * @return a Pipe that accepts a tuple consisting of the partition key string and a ByteBuffer of data  and returns UserRecordResults
     */
   def writeToKinesis[F[_]](
       streamName: String,
+      parallelism: Int = 10,
       producer: Producer[F] = new KinesisProducerClient[F]
   )(implicit F: Effect[F],
     ec: ExecutionContext,
@@ -40,7 +42,7 @@ package object publisher {
 
     // Register the returned future, returning the UserRecordResult
     def registerCallback: fs2.Pipe[F, ListenableFuture[UserRecordResult], UserRecordResult] =
-      _.mapAsync(1) {
+      _.mapAsync(parallelism) {
         case f =>
           Effect[F].async[UserRecordResult] { cb =>
             Futures.addCallback(
@@ -64,48 +66,27 @@ package object publisher {
     * @tparam F effect type of the stream
     * @tparam I type of payload
     * @param streamName the name of the Kinesis stream to write to
+    * @param parallelism number of concurrent writes to race simultaneously
     * @param producer   kinesis producer client to use
     * @param encoder implicit I => ByteBuffer encoder
     * @return a Pipe that accepts a tuple consisting of the partition key string and a ByteBuffer of data  and returns UserRecordResults
     */
   def writeObjectToKinesis[F[_], I](
       streamName: String,
+      parallelism: Int = 10,
       producer: Producer[F] = new KinesisProducerClient[F]
   )(implicit F: Effect[F] with Monad[F],
     ec: ExecutionContext,
     concurrent: Concurrent[F],
     encoder: I => ByteBuffer): fs2.Pipe[F, (String, I), (I, UserRecordResult)] = {
 
-    // Evaluate the operation of invoking the Kinesis client
-    def write: fs2.Pipe[F, (String, I), (I, ListenableFuture[UserRecordResult])] =
-      _.flatMap {
-        case (partitionKey, payload) =>
-          fs2.Stream
-            .eval(producer.putData(streamName, partitionKey, encoder(payload)))
-            .map(payload -> _)
-      }
-
-    // Register the returned future, returning the UserRecordResult
-    def registerCallback
-      : fs2.Pipe[F, (I, ListenableFuture[UserRecordResult]), (I, UserRecordResult)] =
-      _.mapAsync(1) {
-        case (payload, future) =>
-          Effect[F].async[(I, UserRecordResult)] { cb =>
-            Futures.addCallback(
-              future,
-              new FutureCallback[UserRecordResult] {
-                override def onFailure(t: Throwable): Unit = cb(Left(t))
-
-                override def onSuccess(result: UserRecordResult): Unit =
-                  cb(Right(payload -> result))
-              },
-              (command: Runnable) => ec.execute(command)
-            )
-          }
-      }
-
-    _.through(write)
-      .through(registerCallback)
+    _.flatMap {
+      case (key, i) =>
+        fs2
+          .Stream((key, encoder(i)))
+          .through(writeToKinesis(streamName, parallelism, producer))
+          .map(i -> _)
+    }
   }
 
   /** Writes the bytestream to a Kinesis stream via a Sink
@@ -118,11 +99,12 @@ package object publisher {
     */
   def writeToKinesis_[F[_]](
       streamName: String,
+      parallelism: Int = 10,
       producer: Producer[F] = new KinesisProducerClient[F]
   )(implicit F: Effect[F],
     ec: ExecutionContext,
     concurrent: Concurrent[F]): fs2.Sink[F, (String, ByteBuffer)] = {
-    _.through(writeToKinesis(streamName, producer))
+    _.through(writeToKinesis(streamName, parallelism, producer))
       .map(_ => ())
   }
 }
