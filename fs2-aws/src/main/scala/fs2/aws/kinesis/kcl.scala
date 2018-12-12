@@ -116,17 +116,19 @@ package object kcl {
   )(implicit F: ConcurrentEffect[F], timer: Timer[F]): fs2.Pipe[F, CommittableRecord, Record] = {
     _.through(groupBy(r => F.delay(r.shardId))).map {
       case (k, st) =>
-        st.tupleLeft(k)
-          .groupWithin(checkpointSettings.maxBatchSize, checkpointSettings.maxBatchWait)
+        st.groupWithin(checkpointSettings.maxBatchSize, checkpointSettings.maxBatchWait)
           .map(_.toList.max)
           .mapAsync(parallelism) { cr =>
-            F.async[Record](
-              _ =>
-                if (cr._2.canCheckpoint)
-                  Right(cr._2.checkpoint)
-                else
+            F.async[Record] { cb =>
+              if (cr.canCheckpoint) {
+                cr.checkpoint
+                cb(Right(cr.record))
+              } else {
+                cb(
                   Left(new KinesisCheckpointException(
                     "Record processor has been shutdown and therefore cannot checkpoint records")))
+              }
+            }
           }
     }.parJoinUnbounded
   }
