@@ -3,6 +3,7 @@ package aws
 
 import cats.effect.{ContextShift, IO, Timer}
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
+import org.scalatest.time._
 import org.scalatest.concurrent.Eventually
 import org.mockito.Mockito._
 import kinesis.kcl._
@@ -41,6 +42,9 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
   implicit val ec: ExecutionContext             = ExecutionContext.global
   implicit val timer: Timer[IO]                 = IO.timer(ec)
   implicit val ioContextShift: ContextShift[IO] = IO.contextShift(ec)
+
+  implicit override val patienceConfig =
+    PatienceConfig(timeout = scaled(Span(2, Seconds)), interval = scaled(Span(5, Millis)))
 
   "KinesisWorker source" should "successfully read data from the Kinesis stream" in new WorkerContext
   with TestData {
