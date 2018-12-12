@@ -111,14 +111,15 @@ package object kcl {
     *  @return a stream of Record types representing checkpointed messages
     */
   def checkpointRecords[F[_]](
-      checkpointSettings: KinesisCheckpointSettings = KinesisCheckpointSettings.defaultInstance
+      checkpointSettings: KinesisCheckpointSettings = KinesisCheckpointSettings.defaultInstance,
+      parallelism: Int = 10
   )(implicit F: ConcurrentEffect[F], timer: Timer[F]): fs2.Pipe[F, CommittableRecord, Record] = {
     _.through(groupBy(r => F.delay(r.shardId))).map {
       case (k, st) =>
         st.tupleLeft(k)
           .groupWithin(checkpointSettings.maxBatchSize, checkpointSettings.maxBatchWait)
           .map(_.toList.max)
-          .mapAsync(1) { cr =>
+          .mapAsync(parallelism) { cr =>
             F.async[Record](
               _ =>
                 if (cr._2.canCheckpoint)
