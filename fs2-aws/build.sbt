@@ -11,7 +11,7 @@ pgpSecretRing := file(".travis/local.secring.asc")
 releasePublishArtifactsAction := PgpKeys.publishSigned.value
 pgpPassphrase := sys.env.get("PGP_PASS").map(_.toCharArray)
 
-val fs2Version    = "1.0.0"
+val fs2Version    = "1.0.2"
 val AwsSdkVersion = "1.11.456"
 val cirisVersion  = "0.11.0"
 
