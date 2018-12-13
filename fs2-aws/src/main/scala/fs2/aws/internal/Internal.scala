@@ -60,7 +60,7 @@ object Internal {
 
   private[aws] case class MultiPartUploadInfo(uploadId: String, partETags: List[PartETag])
 
-  final class KinesisProducerClient[F[_]] extends Producer[F] {
+  class KinesisProducerClient[F[_]] extends Producer[F] {
 
     val credentials: AWSCredentialsProviderChain = new DefaultAWSCredentialsProviderChain()
     val region: Option[String]                   = None
