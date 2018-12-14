@@ -65,10 +65,13 @@ object Internal {
     val credentials: AWSCredentialsProviderChain = new DefaultAWSCredentialsProviderChain()
     val region: Option[String]                   = None
 
-    private lazy val config: KinesisProducerConfiguration = new KinesisProducerConfiguration()
-      .setCredentialsProvider(credentials)
+    private lazy val config: KinesisProducerConfiguration = {
+      val c = new KinesisProducerConfiguration()
+        .setCredentialsProvider(credentials)
 
-    region.map(r => config.setRegion(r))
+      region.map(r => c.setRegion(r))
+      c
+    }
 
     private lazy val client = new KinesisProducer(config)
 
