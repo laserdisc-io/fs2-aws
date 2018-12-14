@@ -106,8 +106,8 @@ package object s3 {
   }
 
   def listFiles[F[_]](bucketName: String, s3Client: S3Client[F] = new S3Client[F] {})(
-      implicit F: Effect[F]): Stream[F, List[S3ObjectSummary]] = {
+      implicit F: Effect[F]): Stream[F, S3ObjectSummary] = {
     val req = new ListObjectsV2Request().withBucketName(bucketName)
-    fs2.Stream.eval(s3Client.s3ObjectSummaries(req))
+    fs2.Stream.eval(s3Client.s3ObjectSummaries(req)).flatMap(list => fs2.Stream.emits(list))
   }
 }
