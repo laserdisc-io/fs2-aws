@@ -86,7 +86,9 @@ package object kcl {
         new IRecordProcessorFactory {
           override def createProcessor() =
             new RecordProcessor(
-              record => F.runAsync(queue.enqueue1(record))(_ => IO.unit).unsafeRunSync)
+              record => F.runAsync(queue.enqueue1(record))(_ => IO.unit).unsafeRunSync,
+              streamConfig.terminateGracePeriod
+            )
         }
       )
     }

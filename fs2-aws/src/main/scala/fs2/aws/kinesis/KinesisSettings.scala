@@ -9,7 +9,10 @@ import scala.concurrent.duration._
   *
   *  @param bufferSize size of the internal buffer used when reading messages from Kinesis
   */
-class KinesisStreamSettings private (val bufferSize: Int)
+class KinesisStreamSettings private (
+    val bufferSize: Int,
+    val terminateGracePeriod: FiniteDuration
+)
 
 /** Settings for configuring the Kinesis checkpointer pipe
   *
@@ -22,13 +25,14 @@ class KinesisCheckpointSettings private (
 )
 
 object KinesisStreamSettings {
-  val defaultInstance: KinesisStreamSettings = new KinesisStreamSettings(10)
+  val defaultInstance: KinesisStreamSettings = new KinesisStreamSettings(10, 10.seconds)
 
-  def apply(bufferSize: Int): Either[Throwable, KinesisStreamSettings] =
-    if (bufferSize < 1)
-      Left(BufferSizeException("Must be greater than 0"))
-    else
-      Right(new KinesisStreamSettings(bufferSize))
+  def apply(bufferSize: Int,
+            terminateGracePeriod: FiniteDuration): Either[Throwable, KinesisStreamSettings] =
+    (bufferSize, terminateGracePeriod) match {
+      case (bs, _) if bs < 1 => Left(BufferSizeException("Must be greater than 0"))
+      case (bs, period)      => Right(new KinesisStreamSettings(bufferSize, period))
+    }
 }
 
 object KinesisCheckpointSettings {

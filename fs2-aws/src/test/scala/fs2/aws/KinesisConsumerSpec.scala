@@ -16,6 +16,7 @@ import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.{
 }
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{ShutdownReason, Worker}
+import com.amazonaws.services.kinesis.clientlibrary.lib.worker._
 import com.amazonaws.services.kinesis.clientlibrary.types._
 import com.amazonaws.services.kinesis.model.Record
 import org.mockito.invocation.InvocationOnMock
@@ -206,8 +207,11 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
 
   }
 
-  it should "not checkpoint the batch if the IRecordProcessor has been shutdown" in new KinesisWorkerCheckpointContext {
-    recordProcessor.shutdown(new ShutdownInput().withShutdownReason(ShutdownReason.TERMINATE))
+  it should "not checkpoint the batch if the IRecordProcessor has been shutdown with ZOMBIE reason" in new KinesisWorkerCheckpointContext {
+    recordProcessor.shutdown(
+      new ShutdownInput()
+        .withShutdownReason(ShutdownReason.ZOMBIE)
+        .withCheckpointer(checkpointerShard1))
 
     val input = (1 to 3) map { i =>
       val record = mock(classOf[UserRecord])
@@ -225,7 +229,32 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
 
     startStream(input)
 
-    verifyZeroInteractions(checkpointerShard1)
+    verify(checkpointerShard1, times(0)).checkpoint()
+  }
+
+  it should "checkpoint one last time if the IRecordProcessor has been shutdown with TERMINATE reason" in new KinesisWorkerCheckpointContext {
+    recordProcessor.shutdown(
+      new ShutdownInput()
+        .withShutdownReason(ShutdownReason.TERMINATE)
+        .withCheckpointer(checkpointerShard1))
+
+    val input = (1 to 3) map { i =>
+      val record = mock(classOf[UserRecord])
+      when(record.getSequenceNumber).thenReturn("1")
+      when(record.getSubSequenceNumber).thenReturn(i.toLong)
+      new CommittableRecord(
+        "shard-1",
+        mock(classOf[ExtendedSequenceNumber]),
+        1L,
+        record,
+        recordProcessor,
+        checkpointerShard1
+      )
+    }
+
+    startStream(input)
+
+    verify(checkpointerShard1, times(1)).checkpoint()
   }
 
   it should "fail with Exception if checkpoint action fails" in new KinesisWorkerCheckpointContext {
@@ -288,7 +317,7 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
       mockWorker
     }
 
-    val config = KinesisStreamSettings(bufferSize = 10).right.get
+    val config = KinesisStreamSettings(bufferSize = 10, 10.seconds).right.get
 
     val stream =
       readFromKinesisStream[IO](builder, config)
@@ -322,7 +351,7 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
   }
 
   private trait KinesisWorkerCheckpointContext {
-    val recordProcessor    = new RecordProcessor(_ => ())
+    val recordProcessor    = new RecordProcessor(_ => (), 1.seconds)
     val checkpointerShard1 = mock(classOf[IRecordProcessorCheckpointer])
     val settings =
       KinesisCheckpointSettings(maxBatchSize = 100, maxBatchWait = 500.millis).right.get
