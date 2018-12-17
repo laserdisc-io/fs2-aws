@@ -5,6 +5,7 @@ import cats.effect.concurrent.Deferred
 import eu.timepit.refined.auto._
 import fs2.aws.sqs.SqsConfig
 import javax.jms.{Message, MessageListener}
+import scala.concurrent.duration._
 
 package object testkit {
   def sqsStream[F[_]: ConcurrentEffect, O](
@@ -15,5 +16,5 @@ package object testkit {
                       Some(d))
   }
 
-  val TestRecordProcessor = new kinesis.RecordProcessor(_ => ())
+  val TestRecordProcessor = new kinesis.RecordProcessor(_ => (), 10.seconds)
 }
