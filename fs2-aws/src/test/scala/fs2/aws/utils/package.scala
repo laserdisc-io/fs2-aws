@@ -1,12 +1,11 @@
-package fs2
-package aws
+package fs2.aws
 
 import java.io._
 
 import cats.effect.{Effect, IO}
 import com.amazonaws.SdkClientException
 import com.amazonaws.services.s3.model.{AmazonS3Exception, GetObjectRequest, S3ObjectInputStream}
-import fs2.aws.internal.Internal._
+import fs2.aws.internal._
 import org.apache.http.client.methods.HttpRequestBase
 import scala.io.Source
 

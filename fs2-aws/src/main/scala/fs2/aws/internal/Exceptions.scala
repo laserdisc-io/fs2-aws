@@ -1,6 +1,4 @@
-package fs2
-package aws
-package internal
+package fs2.aws.internal
 
 object Exceptions {
   case class KinesisCheckpointException(msg: String) extends Exception

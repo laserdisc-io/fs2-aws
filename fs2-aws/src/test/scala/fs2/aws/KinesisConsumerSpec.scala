@@ -1,39 +1,31 @@
-package fs2
-package aws
+package fs2.aws
 
-import cats.effect.{ContextShift, IO, Timer}
-import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
-import org.scalatest.time._
-import org.scalatest.concurrent.Eventually
-import org.mockito.Mockito._
-import kinesis.kcl._
-
-import scala.concurrent.ExecutionContext
-import scala.concurrent.duration._
-import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.{
-  IRecordProcessor,
-  IRecordProcessorFactory
-}
-import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer
-import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{ShutdownReason, Worker}
-import com.amazonaws.services.kinesis.clientlibrary.lib.worker._
-import com.amazonaws.services.kinesis.clientlibrary.types._
-import com.amazonaws.services.kinesis.model.Record
-import org.mockito.invocation.InvocationOnMock
-import org.mockito.stubbing.Answer
-import org.mockito.Mockito._
-import java.util.Date
 import java.nio.ByteBuffer
+import java.time.Instant
 import java.util.concurrent.Semaphore
 
+import cats.effect.{ContextShift, IO, Timer}
+import fs2.aws.kinesis.consumer._
 import fs2.aws.kinesis.{
   CommittableRecord,
   KinesisCheckpointSettings,
-  KinesisStreamSettings,
+  KinesisConsumerSettings,
   RecordProcessor
 }
+import org.mockito.Mockito._
+import org.mockito.invocation.InvocationOnMock
+import org.mockito.stubbing.Answer
+import org.scalatest.concurrent.Eventually
+import org.scalatest.time._
+import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
+import software.amazon.awssdk.regions.Region
+import software.amazon.kinesis.checkpoint.ShardRecordProcessorCheckpointer
+import software.amazon.kinesis.coordinator.Scheduler
+import software.amazon.kinesis.lifecycle.events._
+import software.amazon.kinesis.processor.{ShardRecordProcessor, ShardRecordProcessorFactory}
+import software.amazon.kinesis.retrieval.KinesisClientRecord
+import software.amazon.kinesis.retrieval.kpl.ExtendedSequenceNumber
 
-import scala.concurrent.Future
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -44,23 +36,26 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
   implicit val timer: Timer[IO]                 = IO.timer(ec)
   implicit val ioContextShift: ContextShift[IO] = IO.contextShift(ec)
 
-  implicit override val patienceConfig =
+  implicit def sList2jList[A](sList: List[A]): java.util.List[A] = sList.asJava
+
+  implicit override val patienceConfig: PatienceConfig =
     PatienceConfig(timeout = scaled(Span(2, Seconds)), interval = scaled(Span(5, Millis)))
 
   "KinesisWorker source" should "successfully read data from the Kinesis stream" in new WorkerContext
   with TestData {
     semaphore.acquire()
     recordProcessor.initialize(initializationInput)
-    recordProcessor.processRecords(recordsInput)
+    recordProcessor.processRecords(recordsInput.build())
 
-    eventually(verify(mockWorker, times(1)).run())
+    eventually(verify(mockScheduler, times(1)).run())
 
     eventually(timeout(1.second)) {
       val commitableRecord = output.head
-      commitableRecord.record.getData should be(record.getData)
-      commitableRecord.recordProcessorStartingSequenceNumber shouldBe initializationInput.getExtendedSequenceNumber
-      commitableRecord.shardId shouldBe initializationInput.getShardId
-      commitableRecord.millisBehindLatest shouldBe recordsInput.getMillisBehindLatest
+      commitableRecord.record.data() should be(record.data())
+      commitableRecord.recordProcessorStartingSequenceNumber shouldBe initializationInput
+        .extendedSequenceNumber()
+      commitableRecord.shardId shouldBe initializationInput.shardId()
+      commitableRecord.millisBehindLatest shouldBe recordsInput.build().millisBehindLatest()
     }
     semaphore.release()
   }
@@ -69,9 +64,9 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
   with TestData {
     semaphore.acquire()
     recordProcessor.initialize(initializationInput)
-    recordProcessor.processRecords(recordsInput)
+    recordProcessor.processRecords(recordsInput.records(List(record)).build())
 
-    eventually(verify(mockWorker, times(0)).shutdown())
+    eventually(verify(mockScheduler, times(0)).shutdown())
     semaphore.release()
   }
 
@@ -79,18 +74,18 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
   with TestData {
     semaphore.acquire()
     recordProcessor.initialize(initializationInput)
-    recordProcessor.processRecords(recordsInput)
+    recordProcessor.processRecords(recordsInput.records(List(record)).build())
 
-    eventually(verify(mockWorker, times(1)).shutdown())
+    eventually(verify(mockScheduler, times(1)).shutdown())
   }
 
   it should "not drop messages in case of back-pressure" in new WorkerContext with TestData {
     semaphore.acquire()
     // Create and send 10 records (to match buffer size)
     for (i <- 1 to 10) {
-      val record = mock(classOf[Record])
-      when(record.getSequenceNumber).thenReturn(i.toString)
-      recordProcessor.processRecords(recordsInput.withRecords(List(record).asJava))
+      val record = mock(classOf[KinesisClientRecord])
+      when(record.sequenceNumber()).thenReturn(i.toString)
+      recordProcessor.processRecords(recordsInput.records(List(record)).build())
     }
 
     // Should process all 10 messages
@@ -98,15 +93,15 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
 
     // Send a batch that exceeds the internal buffer size
     for (i <- 1 to 50) {
-      val record = mock(classOf[Record])
-      when(record.getSequenceNumber).thenReturn(i.toString)
-      recordProcessor.processRecords(recordsInput.withRecords(List(record).asJava))
+      val record = mock(classOf[KinesisClientRecord])
+      when(record.sequenceNumber()).thenReturn(i.toString)
+      recordProcessor.processRecords(recordsInput.records(List(record)).build())
     }
 
     // Should have processed all 60 messages
     eventually(output.size shouldBe (60))
 
-    eventually(verify(mockWorker, times(0)).shutdown())
+    eventually(verify(mockScheduler, times(0)).shutdown())
     semaphore.release()
   }
 
@@ -114,14 +109,19 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
   with TestData {
     semaphore.acquire()
     recordProcessor.initialize(initializationInput)
-    recordProcessor2.initialize(initializationInput.withShardId("shard2"))
+    recordProcessor2.initialize(
+      InitializationInput
+        .builder()
+        .shardId("shard2")
+        .extendedSequenceNumber(ExtendedSequenceNumber.AT_TIMESTAMP)
+        .build())
 
     // Create and send 10 records (to match buffer size)
     for (i <- 1 to 5) {
-      val record = mock(classOf[Record])
-      when(record.getSequenceNumber).thenReturn(i.toString)
-      recordProcessor.processRecords(recordsInput.withRecords(List(record).asJava))
-      recordProcessor2.processRecords(recordsInput.withRecords(List(record).asJava))
+      val record = mock(classOf[KinesisClientRecord])
+      when(record.sequenceNumber()).thenReturn(i.toString)
+      recordProcessor.processRecords(recordsInput.records(List(record)).build())
+      recordProcessor2.processRecords(recordsInput.records(List(record)).build())
     }
 
     // Should process all 10 messages
@@ -129,12 +129,12 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
 
     // Each shard is assigned its own worker thread, so we get messages
     // from each thread simultaneously.
-    def simulateWorkerThread(rp: IRecordProcessor): Future[Unit] = {
+    def simulateWorkerThread(rp: ShardRecordProcessor): Future[Unit] = {
       Future {
         for (i <- 1 to 25) { // 10 is a buffer size
-          val record = mock(classOf[Record])
-          when(record.getSequenceNumber).thenReturn(i.toString)
-          rp.processRecords(recordsInput.withRecords(List(record).asJava))
+          val record = mock(classOf[KinesisClientRecord])
+          when(record.sequenceNumber()).thenReturn(i.toString)
+          rp.processRecords(recordsInput.records(List(record)).build())
         }
       }
     }
@@ -149,9 +149,9 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
 
   "KinesisWorker checkpoint pipe" should "checkpoint batch of records with same sequence number" in new KinesisWorkerCheckpointContext {
     val input = (1 to 3) map { i =>
-      val record = mock(classOf[UserRecord])
-      when(record.getSequenceNumber).thenReturn("1")
-      when(record.getSubSequenceNumber).thenReturn(i.toLong)
+      val record = mock(classOf[KinesisClientRecord])
+      when(record.sequenceNumber()).thenReturn("1")
+      when(record.subSequenceNumber()).thenReturn(i.toLong)
       new CommittableRecord(
         "shard-1",
         mock(classOf[ExtendedSequenceNumber]),
@@ -165,17 +165,18 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     startStream(input)
 
     eventually(timeout(1.second)) {
-      verify(checkpointerShard1).checkpoint(input.last.record)
+      verify(checkpointerShard1).checkpoint(input.last.record.sequenceNumber(),
+                                            input.last.record.subSequenceNumber())
     }
   }
 
   it should "checkpoint batch of records of different shards" in new KinesisWorkerCheckpointContext {
-    val checkpointerShard2 = mock(classOf[IRecordProcessorCheckpointer])
+    val checkpointerShard2 = mock(classOf[ShardRecordProcessorCheckpointer])
 
     val input = (1 to 6) map { i =>
       if (i <= 3) {
-        val record = mock(classOf[UserRecord])
-        when(record.getSequenceNumber).thenReturn(i.toString)
+        val record = mock(classOf[KinesisClientRecord])
+        when(record.sequenceNumber()).thenReturn(i.toString)
         new CommittableRecord(
           "shard-1",
           mock(classOf[ExtendedSequenceNumber]),
@@ -185,8 +186,8 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
           checkpointerShard1
         )
       } else {
-        val record = mock(classOf[UserRecord])
-        when(record.getSequenceNumber).thenReturn(i.toString)
+        val record = mock(classOf[KinesisClientRecord])
+        when(record.sequenceNumber()).thenReturn(i.toString)
         new CommittableRecord(
           "shard-2",
           mock(classOf[ExtendedSequenceNumber]),
@@ -201,47 +202,21 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     startStream(input)
 
     eventually(timeout(3.seconds)) {
-      verify(checkpointerShard1).checkpoint(input(2).record)
-      verify(checkpointerShard2).checkpoint(input.last.record)
+      verify(checkpointerShard1).checkpoint(input(2).record.sequenceNumber(),
+                                            input(2).record.subSequenceNumber())
+      verify(checkpointerShard2).checkpoint(input.last.record.sequenceNumber(),
+                                            input.last.record.subSequenceNumber())
     }
 
   }
 
-  it should "not checkpoint the batch if the IRecordProcessor has been shutdown with ZOMBIE reason" in new KinesisWorkerCheckpointContext {
-    recordProcessor.shutdown(
-      new ShutdownInput()
-        .withShutdownReason(ShutdownReason.ZOMBIE)
-        .withCheckpointer(checkpointerShard1))
+  it should "checkpoint one last time if the RecordProcessor has reached the end of the shard" in new KinesisWorkerCheckpointContext {
+    recordProcessor.shardEnded(ShardEndedInput.builder().checkpointer(checkpointerShard1).build())
 
     val input = (1 to 3) map { i =>
-      val record = mock(classOf[UserRecord])
-      when(record.getSequenceNumber).thenReturn("1")
-      when(record.getSubSequenceNumber).thenReturn(i.toLong)
-      new CommittableRecord(
-        "shard-1",
-        mock(classOf[ExtendedSequenceNumber]),
-        1L,
-        record,
-        recordProcessor,
-        checkpointerShard1
-      )
-    }
-
-    startStream(input)
-
-    verify(checkpointerShard1, times(0)).checkpoint()
-  }
-
-  it should "checkpoint one last time if the IRecordProcessor has been shutdown with TERMINATE reason" in new KinesisWorkerCheckpointContext {
-    recordProcessor.shutdown(
-      new ShutdownInput()
-        .withShutdownReason(ShutdownReason.TERMINATE)
-        .withCheckpointer(checkpointerShard1))
-
-    val input = (1 to 3) map { i =>
-      val record = mock(classOf[UserRecord])
-      when(record.getSequenceNumber).thenReturn("1")
-      when(record.getSubSequenceNumber).thenReturn(i.toLong)
+      val record = mock(classOf[KinesisClientRecord])
+      when(record.sequenceNumber()).thenReturn("1")
+      when(record.subSequenceNumber()).thenReturn(i.toLong)
       new CommittableRecord(
         "shard-1",
         mock(classOf[ExtendedSequenceNumber]),
@@ -258,10 +233,10 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
   }
 
   it should "fail with Exception if checkpoint action fails" in new KinesisWorkerCheckpointContext {
-    val checkpointer = mock(classOf[IRecordProcessorCheckpointer])
+    val checkpointer = mock(classOf[ShardRecordProcessorCheckpointer])
 
-    val record = mock(classOf[Record])
-    when(record.getSequenceNumber).thenReturn("1")
+    val record = mock(classOf[KinesisClientRecord])
+    when(record.sequenceNumber()).thenReturn("1")
 
     val input = new CommittableRecord(
       "shard-1",
@@ -273,7 +248,8 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     )
 
     val failure = new RuntimeException()
-    when(checkpointer.checkpoint(record)).thenThrow(failure)
+    when(checkpointer.checkpoint(record.sequenceNumber, record.subSequenceNumber))
+      .thenThrow(failure)
 
     fs2.Stream
       .emits(Seq(input))
@@ -285,7 +261,9 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
       .head
       .isLeft should be(true)
 
-    eventually(verify(checkpointer).checkpoint(input.record))
+    eventually(
+      verify(checkpointer).checkpoint(input.record.sequenceNumber(),
+                                      input.record.subSequenceNumber()))
   }
 
   private abstract class WorkerContext(backpressureTimeout: FiniteDuration = 1.minute,
@@ -295,29 +273,30 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     semaphore.acquire()
     var output: List[CommittableRecord] = List()
 
-    protected val mockWorker = mock(classOf[Worker])
+    protected val mockScheduler: Scheduler = mock(classOf[Scheduler])
 
-    when(mockWorker.run()).thenAnswer(new Answer[Unit] {
+    when(mockScheduler.run()).thenAnswer(new Answer[Unit] {
       override def answer(invocation: InvocationOnMock): Unit = ()
     })
 
-    when(mockWorker.shutdown()).thenAnswer(new Answer[Unit] {
+    when(mockScheduler.shutdown()).thenAnswer(new Answer[Unit] {
       override def answer(invocation: InvocationOnMock): Unit = ()
     })
 
-    var recordProcessorFactory: IRecordProcessorFactory = _
-    var recordProcessor: IRecordProcessor               = _
-    var recordProcessor2: IRecordProcessor              = _
+    var recordProcessorFactory: ShardRecordProcessorFactory = _
+    var recordProcessor: ShardRecordProcessor               = _
+    var recordProcessor2: ShardRecordProcessor              = _
 
-    val builder = { x: IRecordProcessorFactory =>
+    val builder = { x: ShardRecordProcessorFactory =>
       recordProcessorFactory = x
-      recordProcessor = x.createProcessor()
-      recordProcessor2 = x.createProcessor()
+      recordProcessor = x.shardRecordProcessor()
+      recordProcessor2 = x.shardRecordProcessor()
       semaphore.release()
-      mockWorker
+      mockScheduler
     }
 
-    val config = KinesisStreamSettings(bufferSize = 10, 10.seconds).right.get
+    val config =
+      KinesisConsumerSettings("testStream", "testApp", Region.US_EAST_1, 10, 10.seconds).right.get
 
     val stream =
       readFromKinesisStream[IO](builder, config)
@@ -329,30 +308,37 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
   }
 
   private trait TestData {
-    protected val checkpointer = mock(classOf[IRecordProcessorCheckpointer])
+    protected val checkpointer: ShardRecordProcessorCheckpointer = mock(
+      classOf[ShardRecordProcessorCheckpointer])
 
     val initializationInput = {
-      new InitializationInput()
-        .withShardId("shardId")
-        .withExtendedSequenceNumber(ExtendedSequenceNumber.AT_TIMESTAMP)
+      InitializationInput
+        .builder()
+        .shardId("shardId")
+        .extendedSequenceNumber(ExtendedSequenceNumber.AT_TIMESTAMP)
+        .build()
     }
-    val record =
-      new Record()
-        .withApproximateArrivalTimestamp(new Date())
-        .withEncryptionType("encryption")
-        .withPartitionKey("partitionKey")
-        .withSequenceNumber("sequenceNum")
-        .withData(ByteBuffer.wrap("test".getBytes))
+
+    val record: KinesisClientRecord =
+      KinesisClientRecord
+        .builder()
+        .approximateArrivalTimestamp(Instant.now())
+        .partitionKey("partitionKey")
+        .sequenceNumber("sequenceNum")
+        .data(ByteBuffer.wrap("test".getBytes))
+        .build()
+
     val recordsInput =
-      new ProcessRecordsInput()
-        .withCheckpointer(checkpointer)
-        .withMillisBehindLatest(1L)
-        .withRecords(List(record).asJava)
+      ProcessRecordsInput
+        .builder()
+        .checkpointer(checkpointer)
+        .millisBehindLatest(1L)
+        .records(List(record).asJava)
   }
 
   private trait KinesisWorkerCheckpointContext {
     val recordProcessor    = new RecordProcessor(_ => (), 1.seconds)
-    val checkpointerShard1 = mock(classOf[IRecordProcessorCheckpointer])
+    val checkpointerShard1 = mock(classOf[ShardRecordProcessorCheckpointer])
     val settings =
       KinesisCheckpointSettings(maxBatchSize = 100, maxBatchWait = 500.millis).right.get
 
