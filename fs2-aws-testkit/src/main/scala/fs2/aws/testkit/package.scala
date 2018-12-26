@@ -1,20 +1,17 @@
 package fs2.aws
 
-import cats.effect.ConcurrentEffect
-import cats.effect.concurrent.Deferred
-import eu.timepit.refined.auto._
-import fs2.aws.sqs.SqsConfig
-import javax.jms.{Message, MessageListener}
+import fs2.Stream
+import cats.effect.{Concurrent, Timer}
+import software.amazon.awssdk.services.sqs.model.Message
+
 import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext
 
 package object testkit {
-  def sqsStream[F[_]: ConcurrentEffect, O](
-      d: Deferred[F, MessageListener]
-  )(implicit decoder: Message => Either[Throwable, O]): fs2.Stream[F, O] = {
-    fs2.aws.sqsStream(SqsConfig("dummy"),
-                      (_: SqsConfig, _: MessageListener) => new TestSqsConsumerBuilder[F],
-                      Some(d))
+  def sqsStream[F[_]: Concurrent, A](msgs: List[String])(
+      implicit ec: ExecutionContext,
+      Timer: Timer[F],
+      decoder: Message => Either[Throwable, A]): Stream[F, Either[Throwable, A]] = {
+    fs2.aws.sqs.consumer.readObjectFromSqs("", 5.seconds, new TestSqsClient[F](msgs))
   }
-
-  val TestRecordProcessor = new kinesis.RecordProcessor(_ => (), 10.seconds)
 }
