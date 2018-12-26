@@ -2,7 +2,7 @@ package fs2.aws.sqs
 
 import fs2.{Stream, Pipe, Sink}
 import fs2.concurrent.Queue
-import cats.effect.{Async, ConcurrentEffect}
+import cats.effect.Concurrent
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model._
 
@@ -14,7 +14,7 @@ import scala.collection.JavaConverters._
 object consumer {
   def readObjectFromSqs[F[_], A](queueUrl: String)(
       implicit ec: ExecutionContext,
-      F: ConcurrentEffect[F],
+      F: Concurrent[F],
       decoder: Message => Either[Throwable, A]): Stream[F, Either[Throwable, A]] = {
     val client = SqsAsyncClient.create()
 
@@ -37,12 +37,12 @@ object consumer {
   }
 
   def readFromSqs[F[_]](queueUrl: String)(implicit ec: ExecutionContext,
-                                          conEff: ConcurrentEffect[F]): Stream[F, Message] =
-    readObjectFromSqs[F, Message](queueUrl)(ec, conEff, msg => Right(msg)).map(_.right.get)
+                                          F: Concurrent[F]): Stream[F, Message] =
+    readObjectFromSqs[F, Message](queueUrl)(ec, F, msg => Right(msg)).map(_.right.get)
 
   def deleteFromSqs[F[_]](queueUrl: String)(
       implicit ec: ExecutionContext,
-      F: Async[F]): Pipe[F, Message, DeleteMessageResponse] = {
+      F: Concurrent[F]): Pipe[F, Message, DeleteMessageResponse] = {
     val client = SqsAsyncClient.create()
 
     _.flatMap { msg =>
@@ -59,7 +59,7 @@ object consumer {
   }
 
   def deleteFromSqs_[F[_]](queueUrl: String)(implicit ec: ExecutionContext,
-                                             F: Async[F]): Sink[F, Message] =
+                                             F: Concurrent[F]): Sink[F, Message] =
     _.through(deleteFromSqs(queueUrl)).drain
 
   private[this] def buildReceiveRequest(url: String, numMessages: Int): ReceiveMessageRequest = {
