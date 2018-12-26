@@ -18,7 +18,7 @@ object consumer {
       decoder: Message => Either[Throwable, A]): Stream[F, Either[Throwable, A]] = {
     val client = SqsAsyncClient.create()
 
-    def receiveMessageStream =
+    def receiveMessageStream(buffer: Queue[F, Either[Throwable, A]])=
       Stream
         .eval(
           F.async[List[Message]] { cb =>
@@ -29,10 +29,11 @@ object consumer {
           }
         )
         .flatMap(list => Stream.emits(list.map(decoder)))
+        .evalMap(msg => buffer.enqueue1(msg))
 
     for {
       buffer <- Stream.eval(Queue.bounded[F, Either[Throwable, A]](10))
-      stream <- buffer.dequeue concurrently receiveMessageStream
+      stream <- buffer.dequeue concurrently receiveMessageStream(buffer)
     } yield stream
   }
 
