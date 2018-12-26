@@ -25,5 +25,6 @@ libraryDependencies ++= Seq(
   "is.cir"                 %% "ciris-core"                   % cirisVersion,
   "is.cir"                 %% "ciris-enumeratum"             % cirisVersion,
   "is.cir"                 %% "ciris-refined"                % cirisVersion,
-  "eu.timepit"             %% "refined"                      % "0.9.2"
+  "eu.timepit"             %% "refined"                      % "0.9.2",
+  "org.scala-lang.modules" % "scala-java8-compat_2.12"       % "0.9.0"
 )
