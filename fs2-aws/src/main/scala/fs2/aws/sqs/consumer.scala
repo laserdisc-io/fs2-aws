@@ -1,33 +1,27 @@
 package fs2.aws.sqs
 
+import fs2.aws.internal.{SqsClient, SqsClientImpl}
+
 import fs2.{Stream, Pipe, Sink}
 import fs2.concurrent.Queue
-import cats.effect.Concurrent
-import software.amazon.awssdk.services.sqs.SqsAsyncClient
+import cats.effect.{Async, Concurrent, Timer}
 import software.amazon.awssdk.services.sqs.model._
 
-import scala.util.{Success, Failure}
-import scala.compat.java8.FutureConverters._
+import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
-import scala.collection.JavaConverters._
 
 object consumer {
-  def readObjectFromSqs[F[_], A](queueUrl: String)(
+  def readObjectFromSqs[F[_]: Concurrent, A](queueUrl: String,
+                                             pollRate: FiniteDuration = 5.seconds,
+                                             sqsClient: SqsClient[F] = new SqsClientImpl[F])(
       implicit ec: ExecutionContext,
-      F: Concurrent[F],
+      Timer: Timer[F],
       decoder: Message => Either[Throwable, A]): Stream[F, Either[Throwable, A]] = {
-    val client = SqsAsyncClient.create()
 
-    def receiveMessageStream(buffer: Queue[F, Either[Throwable, A]])=
-      Stream
-        .eval(
-          F.async[List[Message]] { cb =>
-            client.receiveMessage(buildReceiveRequest(queueUrl, 5)).toScala.onComplete {
-              case Success(response) => cb(Right(response.messages().asScala.toList))
-              case Failure(err)      => cb(Left(err))
-            }
-          }
-        )
+    def receiveMessageStream(buffer: Queue[F, Either[Throwable, A]]) =
+      Stream.eval(Timer.sleep(pollRate))
+        .repeat
+        .zipRight(Stream.eval(sqsClient.fetchMessages(queueUrl, 10)))
         .flatMap(list => Stream.emits(list.map(decoder)))
         .evalMap(msg => buffer.enqueue1(msg))
 
@@ -37,35 +31,23 @@ object consumer {
     } yield stream
   }
 
-  def readFromSqs[F[_]](queueUrl: String)(implicit ec: ExecutionContext,
-                                          F: Concurrent[F]): Stream[F, Message] =
-    readObjectFromSqs[F, Message](queueUrl)(ec, F, msg => Right(msg)).map(_.right.get)
+  def readFromSqs[F[_]: Concurrent](queueUrl: String,
+                                    pollRate: FiniteDuration = 5.seconds,
+                                    sqsClient: SqsClient[F] = new SqsClientImpl[F])(
+      implicit ec: ExecutionContext, Timer: Timer[F]): Stream[F, Message] =
+    readObjectFromSqs[F, Message](queueUrl, pollRate, sqsClient)(Concurrent[F], ec, Timer, msg => Right(msg))
+      .map(_.right.get)
 
-  def deleteFromSqs[F[_]](queueUrl: String)(
-      implicit ec: ExecutionContext,
-      F: Concurrent[F]): Pipe[F, Message, DeleteMessageResponse] = {
-    val client = SqsAsyncClient.create()
+  def deleteFromSqs[F[_]: Async](queueUrl: String, sqsClient: SqsClient[F] = new SqsClientImpl[F])(
+      implicit ec: ExecutionContext): Pipe[F, Message, DeleteMessageResponse] = {
 
     _.flatMap { msg =>
-      Stream.eval(
-        F.async[DeleteMessageResponse] { cb =>
-          client.deleteMessage(buildDeleteRequest(queueUrl, msg)).toScala.onComplete {
-            case Success(response) => cb(Right(response))
-            case Failure(err)      => cb(Left(err))
-          }
-        }
-      )
+      Stream.eval(sqsClient.deleteMessage(queueUrl, msg))
     }
-
   }
 
-  def deleteFromSqs_[F[_]](queueUrl: String)(implicit ec: ExecutionContext,
-                                             F: Concurrent[F]): Sink[F, Message] =
+  def deleteFromSqs_[F[_]: Async](queueUrl: String)(
+      implicit ec: ExecutionContext): Sink[F, Message] =
     _.through(deleteFromSqs(queueUrl)).drain
 
-  private[this] def buildReceiveRequest(url: String, numMessages: Int): ReceiveMessageRequest =
-    ReceiveMessageRequest.builder().queueUrl(url).maxNumberOfMessages(numMessages).build()
-
-  private[this] def buildDeleteRequest(url: String, message: Message): DeleteMessageRequest =
-    DeleteMessageRequest.builder().queueUrl(url).receiptHandle(message.receiptHandle()).build()
 }
