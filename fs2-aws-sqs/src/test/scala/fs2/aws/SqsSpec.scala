@@ -1,5 +1,11 @@
 package fs2.aws
 
+import fs2.aws.sqs.consumer.readObjectFromSqs
+import cats.effect.{ContextShift, IO, Timer}
+import software.amazon.awssdk.services.sqs.model.Message
+
+import org.scalatest.mockito.MockitoSugar
+import org.scalatest.{AsyncFlatSpec, Matchers}
 import cats.effect.concurrent.Deferred
 import cats.effect.{ ContextShift, IO }
 import com.amazon.sqs.javamessaging.SQSConnection
@@ -17,9 +23,10 @@ import scala.concurrent.ExecutionContext
 class SqsSpec extends AsyncFlatSpec with Matchers with MockitoSugar {
   implicit val ec: ExecutionContext             = ExecutionContext.global
   implicit val ioContextShift: ContextShift[IO] = IO.contextShift(ec)
+  implicit val ioTimer: Timer[IO] = IO.timer(ec)
   implicit val messageDecoder: Message => Either[Throwable, Int] = { sqs_msg =>
-    val text = sqs_msg.asInstanceOf[TextMessage].getText
-    if ("fail" == text) Left(intercept[Exception](()))
+    val text = sqs_msg.body()
+    if ("fail" == text) Left(new Exception("failure"))
     else Right(text.toInt)
   }
   it should "stream messages" in {
@@ -62,7 +69,15 @@ class SqsSpec extends AsyncFlatSpec with Matchers with MockitoSugar {
     } yield res
 
     val future = r.unsafeToFuture()
-
-    future.map(_ should be(List(1, 2, 4, 5)))
+    future.map(
+      _.filter(_.isRight) should be(
+        List(
+          Right(1),
+          Right(2),
+          Right(4),
+          Right(5)
+        )
+      )
+    )
   }
 }
