@@ -62,11 +62,9 @@ object consumer {
                                              F: Concurrent[F]): Sink[F, Message] =
     _.through(deleteFromSqs(queueUrl)).drain
 
-  private[this] def buildReceiveRequest(url: String, numMessages: Int): ReceiveMessageRequest = {
+  private[this] def buildReceiveRequest(url: String, numMessages: Int): ReceiveMessageRequest =
     ReceiveMessageRequest.builder().queueUrl(url).maxNumberOfMessages(numMessages).build()
-  }
 
-  private[this] def buildDeleteRequest(url: String, message: Message): DeleteMessageRequest = {
+  private[this] def buildDeleteRequest(url: String, message: Message): DeleteMessageRequest =
     DeleteMessageRequest.builder().queueUrl(url).receiptHandle(message.receiptHandle()).build()
-  }
 }
