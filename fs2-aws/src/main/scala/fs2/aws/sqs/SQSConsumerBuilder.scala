@@ -23,14 +23,14 @@ class SQSConsumerBuilder[F[_]](val sqsConfig: SqsConfig, val listener: MessageLi
         )
         override val connection: SQSConnection = connectionFactory.createConnection
 
-        override def startConsumer: Unit = {
+        override def startConsumer(): Unit = {
           val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
           val cons    = session.createConsumer(session.createQueue(sqsConfig.queueName))
           cons.setMessageListener(callback)
           connection.start()
         }
 
-        override def shutdown: Unit = {
+        override def shutdown(): Unit = {
           connection.stop()
         }
       }
@@ -40,7 +40,5 @@ class SQSConsumerBuilder[F[_]](val sqsConfig: SqsConfig, val listener: MessageLi
 
 object SQSConsumerBuilder {
   def apply[F[_]](sqsConfig: SqsConfig, listener: MessageListener)(
-      implicit F: Effect[F]): SQSConsumerBuilder[F] = {
-    new SQSConsumerBuilder[F](sqsConfig, listener)
-  }
+      implicit F: Effect[F]): SQSConsumerBuilder[F] = new SQSConsumerBuilder[F](sqsConfig, listener)
 }
