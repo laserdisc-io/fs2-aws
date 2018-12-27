@@ -11,6 +11,7 @@ import fs2.concurrent.Queue
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient
+import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient
 import software.amazon.kinesis.common.ConfigsBuilder
 import software.amazon.kinesis.coordinator.Scheduler
 import software.amazon.kinesis.processor.ShardRecordProcessorFactory
@@ -22,7 +23,12 @@ object consumer {
       settings: KinesisConsumerSettings
   ): Scheduler = {
     val kinesisClient: KinesisAsyncClient =
-      KinesisAsyncClient.builder().region(settings.region).build()
+      KinesisAsyncClient
+        .builder()
+        .region(settings.region)
+        .httpClientBuilder(
+          NettyNioAsyncHttpClient.builder().maxConcurrency(settings.maxConcurrency))
+        .build()
     val dynamoClient: DynamoDbAsyncClient =
       DynamoDbAsyncClient.builder().region(settings.region).build()
     val cloudWatchClient: CloudWatchAsyncClient =
