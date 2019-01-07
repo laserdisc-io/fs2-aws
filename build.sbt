@@ -1,7 +1,7 @@
 name := "fs2-aws"
 organization in ThisBuild := "io.github.dmateusp"
 
-scalaVersion := "2.12.7"
+scalaVersion := "2.12.8"
 
 scalacOptions in ThisBuild ++= Seq(
   "-encoding",
