@@ -29,7 +29,7 @@ Example using IO for effects (any monad `F <: Effect` can be used):
 ```scala
 Stream("test data")
   .flatMap(_.getBytes)
-  .uploadS3FileMultipart[IO]("testBucket", "testFile", 25)
+  .uploadS3FileMultipart[IO]("testBucket", "testFile")
 ```
 
 ## Kinesis

@@ -1,15 +1,47 @@
-package fs2
-package aws
-package kinesis
+package fs2.aws.kinesis
 
-import internal.Exceptions._
+import fs2.aws.internal.Exceptions._
+
+import software.amazon.awssdk.regions.Region
+
 import scala.concurrent.duration._
 
-/** Settings for configuring the Kinesis consumer stream
+/** Settings for configuring the Kinesis consumer
   *
+  *  @param streamName name of the Kinesis stream to read from
+  *  @param appName name of the application which the KCL daemon should assume
+  *  @param region AWS region in which the Kinesis stream resides. Defaults to US-EAST-1
+  *  @param maxConcurrency max size of the KinesisAsyncClient HTTP thread pool. Defaults to Int.MaxValue.
   *  @param bufferSize size of the internal buffer used when reading messages from Kinesis
+  *  @param terminateGracePeriod period of time to allow processing of records before performing the final checkpoint and terminating
   */
-class KinesisStreamSettings private (val bufferSize: Int)
+class KinesisConsumerSettings private (
+    val streamName: String,
+    val appName: String,
+    val region: Region,
+    val maxConcurrency: Int,
+    val bufferSize: Int,
+    val terminateGracePeriod: FiniteDuration
+)
+
+object KinesisConsumerSettings {
+  def apply(
+      streamName: String,
+      appName: String,
+      region: Region = Region.US_EAST_1,
+      maxConcurrency: Int = Int.MaxValue,
+      bufferSize: Int = 10,
+      terminateGracePeriod: FiniteDuration = 10.seconds
+  ): Either[Throwable, KinesisConsumerSettings] =
+    (bufferSize, maxConcurrency, terminateGracePeriod) match {
+      case (bs, _, _) if bs < 1 => Left(BufferSizeException("Must be greater than 0"))
+      case (_, mc, _) if mc < 1 => Left(MaxConcurrencyException("Must be greater than 0"))
+      case (bs, mc, period) =>
+        Right(
+          new KinesisConsumerSettings(streamName, appName, region, mc, bs, period)
+        )
+    }
+}
 
 /** Settings for configuring the Kinesis checkpointer pipe
   *
@@ -20,16 +52,6 @@ class KinesisCheckpointSettings private (
     val maxBatchSize: Int,
     val maxBatchWait: FiniteDuration
 )
-
-object KinesisStreamSettings {
-  val defaultInstance: KinesisStreamSettings = new KinesisStreamSettings(10)
-
-  def apply(bufferSize: Int): Either[Throwable, KinesisStreamSettings] =
-    if (bufferSize < 1)
-      Left(BufferSizeException("Must be greater than 0"))
-    else
-      Right(new KinesisStreamSettings(bufferSize))
-}
 
 object KinesisCheckpointSettings {
   val defaultInstance = new KinesisCheckpointSettings(1000, 10.seconds)

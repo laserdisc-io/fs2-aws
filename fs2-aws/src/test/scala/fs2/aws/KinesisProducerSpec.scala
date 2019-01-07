@@ -35,7 +35,8 @@ class KinesisProducerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     val output = fs2.Stream
       .eval(IO.pure("someData"))
       .flatMap(i => fs2.Stream.emit(("partitionKey", ByteBuffer.wrap(i.getBytes))))
-      .through(writeToKinesis[IO]("test-stream", TestKinesisProducerClient[IO](result, ops)))
+      .through(
+        writeToKinesis[IO]("test-stream", producer = TestKinesisProducerClient[IO](result, ops)))
       .attempt
       .compile
       .toVector
@@ -52,7 +53,7 @@ class KinesisProducerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     fs2.Stream
       .eval(IO.pure("someData"))
       .flatMap(i => fs2.Stream.emit(("partitionKey", ByteBuffer.wrap(i.getBytes))))
-      .to(writeToKinesis_[IO]("test-stream", TestKinesisProducerClient[IO](result, ops)))
+      .to(writeToKinesis_[IO]("test-stream", producer = TestKinesisProducerClient[IO](result, ops)))
       .compile
       .toVector
       .unsafeRunSync
@@ -67,7 +68,8 @@ class KinesisProducerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
       .eval(IO.pure("someData"))
       .flatMap(i => fs2.Stream.emit(("partitionKey", i)))
       .through(
-        writeObjectToKinesis[IO, String]("test-stream", TestKinesisProducerClient[IO](result, ops)))
+        writeObjectToKinesis[IO, String]("test-stream",
+                                         producer = TestKinesisProducerClient[IO](result, ops)))
       .compile
       .toVector
       .unsafeRunSync
@@ -82,9 +84,10 @@ class KinesisProducerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     val output = fs2.Stream
       .eval(IO.pure("someData"))
       .flatMap(i => fs2.Stream.emit(("partitionKey", ByteBuffer.wrap(i.getBytes))))
-      .through(writeToKinesis[IO]("test-stream", TestKinesisProducerClient[IO](result, IO {
-        throw new Exception("couldn't connect to kinesis")
-      })))
+      .through(
+        writeToKinesis[IO]("test-stream", producer = TestKinesisProducerClient[IO](result, IO {
+          throw new Exception("couldn't connect to kinesis")
+        })))
       .attempt
       .compile
       .toVector
@@ -100,7 +103,7 @@ class KinesisProducerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
       fs2.Stream
         .eval(IO.pure("someData"))
         .flatMap(i => fs2.Stream.emit(("partitionKey", ByteBuffer.wrap(i.toString.getBytes))))
-        .to(writeToKinesis_[IO]("test-stream", TestKinesisProducerClient[IO](result, IO {
+        .to(writeToKinesis_[IO]("test-stream", producer = TestKinesisProducerClient[IO](result, IO {
           throw new Exception("couldn't connect to kinesis")
         })))
         .compile

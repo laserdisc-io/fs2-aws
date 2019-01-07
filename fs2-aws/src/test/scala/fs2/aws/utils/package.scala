@@ -1,19 +1,18 @@
-package fs2
-package aws
+package fs2.aws
 
 import java.io._
 
 import cats.effect.{Effect, IO}
 import com.amazonaws.SdkClientException
 import com.amazonaws.services.s3.model.{AmazonS3Exception, GetObjectRequest, S3ObjectInputStream}
-import fs2.aws.internal.Internal._
+import fs2.aws.internal._
 import org.apache.http.client.methods.HttpRequestBase
 import scala.io.Source
 
 package object utils {
   val s3TestClient: S3Client[IO] = new S3Client[IO] {
-    override def getObjectContent(getObjectRequest: GetObjectRequest)(
-        implicit e: Effect[IO]): IO[Either[Throwable, S3ObjectInputStream]] =
+    override def getObjectContentOrError(getObjectRequest: GetObjectRequest)(
+        implicit e: Effect[IO]): IO[Either[Throwable, InputStream]] =
       getObjectRequest match {
         case goe: GetObjectRequest => {
           IO[Either[Throwable, ByteArrayInputStream]] {
@@ -43,5 +42,25 @@ package object utils {
         }
         case _ => throw new SdkClientException("Invalid GetObjectRequest")
       }
+
+    override def getObjectContent(getObjectRequest: GetObjectRequest)(
+        implicit e: Effect[IO]): IO[InputStream] =
+      IO[ByteArrayInputStream] {
+        val fileContent: Array[Byte] =
+          try {
+            Source.fromResource(getObjectRequest.getKey).mkString.getBytes
+          } catch {
+            case _: FileNotFoundException => throw new AmazonS3Exception("File not found")
+            case e: Throwable             => throw e
+          }
+        new ByteArrayInputStream(fileContent)
+
+      }.map { is =>
+        Thread.sleep(500) // simulate a call to S3
+        new S3ObjectInputStream(is, new HttpRequestBase {
+          def getMethod = ""
+        })
+      }
   }
+
 }
