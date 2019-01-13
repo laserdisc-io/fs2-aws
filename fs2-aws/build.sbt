@@ -18,7 +18,7 @@ libraryDependencies ++= Seq(
   "org.typelevel"          %% "alleycats-core"               % "1.4.0",
   "software.amazon.awssdk" % "s3"                            % AwsSdkVersion,
   "com.amazonaws"          % "amazon-kinesis-producer"       % "0.12.11",
-  "com.amazonaws"          % "amazon-kinesis-client"         % "1.9.2",
+  "com.amazonaws"          % "amazon-kinesis-client"         % "2.0.5",
   "com.amazonaws"          % "amazon-sqs-java-messaging-lib" % "1.0.4",
   "org.scalatest"          %% "scalatest"                    % "3.0.5" % Test,
   "org.mockito"            % "mockito-core"                  % "2.23.4" % Test,

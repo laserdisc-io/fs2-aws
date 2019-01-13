@@ -1,7 +1,7 @@
 name := "fs2-aws"
 organization in ThisBuild := "io.github.dmateusp"
 
-scalaVersion := "2.12.7"
+scalaVersion := "2.12.8"
 
 scalacOptions in ThisBuild ++= Seq(
   "-encoding",
@@ -24,7 +24,7 @@ lazy val root = (project in file("."))
 lazy val `fs2-aws`         = (project in file("fs2-aws"))
 lazy val `fs2-aws-testkit` = (project in file("fs2-aws-testkit")).dependsOn(`fs2-aws`)
 
-addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.3")
+addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.9")
 
 // publish
 publishTo in ThisBuild := Some(

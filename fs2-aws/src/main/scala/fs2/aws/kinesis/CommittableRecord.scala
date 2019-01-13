@@ -1,10 +1,8 @@
-package fs2
-package aws
-package kinesis
+package fs2.aws.kinesis
 
-import com.amazonaws.services.kinesis.model.Record
-import com.amazonaws.services.kinesis.clientlibrary.types.{ExtendedSequenceNumber, UserRecord}
-import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer
+import software.amazon.kinesis.processor.RecordProcessorCheckpointer
+import software.amazon.kinesis.retrieval.KinesisClientRecord
+import software.amazon.kinesis.retrieval.kpl.ExtendedSequenceNumber
 
 /** A message type from Kinesis which has not yet been commited or checkpointed.
   *
@@ -19,14 +17,15 @@ case class CommittableRecord(
     shardId: String,
     recordProcessorStartingSequenceNumber: ExtendedSequenceNumber,
     millisBehindLatest: Long,
-    record: Record,
+    record: KinesisClientRecord,
     recordProcessor: RecordProcessor,
-    checkpointer: IRecordProcessorCheckpointer
+    checkpointer: RecordProcessorCheckpointer
 ) {
-  val sequenceNumber: String = record.getSequenceNumber
-
-  def canCheckpoint(): Boolean = !recordProcessor.isShutdown
-  def checkpoint(): Unit       = checkpointer.checkpoint(record)
+  val sequenceNumber: String  = record.sequenceNumber()
+  val subSequenceNumber: Long = record.subSequenceNumber()
+  def canCheckpoint: Boolean  = !recordProcessor.isShutdown
+  def checkpoint(): Unit =
+    checkpointer.checkpoint(record.sequenceNumber(), record.subSequenceNumber())
 }
 
 object CommittableRecord {
@@ -37,7 +36,7 @@ object CommittableRecord {
   implicit val orderBySequenceNumber: Ordering[CommittableRecord] =
     Ordering[(String, Long)].on(cr ⇒
       (cr.sequenceNumber, cr.record match {
-        case ur: UserRecord ⇒ ur.getSubSequenceNumber
-        case _              ⇒ 0
+        case ur: KinesisClientRecord ⇒ ur.subSequenceNumber()
+        case _                       ⇒ 0
       }))
 }
