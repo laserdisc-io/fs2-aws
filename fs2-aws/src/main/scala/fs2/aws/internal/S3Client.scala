@@ -3,14 +3,14 @@ package fs2.aws.internal
 import java.io.InputStream
 
 import cats.effect.Effect
-import com.amazonaws.services.s3.AmazonS3ClientBuilder
-import com.amazonaws.services.s3.model._
+import software.amazon.awssdk.services.s3.S3AsyncClient
+import software.amazon.awssdk.services.s3.model._
 
 import scala.collection.JavaConverters._
 import scala.util.control.Exception
 
 private[aws] trait S3Client[F[_]] {
-  private lazy val client = AmazonS3ClientBuilder.defaultClient
+  private lazy val client = S3AsyncClient.create
 
   def getObjectContentOrError(getObjectRequest: GetObjectRequest)(
       implicit F: Effect[F]): F[Either[Throwable, InputStream]] =
@@ -19,15 +19,15 @@ private[aws] trait S3Client[F[_]] {
   def getObjectContent(getObjectRequest: GetObjectRequest)(implicit F: Effect[F]): F[InputStream] =
     F.delay(client.getObject(getObjectRequest).getObjectContent)
 
-  def initiateMultipartUpload(initiateMultipartUploadRequest: InitiateMultipartUploadRequest)(
-      implicit F: Effect[F]): F[InitiateMultipartUploadResult] =
-    F.delay(client.initiateMultipartUpload(initiateMultipartUploadRequest))
+  def initiateMultipartUpload(request: CreateMultipartUploadRequest)(
+      implicit F: Effect[F]): F[CreateMultipartUploadRequest] =
+    F.delay(client.createMultipartUpload(request))
 
-  def uploadPart(uploadPartRequest: UploadPartRequest)(implicit F: Effect[F]): F[UploadPartResult] =
+  def uploadPart(uploadPartRequest: UploadPartRequest)(implicit F: Effect[F]): F[UploadPartResponse] =
     F.delay(client.uploadPart(uploadPartRequest))
 
   def completeMultipartUpload(completeMultipartUploadRequest: CompleteMultipartUploadRequest)(
-      implicit F: Effect[F]): F[CompleteMultipartUploadResult] =
+      implicit F: Effect[F]): F[CompleteMultipartUploadResponse] =
     F.delay(client.completeMultipartUpload(completeMultipartUploadRequest))
 
   def s3ObjectSummaries(listObjectsV2Request: ListObjectsV2Request)(
