@@ -9,7 +9,7 @@ scalaVersion := "2.12.7"
 releasePublishArtifactsAction := PgpKeys.publishSigned.value
 
 val fs2Version    = "1.0.2"
-val AwsSdkVersion = "2.3.0"
+val AwsSdkVersion = "2.3.1"
 val cirisVersion  = "0.11.0"
 
 libraryDependencies ++= Seq(
