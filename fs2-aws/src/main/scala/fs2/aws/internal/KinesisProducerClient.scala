@@ -19,7 +19,7 @@ trait KinesisProducerClient[F[_]] {
 class KinesisProducerClientImpl[F[_]] extends KinesisProducerClient[F] {
 
   val credentials: AWSCredentialsProviderChain = new DefaultAWSCredentialsProviderChain()
-  val region: Option[String]                   = Some("us-east-1")
+  val region: Option[String]                   = None
 
   private lazy val config: KinesisProducerConfiguration = {
     val c = new KinesisProducerConfiguration()
