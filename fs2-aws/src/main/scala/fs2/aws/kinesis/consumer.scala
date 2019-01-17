@@ -135,20 +135,22 @@ object consumer {
     timer: Timer[F]): Pipe[F, CommittableRecord, KinesisClientRecord] = {
     _.through(groupBy(r => F.delay(r.shardId))).map {
       case (k, st) =>
-        st.groupWithin(checkpointSettings.maxBatchSize, checkpointSettings.maxBatchWait)
-          .map(_.toList.max)
-          .mapAsync(parallelism) { cr =>
-            F.async[KinesisClientRecord] { cb =>
-              if (cr.canCheckpoint) {
-                cr.checkpoint()
-                cb(Right(cr.record))
-              } else {
-                cb(
-                  Left(KinesisCheckpointException(
+        def checkpoint: Pipe[F, CommittableRecord, KinesisClientRecord] =
+          _.groupWithin(checkpointSettings.maxBatchSize, checkpointSettings.maxBatchWait)
+            .map(_.toList.max)
+            .flatMap { cr =>
+              fs2.Stream.eval_(F.async[KinesisClientRecord] { cb =>
+                if (cr.canCheckpoint) {
+                  cr.checkpoint()
+                  cb(Right(cr.record))
+                } else {
+                  cb(Left(KinesisCheckpointException(
                     "Record processor has been shutdown and therefore cannot checkpoint records")))
-              }
+                }
+              })
             }
-          }
+        def bypass: Pipe[F, CommittableRecord, KinesisClientRecord] = _.map(_.record)
+        st.broadcastThrough(checkpoint, bypass)
     }.parJoinUnbounded
   }
 
