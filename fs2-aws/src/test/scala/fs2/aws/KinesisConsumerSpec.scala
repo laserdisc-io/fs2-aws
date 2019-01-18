@@ -254,7 +254,6 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     the[RuntimeException] thrownBy fs2.Stream
       .emits(Seq(input))
       .through(checkpointRecords[IO](settings))
-      .evalMap(e => IO { println(e); e })
       .compile
       .toVector
       .unsafeRunSync should have message "you have no power here"
