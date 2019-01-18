@@ -157,7 +157,7 @@ object consumer {
 
     _.through(groupBy(r => F.delay(r.shardId))).map {
       case (_, st) =>
-        st.broadcastThrough(checkpoint(checkpointSettings, 10), bypass)
+        st.broadcastThrough(checkpoint(checkpointSettings, parallelism), bypass)
     }.parJoinUnbounded
   }
 
