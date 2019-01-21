@@ -362,7 +362,8 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     val recordProcessor    = new RecordProcessor(_ => (), 1.seconds)
     val checkpointerShard1 = mock(classOf[ShardRecordProcessorCheckpointer])
     val settings =
-      KinesisCheckpointSettings(maxBatchSize = Int.MaxValue, maxBatchWait = 500.millis).right.get
+      KinesisCheckpointSettings(maxBatchSize = Int.MaxValue, maxBatchWait = 500.millis).right
+        .getOrElse(throw new Error())
 
     def startStream(input: Seq[CommittableRecord]) =
       fs2.Stream
