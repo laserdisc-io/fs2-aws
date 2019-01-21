@@ -247,23 +247,45 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
       checkpointer
     )
 
-    val failure = new RuntimeException()
+    val failure = new RuntimeException("you have no power here")
     when(checkpointer.checkpoint(record.sequenceNumber, record.subSequenceNumber))
       .thenThrow(failure)
 
-    fs2.Stream
+    the[RuntimeException] thrownBy fs2.Stream
       .emits(Seq(input))
       .through(checkpointRecords[IO](settings))
-      .attempt
       .compile
       .toVector
-      .unsafeRunSync
-      .head
-      .isLeft should be(true)
+      .unsafeRunSync should have message "you have no power here"
 
     eventually(
       verify(checkpointer).checkpoint(input.record.sequenceNumber(),
                                       input.record.subSequenceNumber()))
+  }
+
+  it should "bypass all items when checkpoint" in new KinesisWorkerCheckpointContext {
+    val checkpointer = mock(classOf[ShardRecordProcessorCheckpointer])
+
+    val record = mock(classOf[KinesisClientRecord])
+    when(record.sequenceNumber()).thenReturn("1")
+
+    val input = (1 to 100).map(
+      idx =>
+        new CommittableRecord(
+          s"shard-1",
+          mock(classOf[ExtendedSequenceNumber]),
+          idx,
+          record,
+          recordProcessor,
+          checkpointer
+      ))
+
+    fs2.Stream
+      .emits(input)
+      .through(checkpointRecords[IO](settings))
+      .compile
+      .toVector
+      .unsafeRunSync should have size 100
   }
 
   private abstract class WorkerContext(backpressureTimeout: FiniteDuration = 1.minute,
@@ -340,7 +362,8 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     val recordProcessor    = new RecordProcessor(_ => (), 1.seconds)
     val checkpointerShard1 = mock(classOf[ShardRecordProcessorCheckpointer])
     val settings =
-      KinesisCheckpointSettings(maxBatchSize = 100, maxBatchWait = 500.millis).right.get
+      KinesisCheckpointSettings(maxBatchSize = Int.MaxValue, maxBatchWait = 500.millis).right
+        .getOrElse(throw new Error())
 
     def startStream(input: Seq[CommittableRecord]) =
       fs2.Stream
