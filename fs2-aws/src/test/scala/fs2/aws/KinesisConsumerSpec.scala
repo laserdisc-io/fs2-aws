@@ -10,7 +10,7 @@ import fs2.aws.kinesis.{
   CommittableRecord,
   KinesisCheckpointSettings,
   KinesisConsumerSettings,
-  RecordProcessor
+  SingleRecordProcessor
 }
 import org.mockito.Mockito._
 import org.mockito.invocation.InvocationOnMock
@@ -359,7 +359,7 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
   }
 
   private trait KinesisWorkerCheckpointContext {
-    val recordProcessor    = new RecordProcessor(_ => (), 1.seconds)
+    val recordProcessor    = new SingleRecordProcessor(_ => (), 1.seconds)
     val checkpointerShard1 = mock(classOf[ShardRecordProcessorCheckpointer])
     val settings =
       KinesisCheckpointSettings(maxBatchSize = Int.MaxValue, maxBatchWait = 500.millis).right
