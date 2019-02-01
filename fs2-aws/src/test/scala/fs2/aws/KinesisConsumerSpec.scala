@@ -14,7 +14,6 @@ import fs2.aws.kinesis.{
 }
 import org.mockito.Mockito._
 import org.mockito.invocation.InvocationOnMock
-import org.mockito.stubbing.Answer
 import org.scalatest.concurrent.Eventually
 import org.scalatest.time._
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
@@ -89,7 +88,7 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     }
 
     // Should process all 10 messages
-    eventually(output.size shouldBe (10))
+    eventually(output.size shouldBe 10)
 
     // Send a batch that exceeds the internal buffer size
     for (i <- 1 to 50) {
@@ -99,7 +98,7 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     }
 
     // Should have processed all 60 messages
-    eventually(output.size shouldBe (60))
+    eventually(output.size shouldBe 60)
 
     eventually(verify(mockScheduler, times(0)).shutdown())
     semaphore.release()
@@ -125,7 +124,7 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     }
 
     // Should process all 10 messages
-    eventually(output.size shouldBe (10))
+    eventually(output.size shouldBe 10)
 
     // Each shard is assigned its own worker thread, so we get messages
     // from each thread simultaneously.
@@ -143,7 +142,7 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     simulateWorkerThread(recordProcessor2)
 
     // Should have processed all 60 messages
-    eventually(output.size shouldBe (60))
+    eventually(output.size shouldBe 60)
     semaphore.release()
   }
 
@@ -297,13 +296,9 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
 
     protected val mockScheduler: Scheduler = mock(classOf[Scheduler])
 
-    when(mockScheduler.run()).thenAnswer(new Answer[Unit] {
-      override def answer(invocation: InvocationOnMock): Unit = ()
-    })
+    when(mockScheduler.run()).thenAnswer((_: InvocationOnMock) => ())
 
-    when(mockScheduler.shutdown()).thenAnswer(new Answer[Unit] {
-      override def answer(invocation: InvocationOnMock): Unit = ()
-    })
+    when(mockScheduler.shutdown()).thenAnswer((_: InvocationOnMock) => ())
 
     var recordProcessorFactory: ShardRecordProcessorFactory = _
     var recordProcessor: ShardRecordProcessor               = _
@@ -321,7 +316,7 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
       KinesisConsumerSettings("testStream", "testApp", Region.US_EAST_1, 10, 10, 10.seconds).right.get
 
     val stream =
-      readFromKinesisStream[IO](builder, config)
+      readFromKinesisStream[IO](config, builder)
         .through(_.evalMap(i => IO(output = output :+ i)))
         .map(i => if (errorStream) throw new Exception("boom") else i)
         .compile

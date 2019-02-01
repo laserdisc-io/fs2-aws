@@ -82,7 +82,7 @@ object consumer {
     */
   def readFromKinesisStream[F[_]](consumerConfig: KinesisConsumerSettings)(
       implicit F: ConcurrentEffect[F]): Stream[F, CommittableRecord] = {
-    readFromKinesisStream(defaultScheduler(_, consumerConfig), consumerConfig)
+    readFromKinesisStream(consumerConfig, defaultScheduler(_, consumerConfig))
   }
 
   /** Initialize a worker and start streaming records from a Kinesis stream
@@ -94,7 +94,7 @@ object consumer {
     */
   def readChunkedFromKinesisStream[F[_]](consumerConfig: KinesisConsumerSettings)(
       implicit F: ConcurrentEffect[F]): Stream[F, Chunk[CommittableRecord]] = {
-    readChunksFromKinesisStream(defaultScheduler(_, consumerConfig), consumerConfig)
+    readChunksFromKinesisStream(consumerConfig, defaultScheduler(_, consumerConfig))
   }
 
   /** Intialize a worker and start streaming records from a Kinesis stream
