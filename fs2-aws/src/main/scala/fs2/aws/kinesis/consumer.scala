@@ -4,7 +4,7 @@ import java.util.UUID
 
 import cats.effect.{ConcurrentEffect, IO, Timer}
 import cats.implicits._
-import fs2.{Pipe, RaiseThrowable, Sink, Stream}
+import fs2.{Chunk, Pipe, RaiseThrowable, Sink, Stream}
 import fs2.aws.internal._
 import fs2.aws.internal.Exceptions.KinesisCheckpointException
 import fs2.concurrent.Queue
@@ -73,7 +73,7 @@ object consumer {
     }
   }
 
-  /** Intialize a worker and start streaming records from a Kinesis stream
+  /** Initialize a worker and start streaming records from a Kinesis stream
     * On stream finish (due to error or other), worker will be shutdown
     *
     *  @tparam F effect type of the fs2 stream
@@ -82,7 +82,19 @@ object consumer {
     */
   def readFromKinesisStream[F[_]](consumerConfig: KinesisConsumerSettings)(
       implicit F: ConcurrentEffect[F]): Stream[F, CommittableRecord] = {
-    readFromKinesisStream(defaultScheduler(_, consumerConfig), consumerConfig)
+    readFromKinesisStream(consumerConfig, defaultScheduler(_, consumerConfig))
+  }
+
+  /** Initialize a worker and start streaming records from a Kinesis stream
+    * On stream finish (due to error or other), worker will be shutdown
+    *
+    *  @tparam F effect type of the fs2 stream
+    *  @param consumerConfig configuration parameters for the KCL
+    *  @return an infinite fs2 Stream that emits Kinesis Records Chunks
+    */
+  def readChunkedFromKinesisStream[F[_]](consumerConfig: KinesisConsumerSettings)(
+      implicit F: ConcurrentEffect[F]): Stream[F, Chunk[CommittableRecord]] = {
+    readChunksFromKinesisStream(consumerConfig, defaultScheduler(_, consumerConfig))
   }
 
   /** Intialize a worker and start streaming records from a Kinesis stream
@@ -94,15 +106,15 @@ object consumer {
     *  @return an infinite fs2 Stream that emits Kinesis Records
     */
   private[aws] def readFromKinesisStream[F[_]](
-      workerFactory: => ShardRecordProcessorFactory => Scheduler,
-      streamConfig: KinesisConsumerSettings
+      streamConfig: KinesisConsumerSettings,
+      workerFactory: => ShardRecordProcessorFactory => Scheduler
   )(implicit F: ConcurrentEffect[F]): Stream[F, CommittableRecord] = {
 
     // Initialize a KCL worker which appends to the internal stream queue on message receipt
     def instantiateWorker(queue: Queue[F, CommittableRecord]): F[Scheduler] = F.delay {
       workerFactory(
         () =>
-          new RecordProcessor(
+          new SingleRecordProcessor(
             record => F.runAsync(queue.enqueue1(record))(_ => IO.unit).unsafeRunSync,
             streamConfig.terminateGracePeriod
         )
@@ -113,6 +125,32 @@ object consumer {
     // Expose the elements by dequeuing the internal buffer
     for {
       buffer <- Stream.eval(Queue.bounded[F, CommittableRecord](streamConfig.bufferSize))
+      worker = instantiateWorker(buffer)
+      stream <- buffer.dequeue concurrently Stream.eval(worker.map(_.run)) onFinalize worker.map(
+        _.shutdown)
+    } yield stream
+  }
+
+  private[aws] def readChunksFromKinesisStream[F[_]](
+      streamConfig: KinesisConsumerSettings,
+      workerFactory: => ShardRecordProcessorFactory => Scheduler
+  )(implicit F: ConcurrentEffect[F]): Stream[F, Chunk[CommittableRecord]] = {
+
+    // Initialize a KCL worker which appends to the internal stream queue on message receipt
+    def instantiateWorker(queue: Queue[F, Chunk[CommittableRecord]]): F[Scheduler] = F.delay {
+      workerFactory(
+        () =>
+          new ChunkedRecordProcessor(
+            records => F.runAsync(queue.enqueue1(records))(_ => IO.unit).unsafeRunSync,
+            streamConfig.terminateGracePeriod
+        )
+      )
+    }
+
+    // Instantiate a new bounded queue and concurrently run the queue populator
+    // Expose the elements by dequeuing the internal buffer
+    for {
+      buffer <- Stream.eval(Queue.bounded[F, Chunk[CommittableRecord]](streamConfig.bufferSize))
       worker = instantiateWorker(buffer)
       stream <- buffer.dequeue concurrently Stream.eval(worker.map(_.run)) onFinalize worker.map(
         _.shutdown)
