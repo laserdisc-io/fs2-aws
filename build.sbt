@@ -55,6 +55,8 @@ credentials in ThisBuild += Credentials("Sonatype Nexus Repository Manager",
 
 publishArtifact in ThisBuild in Test := true
 
+updateOptions := updateOptions.value.withGigahorse(false)
+
 // release steps
 releaseProcess := Seq[ReleaseStep](
   inquireVersions,
