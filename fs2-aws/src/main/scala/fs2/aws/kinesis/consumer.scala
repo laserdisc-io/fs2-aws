@@ -106,8 +106,8 @@ object consumer {
     *  @return an infinite fs2 Stream that emits Kinesis Records
     */
   private[aws] def readFromKinesisStream[F[_]](
-      workerFactory: => ShardRecordProcessorFactory => Scheduler,
-      streamConfig: KinesisConsumerSettings
+      streamConfig: KinesisConsumerSettings,
+      workerFactory: => ShardRecordProcessorFactory => Scheduler
   )(implicit F: ConcurrentEffect[F]): Stream[F, CommittableRecord] = {
 
     // Initialize a KCL worker which appends to the internal stream queue on message receipt
@@ -132,8 +132,8 @@ object consumer {
   }
 
   private[aws] def readChunksFromKinesisStream[F[_]](
-      workerFactory: => ShardRecordProcessorFactory => Scheduler,
-      streamConfig: KinesisConsumerSettings
+      streamConfig: KinesisConsumerSettings,
+      workerFactory: => ShardRecordProcessorFactory => Scheduler
   )(implicit F: ConcurrentEffect[F]): Stream[F, Chunk[CommittableRecord]] = {
 
     // Initialize a KCL worker which appends to the internal stream queue on message receipt
