@@ -16,5 +16,5 @@ package object testkit {
                       Some(d))
   }
 
-  val TestRecordProcessor = new kinesis.RecordProcessor(_ => (), 10.seconds)
+  val TestRecordProcessor = new kinesis.SingleRecordProcessor(_ => (), 10.seconds)
 }

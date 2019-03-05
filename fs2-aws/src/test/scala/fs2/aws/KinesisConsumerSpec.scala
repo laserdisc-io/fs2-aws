@@ -10,11 +10,10 @@ import fs2.aws.kinesis.{
   CommittableRecord,
   KinesisCheckpointSettings,
   KinesisConsumerSettings,
-  RecordProcessor
+  SingleRecordProcessor
 }
 import org.mockito.Mockito._
 import org.mockito.invocation.InvocationOnMock
-import org.mockito.stubbing.Answer
 import org.scalatest.concurrent.Eventually
 import org.scalatest.time._
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
@@ -89,7 +88,7 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     }
 
     // Should process all 10 messages
-    eventually(output.size shouldBe (10))
+    eventually(output.size shouldBe 10)
 
     // Send a batch that exceeds the internal buffer size
     for (i <- 1 to 50) {
@@ -99,7 +98,7 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     }
 
     // Should have processed all 60 messages
-    eventually(output.size shouldBe (60))
+    eventually(output.size shouldBe 60)
 
     eventually(verify(mockScheduler, times(0)).shutdown())
     semaphore.release()
@@ -125,7 +124,7 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     }
 
     // Should process all 10 messages
-    eventually(output.size shouldBe (10))
+    eventually(output.size shouldBe 10)
 
     // Each shard is assigned its own worker thread, so we get messages
     // from each thread simultaneously.
@@ -143,7 +142,7 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     simulateWorkerThread(recordProcessor2)
 
     // Should have processed all 60 messages
-    eventually(output.size shouldBe (60))
+    eventually(output.size shouldBe 60)
     semaphore.release()
   }
 
@@ -247,23 +246,45 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
       checkpointer
     )
 
-    val failure = new RuntimeException()
+    val failure = new RuntimeException("you have no power here")
     when(checkpointer.checkpoint(record.sequenceNumber, record.subSequenceNumber))
       .thenThrow(failure)
 
-    fs2.Stream
+    the[RuntimeException] thrownBy fs2.Stream
       .emits(Seq(input))
       .through(checkpointRecords[IO](settings))
-      .attempt
       .compile
       .toVector
-      .unsafeRunSync
-      .head
-      .isLeft should be(true)
+      .unsafeRunSync should have message "you have no power here"
 
     eventually(
       verify(checkpointer).checkpoint(input.record.sequenceNumber(),
                                       input.record.subSequenceNumber()))
+  }
+
+  it should "bypass all items when checkpoint" in new KinesisWorkerCheckpointContext {
+    val checkpointer = mock(classOf[ShardRecordProcessorCheckpointer])
+
+    val record = mock(classOf[KinesisClientRecord])
+    when(record.sequenceNumber()).thenReturn("1")
+
+    val input = (1 to 100).map(
+      idx =>
+        new CommittableRecord(
+          s"shard-1",
+          mock(classOf[ExtendedSequenceNumber]),
+          idx,
+          record,
+          recordProcessor,
+          checkpointer
+      ))
+
+    fs2.Stream
+      .emits(input)
+      .through(checkpointRecords[IO](settings))
+      .compile
+      .toVector
+      .unsafeRunSync should have size 100
   }
 
   private abstract class WorkerContext(backpressureTimeout: FiniteDuration = 1.minute,
@@ -275,13 +296,9 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
 
     protected val mockScheduler: Scheduler = mock(classOf[Scheduler])
 
-    when(mockScheduler.run()).thenAnswer(new Answer[Unit] {
-      override def answer(invocation: InvocationOnMock): Unit = ()
-    })
+    when(mockScheduler.run()).thenAnswer((_: InvocationOnMock) => ())
 
-    when(mockScheduler.shutdown()).thenAnswer(new Answer[Unit] {
-      override def answer(invocation: InvocationOnMock): Unit = ()
-    })
+    when(mockScheduler.shutdown()).thenAnswer((_: InvocationOnMock) => ())
 
     var recordProcessorFactory: ShardRecordProcessorFactory = _
     var recordProcessor: ShardRecordProcessor               = _
@@ -299,7 +316,7 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
       KinesisConsumerSettings("testStream", "testApp", Region.US_EAST_1, 10, 10, 10.seconds).right.get
 
     val stream =
-      readFromKinesisStream[IO](builder, config)
+      readFromKinesisStream[IO](config, builder)
         .through(_.evalMap(i => IO(output = output :+ i)))
         .map(i => if (errorStream) throw new Exception("boom") else i)
         .compile
@@ -337,10 +354,11 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
   }
 
   private trait KinesisWorkerCheckpointContext {
-    val recordProcessor    = new RecordProcessor(_ => (), 1.seconds)
+    val recordProcessor    = new SingleRecordProcessor(_ => (), 1.seconds)
     val checkpointerShard1 = mock(classOf[ShardRecordProcessorCheckpointer])
     val settings =
-      KinesisCheckpointSettings(maxBatchSize = 100, maxBatchWait = 500.millis).right.get
+      KinesisCheckpointSettings(maxBatchSize = Int.MaxValue, maxBatchWait = 500.millis).right
+        .getOrElse(throw new Error())
 
     def startStream(input: Seq[CommittableRecord]) =
       fs2.Stream
