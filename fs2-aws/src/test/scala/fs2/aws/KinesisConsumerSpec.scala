@@ -296,9 +296,13 @@ class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach
 
     protected val mockScheduler: Scheduler = mock(classOf[Scheduler])
 
-    when(mockScheduler.run()).thenAnswer((_: InvocationOnMock) => ())
+    when(mockScheduler.run()).thenAnswer(new org.mockito.stubbing.Answer[Unit] {
+      def answer(invocation: InvocationOnMock): Unit = ()
+    })
 
-    when(mockScheduler.shutdown()).thenAnswer((_: InvocationOnMock) => ())
+    when(mockScheduler.shutdown()).thenAnswer(new org.mockito.stubbing.Answer[Unit] {
+      def answer(invocation: InvocationOnMock): Unit = ()
+    })
 
     var recordProcessorFactory: ShardRecordProcessorFactory = _
     var recordProcessor: ShardRecordProcessor               = _

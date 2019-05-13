@@ -16,6 +16,7 @@ import software.amazon.kinesis.common.ConfigsBuilder
 import software.amazon.kinesis.coordinator.Scheduler
 import software.amazon.kinesis.processor.ShardRecordProcessorFactory
 import software.amazon.kinesis.retrieval.KinesisClientRecord
+import software.amazon.kinesis.processor.ShardRecordProcessor
 
 object consumer {
   private def defaultScheduler(
@@ -113,11 +114,14 @@ object consumer {
     // Initialize a KCL worker which appends to the internal stream queue on message receipt
     def instantiateWorker(queue: Queue[F, CommittableRecord]): F[Scheduler] = F.delay {
       workerFactory(
-        () =>
-          new SingleRecordProcessor(
-            record => F.runAsync(queue.enqueue1(record))(_ => IO.unit).unsafeRunSync,
-            streamConfig.terminateGracePeriod
-        )
+        new ShardRecordProcessorFactory {
+          def shardRecordProcessor(): ShardRecordProcessor = {
+            new SingleRecordProcessor(
+              record => F.runAsync(queue.enqueue1(record))(_ => IO.unit).unsafeRunSync,
+              streamConfig.terminateGracePeriod
+            )
+          }
+        }
       )
     }
 
@@ -139,11 +143,14 @@ object consumer {
     // Initialize a KCL worker which appends to the internal stream queue on message receipt
     def instantiateWorker(queue: Queue[F, Chunk[CommittableRecord]]): F[Scheduler] = F.delay {
       workerFactory(
-        () =>
-          new ChunkedRecordProcessor(
-            records => F.runAsync(queue.enqueue1(records))(_ => IO.unit).unsafeRunSync,
-            streamConfig.terminateGracePeriod
-        )
+        new ShardRecordProcessorFactory {
+          def shardRecordProcessor(): ShardRecordProcessor = {
+            new ChunkedRecordProcessor(
+              records => F.runAsync(queue.enqueue1(records))(_ => IO.unit).unsafeRunSync,
+              streamConfig.terminateGracePeriod  
+            )
+          }
+        }
       )
     }
 

@@ -18,7 +18,7 @@ package object utils {
           IO[Either[Throwable, ByteArrayInputStream]] {
             val fileContent: Array[Byte] =
               try {
-                Source.fromResource(goe.getKey).mkString.getBytes
+                Source.fromInputStream(Thread.currentThread.getContextClassLoader.getResourceAsStream(goe.getKey)).mkString.getBytes
               } catch {
                 case _: FileNotFoundException => throw new AmazonS3Exception("File not found")
                 case e: Throwable             => throw e
@@ -48,7 +48,7 @@ package object utils {
       IO[ByteArrayInputStream] {
         val fileContent: Array[Byte] =
           try {
-            Source.fromResource(getObjectRequest.getKey).mkString.getBytes
+            Source.fromInputStream(Thread.currentThread.getContextClassLoader.getResourceAsStream(getObjectRequest.getKey)).mkString.getBytes
           } catch {
             case _: FileNotFoundException => throw new AmazonS3Exception("File not found")
             case e: Throwable             => throw e

@@ -1,9 +1,14 @@
 name := "fs2-aws"
 organization in ThisBuild := "io.github.dmateusp"
 
-scalaVersion := "2.12.8"
+lazy val scala212 = "2.12.8"
+lazy val scala211 = "2.11.12"
+lazy val supportedScalaVersions = List(scala212, scala211)
+
+ThisBuild / scalaVersion := "2.12.8"
 
 scalacOptions in ThisBuild ++= Seq(
+  "-target:jvm-1.8",
   "-encoding",
   "UTF-8", // source files are in UTF-8
   "-deprecation", // warn about use of deprecated APIs
@@ -18,11 +23,18 @@ scalacOptions in ThisBuild ++= Seq(
 lazy val root = (project in file("."))
   .aggregate(`fs2-aws`, `fs2-aws-testkit`)
   .settings(
+    crossScalaVersions := Nil,
     skip in publish := true
   )
 
 lazy val `fs2-aws`         = (project in file("fs2-aws"))
-lazy val `fs2-aws-testkit` = (project in file("fs2-aws-testkit")).dependsOn(`fs2-aws`)
+  .settings(
+    crossScalaVersions := supportedScalaVersions
+  )
+lazy val `fs2-aws-testkit` = (project in file("fs2-aws-testkit"))
+  .settings(
+    crossScalaVersions := supportedScalaVersions
+  ).dependsOn(`fs2-aws`)
 
 addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.9")
 
@@ -57,13 +69,19 @@ publishArtifact in ThisBuild in Test := true
 
 updateOptions in ThisBuild := updateOptions.value.withGigahorse(false)
 
-// release steps
+// don't use sbt-release's cross facility
+releaseCrossBuild := false
 releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,
   inquireVersions,
+  runClean,
+  releaseStepCommandAndRemaining("+test"),
   setReleaseVersion,
   commitReleaseVersion,
   tagRelease,
-  publishArtifacts,
+  releaseStepCommandAndRemaining("+publishSigned"),
+  setNextVersion,
+  commitNextVersion,
   pushChanges
 )
 

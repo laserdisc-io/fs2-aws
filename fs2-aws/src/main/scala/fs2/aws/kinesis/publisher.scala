@@ -50,8 +50,9 @@ object publisher {
                 override def onFailure(t: Throwable): Unit = cb(Left(t))
 
                 override def onSuccess(result: UserRecordResult): Unit = cb(Right(result))
-              },
-              (command: Runnable) => ec.execute(command)
+              }, new java.util.concurrent.Executor {
+                def execute(command: Runnable): Unit = ec.execute(command)
+              }
             )
           }
       }
