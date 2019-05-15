@@ -1,8 +1,7 @@
 package fs2.aws.sqs
 
 import fs2.aws.internal.{SqsClient, SqsClientImpl}
-
-import fs2.{Stream, Pipe, Sink}
+import fs2.{Pipe, Sink, Stream}
 import fs2.concurrent.Queue
 import cats.effect.{Async, Concurrent, Timer}
 import software.amazon.awssdk.services.sqs.model._
@@ -35,7 +34,10 @@ object consumer {
                                     sqsClient: SqsClient[F] = new SqsClientImpl[F])(
       implicit ec: ExecutionContext,
       Timer: Timer[F]): Stream[F, Message] =
-    readObjectFromSqs[F, Message](sqsConfig, sqsClient)(Concurrent[F], ec, Timer, msg => Right(msg))
+    readObjectFromSqs[F, Message](sqsConfig, sqsClient)(Concurrent[F],
+                                                        ec,
+                                                        Timer,
+                                                        msg => Right(msg))
       .map(_.right.get)
 
   def deleteFromSqs[F[_]: Async](queueUrl: String, sqsClient: SqsClient[F] = new SqsClientImpl[F])(
@@ -49,5 +51,9 @@ object consumer {
   def deleteFromSqs_[F[_]: Async](queueUrl: String)(
       implicit ec: ExecutionContext): Sink[F, Message] =
     _.through(deleteFromSqs(queueUrl)).drain
+
+  def sendToSqs[F[_]: Async](queueUrl: String, sqsClient: SqsClient[F] = new SqsClientImpl[F])(
+      implicit ec: ExecutionContext): Pipe[F, Message, SendMessageResponse] =
+    _.flatMap(msg => Stream.eval(sqsClient.sendMessage(queueUrl, msg)))
 
 }
