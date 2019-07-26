@@ -4,6 +4,7 @@ organization in ThisBuild := "io.github.dmateusp"
 scalaVersion := "2.12.8"
 
 scalacOptions in ThisBuild ++= Seq(
+  "-target:jvm-1.8",
   "-encoding",
   "UTF-8", // source files are in UTF-8
   "-deprecation", // warn about use of deprecated APIs
