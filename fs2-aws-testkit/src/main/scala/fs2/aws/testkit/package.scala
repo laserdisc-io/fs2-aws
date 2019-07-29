@@ -12,8 +12,8 @@ package object testkit {
       d: Deferred[F, MessageListener]
   )(implicit decoder: Message => Either[Throwable, O]): fs2.Stream[F, O] = {
     fs2.aws.sqs.sqsStream(SqsConfig("dummy"),
-                      (_: SqsConfig, _: MessageListener) => new TestSqsConsumerBuilder[F],
-                      Some(d))
+                          (_: SqsConfig, _: MessageListener) => new TestSqsConsumerBuilder[F],
+                          Some(d))
   }
 
   val TestRecordProcessor = new kinesis.SingleRecordProcessor(_ => (), 10.seconds)
