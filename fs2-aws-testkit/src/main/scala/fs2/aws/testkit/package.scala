@@ -11,7 +11,7 @@ package object testkit {
   def sqsStream[F[_]: ConcurrentEffect, O](
       d: Deferred[F, MessageListener]
   )(implicit decoder: Message => Either[Throwable, O]): fs2.Stream[F, O] = {
-    fs2.aws.sqsStream(SqsConfig("dummy"),
+    fs2.aws.sqs.sqsStream(SqsConfig("dummy"),
                       (_: SqsConfig, _: MessageListener) => new TestSqsConsumerBuilder[F],
                       Some(d))
   }

@@ -5,7 +5,6 @@ import cats.effect.{ContextShift, IO}
 import com.amazon.sqs.javamessaging.SQSConnection
 import com.amazon.sqs.javamessaging.message.SQSTextMessage
 import eu.timepit.refined.auto._
-import fs2.aws
 import fs2.aws.sqs.{ConsumerBuilder, SQSConsumer, SqsConfig}
 import javax.jms.{Message, MessageListener, TextMessage}
 import org.scalatest.mockito.MockitoSugar
@@ -24,7 +23,7 @@ class SqsSpec extends AsyncFlatSpec with Matchers with MockitoSugar {
   "SQS endpoint" should "stream messages" in {
 
     def stream(d: Deferred[IO, MessageListener]) =
-      aws
+      sqs
         .sqsStream[IO, Int](
           SqsConfig("dummy"),
           (_, listener) => {
