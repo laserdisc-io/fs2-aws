@@ -51,7 +51,9 @@ object consumer {
       configsBuilder.lifecycleConfig(),
       configsBuilder.metricsConfig(),
       configsBuilder.processorConfig(),
-      configsBuilder.retrievalConfig()
+      configsBuilder
+        .retrievalConfig()
+        .initialPositionInStreamExtended(settings.initialPositionInStreamExtended)
     )
   }
 

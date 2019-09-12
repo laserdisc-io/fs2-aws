@@ -1,8 +1,8 @@
 package fs2.aws.kinesis
 
 import fs2.aws.internal.Exceptions._
-
 import software.amazon.awssdk.regions.Region
+import software.amazon.kinesis.common.{InitialPositionInStream, InitialPositionInStreamExtended}
 
 import scala.concurrent.duration._
 
@@ -14,6 +14,7 @@ import scala.concurrent.duration._
   *  @param maxConcurrency max size of the KinesisAsyncClient HTTP thread pool. Defaults to Int.MaxValue.
   *  @param bufferSize size of the internal buffer used when reading messages from Kinesis
   *  @param terminateGracePeriod period of time to allow processing of records before performing the final checkpoint and terminating
+  *  @param initialPositionInStreamExtended initial position in Kinesis stream to start processing messages from
   */
 class KinesisConsumerSettings private (
     val streamName: String,
@@ -21,7 +22,8 @@ class KinesisConsumerSettings private (
     val region: Region,
     val maxConcurrency: Int,
     val bufferSize: Int,
-    val terminateGracePeriod: FiniteDuration
+    val terminateGracePeriod: FiniteDuration,
+    val initialPositionInStreamExtended: InitialPositionInStreamExtended
 )
 
 object KinesisConsumerSettings {
@@ -31,14 +33,22 @@ object KinesisConsumerSettings {
       region: Region = Region.US_EAST_1,
       maxConcurrency: Int = Int.MaxValue,
       bufferSize: Int = 10,
-      terminateGracePeriod: FiniteDuration = 10.seconds
+      terminateGracePeriod: FiniteDuration = 10.seconds,
+      initialPositionInStreamExtended: InitialPositionInStreamExtended =
+        InitialPositionInStreamExtended.newInitialPosition(InitialPositionInStream.LATEST)
   ): Either[Throwable, KinesisConsumerSettings] =
     (bufferSize, maxConcurrency, terminateGracePeriod) match {
       case (bs, _, _) if bs < 1 => Left(BufferSizeException("Must be greater than 0"))
       case (_, mc, _) if mc < 1 => Left(MaxConcurrencyException("Must be greater than 0"))
       case (bs, mc, period) =>
         Right(
-          new KinesisConsumerSettings(streamName, appName, region, mc, bs, period)
+          new KinesisConsumerSettings(streamName,
+                                      appName,
+                                      region,
+                                      mc,
+                                      bs,
+                                      period,
+                                      initialPositionInStreamExtended)
         )
     }
 }
