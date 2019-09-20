@@ -4,7 +4,7 @@ import java.nio.ByteBuffer
 
 import cats.Monad
 import cats.effect.{Concurrent, Effect}
-import fs2.{Stream, Pipe, Sink}
+import fs2.{Stream, Pipe}
 import fs2.aws.internal._
 import com.google.common.util.concurrent.{FutureCallback, Futures, ListenableFuture}
 import com.amazonaws.services.kinesis.producer.UserRecordResult
@@ -101,7 +101,7 @@ object publisher {
       producer: KinesisProducerClient[F] = new KinesisProducerClientImpl[F]
   )(implicit F: Effect[F],
     ec: ExecutionContext,
-    concurrent: Concurrent[F]): Sink[F, (String, ByteBuffer)] = {
+    concurrent: Concurrent[F]): Pipe[F, (String, ByteBuffer), Unit] = {
     _.through(writeToKinesis(streamName, parallelism, producer))
       .map(_ => ())
   }
