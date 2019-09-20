@@ -9,8 +9,8 @@ import com.amazonaws.services.s3.model._
 import scala.collection.JavaConverters._
 import scala.util.control.Exception
 
-object S3Client{
-  def apply[F[_]](amazonS3: AmazonS3): S3Client[F] = new S3Client[F]{
+object S3Client {
+  def apply[F[_]](amazonS3: AmazonS3): S3Client[F] = new S3Client[F] {
     override lazy val client: AmazonS3 = amazonS3
   }
 }
