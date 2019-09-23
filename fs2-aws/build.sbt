@@ -15,7 +15,7 @@ val cirisVersion  = "0.11.0"
 libraryDependencies ++= Seq(
   "co.fs2"                  %% "fs2-core"                     % fs2Version,
   "co.fs2"                  %% "fs2-io"                       % fs2Version,
-  "org.typelevel"           %% "alleycats-core"               % "1.4.0",
+  "org.typelevel"           %% "alleycats-core"               % "1.6.1",
   "com.amazonaws"           % "aws-java-sdk-kinesis"          % AwsSdkVersion,
   "com.amazonaws"           % "aws-java-sdk-s3"               % AwsSdkVersion,
   "com.amazonaws"           % "aws-java-sdk-sqs"              % AwsSdkVersion,
