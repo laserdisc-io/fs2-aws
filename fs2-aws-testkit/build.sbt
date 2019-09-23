@@ -6,5 +6,5 @@ releasePublishArtifactsAction := PgpKeys.publishSigned.value
 
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest"   % "3.0.8",
-  "org.mockito"   % "mockito-core" % "2.23.4"
+  "org.mockito"   % "mockito-core" % "2.28.2"
 )
