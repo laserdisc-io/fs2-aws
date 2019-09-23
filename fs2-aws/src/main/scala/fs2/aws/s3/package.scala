@@ -57,11 +57,11 @@ package object s3 {
                        closeAfterUse = true)
   }
 
-  def uploadS3FileMultipart[F[_]](
-      bucket: String,
-      key: String,
-      objectMetadata: Option[ObjectMetadata] = None,
-      s3Client: S3Client[F] = new S3Client[F] {})(implicit F: Effect[F]): fs2.Sink[F, Byte] = {
+  def uploadS3FileMultipart[F[_]](bucket: String,
+                                  key: String,
+                                  objectMetadata: Option[ObjectMetadata] = None,
+                                  s3Client: S3Client[F] = new S3Client[F] {})(
+      implicit F: Effect[F]): fs2.Pipe[F, Byte, Unit] = {
     def uploadPart(uploadId: String): fs2.Pipe[F, (Chunk[Byte], Long), PartETag] =
       _.flatMap({
         case (c, i) =>
@@ -78,7 +78,7 @@ package object s3 {
               .flatMap(r => F.delay(r.getPartETag)))
       })
 
-    def completeUpload(uploadId: String): fs2.Sink[F, List[PartETag]] =
+    def completeUpload(uploadId: String): fs2.Pipe[F, List[PartETag], Unit] =
       _.flatMap(
         parts =>
           Stream.eval_(s3Client.completeMultipartUpload(
@@ -102,7 +102,7 @@ package object s3 {
                 .zip(Stream.iterate(1L)(_ + 1))
                 .through(uploadPart(m.uploadId))
                 .fold[List[PartETag]](List())(_ :+ _)
-                .to(completeUpload(m.uploadId)))
+                .through(completeUpload(m.uploadId)))
       }
   }
 
