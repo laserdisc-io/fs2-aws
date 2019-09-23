@@ -57,11 +57,11 @@ package object s3 {
                        closeAfterUse = true)
   }
 
-  def uploadS3FileMultipart[F[_]](
-      bucket: String,
-      key: String,
-      objectMetadata: Option[ObjectMetadata] = None,
-      s3Client: S3Client[F] = new S3Client[F] {})(implicit F: Effect[F]): fs2.Pipe[F, Byte, Unit] = {
+  def uploadS3FileMultipart[F[_]](bucket: String,
+                                  key: String,
+                                  objectMetadata: Option[ObjectMetadata] = None,
+                                  s3Client: S3Client[F] = new S3Client[F] {})(
+      implicit F: Effect[F]): fs2.Pipe[F, Byte, Unit] = {
     def uploadPart(uploadId: String): fs2.Pipe[F, (Chunk[Byte], Long), PartETag] =
       _.flatMap({
         case (c, i) =>
