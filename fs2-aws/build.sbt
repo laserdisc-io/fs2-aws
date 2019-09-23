@@ -28,5 +28,5 @@ libraryDependencies ++= Seq(
   "is.cir"                  %% "ciris-core"                   % cirisVersion,
   "is.cir"                  %% "ciris-enumeratum"             % cirisVersion,
   "is.cir"                  %% "ciris-refined"                % cirisVersion,
-  "eu.timepit"              %% "refined"                      % "0.9.2"
+  "eu.timepit"              %% "refined"                      % "0.9.10"
 )
