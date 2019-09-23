@@ -1,7 +1,7 @@
 name := "fs2-aws"
 organization in ThisBuild := "io.github.dmateusp"
 
-scalaVersion := "2.12.8"
+scalaVersion := "2.12.9"
 
 scalacOptions in ThisBuild ++= Seq(
   "-target:jvm-1.8",
