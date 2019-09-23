@@ -4,7 +4,7 @@ import java.util.UUID
 
 import cats.effect.{ConcurrentEffect, IO, Timer}
 import cats.implicits._
-import fs2.{Chunk, Pipe, RaiseThrowable, Sink, Stream}
+import fs2.{Chunk, Pipe, RaiseThrowable, Stream}
 import fs2.aws.internal._
 import fs2.aws.internal.Exceptions.KinesisCheckpointException
 import fs2.concurrent.Queue
@@ -210,7 +210,7 @@ object consumer {
     */
   def checkpointRecords_[F[_]](
       checkpointSettings: KinesisCheckpointSettings = KinesisCheckpointSettings.defaultInstance
-  )(implicit F: ConcurrentEffect[F], timer: Timer[F]): Sink[F, CommittableRecord] = {
+  )(implicit F: ConcurrentEffect[F], timer: Timer[F]): Pipe[F, CommittableRecord, Unit] = {
     _.through(checkpointRecords(checkpointSettings))
       .map(_ => ())
   }

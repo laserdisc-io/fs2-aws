@@ -4,7 +4,7 @@ name := "fs2-aws"
 coverageMinimum := 40
 coverageFailOnMinimum := true
 
-scalaVersion := "2.12.7"
+scalaVersion := "2.12.9"
 
 releasePublishArtifactsAction := PgpKeys.publishSigned.value
 
