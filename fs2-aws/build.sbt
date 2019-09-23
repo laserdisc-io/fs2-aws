@@ -10,7 +10,7 @@ releasePublishArtifactsAction := PgpKeys.publishSigned.value
 
 val fs2Version    = "1.0.5"
 val AwsSdkVersion = "1.11.636"
-val cirisVersion  = "0.11.0"
+val cirisVersion  = "0.12.1"
 
 libraryDependencies ++= Seq(
   "co.fs2"                  %% "fs2-core"                     % fs2Version,
