@@ -8,12 +8,12 @@ import eu.timepit.refined.auto._
 import fs2.aws
 import fs2.aws.sqs.{ConsumerBuilder, SQSConsumer, SqsConfig}
 import javax.jms.{Message, MessageListener, TextMessage}
-import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{AsyncFlatSpec, Matchers}
+import org.scalatestplus.mockito.MockitoSugar
 
 import scala.concurrent.ExecutionContext
 
-class SqsSpec extends AsyncFlatSpec with Matchers with MockitoSugar {
+class SqsSpec extends AsyncFlatSpec with Matchers with MockitoSugar{
   implicit val ec: ExecutionContext             = ExecutionContext.global
   implicit val ioContextShift: ContextShift[IO] = IO.contextShift(ec)
   implicit val messageDecoder: Message => Either[Throwable, Int] = { sqs_msg =>
