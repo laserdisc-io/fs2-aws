@@ -24,7 +24,7 @@ libraryDependencies ++= Seq(
   "org.scalatest"           %% "scalatest"                    % "3.0.5" % Test,
   "org.mockito"             % "mockito-core"                  % "2.23.4" % Test,
   "com.amazonaws"           % "aws-java-sdk-sqs"              % AwsSdkVersion excludeAll ("commons-logging", "commons-logging"),
-  "com.amazonaws"           % "amazon-sqs-java-messaging-lib" % "1.0.4" excludeAll ("commons-logging", "commons-logging"),
+  "com.amazonaws"           % "amazon-sqs-java-messaging-lib" % "1.0.8" excludeAll ("commons-logging", "commons-logging"),
   "is.cir"                  %% "ciris-core"                   % cirisVersion,
   "is.cir"                  %% "ciris-enumeratum"             % cirisVersion,
   "is.cir"                  %% "ciris-refined"                % cirisVersion,
