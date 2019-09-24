@@ -2,7 +2,7 @@ package fs2.aws
 
 import java.io.{ByteArrayInputStream, InputStream}
 
-import cats.effect.{ContextShift, Effect}
+import cats.effect.{Blocker, ContextShift, Effect}
 import cats.implicits._
 import com.amazonaws.services.s3.model._
 import fs2.{Chunk, Pull, Stream}
@@ -19,22 +19,24 @@ package object s3 {
       chunkSize: Int,
       s3Client: S3Client[F] = new S3Client[F] {})(implicit F: Effect[F]): Stream[F, Byte] = {
     def go(offset: Int)(implicit F: Effect[F]): Pull[F, Byte, Unit] =
-      Pull
-        .acquire[F, Either[Throwable, InputStream]](s3Client.getObjectContentOrError(
+      fs2.Stream
+        .bracket[F, Either[Throwable, InputStream]](s3Client.getObjectContentOrError(
           new GetObjectRequest(bucket, key).withRange(offset, offset + chunkSize))) {
           //todo: properly log the error
           case Left(e)  => F.delay(() => e.printStackTrace())
           case Right(s) => F.delay(s.close())
         }
+        .pull
+        .last
         .flatMap {
-          case Right(s3_is) =>
+          case Some(Right(s3_is)) =>
             Pull.eval(F.delay {
               val is: InputStream = s3_is
               val buf             = new Array[Byte](chunkSize)
               val len             = is.read(buf)
               if (len < 0) None else Some(Chunk.bytes(buf, 0, len))
             })
-          case Left(_) => Pull.eval(F.delay(None))
+          case Some(_) | None => Pull.eval(F.delay(None))
         }
         .flatMap {
           case Some(o) => Pull.output(o) >> go(offset + o.size)
@@ -53,7 +55,7 @@ package object s3 {
       cs: ContextShift[F]): Stream[F, Byte] = {
     readInputStream[F](s3Client.getObjectContent(new GetObjectRequest(bucket, key)),
                        chunkSize = 8192,
-                       blockingExecutionContext = blockingEC,
+                       blocker = Blocker.liftExecutionContext(blockingEC),
                        closeAfterUse = true)
   }
 
