@@ -19,12 +19,15 @@ package object s3 {
       chunkSize: Int,
       s3Client: S3Client[F] = new S3Client[F] {})(implicit F: Effect[F]): Stream[F, Byte] = {
     def go(offset: Int)(implicit F: Effect[F]): Pull[F, Byte, Unit] =
-      fs2.Stream.bracket[F, Either[Throwable, InputStream]](s3Client.getObjectContentOrError(
+      fs2.Stream
+        .bracket[F, Either[Throwable, InputStream]](s3Client.getObjectContentOrError(
           new GetObjectRequest(bucket, key).withRange(offset, offset + chunkSize))) {
           //todo: properly log the error
           case Left(e)  => F.delay(() => e.printStackTrace())
           case Right(s) => F.delay(s.close())
-        }.pull.last
+        }
+        .pull
+        .last
         .flatMap {
           case Some(Right(s3_is)) =>
             Pull.eval(F.delay {
