@@ -8,7 +8,7 @@ scalaVersion := "2.12.9"
 
 releasePublishArtifactsAction := PgpKeys.publishSigned.value
 
-val fs2Version    = "2.0.0"
+val fs2Version    = "2.0.1"
 val AwsSdkVersion = "1.11.636"
 val cirisVersion  = "0.12.1"
 
@@ -20,7 +20,7 @@ libraryDependencies ++= Seq(
   "com.amazonaws"           % "aws-java-sdk-s3"               % AwsSdkVersion,
   "com.amazonaws"           % "aws-java-sdk-sqs"              % AwsSdkVersion,
   "com.amazonaws"           % "amazon-kinesis-producer"       % "0.13.1",
-  "software.amazon.kinesis" % "amazon-kinesis-client"         % "2.2.3",
+  "software.amazon.kinesis" % "amazon-kinesis-client"         % "2.2.4",
   "org.scalatest"           %% "scalatest"                    % "3.0.8" % Test,
   "org.mockito"             % "mockito-core"                  % "2.28.2" % Test,
   "com.amazonaws"           % "aws-java-sdk-sqs"              % AwsSdkVersion excludeAll ("commons-logging", "commons-logging"),
