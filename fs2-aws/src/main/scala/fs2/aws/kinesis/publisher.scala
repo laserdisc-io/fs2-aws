@@ -23,7 +23,7 @@ object publisher {
     * @param producer   kinesis producer client to use
     * @return a Pipe that accepts a tuple consisting of the partition key string and a ByteBuffer of data  and returns UserRecordResults
     */
-  def writeToKinesis[F[_] : Concurrent](
+  def writeToKinesis[F[_]: Concurrent](
       streamName: String,
       parallelism: Int = 10,
       producer: KinesisProducerClient[F] = new KinesisProducerClientImpl[F]
@@ -67,7 +67,7 @@ object publisher {
     * @param encoder implicit I => ByteBuffer encoder
     * @return a Pipe that accepts a tuple consisting of the partition key string and a ByteBuffer of data  and returns UserRecordResults
     */
-  def writeObjectToKinesis[F[_] : Concurrent, I](
+  def writeObjectToKinesis[F[_]: Concurrent, I](
       streamName: String,
       parallelism: Int = 10,
       producer: KinesisProducerClient[F] = new KinesisProducerClientImpl[F]
@@ -90,7 +90,7 @@ object publisher {
     * @param producer     kinesis producer client to use
     * @return a Sink that accepts a stream of bytes
     */
-  def writeToKinesis_[F[_] : Concurrent](
+  def writeToKinesis_[F[_]: Concurrent](
       streamName: String,
       parallelism: Int = 10,
       producer: KinesisProducerClient[F] = new KinesisProducerClientImpl[F]
