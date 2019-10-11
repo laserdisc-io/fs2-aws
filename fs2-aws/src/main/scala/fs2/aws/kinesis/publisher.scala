@@ -2,12 +2,11 @@ package fs2.aws.kinesis
 
 import java.nio.ByteBuffer
 
-import cats.Monad
-import cats.effect.{Concurrent, Effect}
-import fs2.{Stream, Pipe}
-import fs2.aws.internal._
-import com.google.common.util.concurrent.{FutureCallback, Futures, ListenableFuture}
+import cats.effect.{Async, Concurrent}
 import com.amazonaws.services.kinesis.producer.UserRecordResult
+import com.google.common.util.concurrent.{FutureCallback, Futures, ListenableFuture}
+import fs2.aws.internal._
+import fs2.{Pipe, Stream}
 
 import scala.concurrent.ExecutionContext
 
@@ -24,13 +23,11 @@ object publisher {
     * @param producer   kinesis producer client to use
     * @return a Pipe that accepts a tuple consisting of the partition key string and a ByteBuffer of data  and returns UserRecordResults
     */
-  def writeToKinesis[F[_]](
+  def writeToKinesis[F[_] : Concurrent](
       streamName: String,
       parallelism: Int = 10,
       producer: KinesisProducerClient[F] = new KinesisProducerClientImpl[F]
-  )(implicit F: Effect[F],
-    ec: ExecutionContext,
-    concurrent: Concurrent[F]): Pipe[F, (String, ByteBuffer), UserRecordResult] = {
+  )(implicit ec: ExecutionContext): Pipe[F, (String, ByteBuffer), UserRecordResult] = {
 
     // Evaluate the operation of invoking the Kinesis client
     def write: Pipe[F, (String, ByteBuffer), ListenableFuture[UserRecordResult]] =
@@ -43,7 +40,7 @@ object publisher {
     def registerCallback: Pipe[F, ListenableFuture[UserRecordResult], UserRecordResult] =
       _.mapAsync(parallelism) {
         case f =>
-          Effect[F].async[UserRecordResult] { cb =>
+          Async[F].async[UserRecordResult] { cb =>
             Futures.addCallback(
               f,
               new FutureCallback[UserRecordResult] {
@@ -70,13 +67,11 @@ object publisher {
     * @param encoder implicit I => ByteBuffer encoder
     * @return a Pipe that accepts a tuple consisting of the partition key string and a ByteBuffer of data  and returns UserRecordResults
     */
-  def writeObjectToKinesis[F[_], I](
+  def writeObjectToKinesis[F[_] : Concurrent, I](
       streamName: String,
       parallelism: Int = 10,
       producer: KinesisProducerClient[F] = new KinesisProducerClientImpl[F]
-  )(implicit F: Effect[F] with Monad[F],
-    ec: ExecutionContext,
-    concurrent: Concurrent[F],
+  )(implicit ec: ExecutionContext,
     encoder: I => ByteBuffer): Pipe[F, (String, I), (I, UserRecordResult)] = {
 
     _.flatMap {
@@ -95,13 +90,11 @@ object publisher {
     * @param producer     kinesis producer client to use
     * @return a Sink that accepts a stream of bytes
     */
-  def writeToKinesis_[F[_]](
+  def writeToKinesis_[F[_] : Concurrent](
       streamName: String,
       parallelism: Int = 10,
       producer: KinesisProducerClient[F] = new KinesisProducerClientImpl[F]
-  )(implicit F: Effect[F],
-    ec: ExecutionContext,
-    concurrent: Concurrent[F]): Pipe[F, (String, ByteBuffer), Unit] = {
+  )(implicit ec: ExecutionContext): Pipe[F, (String, ByteBuffer), Unit] = {
     _.through(writeToKinesis(streamName, parallelism, producer))
       .map(_ => ())
   }
