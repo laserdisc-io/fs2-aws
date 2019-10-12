@@ -10,7 +10,7 @@ import scala.concurrent.duration.FiniteDuration
   * Wraps incoming records into CommitableRecord types to allow for downstream
   * checkpointing
   */
-private[aws] trait RecordProcessor extends ShardRecordProcessor {
+trait RecordProcessor extends ShardRecordProcessor {
   val terminateGracePeriod: FiniteDuration
 
   private[kinesis] var shardId: String                                = _
