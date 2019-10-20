@@ -92,6 +92,7 @@ object consumer {
     * @tparam F effect type of the fs2 stream
     * @param appName    name of the Kinesis application. Used by KCL when resharding
     * @param streamName name of the Kinesis stream to consume from
+    * @param kinesisClient preconfigured kineiss klient, usefull when you need STS access
     * @return an infinite fs2 Stream that emits Kinesis Records
     */
   def readFromKinesisStream[F[_]](
@@ -121,7 +122,6 @@ object consumer {
     *
     * @tparam F effect type of the fs2 stream
     * @param consumerConfig configuration parameters for the KCL
-    * @param kinesisClient preconfigured kineiss klient, usefull when you need STS access
     * @return an infinite fs2 Stream that emits Kinesis Records Chunks
     */
   def readChunkedFromKinesisStream[F[_]](consumerConfig: KinesisConsumerSettings)(
