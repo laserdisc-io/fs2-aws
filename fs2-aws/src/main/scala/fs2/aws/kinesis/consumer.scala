@@ -18,17 +18,19 @@ import software.amazon.kinesis.processor.ShardRecordProcessorFactory
 import software.amazon.kinesis.retrieval.KinesisClientRecord
 
 object consumer {
+  def mkDefaultKinesisClient(settings: KinesisConsumerSettings): KinesisAsyncClient =
+    KinesisAsyncClient
+      .builder()
+      .region(settings.region)
+      .httpClientBuilder(NettyNioAsyncHttpClient.builder().maxConcurrency(settings.maxConcurrency))
+      .build()
+
   private def defaultScheduler(
       recordProcessorFactory: ShardRecordProcessorFactory,
-      settings: KinesisConsumerSettings
+      settings: KinesisConsumerSettings,
+      kinesisClient: KinesisAsyncClient
   ): Scheduler = {
-    val kinesisClient: KinesisAsyncClient =
-      KinesisAsyncClient
-        .builder()
-        .region(settings.region)
-        .httpClientBuilder(
-          NettyNioAsyncHttpClient.builder().maxConcurrency(settings.maxConcurrency))
-        .build()
+
     val dynamoClient: DynamoDbAsyncClient =
       DynamoDbAsyncClient.builder().region(settings.region).build()
     val cloudWatchClient: CloudWatchAsyncClient =
@@ -58,10 +60,10 @@ object consumer {
   /** Intialize a worker and start streaming records from a Kinesis stream
     * On stream finish (due to error or other), worker will be shutdown
     *
-    *  @tparam F effect type of the fs2 stream
-    *  @param appName name of the Kinesis application. Used by KCL when resharding
-    *  @param streamName name of the Kinesis stream to consume from
-    *  @return an infinite fs2 Stream that emits Kinesis Records
+    * @tparam F effect type of the fs2 stream
+    * @param appName    name of the Kinesis application. Used by KCL when resharding
+    * @param streamName name of the Kinesis stream to consume from
+    * @return an infinite fs2 Stream that emits Kinesis Records
     */
   def readFromKinesisStream[F[_]](
       appName: String,
@@ -76,38 +78,90 @@ object consumer {
   /** Initialize a worker and start streaming records from a Kinesis stream
     * On stream finish (due to error or other), worker will be shutdown
     *
-    *  @tparam F effect type of the fs2 stream
-    *  @param consumerConfig configuration parameters for the KCL
-    *  @return an infinite fs2 Stream that emits Kinesis Records
+    * @tparam F effect type of the fs2 stream
+    * @param consumerConfig configuration parameters for the KCL
+    * @return an infinite fs2 Stream that emits Kinesis Records
     */
   def readFromKinesisStream[F[_]](consumerConfig: KinesisConsumerSettings)(
       implicit F: ConcurrentEffect[F]): Stream[F, CommittableRecord] = {
-    readFromKinesisStream(consumerConfig, defaultScheduler(_, consumerConfig))
-  }
-
-  /** Initialize a worker and start streaming records from a Kinesis stream
-    * On stream finish (due to error or other), worker will be shutdown
-    *
-    *  @tparam F effect type of the fs2 stream
-    *  @param consumerConfig configuration parameters for the KCL
-    *  @return an infinite fs2 Stream that emits Kinesis Records Chunks
-    */
-  def readChunkedFromKinesisStream[F[_]](consumerConfig: KinesisConsumerSettings)(
-      implicit F: ConcurrentEffect[F]): Stream[F, Chunk[CommittableRecord]] = {
-    readChunksFromKinesisStream(consumerConfig, defaultScheduler(_, consumerConfig))
+    readFromKinesisStream(
+      consumerConfig,
+      defaultScheduler(_, consumerConfig, mkDefaultKinesisClient(consumerConfig)))
   }
 
   /** Intialize a worker and start streaming records from a Kinesis stream
     * On stream finish (due to error or other), worker will be shutdown
     *
-    *  @tparam F effect type of the fs2 stream
-    *  @param workerFactory function to create a Worker from a IRecordProcessorFactory
-    *  @param streamConfig configuration for the internal stream
-    *  @return an infinite fs2 Stream that emits Kinesis Records
+    * @tparam F effect type of the fs2 stream
+    * @param appName    name of the Kinesis application. Used by KCL when resharding
+    * @param streamName name of the Kinesis stream to consume from
+    * @param kinesisClient preconfigured kineiss klient, usefull when you need STS access
+    * @return an infinite fs2 Stream that emits Kinesis Records
+    */
+  def readFromKinesisStream[F[_]](
+      appName: String,
+      streamName: String,
+      kinesisClient: KinesisAsyncClient
+  )(implicit F: ConcurrentEffect[F], rt: RaiseThrowable[F]): Stream[F, CommittableRecord] = {
+    KinesisConsumerSettings(streamName, appName) match {
+      case Right(config) => readFromKinesisStream(config, kinesisClient)
+      case Left(err)     => Stream.raiseError(err)
+    }
+  }
+
+  /** Initialize a worker and start streaming records from a Kinesis stream
+    * On stream finish (due to error or other), worker will be shutdown
+    *
+    * @tparam F effect type of the fs2 stream
+    * @param consumerConfig configuration parameters for the KCL
+    * @param kinesisClient preconfigured kineiss klient, usefull when you need STS access
+    * @return an infinite fs2 Stream that emits Kinesis Records
+    */
+  def readFromKinesisStream[F[_]](consumerConfig: KinesisConsumerSettings,
+                                  kinesisClient: KinesisAsyncClient)(
+      implicit F: ConcurrentEffect[F]): Stream[F, CommittableRecord] = {
+    readFromKinesisStream(consumerConfig, defaultScheduler(_, consumerConfig, kinesisClient))
+  }
+
+  /** Initialize a worker and start streaming records from a Kinesis stream
+    * On stream finish (due to error or other), worker will be shutdown
+    *
+    * @tparam F effect type of the fs2 stream
+    * @param consumerConfig configuration parameters for the KCL
+    * @return an infinite fs2 Stream that emits Kinesis Records Chunks
+    */
+  def readChunkedFromKinesisStream[F[_]](consumerConfig: KinesisConsumerSettings)(
+      implicit F: ConcurrentEffect[F]): Stream[F, Chunk[CommittableRecord]] = {
+    readChunksFromKinesisStream(
+      consumerConfig,
+      defaultScheduler(_, consumerConfig, mkDefaultKinesisClient(consumerConfig)))
+  }
+
+  /** Initialize a worker and start streaming records from a Kinesis stream
+    * On stream finish (due to error or other), worker will be shutdown
+    *
+    * @tparam F effect type of the fs2 stream
+    * @param consumerConfig configuration parameters for the KCL
+    * @param kinesisClient preconfigured kineiss klient, usefull when you need STS access
+    * @return an infinite fs2 Stream that emits Kinesis Records Chunks
+    */
+  def readChunkedFromKinesisStream[F[_]](consumerConfig: KinesisConsumerSettings,
+                                         kinesisClient: KinesisAsyncClient)(
+      implicit F: ConcurrentEffect[F]): Stream[F, Chunk[CommittableRecord]] = {
+    readChunksFromKinesisStream(consumerConfig, defaultScheduler(_, consumerConfig, kinesisClient))
+  }
+
+  /** Intialize a worker and start streaming records from a Kinesis stream
+    * On stream finish (due to error or other), worker will be shutdown
+    *
+    * @tparam F effect type of the fs2 stream
+    * @param workerFactory function to create a Worker from a IRecordProcessorFactory
+    * @param streamConfig  configuration for the internal stream
+    * @return an infinite fs2 Stream that emits Kinesis Records
     */
   private[aws] def readFromKinesisStream[F[_]](
       streamConfig: KinesisConsumerSettings,
-      workerFactory: => ShardRecordProcessorFactory => Scheduler
+      workerFactory: ShardRecordProcessorFactory => Scheduler
   )(implicit F: ConcurrentEffect[F]): Stream[F, CommittableRecord] = {
 
     // Initialize a KCL worker which appends to the internal stream queue on message receipt
@@ -162,9 +216,9 @@ object consumer {
     * After accumulating maxBatchSize or reaching maxBatchWait for a respective shard, the latest record is checkpointed
     * By design, all records prior to the checkpointed record are also checkpointed in Kinesis
     *
-    *  @tparam F effect type of the fs2 stream
-    *  @param checkpointSettings configure maxBatchSize and maxBatchWait time before triggering a checkpoint
-    *  @return a stream of Record types representing checkpointed messages
+    * @tparam F effect type of the fs2 stream
+    * @param checkpointSettings configure maxBatchSize and maxBatchWait time before triggering a checkpoint
+    * @return a stream of Record types representing checkpointed messages
     */
   def checkpointRecords[F[_]](
       checkpointSettings: KinesisCheckpointSettings = KinesisCheckpointSettings.defaultInstance,
@@ -204,9 +258,9 @@ object consumer {
     * After accumulating maxBatchSize or reaching maxBatchWait for a respective shard, the latest record is checkpointed
     * By design, all records prior to the checkpointed record are also checkpointed in Kinesis
     *
-    *  @tparam F effect type of the fs2 stream
-    *  @param checkpointSettings configure maxBatchSize and maxBatchWait time before triggering a checkpoint
-    *  @return a Sink that accepts a stream of CommittableRecords
+    * @tparam F effect type of the fs2 stream
+    * @param checkpointSettings configure maxBatchSize and maxBatchWait time before triggering a checkpoint
+    * @return a Sink that accepts a stream of CommittableRecords
     */
   def checkpointRecords_[F[_]](
       checkpointSettings: KinesisCheckpointSettings = KinesisCheckpointSettings.defaultInstance

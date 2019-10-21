@@ -7,4 +7,4 @@ addSbtPlugin("org.scoverage" % "sbt-coveralls" % "1.2.7")
 
 // release
 addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.11")
-addSbtPlugin("com.jsuereth"      % "sbt-pgp"     % "1.1.2")
+addSbtPlugin("com.jsuereth"      % "sbt-pgp"     % "2.0.0")
