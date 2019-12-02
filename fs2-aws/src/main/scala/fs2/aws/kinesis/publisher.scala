@@ -2,7 +2,7 @@ package fs2.aws.kinesis
 
 import java.nio.ByteBuffer
 
-import cats.effect.{Async, Concurrent}
+import cats.effect.{Async, Concurrent, Sync}
 import com.amazonaws.services.kinesis.producer.UserRecordResult
 import com.google.common.util.concurrent.{FutureCallback, Futures, ListenableFuture}
 import fs2.aws.internal._
@@ -14,6 +14,15 @@ import scala.concurrent.ExecutionContext
   * fs2 Streams for publishing data to AWS Kinesis streams
   */
 object publisher {
+
+  def write[F[_] : Sync](streamName: String, producer: KinesisProducerClient[F]): Pipe[F, (String, ByteBuffer), ListenableFuture[UserRecordResult]] =
+    _.flatMap {
+      case (partitionKey, byteArray) =>
+        Stream.eval(producer.putData(streamName, partitionKey, byteArray))
+    }
+
+  // Register the returned future, returning the UserRecordResult
+
 
   /** Writes the (partitionKey, ByteBuffer) to a Kinesis stream via a Pipe
     *
@@ -30,16 +39,9 @@ object publisher {
   )(implicit ec: ExecutionContext): Pipe[F, (String, ByteBuffer), UserRecordResult] = {
 
     // Evaluate the operation of invoking the Kinesis client
-    def write: Pipe[F, (String, ByteBuffer), ListenableFuture[UserRecordResult]] =
-      _.flatMap {
-        case (partitionKey, byteArray) =>
-          Stream.eval(producer.putData(streamName, partitionKey, byteArray))
-      }
-
-    // Register the returned future, returning the UserRecordResult
     def registerCallback: Pipe[F, ListenableFuture[UserRecordResult], UserRecordResult] =
       _.mapAsync(parallelism) {
-        case f =>
+        f =>
           Async[F].async[UserRecordResult] { cb =>
             Futures.addCallback(
               f,
@@ -53,8 +55,26 @@ object publisher {
           }
       }
 
-    _.through(write)
+    _.through(write(streamName, producer))
       .through(registerCallback)
+  }
+  /** Writes the (partitionKey, ByteBuffer) to a Kinesis stream via a Pipe
+    *
+    * @tparam F effect type of the stream
+    * @param streamName the name of the Kinesis stream to write to
+    * @param parallelism number of concurrent writes to race simultaneously
+    * @param producer   kinesis producer client to use
+    * @return a Pipe that accepts a tuple consisting of the partition key string and a ByteBuffer of data  and returns Unit
+    *         this is most fast version of producer, since we do not care about the result of kinesis right, hence we don't wait
+    *         for it to publish next message
+    */
+  def writeAndForgetToKinesis[F[_] : Sync](
+                                        streamName: String,
+                                        parallelism: Int = 10,
+                                        producer: KinesisProducerClient[F] = new KinesisProducerClientImpl[F]
+                                      ): Pipe[F, (String, ByteBuffer), Unit] = {
+
+    _.through(write(streamName, producer)).as(Unit)
   }
 
   /** Writes the (partitionKey, payload) to a Kinesis stream via a Pipe
