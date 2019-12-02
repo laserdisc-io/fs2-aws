@@ -25,8 +25,7 @@ package object utils {
               }
             goe.getRange match {
               case Array(x, y) =>
-                if (x >= fileContent.length) Left(new AmazonS3Exception("Invalid range"))
-                else if (y > fileContent.length)
+                if (y > fileContent.length)
                   Right(new ByteArrayInputStream(fileContent.slice(x.toInt, fileContent.length)))
                 else Right(new ByteArrayInputStream(fileContent.slice(x.toInt, y.toInt)))
             }
