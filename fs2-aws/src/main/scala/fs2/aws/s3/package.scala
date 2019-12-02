@@ -22,8 +22,7 @@ package object s3 {
       fs2.Stream
         .bracket[F, Either[Throwable, InputStream]](s3Client.getObjectContentOrError(
           new GetObjectRequest(bucket, key).withRange(offset, offset + chunkSize))) {
-          //todo: properly log the error
-          case Left(e)  => F.delay(() => e.printStackTrace())
+          case Left(e)  => F.raiseError(e)
           case Right(s) => F.delay(s.close())
         }
         .pull
@@ -61,6 +60,7 @@ package object s3 {
 
   def uploadS3FileMultipart[F[_]](bucket: String,
                                   key: String,
+                                  partSize : Int,
                                   objectMetadata: Option[ObjectMetadata] = None,
                                   s3Client: S3Client[F] = new S3Client[F] {})(
       implicit F: Effect[F]): fs2.Pipe[F, Byte, Unit] = {
@@ -100,7 +100,7 @@ package object s3 {
           .eval(mui)
           .flatMap(
             m =>
-              in.chunks
+              in.chunkN(partSize)
                 .zip(Stream.iterate(1L)(_ + 1))
                 .through(uploadPart(m.uploadId))
                 .fold[List[PartETag]](List())(_ :+ _)
