@@ -24,7 +24,6 @@ class KinesisConsumerSettings private (
     val bufferSize: Int,
     val terminateGracePeriod: FiniteDuration,
     val stsAssumeRole: Option[STSAssumeRoleSettings]
-
 )
 
 object KinesisConsumerSettings {
@@ -56,13 +55,14 @@ object KinesisConsumerSettings {
   * @param roleArn The Amazon Resource Name (ARN) of the role to assume.
   * @param roleSessionName An identifier for the assumed role session.
   */
-class STSAssumeRoleSettings private(
-                    val roleArn: String,
-                    val roleSessionName: String
-                  )
+class STSAssumeRoleSettings private (
+    val roleArn: String,
+    val roleSessionName: String
+)
 
 object STSAssumeRoleSettings {
-  def apply(roleArn: String,roleSessionName: String) = new STSAssumeRoleSettings(roleArn, roleSessionName)
+  def apply(roleArn: String, roleSessionName: String) =
+    new STSAssumeRoleSettings(roleArn, roleSessionName)
 }
 
 /** Settings for configuring the Kinesis checkpointer pipe

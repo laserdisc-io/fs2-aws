@@ -26,18 +26,22 @@ object consumer {
     KinesisAsyncClient
       .builder()
       .region(settings.region)
-      .credentialsProvider(settings.stsAssumeRole.map(stsSettings =>
-        StsAssumeRoleCredentialsProvider
-          .builder()
-          .stsClient(StsClient.builder.build())
-          .refreshRequest(
-            AssumeRoleRequest.builder()
-              .roleArn(stsSettings.roleArn)
-              .roleSessionName(stsSettings.roleSessionName)
-              .build()
-          )
-          .build()
-      ).getOrElse(DefaultCredentialsProvider.create()))
+      .credentialsProvider(
+        settings.stsAssumeRole
+          .map(
+            stsSettings =>
+              StsAssumeRoleCredentialsProvider
+                .builder()
+                .stsClient(StsClient.builder.build())
+                .refreshRequest(
+                  AssumeRoleRequest
+                    .builder()
+                    .roleArn(stsSettings.roleArn)
+                    .roleSessionName(stsSettings.roleSessionName)
+                    .build()
+                )
+                .build())
+          .getOrElse(DefaultCredentialsProvider.create()))
       .httpClientBuilder(NettyNioAsyncHttpClient.builder().maxConcurrency(settings.maxConcurrency))
       .build()
 

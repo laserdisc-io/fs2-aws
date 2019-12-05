@@ -13,7 +13,7 @@ import org.scalatestplus.mockito.MockitoSugar
 
 import scala.concurrent.ExecutionContext
 
-class SqsSpec extends AsyncFlatSpec with Matchers with MockitoSugar{
+class SqsSpec extends AsyncFlatSpec with Matchers with MockitoSugar {
   implicit val ec: ExecutionContext             = ExecutionContext.global
   implicit val ioContextShift: ContextShift[IO] = IO.contextShift(ec)
   implicit val messageDecoder: Message => Either[Throwable, Int] = { sqs_msg =>
