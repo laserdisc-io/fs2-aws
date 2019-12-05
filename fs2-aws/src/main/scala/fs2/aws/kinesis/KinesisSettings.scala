@@ -14,6 +14,7 @@ import scala.concurrent.duration._
   *  @param maxConcurrency max size of the KinesisAsyncClient HTTP thread pool. Defaults to Int.MaxValue.
   *  @param bufferSize size of the internal buffer used when reading messages from Kinesis
   *  @param terminateGracePeriod period of time to allow processing of records before performing the final checkpoint and terminating
+  *  @param stsAssumeRole If present, the configured client will be setup for AWS cross-account access using the provided tokens
   */
 class KinesisConsumerSettings private (
     val streamName: String,
@@ -21,7 +22,9 @@ class KinesisConsumerSettings private (
     val region: Region,
     val maxConcurrency: Int,
     val bufferSize: Int,
-    val terminateGracePeriod: FiniteDuration
+    val terminateGracePeriod: FiniteDuration,
+    val stsAssumeRole: Option[STSAssumeRoleSettings]
+
 )
 
 object KinesisConsumerSettings {
@@ -31,16 +34,35 @@ object KinesisConsumerSettings {
       region: Region = Region.US_EAST_1,
       maxConcurrency: Int = Int.MaxValue,
       bufferSize: Int = 10,
-      terminateGracePeriod: FiniteDuration = 10.seconds
+      terminateGracePeriod: FiniteDuration = 10.seconds,
+      stsAssumeRole: Option[STSAssumeRoleSettings] = None
   ): Either[Throwable, KinesisConsumerSettings] =
     (bufferSize, maxConcurrency, terminateGracePeriod) match {
       case (bs, _, _) if bs < 1 => Left(BufferSizeException("Must be greater than 0"))
       case (_, mc, _) if mc < 1 => Left(MaxConcurrencyException("Must be greater than 0"))
       case (bs, mc, period) =>
         Right(
-          new KinesisConsumerSettings(streamName, appName, region, mc, bs, period)
+          new KinesisConsumerSettings(streamName, appName, region, mc, bs, period, stsAssumeRole)
         )
     }
+}
+
+/**
+  * Used when constructing a [KinesisConsumerSettings] instance that will by used by a client for cross-account access.
+  *
+  * This currently implements only the minimum required fields defined in:
+  * https://docs.aws.amazon.com/cli/latest/reference/sts/assume-role.html
+  *
+  * @param roleArn The Amazon Resource Name (ARN) of the role to assume.
+  * @param roleSessionName An identifier for the assumed role session.
+  */
+class STSAssumeRoleSettings private(
+                    val roleArn: String,
+                    val roleSessionName: String
+                  )
+
+object STSAssumeRoleSettings {
+  def apply(roleArn: String,roleSessionName: String) = new STSAssumeRoleSettings(roleArn, roleSessionName)
 }
 
 /** Settings for configuring the Kinesis checkpointer pipe

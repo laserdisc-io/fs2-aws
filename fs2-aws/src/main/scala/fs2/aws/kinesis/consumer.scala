@@ -8,10 +8,14 @@ import fs2.{Chunk, Pipe, RaiseThrowable, Stream}
 import fs2.aws.internal._
 import fs2.aws.internal.Exceptions.KinesisCheckpointException
 import fs2.concurrent.Queue
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient
+import software.amazon.awssdk.services.sts.StsClient
+import software.amazon.awssdk.services.sts.auth.StsAssumeRoleCredentialsProvider
+import software.amazon.awssdk.services.sts.model.AssumeRoleRequest
 import software.amazon.kinesis.common.ConfigsBuilder
 import software.amazon.kinesis.coordinator.Scheduler
 import software.amazon.kinesis.processor.ShardRecordProcessorFactory
@@ -22,6 +26,18 @@ object consumer {
     KinesisAsyncClient
       .builder()
       .region(settings.region)
+      .credentialsProvider(settings.stsAssumeRole.map(stsSettings =>
+        StsAssumeRoleCredentialsProvider
+          .builder()
+          .stsClient(StsClient.builder.build())
+          .refreshRequest(
+            AssumeRoleRequest.builder()
+              .roleArn(stsSettings.roleArn)
+              .roleSessionName(stsSettings.roleSessionName)
+              .build()
+          )
+          .build()
+      ).getOrElse(DefaultCredentialsProvider.create()))
       .httpClientBuilder(NettyNioAsyncHttpClient.builder().maxConcurrency(settings.maxConcurrency))
       .build()
 
