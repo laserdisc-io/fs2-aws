@@ -199,9 +199,9 @@ object consumer {
     // Expose the elements by dequeuing the internal buffer
     for {
       buffer <- Stream.eval(Queue.bounded[F, CommittableRecord](streamConfig.bufferSize))
-      worker = instantiateWorker(buffer)
-      stream <- buffer.dequeue concurrently Stream.eval(worker.map(_.run)) onFinalize worker.map(
-        _.shutdown)
+      worker <- Stream.eval(instantiateWorker(buffer))
+      stream <- buffer.dequeue concurrently Stream.eval(F.delay(worker.run)) onFinalize F.delay(
+        worker.shutdown)
     } yield stream
   }
 
@@ -225,9 +225,9 @@ object consumer {
     // Expose the elements by dequeuing the internal buffer
     for {
       buffer <- Stream.eval(Queue.bounded[F, Chunk[CommittableRecord]](streamConfig.bufferSize))
-      worker = instantiateWorker(buffer)
-      stream <- buffer.dequeue concurrently Stream.eval(worker.map(_.run)) onFinalize worker.map(
-        _.shutdown)
+      worker <- Stream.eval(instantiateWorker(buffer))
+      stream <- buffer.dequeue concurrently Stream.eval(F.delay(worker.run)) onFinalize F.delay(
+        worker.shutdown)
     } yield stream
   }
 
