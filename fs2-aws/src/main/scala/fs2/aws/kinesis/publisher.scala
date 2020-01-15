@@ -7,6 +7,7 @@ import com.amazonaws.services.kinesis.producer.UserRecordResult
 import com.google.common.util.concurrent.{FutureCallback, Futures, ListenableFuture}
 import fs2.aws.internal._
 import fs2.{Pipe, Stream}
+import cats.implicits._
 
 import scala.concurrent.ExecutionContext
 
@@ -74,7 +75,7 @@ object publisher {
       producer: KinesisProducerClient[F] = new KinesisProducerClientImpl[F]
   ): Pipe[F, (String, ByteBuffer), Unit] = {
 
-    _.through(write(streamName, producer)).as(Unit)
+    _.through(write(streamName, producer)).void
   }
 
   /** Writes the (partitionKey, payload) to a Kinesis stream via a Pipe
@@ -116,6 +117,6 @@ object publisher {
       producer: KinesisProducerClient[F] = new KinesisProducerClientImpl[F]
   )(implicit ec: ExecutionContext): Pipe[F, (String, ByteBuffer), Unit] = {
     _.through(writeToKinesis(streamName, parallelism, producer))
-      .map(_ => ())
+      .void
   }
 }
