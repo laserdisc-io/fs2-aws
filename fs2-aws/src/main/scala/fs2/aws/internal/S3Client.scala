@@ -43,5 +43,4 @@ trait S3Client[F[_]] {
   def getObject(objectRequest: GetObjectRequest)(implicit F: Effect[F]): F[S3Object] = {
     F.delay(client.getObject(objectRequest))
   }
-
 }
