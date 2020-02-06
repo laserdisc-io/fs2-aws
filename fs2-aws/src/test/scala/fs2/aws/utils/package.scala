@@ -4,6 +4,7 @@ import java.io._
 
 import cats.effect.{ Effect, IO }
 import com.amazonaws.SdkClientException
+import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.{ AmazonS3Exception, GetObjectRequest, S3ObjectInputStream }
 import fs2.aws.internal._
 import org.apache.http.client.methods.HttpRequestBase
@@ -11,6 +12,10 @@ import scala.io.Source
 
 package object utils {
   val s3TestClient: S3Client[IO] = new S3Client[IO] {
+
+    override def client: AmazonS3 =
+      throw new NotImplementedError("s3 client shouldn't be used in this test client")
+
     override def getObjectContentOrError(
       getObjectRequest: GetObjectRequest
     )(implicit e: Effect[IO]): IO[Either[Throwable, InputStream]] =
