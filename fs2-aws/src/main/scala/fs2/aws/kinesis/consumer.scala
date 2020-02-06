@@ -2,9 +2,9 @@ package fs2.aws.kinesis
 
 import java.util.UUID
 
-import cats.effect.{ConcurrentEffect, IO, Timer}
+import cats.effect.{ ConcurrentEffect, IO, Timer }
 import cats.implicits._
-import fs2.{Chunk, Pipe, RaiseThrowable, Stream}
+import fs2.{ Chunk, Pipe, RaiseThrowable, Stream }
 import fs2.aws.internal._
 import fs2.aws.internal.Exceptions.KinesisCheckpointException
 import fs2.concurrent.Queue
@@ -28,27 +28,28 @@ object consumer {
       .region(settings.region)
       .credentialsProvider(
         settings.stsAssumeRole
-          .map(
-            stsSettings =>
-              StsAssumeRoleCredentialsProvider
-                .builder()
-                .stsClient(StsClient.builder.build())
-                .refreshRequest(
-                  AssumeRoleRequest
-                    .builder()
-                    .roleArn(stsSettings.roleArn)
-                    .roleSessionName(stsSettings.roleSessionName)
-                    .build()
-                )
-                .build())
-          .getOrElse(DefaultCredentialsProvider.create()))
+          .map(stsSettings =>
+            StsAssumeRoleCredentialsProvider
+              .builder()
+              .stsClient(StsClient.builder.build())
+              .refreshRequest(
+                AssumeRoleRequest
+                  .builder()
+                  .roleArn(stsSettings.roleArn)
+                  .roleSessionName(stsSettings.roleSessionName)
+                  .build()
+              )
+              .build()
+          )
+          .getOrElse(DefaultCredentialsProvider.create())
+      )
       .httpClientBuilder(NettyNioAsyncHttpClient.builder().maxConcurrency(settings.maxConcurrency))
       .build()
 
   private def defaultScheduler(
-      recordProcessorFactory: ShardRecordProcessorFactory,
-      settings: KinesisConsumerSettings,
-      kinesisClient: KinesisAsyncClient
+    recordProcessorFactory: ShardRecordProcessorFactory,
+    settings: KinesisConsumerSettings,
+    kinesisClient: KinesisAsyncClient
   ): Scheduler = {
 
     val dynamoClient: DynamoDbAsyncClient =
@@ -86,14 +87,13 @@ object consumer {
     * @return an infinite fs2 Stream that emits Kinesis Records
     */
   def readFromKinesisStream[F[_]](
-      appName: String,
-      streamName: String
-  )(implicit F: ConcurrentEffect[F], rt: RaiseThrowable[F]): Stream[F, CommittableRecord] = {
+    appName: String,
+    streamName: String
+  )(implicit F: ConcurrentEffect[F], rt: RaiseThrowable[F]): Stream[F, CommittableRecord] =
     KinesisConsumerSettings(streamName, appName) match {
       case Right(config) => readFromKinesisStream(config)
       case Left(err)     => Stream.raiseError(err)
     }
-  }
 
   /** Initialize a worker and start streaming records from a Kinesis stream
     * On stream finish (due to error or other), worker will be shutdown
@@ -102,12 +102,13 @@ object consumer {
     * @param consumerConfig configuration parameters for the KCL
     * @return an infinite fs2 Stream that emits Kinesis Records
     */
-  def readFromKinesisStream[F[_]](consumerConfig: KinesisConsumerSettings)(
-      implicit F: ConcurrentEffect[F]): Stream[F, CommittableRecord] = {
+  def readFromKinesisStream[F[_]](
+    consumerConfig: KinesisConsumerSettings
+  )(implicit F: ConcurrentEffect[F]): Stream[F, CommittableRecord] =
     readFromKinesisStream(
       consumerConfig,
-      defaultScheduler(_, consumerConfig, mkDefaultKinesisClient(consumerConfig)))
-  }
+      defaultScheduler(_, consumerConfig, mkDefaultKinesisClient(consumerConfig))
+    )
 
   /** Intialize a worker and start streaming records from a Kinesis stream
     * On stream finish (due to error or other), worker will be shutdown
@@ -119,15 +120,14 @@ object consumer {
     * @return an infinite fs2 Stream that emits Kinesis Records
     */
   def readFromKinesisStream[F[_]](
-      appName: String,
-      streamName: String,
-      kinesisClient: KinesisAsyncClient
-  )(implicit F: ConcurrentEffect[F], rt: RaiseThrowable[F]): Stream[F, CommittableRecord] = {
+    appName: String,
+    streamName: String,
+    kinesisClient: KinesisAsyncClient
+  )(implicit F: ConcurrentEffect[F], rt: RaiseThrowable[F]): Stream[F, CommittableRecord] =
     KinesisConsumerSettings(streamName, appName) match {
       case Right(config) => readFromKinesisStream(config, kinesisClient)
       case Left(err)     => Stream.raiseError(err)
     }
-  }
 
   /** Initialize a worker and start streaming records from a Kinesis stream
     * On stream finish (due to error or other), worker will be shutdown
@@ -137,11 +137,11 @@ object consumer {
     * @param kinesisClient preconfigured kineiss klient, usefull when you need STS access
     * @return an infinite fs2 Stream that emits Kinesis Records
     */
-  def readFromKinesisStream[F[_]](consumerConfig: KinesisConsumerSettings,
-                                  kinesisClient: KinesisAsyncClient)(
-      implicit F: ConcurrentEffect[F]): Stream[F, CommittableRecord] = {
+  def readFromKinesisStream[F[_]](
+    consumerConfig: KinesisConsumerSettings,
+    kinesisClient: KinesisAsyncClient
+  )(implicit F: ConcurrentEffect[F]): Stream[F, CommittableRecord] =
     readFromKinesisStream(consumerConfig, defaultScheduler(_, consumerConfig, kinesisClient))
-  }
 
   /** Initialize a worker and start streaming records from a Kinesis stream
     * On stream finish (due to error or other), worker will be shutdown
@@ -150,12 +150,13 @@ object consumer {
     * @param consumerConfig configuration parameters for the KCL
     * @return an infinite fs2 Stream that emits Kinesis Records Chunks
     */
-  def readChunkedFromKinesisStream[F[_]](consumerConfig: KinesisConsumerSettings)(
-      implicit F: ConcurrentEffect[F]): Stream[F, Chunk[CommittableRecord]] = {
+  def readChunkedFromKinesisStream[F[_]](
+    consumerConfig: KinesisConsumerSettings
+  )(implicit F: ConcurrentEffect[F]): Stream[F, Chunk[CommittableRecord]] =
     readChunksFromKinesisStream(
       consumerConfig,
-      defaultScheduler(_, consumerConfig, mkDefaultKinesisClient(consumerConfig)))
-  }
+      defaultScheduler(_, consumerConfig, mkDefaultKinesisClient(consumerConfig))
+    )
 
   /** Initialize a worker and start streaming records from a Kinesis stream
     * On stream finish (due to error or other), worker will be shutdown
@@ -165,11 +166,11 @@ object consumer {
     * @param kinesisClient preconfigured kineiss klient, usefull when you need STS access
     * @return an infinite fs2 Stream that emits Kinesis Records Chunks
     */
-  def readChunkedFromKinesisStream[F[_]](consumerConfig: KinesisConsumerSettings,
-                                         kinesisClient: KinesisAsyncClient)(
-      implicit F: ConcurrentEffect[F]): Stream[F, Chunk[CommittableRecord]] = {
+  def readChunkedFromKinesisStream[F[_]](
+    consumerConfig: KinesisConsumerSettings,
+    kinesisClient: KinesisAsyncClient
+  )(implicit F: ConcurrentEffect[F]): Stream[F, Chunk[CommittableRecord]] =
     readChunksFromKinesisStream(consumerConfig, defaultScheduler(_, consumerConfig, kinesisClient))
-  }
 
   /** Intialize a worker and start streaming records from a Kinesis stream
     * On stream finish (due to error or other), worker will be shutdown
@@ -180,17 +181,16 @@ object consumer {
     * @return an infinite fs2 Stream that emits Kinesis Records
     */
   private[aws] def readFromKinesisStream[F[_]](
-      streamConfig: KinesisConsumerSettings,
-      workerFactory: ShardRecordProcessorFactory => Scheduler
+    streamConfig: KinesisConsumerSettings,
+    workerFactory: ShardRecordProcessorFactory => Scheduler
   )(implicit F: ConcurrentEffect[F]): Stream[F, CommittableRecord] = {
 
     // Initialize a KCL worker which appends to the internal stream queue on message receipt
     def instantiateWorker(queue: Queue[F, CommittableRecord]): F[Scheduler] = F.delay {
-      workerFactory(
-        () =>
-          new SingleRecordProcessor(
-            record => F.runAsync(queue.enqueue1(record))(_ => IO.unit).unsafeRunSync,
-            streamConfig.terminateGracePeriod
+      workerFactory(() =>
+        new SingleRecordProcessor(
+          record => F.runAsync(queue.enqueue1(record))(_ => IO.unit).unsafeRunSync,
+          streamConfig.terminateGracePeriod
         )
       )
     }
@@ -201,22 +201,22 @@ object consumer {
       buffer <- Stream.eval(Queue.bounded[F, CommittableRecord](streamConfig.bufferSize))
       worker = instantiateWorker(buffer)
       stream <- buffer.dequeue concurrently Stream.eval(worker.map(_.run)) onFinalize worker.map(
-        _.shutdown)
+                 _.shutdown
+               )
     } yield stream
   }
 
   private[aws] def readChunksFromKinesisStream[F[_]](
-      streamConfig: KinesisConsumerSettings,
-      workerFactory: => ShardRecordProcessorFactory => Scheduler
+    streamConfig: KinesisConsumerSettings,
+    workerFactory: =>ShardRecordProcessorFactory => Scheduler
   )(implicit F: ConcurrentEffect[F]): Stream[F, Chunk[CommittableRecord]] = {
 
     // Initialize a KCL worker which appends to the internal stream queue on message receipt
     def instantiateWorker(queue: Queue[F, Chunk[CommittableRecord]]): F[Scheduler] = F.delay {
-      workerFactory(
-        () =>
-          new ChunkedRecordProcessor(
-            records => F.runAsync(queue.enqueue1(records))(_ => IO.unit).unsafeRunSync,
-            streamConfig.terminateGracePeriod
+      workerFactory(() =>
+        new ChunkedRecordProcessor(
+          records => F.runAsync(queue.enqueue1(records))(_ => IO.unit).unsafeRunSync,
+          streamConfig.terminateGracePeriod
         )
       )
     }
@@ -227,7 +227,8 @@ object consumer {
       buffer <- Stream.eval(Queue.bounded[F, Chunk[CommittableRecord]](streamConfig.bufferSize))
       worker = instantiateWorker(buffer)
       stream <- buffer.dequeue concurrently Stream.eval(worker.map(_.run)) onFinalize worker.map(
-        _.shutdown)
+                 _.shutdown
+               )
     } yield stream
   }
 
@@ -241,13 +242,16 @@ object consumer {
     * @return a stream of Record types representing checkpointed messages
     */
   def checkpointRecords[F[_]](
-      checkpointSettings: KinesisCheckpointSettings = KinesisCheckpointSettings.defaultInstance,
-      parallelism: Int = 10
-  )(implicit F: ConcurrentEffect[F],
-    timer: Timer[F]): Pipe[F, CommittableRecord, KinesisClientRecord] = {
+    checkpointSettings: KinesisCheckpointSettings = KinesisCheckpointSettings.defaultInstance,
+    parallelism: Int = 10
+  )(
+    implicit F: ConcurrentEffect[F],
+    timer: Timer[F]
+  ): Pipe[F, CommittableRecord, KinesisClientRecord] = {
     def checkpoint(checkpointSettings: KinesisCheckpointSettings, parallelism: Int)(
-        implicit F: ConcurrentEffect[F],
-        timer: Timer[F]): Pipe[F, CommittableRecord, KinesisClientRecord] =
+      implicit F: ConcurrentEffect[F],
+      timer: Timer[F]
+    ): Pipe[F, CommittableRecord, KinesisClientRecord] =
       _.groupWithin(checkpointSettings.maxBatchSize, checkpointSettings.maxBatchWait)
         .collect { case chunk if chunk.size > 0 => chunk.toList.max }
         .flatMap { cr =>
@@ -258,8 +262,12 @@ object consumer {
                 cb(Right(cr.record))
               } else {
                 cb(
-                  Left(KinesisCheckpointException(
-                    "Record processor has been shutdown and therefore cannot checkpoint records")))
+                  Left(
+                    KinesisCheckpointException(
+                      "Record processor has been shutdown and therefore cannot checkpoint records"
+                    )
+                  )
+                )
               }
             }
           )
@@ -283,9 +291,8 @@ object consumer {
     * @return a Sink that accepts a stream of CommittableRecords
     */
   def checkpointRecords_[F[_]](
-      checkpointSettings: KinesisCheckpointSettings = KinesisCheckpointSettings.defaultInstance
-  )(implicit F: ConcurrentEffect[F], timer: Timer[F]): Pipe[F, CommittableRecord, Unit] = {
+    checkpointSettings: KinesisCheckpointSettings = KinesisCheckpointSettings.defaultInstance
+  )(implicit F: ConcurrentEffect[F], timer: Timer[F]): Pipe[F, CommittableRecord, Unit] =
     _.through(checkpointRecords(checkpointSettings))
       .map(_ => ())
-  }
 }

@@ -2,9 +2,9 @@ package fs2.aws.testkit
 import cats.effect.Effect
 import com.amazon.sqs.javamessaging.SQSConnection
 import fs2.aws.testkit.TestSqsConsumerBuilder.TestSQSConsumer
-import fs2.aws.sqs.{ConsumerBuilder, SQSConsumer}
+import fs2.aws.sqs.{ ConsumerBuilder, SQSConsumer }
 import javax.jms.MessageListener
-import org.scalatestplus.mockito.MockitoSugar
+import org.mockito.scalatest.MockitoSugar
 
 class TestSqsConsumerBuilder[F[_]: Effect] extends ConsumerBuilder[F] {
   override def start: F[SQSConsumer] =

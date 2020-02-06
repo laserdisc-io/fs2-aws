@@ -1,16 +1,16 @@
 package fs2.aws.sqs
 
 import cats.effect.Effect
-import com.amazon.sqs.javamessaging.{ProviderConfiguration, SQSConnection, SQSConnectionFactory}
+import com.amazon.sqs.javamessaging.{ ProviderConfiguration, SQSConnection, SQSConnectionFactory }
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder
 import eu.timepit.refined.auto._
-import javax.jms.{MessageListener, Session}
+import javax.jms.{ MessageListener, Session }
 
 import scala.language.higherKinds
 
 class SQSConsumerBuilder[F[_]](val sqsConfig: SqsConfig, val listener: MessageListener)(
-    implicit F: Effect[F])
-    extends ConsumerBuilder[F] {
+  implicit F: Effect[F]
+) extends ConsumerBuilder[F] {
 
   val start: F[SQSConsumer] = {
     F.delay {
@@ -30,9 +30,8 @@ class SQSConsumerBuilder[F[_]](val sqsConfig: SqsConfig, val listener: MessageLi
           connection.start()
         }
 
-        override def shutdown(): Unit = {
+        override def shutdown(): Unit =
           connection.stop()
-        }
       }
     }
   }
@@ -40,5 +39,6 @@ class SQSConsumerBuilder[F[_]](val sqsConfig: SqsConfig, val listener: MessageLi
 
 object SQSConsumerBuilder {
   def apply[F[_]](sqsConfig: SqsConfig, listener: MessageListener)(
-      implicit F: Effect[F]): SQSConsumerBuilder[F] = new SQSConsumerBuilder[F](sqsConfig, listener)
+    implicit F: Effect[F]
+  ): SQSConsumerBuilder[F] = new SQSConsumerBuilder[F](sqsConfig, listener)
 }

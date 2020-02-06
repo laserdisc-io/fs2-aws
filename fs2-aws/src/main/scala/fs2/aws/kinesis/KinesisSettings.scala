@@ -17,24 +17,24 @@ import scala.concurrent.duration._
   *  @param stsAssumeRole If present, the configured client will be setup for AWS cross-account access using the provided tokens
   */
 class KinesisConsumerSettings private (
-    val streamName: String,
-    val appName: String,
-    val region: Region,
-    val maxConcurrency: Int,
-    val bufferSize: Int,
-    val terminateGracePeriod: FiniteDuration,
-    val stsAssumeRole: Option[STSAssumeRoleSettings]
+  val streamName: String,
+  val appName: String,
+  val region: Region,
+  val maxConcurrency: Int,
+  val bufferSize: Int,
+  val terminateGracePeriod: FiniteDuration,
+  val stsAssumeRole: Option[STSAssumeRoleSettings]
 )
 
 object KinesisConsumerSettings {
   def apply(
-      streamName: String,
-      appName: String,
-      region: Region = Region.US_EAST_1,
-      maxConcurrency: Int = Int.MaxValue,
-      bufferSize: Int = 10,
-      terminateGracePeriod: FiniteDuration = 10.seconds,
-      stsAssumeRole: Option[STSAssumeRoleSettings] = None
+    streamName: String,
+    appName: String,
+    region: Region = Region.US_EAST_1,
+    maxConcurrency: Int = Int.MaxValue,
+    bufferSize: Int = 10,
+    terminateGracePeriod: FiniteDuration = 10.seconds,
+    stsAssumeRole: Option[STSAssumeRoleSettings] = None
   ): Either[Throwable, KinesisConsumerSettings] =
     (bufferSize, maxConcurrency, terminateGracePeriod) match {
       case (bs, _, _) if bs < 1 => Left(BufferSizeException("Must be greater than 0"))
@@ -56,8 +56,8 @@ object KinesisConsumerSettings {
   * @param roleSessionName An identifier for the assumed role session.
   */
 class STSAssumeRoleSettings private (
-    val roleArn: String,
-    val roleSessionName: String
+  val roleArn: String,
+  val roleSessionName: String
 )
 
 object STSAssumeRoleSettings {
@@ -71,21 +71,26 @@ object STSAssumeRoleSettings {
   *  @param maxBatchWait the maximum amount of time to wait before checkpointing the cluster of records
   */
 class KinesisCheckpointSettings private (
-    val maxBatchSize: Int,
-    val maxBatchWait: FiniteDuration
+  val maxBatchSize: Int,
+  val maxBatchWait: FiniteDuration
 )
 
 object KinesisCheckpointSettings {
   val defaultInstance = new KinesisCheckpointSettings(1000, 10.seconds)
 
-  def apply(maxBatchSize: Int,
-            maxBatchWait: FiniteDuration): Either[Throwable, KinesisCheckpointSettings] =
+  def apply(
+    maxBatchSize: Int,
+    maxBatchWait: FiniteDuration
+  ): Either[Throwable, KinesisCheckpointSettings] =
     (maxBatchSize, maxBatchWait) match {
       case (s, _) if s <= 0 =>
         Left(MaxBatchSizeException("Must be greater than 0"))
       case (_, w) if w <= 0.milliseconds =>
-        Left(MaxBatchWaitException(
-          "Must be greater than 0 milliseconds. To checkpoint immediately, pass 1 to the max batch size."))
+        Left(
+          MaxBatchWaitException(
+            "Must be greater than 0 milliseconds. To checkpoint immediately, pass 1 to the max batch size."
+          )
+        )
       case (s, w) =>
         Right(new KinesisCheckpointSettings(s, w))
     }

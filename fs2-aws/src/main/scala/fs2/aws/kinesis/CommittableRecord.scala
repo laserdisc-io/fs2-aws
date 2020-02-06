@@ -14,12 +14,12 @@ import software.amazon.kinesis.retrieval.kpl.ExtendedSequenceNumber
   *  @param checkpointer reference to the checkpointer used to commit this record
   */
 case class CommittableRecord(
-    shardId: String,
-    recordProcessorStartingSequenceNumber: ExtendedSequenceNumber,
-    millisBehindLatest: Long,
-    record: KinesisClientRecord,
-    recordProcessor: RecordProcessor,
-    checkpointer: RecordProcessorCheckpointer
+  shardId: String,
+  recordProcessorStartingSequenceNumber: ExtendedSequenceNumber,
+  millisBehindLatest: Long,
+  record: KinesisClientRecord,
+  recordProcessor: RecordProcessor,
+  checkpointer: RecordProcessorCheckpointer
 ) {
   val sequenceNumber: String  = record.sequenceNumber()
   val subSequenceNumber: Long = record.subSequenceNumber()
@@ -38,5 +38,6 @@ object CommittableRecord {
       (cr.sequenceNumber, cr.record match {
         case ur: KinesisClientRecord ⇒ ur.subSequenceNumber()
         case _                       ⇒ 0
-      }))
+      })
+    )
 }
