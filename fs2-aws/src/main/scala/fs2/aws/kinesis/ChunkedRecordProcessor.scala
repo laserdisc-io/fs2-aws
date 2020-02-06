@@ -13,9 +13,10 @@ import scala.concurrent.duration.FiniteDuration
   *  @constructor create a new instance with a callback function to perform on record receive
   *  @param cb callback function to run on record receive, passing the new CommittableRecord
   */
-private[aws] class ChunkedRecordProcessor(cb: Chunk[CommittableRecord] => Unit,
-                                          override val terminateGracePeriod: FiniteDuration)
-    extends RecordProcessor {
+private[aws] class ChunkedRecordProcessor(
+  cb: Chunk[CommittableRecord] => Unit,
+  override val terminateGracePeriod: FiniteDuration
+) extends RecordProcessor {
 
   override def processRecords(processRecordsInput: ProcessRecordsInput): Unit = {
     val batch = processRecordsInput

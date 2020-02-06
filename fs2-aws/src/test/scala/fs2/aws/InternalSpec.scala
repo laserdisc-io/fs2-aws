@@ -1,7 +1,7 @@
 package fs2.aws
 
 import fs2.Stream
-import cats.effect.{ContextShift, IO}
+import cats.effect.{ ContextShift, IO }
 import fs2.aws.internal._
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -45,7 +45,7 @@ class InternalSpec extends AnyFlatSpec with Matchers {
       .toVector
       .unsafeRunSync
 
-    streams.size shouldBe 1
+    streams.size        shouldBe 1
     streams.head.isLeft shouldBe true
   }
 }

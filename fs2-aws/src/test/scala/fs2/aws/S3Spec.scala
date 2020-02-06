@@ -3,7 +3,7 @@ package aws
 
 import java.util.concurrent.Executors
 
-import cats.effect.{ContextShift, IO}
+import cats.effect.{ ContextShift, IO }
 import fs2.aws.s3._
 import fs2.aws.utils._
 import org.scalatest.flatspec.AnyFlatSpec
@@ -19,7 +19,8 @@ class S3Spec extends AnyFlatSpec with Matchers {
 
   ignore should "stdout the jsonfile" in {
     readS3FileMultipart[IO]("resources", "jsontest.json", 25, s3TestClient).compile.toVector.unsafeRunSync should be(
-      Vector())
+      Vector()
+    )
   }
 
   "Downloading the JSON test file by chunks" should "return the same content" in {
@@ -31,7 +32,8 @@ class S3Spec extends AnyFlatSpec with Matchers {
       .unsafeRunSync
       .reduce(_ + _)
       .concat("") should be(
-      """{"test": 1}{"test": 2}{"test": 3}{"test": 4}{"test": 5}{"test": 6}{"test": 7}{"test": 8}""")
+      """{"test": 1}{"test": 2}{"test": 3}{"test": 4}{"test": 5}{"test": 6}{"test": 7}{"test": 8}"""
+    )
   }
 
   "Downloading the JSON test file" should "return the same content" in {
@@ -43,7 +45,8 @@ class S3Spec extends AnyFlatSpec with Matchers {
       .unsafeRunSync
       .reduce(_ + _)
       .concat("") should be(
-      """{"test": 1}{"test": 2}{"test": 3}{"test": 4}{"test": 5}{"test": 6}{"test": 7}{"test": 8}""")
+      """{"test": 1}{"test": 2}{"test": 3}{"test": 4}{"test": 5}{"test": 6}{"test": 7}{"test": 8}"""
+    )
   }
 
   "big chunk size but small entire text" should "be trimmed to content" in {

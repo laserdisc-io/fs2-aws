@@ -1,7 +1,7 @@
 name := "fs2-aws"
 
 // coverage
-coverageMinimum := 40
+coverageMinimum       := 40
 coverageFailOnMinimum := true
 
 scalaVersion := "2.12.9"

@@ -4,7 +4,7 @@ import cats.effect.Concurrent
 import cats.effect.concurrent.Ref
 import cats.implicits._
 import fs2.concurrent.Queue
-import fs2.{Pipe, Stream}
+import fs2.{ Pipe, Stream }
 import alleycats.std.all._
 
 package object internal {
@@ -23,8 +23,9 @@ package object internal {
     *  @param selector partitioning function based on the element
     *  @return a FS2 pipe producing a new sub-stream of elements grouped by the selector
     */
-  def groupBy[F[_], A, K](selector: A => F[K])(
-      implicit F: Concurrent[F]): Pipe[F, A, (K, Stream[F, A])] = { in =>
+  def groupBy[F[_], A, K](
+    selector: A => F[K]
+  )(implicit F: Concurrent[F]): Pipe[F, A, (K, Stream[F, A])] = { in =>
     Stream.eval(Ref.of[F, Map[K, Queue[F, Option[A]]]](Map.empty)).flatMap { queueMap =>
       val cleanup = {
         queueMap.get.flatMap(_.traverse_(_.enqueue1(None)))

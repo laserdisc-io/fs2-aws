@@ -1,13 +1,13 @@
 package fs2.aws
 
 import cats.effect.concurrent.Deferred
-import cats.effect.{ContextShift, IO}
+import cats.effect.{ ContextShift, IO }
 import com.amazon.sqs.javamessaging.SQSConnection
 import com.amazon.sqs.javamessaging.message.SQSTextMessage
 import eu.timepit.refined.auto._
 import fs2.aws
-import fs2.aws.sqs.{ConsumerBuilder, SQSConsumer, SqsConfig}
-import javax.jms.{Message, MessageListener, TextMessage}
+import fs2.aws.sqs.{ ConsumerBuilder, SQSConsumer, SqsConfig }
+import javax.jms.{ Message, MessageListener, TextMessage }
 import org.mockito.scalatest.MockitoSugar
 import org.scalatest.flatspec.AsyncFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -28,7 +28,7 @@ class SqsSpec extends AsyncFlatSpec with Matchers with MockitoSugar {
       aws
         .sqsStream[IO, Int](
           SqsConfig("dummy"),
-          (_, listener) => {
+          (_, listener) =>
             new ConsumerBuilder[IO] {
               override def start: IO[SQSConsumer] =
                 IO.delay(new SQSConsumer {
@@ -40,8 +40,7 @@ class SqsSpec extends AsyncFlatSpec with Matchers with MockitoSugar {
 
                   override def connection: SQSConnection = mock[SQSConnection]
                 })
-            }
-          },
+            },
           Some(d)
         )
         .take(4)
@@ -51,15 +50,15 @@ class SqsSpec extends AsyncFlatSpec with Matchers with MockitoSugar {
     val r = for {
       d <- Deferred[IO, MessageListener]
       res <- IO.racePair(stream(d), d.get).flatMap {
-        case Right((streamFiber, listener)) =>
-          listener.onMessage(new SQSTextMessage("1"))
-          listener.onMessage(new SQSTextMessage("2"))
-          listener.onMessage(new SQSTextMessage("fail"))
-          listener.onMessage(new SQSTextMessage("4"))
-          listener.onMessage(new SQSTextMessage("5"))
-          streamFiber.join
-        case _ => IO(Nil)
-      }
+              case Right((streamFiber, listener)) =>
+                listener.onMessage(new SQSTextMessage("1"))
+                listener.onMessage(new SQSTextMessage("2"))
+                listener.onMessage(new SQSTextMessage("fail"))
+                listener.onMessage(new SQSTextMessage("4"))
+                listener.onMessage(new SQSTextMessage("5"))
+                streamFiber.join
+              case _ => IO(Nil)
+            }
     } yield res
 
     val future = r.unsafeToFuture()

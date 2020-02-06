@@ -7,7 +7,6 @@ object KinesisStub {
 
   def clear() = _data = List()
 
-  def save(data: ByteBuffer) = {
+  def save(data: ByteBuffer) =
     _data = _data :+ data
-  }
 }

@@ -4,9 +4,14 @@ import java.nio.ByteBuffer
 import java.time.Instant
 import java.util.concurrent.Semaphore
 
-import cats.effect.{ContextShift, IO, Timer}
+import cats.effect.{ ContextShift, IO, Timer }
 import fs2.aws.kinesis.consumer._
-import fs2.aws.kinesis.{CommittableRecord, KinesisCheckpointSettings, KinesisConsumerSettings, SingleRecordProcessor}
+import fs2.aws.kinesis.{
+  CommittableRecord,
+  KinesisCheckpointSettings,
+  KinesisConsumerSettings,
+  SingleRecordProcessor
+}
 import org.mockito.Mockito._
 import org.mockito.invocation.InvocationOnMock
 import org.scalatest.concurrent.Eventually
@@ -18,15 +23,19 @@ import software.amazon.awssdk.regions.Region
 import software.amazon.kinesis.checkpoint.ShardRecordProcessorCheckpointer
 import software.amazon.kinesis.coordinator.Scheduler
 import software.amazon.kinesis.lifecycle.events._
-import software.amazon.kinesis.processor.{ShardRecordProcessor, ShardRecordProcessorFactory}
+import software.amazon.kinesis.processor.{ ShardRecordProcessor, ShardRecordProcessorFactory }
 import software.amazon.kinesis.retrieval.KinesisClientRecord
 import software.amazon.kinesis.retrieval.kpl.ExtendedSequenceNumber
 
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
-class KinesisConsumerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach with Eventually {
+class KinesisConsumerSpec
+    extends AnyFlatSpec
+    with Matchers
+    with BeforeAndAfterEach
+    with Eventually {
 
   implicit val ec: ExecutionContext             = ExecutionContext.global
   implicit val timer: Timer[IO]                 = IO.timer(ec)
@@ -38,7 +47,7 @@ class KinesisConsumerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
     PatienceConfig(timeout = scaled(Span(2, Seconds)), interval = scaled(Span(5, Millis)))
 
   "KinesisWorker source" should "successfully read data from the Kinesis stream" in new WorkerContext
-  with TestData {
+    with TestData {
     semaphore.acquire()
     recordProcessor.initialize(initializationInput)
     recordProcessor.processRecords(recordsInput.build())
@@ -50,14 +59,14 @@ class KinesisConsumerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
       commitableRecord.record.data() should be(record.data())
       commitableRecord.recordProcessorStartingSequenceNumber shouldBe initializationInput
         .extendedSequenceNumber()
-      commitableRecord.shardId shouldBe initializationInput.shardId()
+      commitableRecord.shardId            shouldBe initializationInput.shardId()
       commitableRecord.millisBehindLatest shouldBe recordsInput.build().millisBehindLatest()
     }
     semaphore.release()
   }
 
   it should "not shutdown the worker if the stream is drained but has not failed" in new WorkerContext
-  with TestData {
+    with TestData {
     semaphore.acquire()
     recordProcessor.initialize(initializationInput)
     recordProcessor.processRecords(recordsInput.records(List(record)).build())
@@ -67,7 +76,7 @@ class KinesisConsumerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
   }
 
   it should "shutdown the worker if the stream terminates" in new WorkerContext(errorStream = true)
-  with TestData {
+    with TestData {
     semaphore.acquire()
     recordProcessor.initialize(initializationInput)
     recordProcessor.processRecords(recordsInput.records(List(record)).build())
@@ -102,7 +111,7 @@ class KinesisConsumerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
   }
 
   it should "not drop messages in case of back-pressure with multiple shard workers" in new WorkerContext
-  with TestData {
+    with TestData {
     semaphore.acquire()
     recordProcessor.initialize(initializationInput)
     recordProcessor2.initialize(
@@ -110,7 +119,8 @@ class KinesisConsumerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
         .builder()
         .shardId("shard2")
         .extendedSequenceNumber(ExtendedSequenceNumber.AT_TIMESTAMP)
-        .build())
+        .build()
+    )
 
     // Create and send 10 records (to match buffer size)
     for (i <- 1 to 5) {
@@ -125,7 +135,7 @@ class KinesisConsumerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
 
     // Each shard is assigned its own worker thread, so we get messages
     // from each thread simultaneously.
-    def simulateWorkerThread(rp: ShardRecordProcessor): Future[Unit] = {
+    def simulateWorkerThread(rp: ShardRecordProcessor): Future[Unit] =
       Future {
         for (i <- 1 to 25) { // 10 is a buffer size
           val record = mock(classOf[KinesisClientRecord])
@@ -133,7 +143,6 @@ class KinesisConsumerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
           rp.processRecords(recordsInput.records(List(record)).build())
         }
       }
-    }
 
     simulateWorkerThread(recordProcessor)
     simulateWorkerThread(recordProcessor2)
@@ -161,8 +170,8 @@ class KinesisConsumerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
     startStream(input)
 
     eventually(timeout(1.second)) {
-      verify(checkpointerShard1).checkpoint(input.last.record.sequenceNumber(),
-                                            input.last.record.subSequenceNumber())
+      verify(checkpointerShard1)
+        .checkpoint(input.last.record.sequenceNumber(), input.last.record.subSequenceNumber())
     }
   }
 
@@ -198,10 +207,10 @@ class KinesisConsumerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
     startStream(input)
 
     eventually(timeout(3.seconds)) {
-      verify(checkpointerShard1).checkpoint(input(2).record.sequenceNumber(),
-                                            input(2).record.subSequenceNumber())
-      verify(checkpointerShard2).checkpoint(input.last.record.sequenceNumber(),
-                                            input.last.record.subSequenceNumber())
+      verify(checkpointerShard1)
+        .checkpoint(input(2).record.sequenceNumber(), input(2).record.subSequenceNumber())
+      verify(checkpointerShard2)
+        .checkpoint(input.last.record.sequenceNumber(), input.last.record.subSequenceNumber())
     }
 
   }
@@ -255,8 +264,9 @@ class KinesisConsumerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
       .unsafeRunSync should have message "you have no power here"
 
     eventually(
-      verify(checkpointer).checkpoint(input.record.sequenceNumber(),
-                                      input.record.subSequenceNumber()))
+      verify(checkpointer)
+        .checkpoint(input.record.sequenceNumber(), input.record.subSequenceNumber())
+    )
   }
 
   it should "bypass all items when checkpoint" in new KinesisWorkerCheckpointContext {
@@ -265,16 +275,16 @@ class KinesisConsumerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
     val record = mock(classOf[KinesisClientRecord])
     when(record.sequenceNumber()).thenReturn("1")
 
-    val input = (1 to 100).map(
-      idx =>
-        new CommittableRecord(
-          s"shard-1",
-          mock(classOf[ExtendedSequenceNumber]),
-          idx,
-          record,
-          recordProcessor,
-          checkpointer
-      ))
+    val input = (1 to 100).map(idx =>
+      new CommittableRecord(
+        s"shard-1",
+        mock(classOf[ExtendedSequenceNumber]),
+        idx,
+        record,
+        recordProcessor,
+        checkpointer
+      )
+    )
 
     fs2.Stream
       .emits(input)
@@ -284,8 +294,10 @@ class KinesisConsumerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
       .unsafeRunSync should have size 100
   }
 
-  private abstract class WorkerContext(backpressureTimeout: FiniteDuration = 1.minute,
-                                       errorStream: Boolean = false) {
+  abstract private class WorkerContext(
+    backpressureTimeout: FiniteDuration = 1.minute,
+    errorStream: Boolean = false
+  ) {
 
     val semaphore = new Semaphore(1)
     semaphore.acquire()
@@ -323,7 +335,8 @@ class KinesisConsumerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
 
   private trait TestData {
     protected val checkpointer: ShardRecordProcessorCheckpointer = mock(
-      classOf[ShardRecordProcessorCheckpointer])
+      classOf[ShardRecordProcessorCheckpointer]
+    )
 
     val initializationInput = {
       InitializationInput

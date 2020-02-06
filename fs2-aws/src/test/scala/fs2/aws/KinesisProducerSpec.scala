@@ -3,8 +3,8 @@ package aws
 
 import java.nio.ByteBuffer
 
-import cats.effect.{ContextShift, IO, Timer}
-import com.amazonaws.services.kinesis.producer.{Attempt, UserRecordResult}
+import cats.effect.{ ContextShift, IO, Timer }
+import com.amazonaws.services.kinesis.producer.{ Attempt, UserRecordResult }
 import com.google.common.util.concurrent.SettableFuture
 import fs2.aws.kinesis.publisher._
 import fs2.aws.utils.KinesisStub
@@ -38,13 +38,14 @@ class KinesisProducerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
       .eval(IO.pure("someData"))
       .flatMap(i => fs2.Stream.emit(("partitionKey", ByteBuffer.wrap(i.getBytes))))
       .through(
-        writeToKinesis[IO]("test-stream", producer = TestKinesisProducerClient[IO](result, ops)))
+        writeToKinesis[IO]("test-stream", producer = TestKinesisProducerClient[IO](result, ops))
+      )
       .attempt
       .compile
       .toVector
       .unsafeRunSync
 
-    output.size should be(1)
+    output.size         should be(1)
     output.head.isRight should be(true)
 
     KinesisStub._data.size should be(1)
@@ -56,7 +57,8 @@ class KinesisProducerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
       .eval(IO.pure("someData"))
       .flatMap(i => fs2.Stream.emit(("partitionKey", ByteBuffer.wrap(i.getBytes))))
       .through(
-        writeToKinesis_[IO]("test-stream", producer = TestKinesisProducerClient[IO](result, ops)))
+        writeToKinesis_[IO]("test-stream", producer = TestKinesisProducerClient[IO](result, ops))
+      )
       .compile
       .toVector
       .unsafeRunSync
@@ -71,15 +73,18 @@ class KinesisProducerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
       .eval(IO.pure("someData"))
       .flatMap(i => fs2.Stream.emit(("partitionKey", i)))
       .through(
-        writeObjectToKinesis[IO, String]("test-stream",
-                                         producer = TestKinesisProducerClient[IO](result, ops)))
+        writeObjectToKinesis[IO, String](
+          "test-stream",
+          producer = TestKinesisProducerClient[IO](result, ops)
+        )
+      )
       .compile
       .toVector
       .unsafeRunSync
 
     KinesisStub._data.size should be(1)
     KinesisStub._data.head should be(ByteBuffer.wrap("someData".getBytes))
-    res should be(Vector("someData" -> result))
+    res                    should be(Vector("someData" -> result))
   }
 
   "error thrown when invoking writeToKinesis" should "return an error in the stream" in new KinesisProducerTestContext {
@@ -90,14 +95,15 @@ class KinesisProducerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
       .through(
         writeToKinesis[IO]("test-stream", producer = TestKinesisProducerClient[IO](result, IO {
           throw new Exception("couldn't connect to kinesis")
-        })))
+        }))
+      )
       .attempt
       .compile
       .toVector
       .unsafeRunSync
 
-    output.size should be(1)
-    output.head.isLeft should be(true)
+    output.size                     should be(1)
+    output.head.isLeft              should be(true)
     output.head.left.get.getMessage should be("couldn't connect to kinesis")
   }
 
@@ -109,7 +115,8 @@ class KinesisProducerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
         .through(
           writeToKinesis_[IO]("test-stream", producer = TestKinesisProducerClient[IO](result, IO {
             throw new Exception("couldn't connect to kinesis")
-          })))
+          }))
+        )
         .compile
         .toVector
         .unsafeRunSync
