@@ -3,14 +3,23 @@ package fs2.aws.internal
 import java.io.InputStream
 
 import cats.effect.Effect
-import com.amazonaws.services.s3.AmazonS3ClientBuilder
+import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model._
 
 import scala.collection.JavaConverters._
 import scala.util.control.Exception
 
+private[aws] object S3Client {
+  def apply[F[_]](s3: AmazonS3) = new S3ClientImpl[F](s3)
+}
+
+private[aws] class S3ClientImpl[F[_]](c: AmazonS3) extends S3Client[F] {
+  override def client: AmazonS3 = c
+}
+
 private[aws] trait S3Client[F[_]] {
-  private lazy val client = AmazonS3ClientBuilder.defaultClient
+
+  def client: AmazonS3
 
   def getObjectContentOrError(
     getObjectRequest: GetObjectRequest
