@@ -6,11 +6,12 @@ import java.util.concurrent.Executors
 import cats.effect.{ContextShift, IO}
 import fs2.aws.s3._
 import fs2.aws.utils._
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.ExecutionContext
 
-class S3Spec extends FlatSpec with Matchers {
+class S3Spec extends AnyFlatSpec with Matchers {
 
   private val blockingEC                        = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(6))
   implicit val ec: ExecutionContext             = ExecutionContext.global

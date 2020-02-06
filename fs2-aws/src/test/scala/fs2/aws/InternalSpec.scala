@@ -3,11 +3,12 @@ package fs2.aws
 import fs2.Stream
 import cats.effect.{ContextShift, IO}
 import fs2.aws.internal._
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.ExecutionContext
 
-class InternalSpec extends FlatSpec with Matchers {
+class InternalSpec extends AnyFlatSpec with Matchers {
   implicit val ec: ExecutionContext             = ExecutionContext.global
   implicit val ioContextShift: ContextShift[IO] = IO.contextShift(ec)
 

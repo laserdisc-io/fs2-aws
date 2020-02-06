@@ -8,12 +8,14 @@ import com.amazonaws.services.kinesis.producer.{Attempt, UserRecordResult}
 import com.google.common.util.concurrent.SettableFuture
 import fs2.aws.kinesis.publisher._
 import fs2.aws.utils.KinesisStub
-import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.matchers.should.Matchers
 
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext
 
-class KinesisProducerSpec extends FlatSpec with Matchers with BeforeAndAfterEach {
+class KinesisProducerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach {
   override def beforeEach {
     KinesisStub.clear()
   }

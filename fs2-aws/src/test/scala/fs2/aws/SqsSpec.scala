@@ -8,8 +8,9 @@ import eu.timepit.refined.auto._
 import fs2.aws
 import fs2.aws.sqs.{ConsumerBuilder, SQSConsumer, SqsConfig}
 import javax.jms.{Message, MessageListener, TextMessage}
-import org.scalatest.{AsyncFlatSpec, Matchers}
-import org.scalatestplus.mockito.MockitoSugar
+import org.mockito.scalatest.MockitoSugar
+import org.scalatest.flatspec.AsyncFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.ExecutionContext
 

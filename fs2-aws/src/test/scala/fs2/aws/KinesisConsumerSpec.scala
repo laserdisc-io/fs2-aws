@@ -6,17 +6,14 @@ import java.util.concurrent.Semaphore
 
 import cats.effect.{ContextShift, IO, Timer}
 import fs2.aws.kinesis.consumer._
-import fs2.aws.kinesis.{
-  CommittableRecord,
-  KinesisCheckpointSettings,
-  KinesisConsumerSettings,
-  SingleRecordProcessor
-}
+import fs2.aws.kinesis.{CommittableRecord, KinesisCheckpointSettings, KinesisConsumerSettings, SingleRecordProcessor}
 import org.mockito.Mockito._
 import org.mockito.invocation.InvocationOnMock
 import org.scalatest.concurrent.Eventually
+import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.time._
-import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.matchers.should.Matchers
 import software.amazon.awssdk.regions.Region
 import software.amazon.kinesis.checkpoint.ShardRecordProcessorCheckpointer
 import software.amazon.kinesis.coordinator.Scheduler
@@ -29,7 +26,7 @@ import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
-class KinesisConsumerSpec extends FlatSpec with Matchers with BeforeAndAfterEach with Eventually {
+class KinesisConsumerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach with Eventually {
 
   implicit val ec: ExecutionContext             = ExecutionContext.global
   implicit val timer: Timer[IO]                 = IO.timer(ec)
