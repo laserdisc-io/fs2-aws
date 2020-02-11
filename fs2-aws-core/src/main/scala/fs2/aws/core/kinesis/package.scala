@@ -7,7 +7,7 @@ import fs2.concurrent.Queue
 import fs2.{ Pipe, Stream }
 import alleycats.std.all._
 
-package object internal {
+package object core {
 
   /** Helper flow to group elements of a stream into K substreams.
     * Grows with the number of distinct 'K' selectors
