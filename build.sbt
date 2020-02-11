@@ -37,6 +37,29 @@ lazy val commonSettings = Seq(
   )
 )
 
+lazy val `fs2-aws-core`         = (project in file("fs2-aws-core"))
+lazy val `fs2-aws`         = (project in file("fs2-aws")).dependsOn(`fs2-aws-core`)
+lazy val `fs2-aws-dynamodb`         = (project in file("fs2-aws-dynamodb")).dependsOn(`fs2-aws-core`)
+lazy val `fs2-aws-examples`         = (project in file("fs2-aws-examples")).dependsOn(`fs2-aws-dynamodb`)
+lazy val `fs2-aws-testkit` = (project in file("fs2-aws-testkit")).dependsOn(`fs2-aws`)
+
+addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.10")
+
+// publish
+publishTo in ThisBuild := Some(
+  "Sonatype Nexus" at "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+)
+
+licenses in ThisBuild := Seq(
+  "MIT" -> url("https://github.com/dmateusp/fs2-aws/blob/master/LICENSE")
+)
+developers in ThisBuild := List(
+  Developer(
+    id = "dmateusp",
+    name = "Daniel Mateus Pires",
+    email = "dmateusp@gmail.com",
+    url = url("https://github.com/dmateusp")
+  )
 lazy val publishSettings = Seq(
   publishMavenStyle      := true,
   Test / publishArtifact := true,

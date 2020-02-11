@@ -4,8 +4,8 @@ import java.util.UUID
 
 import cats.effect.{ ConcurrentEffect, IO, Timer }
 import cats.implicits._
+import fs2.aws.core
 import fs2.{ Chunk, Pipe, RaiseThrowable, Stream }
-import fs2.aws.internal._
 import fs2.aws.internal.Exceptions.KinesisCheckpointException
 import fs2.concurrent.Queue
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider
@@ -28,18 +28,19 @@ object consumer {
       .region(settings.region)
       .credentialsProvider(
         settings.stsAssumeRole
-          .map(stsSettings =>
-            StsAssumeRoleCredentialsProvider
-              .builder()
-              .stsClient(StsClient.builder.build())
-              .refreshRequest(
-                AssumeRoleRequest
-                  .builder()
-                  .roleArn(stsSettings.roleArn)
-                  .roleSessionName(stsSettings.roleSessionName)
-                  .build()
-              )
-              .build()
+          .map(
+            stsSettings =>
+              StsAssumeRoleCredentialsProvider
+                .builder()
+                .stsClient(StsClient.builder.build())
+                .refreshRequest(
+                  AssumeRoleRequest
+                    .builder()
+                    .roleArn(stsSettings.roleArn)
+                    .roleSessionName(stsSettings.roleSessionName)
+                    .build()
+                )
+                .build()
           )
           .getOrElse(DefaultCredentialsProvider.create())
       )
@@ -187,10 +188,11 @@ object consumer {
 
     // Initialize a KCL worker which appends to the internal stream queue on message receipt
     def instantiateWorker(queue: Queue[F, CommittableRecord]): F[Scheduler] = F.delay {
-      workerFactory(() =>
-        new SingleRecordProcessor(
-          record => F.runAsync(queue.enqueue1(record))(_ => IO.unit).unsafeRunSync,
-          streamConfig.terminateGracePeriod
+      workerFactory(
+        () =>
+          new SingleRecordProcessor(
+            record => F.runAsync(queue.enqueue1(record))(_ => IO.unit).unsafeRunSync,
+            streamConfig.terminateGracePeriod
         )
       )
     }
@@ -213,10 +215,11 @@ object consumer {
 
     // Initialize a KCL worker which appends to the internal stream queue on message receipt
     def instantiateWorker(queue: Queue[F, Chunk[CommittableRecord]]): F[Scheduler] = F.delay {
-      workerFactory(() =>
-        new ChunkedRecordProcessor(
-          records => F.runAsync(queue.enqueue1(records))(_ => IO.unit).unsafeRunSync,
-          streamConfig.terminateGracePeriod
+      workerFactory(
+        () =>
+          new ChunkedRecordProcessor(
+            records => F.runAsync(queue.enqueue1(records))(_ => IO.unit).unsafeRunSync,
+            streamConfig.terminateGracePeriod
         )
       )
     }
@@ -275,7 +278,7 @@ object consumer {
 
     def bypass: Pipe[F, CommittableRecord, KinesisClientRecord] = _.map(r => r.record)
 
-    _.through(groupBy(r => F.delay(r.shardId))).map {
+    _.through(core.groupBy(r => F.delay(r.shardId))).map {
       case (_, st) =>
         st.broadcastThrough(checkpoint(checkpointSettings, parallelism), bypass)
     }.parJoinUnbounded
