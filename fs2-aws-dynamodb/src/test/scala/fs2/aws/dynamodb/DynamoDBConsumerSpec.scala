@@ -1,11 +1,13 @@
 package fs2
 package aws
 
-import java.nio.ByteBuffer
 import java.util.Date
 import java.util.concurrent.Semaphore
 
 import cats.effect.{ ContextShift, IO, Timer }
+import com.amazonaws.services.dynamodbv2.model
+import com.amazonaws.services.dynamodbv2.model.{ AttributeValue, StreamRecord }
+import com.amazonaws.services.dynamodbv2.streamsadapter.model.RecordAdapter
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.{
   IRecordProcessor,
@@ -83,7 +85,7 @@ class DynamoDBConsumerSpec
     semaphore.acquire()
     // Create and send 10 records (to match buffer size)
     for (i <- 1 to 10) {
-      val record = mock(classOf[Record])
+      val record: Record = mock(classOf[RecordAdapter])
       when(record.getSequenceNumber).thenReturn(i.toString)
       recordProcessor.processRecords(recordsInput.withRecords(List(record).asJava))
     }
@@ -93,7 +95,7 @@ class DynamoDBConsumerSpec
 
     // Send a batch that exceeds the internal buffer size
     for (i <- 1 to 50) {
-      val record = mock(classOf[Record])
+      val record: Record = mock(classOf[RecordAdapter])
       when(record.getSequenceNumber).thenReturn(i.toString)
       recordProcessor.processRecords(recordsInput.withRecords(List(record).asJava))
     }
@@ -113,7 +115,7 @@ class DynamoDBConsumerSpec
 
     // Create and send 10 records (to match buffer size)
     for (i <- 1 to 5) {
-      val record = mock(classOf[Record])
+      val record: Record = mock(classOf[RecordAdapter])
       when(record.getSequenceNumber).thenReturn(i.toString)
       recordProcessor.processRecords(recordsInput.withRecords(List(record).asJava))
       recordProcessor2.processRecords(recordsInput.withRecords(List(record).asJava))
@@ -127,7 +129,7 @@ class DynamoDBConsumerSpec
     def simulateWorkerThread(rp: IRecordProcessor): Future[Unit] =
       Future {
         for (i <- 1 to 25) { // 10 is a buffer size
-          val record = mock(classOf[Record])
+          val record: Record = mock(classOf[RecordAdapter])
           when(record.getSequenceNumber).thenReturn(i.toString)
           rp.processRecords(recordsInput.withRecords(List(record).asJava))
         }
@@ -143,9 +145,8 @@ class DynamoDBConsumerSpec
 
   "KinesisWorker checkpoint pipe" should "checkpoint batch of records with same sequence number" in new KinesisWorkerCheckpointContext {
     val input: immutable.IndexedSeq[CommittableRecord] = (1 to 3) map { i =>
-      val record = mock(classOf[UserRecord])
-      when(record.getSequenceNumber).thenReturn("1")
-      when(record.getSubSequenceNumber).thenReturn(i.toLong)
+      val record = mock(classOf[RecordAdapter])
+      when(record.getSequenceNumber).thenReturn(i.toString)
       new CommittableRecord(
         "shard-1",
         mock(classOf[ExtendedSequenceNumber]),
@@ -169,7 +170,7 @@ class DynamoDBConsumerSpec
 
     val input: immutable.IndexedSeq[CommittableRecord] = (1 to 6) map { i =>
       if (i <= 3) {
-        val record = mock(classOf[UserRecord])
+        val record = mock(classOf[RecordAdapter])
         when(record.getSequenceNumber).thenReturn(i.toString)
         new CommittableRecord(
           "shard-1",
@@ -180,7 +181,7 @@ class DynamoDBConsumerSpec
           checkpointerShard1
         )
       } else {
-        val record = mock(classOf[UserRecord])
+        val record = mock(classOf[RecordAdapter])
         when(record.getSequenceNumber).thenReturn(i.toString)
         new CommittableRecord(
           "shard-2",
@@ -210,9 +211,8 @@ class DynamoDBConsumerSpec
     )
 
     val input: immutable.IndexedSeq[CommittableRecord] = (1 to 3) map { i =>
-      val record = mock(classOf[UserRecord])
+      val record = mock(classOf[RecordAdapter])
       when(record.getSequenceNumber).thenReturn("1")
-      when(record.getSubSequenceNumber).thenReturn(i.toLong)
       new CommittableRecord(
         "shard-1",
         mock(classOf[ExtendedSequenceNumber]),
@@ -236,9 +236,8 @@ class DynamoDBConsumerSpec
     )
 
     val input: immutable.IndexedSeq[CommittableRecord] = (1 to 3) map { i =>
-      val record = mock(classOf[UserRecord])
+      val record = mock(classOf[RecordAdapter])
       when(record.getSequenceNumber).thenReturn("1")
-      when(record.getSubSequenceNumber).thenReturn(i.toLong)
       new CommittableRecord(
         "shard-1",
         mock(classOf[ExtendedSequenceNumber]),
@@ -257,7 +256,7 @@ class DynamoDBConsumerSpec
   it should "fail with Exception if checkpoint action fails" in new KinesisWorkerCheckpointContext {
     val checkpointer: IRecordProcessorCheckpointer = mock(classOf[IRecordProcessorCheckpointer])
 
-    val record: Record = mock(classOf[Record])
+    val record: RecordAdapter = mock(classOf[RecordAdapter])
     when(record.getSequenceNumber).thenReturn("1")
 
     val input = new CommittableRecord(
@@ -335,12 +334,12 @@ class DynamoDBConsumerSpec
         .withExtendedSequenceNumber(ExtendedSequenceNumber.AT_TIMESTAMP)
     }
     val record: Record =
-      new Record()
-        .withApproximateArrivalTimestamp(new Date())
+      new RecordAdapter(
+        new model.Record()
+          .withDynamodb(new StreamRecord().addNewImageEntry("name", new AttributeValue("Barry")))
+      ).withApproximateArrivalTimestamp(new Date())
         .withEncryptionType("encryption")
-        .withPartitionKey("partitionKey")
-        .withSequenceNumber("sequenceNum")
-        .withData(ByteBuffer.wrap("test".getBytes))
+
     val recordsInput: ProcessRecordsInput =
       new ProcessRecordsInput()
         .withCheckpointer(checkpointer)
