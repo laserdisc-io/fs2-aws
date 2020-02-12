@@ -37,13 +37,17 @@ lazy val commonSettings = Seq(
   )
 )
 
-
 lazy val publishSettings = Seq(
-  publishMavenStyle := true,
+  publishMavenStyle      := true,
   Test / publishArtifact := true,
-  pomIncludeRepository := (_ => false),
+  pomIncludeRepository   := (_ => false),
   developers := List(
-    Developer("dmateusp", "Daniel Mateus Pires", "dmateusp@gmail.com", url("https://github.com/dmateusp")),
+    Developer(
+      "dmateusp",
+      "Daniel Mateus Pires",
+      "dmateusp@gmail.com",
+      url("https://github.com/dmateusp")
+    ),
     Developer("semenodm", "Dmytro Semenov", "", url("https://github.com/semenodm"))
   ),
   scmInfo := Some(
@@ -54,9 +58,10 @@ lazy val publishSettings = Seq(
     )
   ),
   homepage := Some(url("https://github.com/laserdisc-io/fs2-aws/")),
-  licenses := Seq("MIT" -> url("https://raw.githubusercontent.com/laserdisc-io/fs2-aws/master/LICENSE")),
+  licenses := Seq(
+    "MIT" -> url("https://raw.githubusercontent.com/laserdisc-io/fs2-aws/master/LICENSE")
+  ),
   pgpPublicRing    := file(".travis/local.pubring.asc"),
   pgpSecretRing    := file(".travis/local.secring.asc"),
   releaseEarlyWith := SonatypePublisher
 )
-
