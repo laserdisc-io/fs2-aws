@@ -37,11 +37,11 @@ lazy val commonSettings = Seq(
   )
 )
 
-lazy val `fs2-aws-core`         = (project in file("fs2-aws-core"))
-lazy val `fs2-aws`         = (project in file("fs2-aws")).dependsOn(`fs2-aws-core`)
-lazy val `fs2-aws-dynamodb`         = (project in file("fs2-aws-dynamodb")).dependsOn(`fs2-aws-core`)
-lazy val `fs2-aws-examples`         = (project in file("fs2-aws-examples")).dependsOn(`fs2-aws-dynamodb`)
-lazy val `fs2-aws-testkit` = (project in file("fs2-aws-testkit")).dependsOn(`fs2-aws`)
+lazy val `fs2-aws-core`     = (project in file("fs2-aws-core"))
+lazy val `fs2-aws`          = (project in file("fs2-aws")).dependsOn(`fs2-aws-core`)
+lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb")).dependsOn(`fs2-aws-core`)
+lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples")).dependsOn(`fs2-aws-dynamodb`)
+lazy val `fs2-aws-testkit`  = (project in file("fs2-aws-testkit")).dependsOn(`fs2-aws`)
 
 addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.10")
 
