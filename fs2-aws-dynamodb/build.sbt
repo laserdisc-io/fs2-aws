@@ -19,6 +19,7 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest"                       % "3.1.0" % Test,
   "org.mockito"   % "mockito-core"                     % "3.2.4" % Test,
   "org.mockito"   %% "mockito-scala-scalatest"         % "1.11.2" % Test,
-  "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.5.0"
+  "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.5.0",
+"io.github.howardjohn" %% "scanamo-circe"       % "0.2.2-SNAPSHOT"
 )
 

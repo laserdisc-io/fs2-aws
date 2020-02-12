@@ -1,7 +1,7 @@
 package fs2.aws.dynamodb
 
-import com.amazonaws.services.kinesis.model.Record
-import com.amazonaws.services.kinesis.clientlibrary.types.{ ExtendedSequenceNumber, UserRecord }
+import com.amazonaws.services.dynamodbv2.streamsadapter.model.RecordAdapter
+import com.amazonaws.services.kinesis.clientlibrary.types.ExtendedSequenceNumber
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer
 
 /** A message type from Kinesis which has not yet been commited or checkpointed.
@@ -17,7 +17,7 @@ case class CommittableRecord(
   shardId: String,
   recordProcessorStartingSequenceNumber: ExtendedSequenceNumber,
   millisBehindLatest: Long,
-  record: Record,
+  record: RecordAdapter,
   recordProcessor: RecordProcessor,
   checkpointer: IRecordProcessorCheckpointer
 ) {
@@ -29,15 +29,6 @@ case class CommittableRecord(
 
 object CommittableRecord {
 
-  // Only makes sense to compare Records belonging to the same shard
-  // Records that have been batched by the KCL producer all have the
-  // same sequence number but will differ by subsequence number
   implicit val orderBySequenceNumber: Ordering[CommittableRecord] =
-    Ordering[(String, Long)].on(
-      cr ⇒
-        (cr.sequenceNumber, cr.record match {
-          case ur: UserRecord ⇒ ur.getSubSequenceNumber
-          case _              ⇒ 0
-        })
-    )
+    Ordering[String].on(cr ⇒ cr.sequenceNumber)
 }

@@ -1,5 +1,6 @@
 package fs2.aws.dynamodb
 
+import com.amazonaws.services.dynamodbv2.streamsadapter.model.RecordAdapter
 import com.amazonaws.services.kinesis.clientlibrary.interfaces._
 import com.amazonaws.services.kinesis.clientlibrary.types._
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.ShutdownReason
@@ -38,7 +39,7 @@ class RecordProcessor(
           shardId,
           extendedSequenceNumber,
           processRecordsInput.getMillisBehindLatest,
-          record,
+          record.asInstanceOf[RecordAdapter],
           recordProcessor = this,
           processRecordsInput.getCheckpointer
         )
