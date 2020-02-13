@@ -6,8 +6,6 @@ coverageFailOnMinimum := true
 
 scalaVersion := "2.12.10"
 
-releasePublishArtifactsAction := PgpKeys.publishSigned.value
-
 val fs2Version    = "2.2.2"
 val AwsSdkVersion = "1.11.716"
 val cirisVersion  = "0.12.1"

@@ -7,7 +7,23 @@ lazy val root = (project in file("."))
     skip in publish := true
   )
 
+lazy val `fs2-aws-core`     = (project in file("fs2-aws-core"))
+  .settings(commonSettings)
+  .settings(publishSettings)
+
+lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb")).dependsOn(`fs2-aws-core`)
+  .settings(commonSettings)
+  .settings(publishSettings)
+
+lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples")).dependsOn(`fs2-aws-dynamodb`)
+  .settings(commonSettings)
+  .settings(publishSettings)
+  .settings(
+    skip in publish := true
+  )
+
 lazy val `fs2-aws` = (project in file("fs2-aws"))
+  .dependsOn(`fs2-aws-core`)
   .settings(commonSettings)
   .settings(publishSettings)
 
@@ -37,14 +53,6 @@ lazy val commonSettings = Seq(
   )
 )
 
-lazy val `fs2-aws-core`     = (project in file("fs2-aws-core"))
-lazy val `fs2-aws`          = (project in file("fs2-aws")).dependsOn(`fs2-aws-core`)
-lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb")).dependsOn(`fs2-aws-core`)
-lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples")).dependsOn(`fs2-aws-dynamodb`).settings(
-  skip in publish := true
-)
-lazy val `fs2-aws-testkit`  = (project in file("fs2-aws-testkit")).dependsOn(`fs2-aws`)
-
 addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.10")
 
 // publish
@@ -62,6 +70,8 @@ developers in ThisBuild := List(
     email = "dmateusp@gmail.com",
     url = url("https://github.com/dmateusp")
   )
+)
+
 lazy val publishSettings = Seq(
   publishMavenStyle      := true,
   Test / publishArtifact := true,
