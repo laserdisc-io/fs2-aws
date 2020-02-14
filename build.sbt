@@ -7,15 +7,17 @@ lazy val root = (project in file("."))
     skip in publish := true
   )
 
-lazy val `fs2-aws-core`     = (project in file("fs2-aws-core"))
+lazy val `fs2-aws-core` = (project in file("fs2-aws-core"))
   .settings(commonSettings)
   .settings(publishSettings)
 
-lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb")).dependsOn(`fs2-aws-core`)
+lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb"))
+  .dependsOn(`fs2-aws-core`)
   .settings(commonSettings)
   .settings(publishSettings)
 
-lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples")).dependsOn(`fs2-aws-dynamodb`)
+lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
+  .dependsOn(`fs2-aws-dynamodb`)
   .settings(commonSettings)
   .settings(publishSettings)
   .settings(
