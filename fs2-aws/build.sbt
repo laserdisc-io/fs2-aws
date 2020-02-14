@@ -8,7 +8,7 @@ scalaVersion := "2.12.10"
 
 val fs2Version    = "2.2.2"
 val AwsSdkVersion = "1.11.717"
-val cirisVersion  = "0.12.1"
+val cirisVersion  = "1.0.4"
 
 libraryDependencies ++= Seq(
   "co.fs2"                  %% "fs2-core"                     % fs2Version,
