@@ -2,12 +2,30 @@ name         := "fs2-aws"
 scalaVersion := "2.12.10"
 
 lazy val root = (project in file("."))
-  .aggregate(`fs2-aws`, `fs2-aws-testkit`)
+  .aggregate(`fs2-aws`, `fs2-aws-testkit`, `fs2-aws-dynamodb`, `fs2-aws-core`, `fs2-aws-examples`)
+  .settings(
+    skip in publish := true
+  )
+
+lazy val `fs2-aws-core` = (project in file("fs2-aws-core"))
+  .settings(commonSettings)
+  .settings(publishSettings)
+
+lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb"))
+  .dependsOn(`fs2-aws-core`)
+  .settings(commonSettings)
+  .settings(publishSettings)
+
+lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
+  .dependsOn(`fs2-aws-dynamodb`)
+  .settings(commonSettings)
+  .settings(publishSettings)
   .settings(
     skip in publish := true
   )
 
 lazy val `fs2-aws` = (project in file("fs2-aws"))
+  .dependsOn(`fs2-aws-core`)
   .settings(commonSettings)
   .settings(publishSettings)
 
@@ -34,6 +52,25 @@ lazy val commonSettings = Seq(
     "-Xlint",                        // enable handy linter warnings
     "-Xfatal-warnings",              // turn compiler warnings into errors
     "-Ypartial-unification"          // allow the compiler to unify type constructors of different arities
+  )
+)
+
+addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.10")
+
+// publish
+publishTo in ThisBuild := Some(
+  "Sonatype Nexus" at "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+)
+
+licenses in ThisBuild := Seq(
+  "MIT" -> url("https://github.com/dmateusp/fs2-aws/blob/master/LICENSE")
+)
+developers in ThisBuild := List(
+  Developer(
+    id = "dmateusp",
+    name = "Daniel Mateus Pires",
+    email = "dmateusp@gmail.com",
+    url = url("https://github.com/dmateusp")
   )
 )
 

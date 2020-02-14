@@ -4,8 +4,8 @@ import java.util.UUID
 
 import cats.effect.{ ConcurrentEffect, IO, Timer }
 import cats.implicits._
+import fs2.aws.core
 import fs2.{ Chunk, Pipe, RaiseThrowable, Stream }
-import fs2.aws.internal._
 import fs2.aws.internal.Exceptions.KinesisCheckpointException
 import fs2.concurrent.Queue
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider
@@ -275,7 +275,7 @@ object consumer {
 
     def bypass: Pipe[F, CommittableRecord, KinesisClientRecord] = _.map(r => r.record)
 
-    _.through(groupBy(r => F.delay(r.shardId))).map {
+    _.through(core.groupBy(r => F.delay(r.shardId))).map {
       case (_, st) =>
         st.broadcastThrough(checkpoint(checkpointSettings, parallelism), bypass)
     }.parJoinUnbounded
