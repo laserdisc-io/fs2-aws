@@ -38,14 +38,25 @@ object KinesisConsumerSettings {
     bufferSize: Int = 10,
     terminateGracePeriod: FiniteDuration = 10.seconds,
     stsAssumeRole: Option[STSAssumeRoleSettings] = None,
-    initialPositionInStream: Either[InitialPositionInStream, Date] = Left(InitialPositionInStream.LATEST)
+    initialPositionInStream: Either[InitialPositionInStream, Date] = Left(
+      InitialPositionInStream.LATEST
+    )
   ): Either[Throwable, KinesisConsumerSettings] =
     (bufferSize, maxConcurrency, terminateGracePeriod) match {
       case (bs, _, _) if bs < 1 => Left(BufferSizeException("Must be greater than 0"))
       case (_, mc, _) if mc < 1 => Left(MaxConcurrencyException("Must be greater than 0"))
       case (bs, mc, period) =>
         Right(
-          new KinesisConsumerSettings(streamName, appName, region, mc, bs, period, stsAssumeRole, initialPositionInStream)
+          new KinesisConsumerSettings(
+            streamName,
+            appName,
+            region,
+            mc,
+            bs,
+            period,
+            stsAssumeRole,
+            initialPositionInStream
+          )
         )
     }
 }
