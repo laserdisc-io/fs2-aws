@@ -60,19 +60,18 @@ addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.10")
 licenses in ThisBuild := Seq(
   "MIT" -> url("https://github.com/dmateusp/fs2-aws/blob/master/LICENSE")
 )
-developers in ThisBuild := List(
-  Developer(
-    id = "dmateusp",
-    name = "Daniel Mateus Pires",
-    email = "dmateusp@gmail.com",
-    url = url("https://github.com/dmateusp")
-  )
-)
 
 lazy val publishSettings = Seq(
   publishMavenStyle      := true,
   Test / publishArtifact := true,
-  pomIncludeRepository   := (_ => false),
+  pomIncludeRepository   := (_ => false)
+)
+
+inThisBuild(List(
+  licenses := Seq(
+    "MIT" -> url("https://raw.githubusercontent.com/laserdisc-io/fs2-aws/master/LICENSE")
+  ),
+  homepage := Some(url("https://github.com/laserdisc-io/fs2-aws/")),
   developers := List(
     Developer(
       "dmateusp",
@@ -89,11 +88,8 @@ lazy val publishSettings = Seq(
       "scm:git:git@github.com:laserdisc-io/fs2-aws.git"
     )
   ),
-  homepage := Some(url("https://github.com/laserdisc-io/fs2-aws/")),
-  licenses := Seq(
-    "MIT" -> url("https://raw.githubusercontent.com/laserdisc-io/fs2-aws/master/LICENSE")
-  ),
+
   pgpPublicRing    := file(".travis/local.pubring.asc"),
   pgpSecretRing    := file(".travis/local.secring.asc"),
   releaseEarlyWith := SonatypePublisher
-)
+))
