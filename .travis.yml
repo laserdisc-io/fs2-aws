@@ -18,7 +18,7 @@ env:
 
 before_install:
   - if [[ -n "${TRAVIS_TAG}" && "${TRAVIS_PULL_REQUEST}" = "false" ]]; then
-      openssl aes-256-cbc -K $encrypted_8a4bd8b95e8a_key -iv $encrypted_8a4bd8b95e8a_iv -in .travis/secrets.tar.enc -out .travis/local.secrets.tar -d; tar xv -C .travis -f .travis/local.secrets.tar;
+      openssl aes-256-cbc -K $encrypted_f6487627a419_key -iv $encrypted_f6487627a419_iv -in .travis/secrets.tar.enc -out .travis/local.secrets.tar -d; tar xv -C .travis -f .travis/local.secrets.tar;
     fi
 
 script:
