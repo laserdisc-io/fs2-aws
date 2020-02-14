@@ -7,7 +7,7 @@ coverageFailOnMinimum := true
 scalaVersion := "2.12.10"
 
 val fs2Version    = "2.2.2"
-val AwsSdkVersion = "1.11.717"
+val AwsSdkVersion = "1.11.722"
 val cirisVersion  = "0.12.1"
 
 libraryDependencies ++= Seq(
