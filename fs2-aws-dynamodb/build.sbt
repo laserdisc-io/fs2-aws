@@ -1,5 +1,5 @@
 organization := "io.laserdisc"
-name := "fs2-aws-dynamodb"
+name         := "fs2-aws-dynamodb"
 
 // coverage
 coverageMinimum       := 40

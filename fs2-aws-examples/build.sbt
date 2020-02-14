@@ -1,5 +1,5 @@
 organization := "io.laserdisc"
-name := "fs2-aws-examples"
+name         := "fs2-aws-examples"
 
 // coverage
 coverageMinimum       := 0
