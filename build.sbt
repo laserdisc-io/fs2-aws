@@ -9,17 +9,14 @@ lazy val root = (project in file("."))
 
 lazy val `fs2-aws-core` = (project in file("fs2-aws-core"))
   .settings(commonSettings)
-  .settings(publishSettings)
 
 lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb"))
   .dependsOn(`fs2-aws-core`)
   .settings(commonSettings)
-  .settings(publishSettings)
 
 lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
   .dependsOn(`fs2-aws-dynamodb`)
   .settings(commonSettings)
-  .settings(publishSettings)
   .settings(
     skip in publish := true
   )
@@ -27,12 +24,10 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
 lazy val `fs2-aws` = (project in file("fs2-aws"))
   .dependsOn(`fs2-aws-core`)
   .settings(commonSettings)
-  .settings(publishSettings)
 
 lazy val `fs2-aws-testkit` = (project in file("fs2-aws-testkit"))
   .dependsOn(`fs2-aws`)
   .settings(commonSettings)
-  .settings(publishSettings)
 
 addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.10")
 addCommandAlias("format", ";scalafmt;test:scalafmt;scalafmtSbt")
@@ -57,15 +52,8 @@ lazy val commonSettings = Seq(
 
 addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.10")
 
-licenses in ThisBuild := Seq(
-  "MIT" -> url("https://github.com/dmateusp/fs2-aws/blob/master/LICENSE")
-)
-
 lazy val publishSettings = Seq(
-  publishMavenStyle      := true,
-  Test / publishArtifact := true,
-  pomIncludeRepository   := (_ => false)
-)
+  )
 
 inThisBuild(
   List(
@@ -89,8 +77,11 @@ inThisBuild(
         "scm:git:git@github.com:laserdisc-io/fs2-aws.git"
       )
     ),
-    pgpPublicRing    := file(".travis/local.pubring.asc"),
-    pgpSecretRing    := file(".travis/local.secring.asc"),
-    releaseEarlyWith := SonatypePublisher
+    publishMavenStyle      := true,
+    Test / publishArtifact := true,
+    pomIncludeRepository   := (_ => false),
+    pgpPublicRing          := file(".travis/local.pubring.asc"),
+    pgpSecretRing          := file(".travis/local.secring.asc"),
+    releaseEarlyWith       := SonatypePublisher
   )
 )
