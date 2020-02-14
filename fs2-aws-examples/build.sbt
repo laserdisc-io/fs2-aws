@@ -22,4 +22,4 @@ libraryDependencies ++= Seq(
 )
 
 addCompilerPlugin("com.olegpy"     %% "better-monadic-for" % "0.3.1")
-addCompilerPlugin("org.spire-math" %% "kind-projector"     % "0.9.3")
+addCompilerPlugin("org.spire-math" %% "kind-projector"     % "0.9.10")
