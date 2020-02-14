@@ -1,3 +1,4 @@
+organization := "io.laserdisc"
 name := "fs2-aws-dynamodb"
 
 // coverage
