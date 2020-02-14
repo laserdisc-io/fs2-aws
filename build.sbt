@@ -80,6 +80,7 @@ inThisBuild(
     publishMavenStyle      := true,
     Test / publishArtifact := true,
     pomIncludeRepository   := (_ => false),
+    sonatypeProfileName    := "io.laserdisc",
     pgpPublicRing          := file(".travis/local.pubring.asc"),
     pgpSecretRing          := file(".travis/local.secring.asc"),
     releaseEarlyWith       := SonatypePublisher
