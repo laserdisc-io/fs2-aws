@@ -57,11 +57,6 @@ lazy val commonSettings = Seq(
 
 addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.10")
 
-// publish
-publishTo in ThisBuild := Some(
-  "Sonatype Nexus" at "https://oss.sonatype.org/service/local/staging/deploy/maven2"
-)
-
 licenses in ThisBuild := Seq(
   "MIT" -> url("https://github.com/dmateusp/fs2-aws/blob/master/LICENSE")
 )
