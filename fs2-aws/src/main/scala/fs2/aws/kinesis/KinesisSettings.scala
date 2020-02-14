@@ -1,8 +1,10 @@
 package fs2.aws.kinesis
 
 import fs2.aws.internal.Exceptions._
+import java.util.Date
 
 import software.amazon.awssdk.regions.Region
+import software.amazon.kinesis.common.InitialPositionInStream
 
 import scala.concurrent.duration._
 
@@ -23,7 +25,8 @@ class KinesisConsumerSettings private (
   val maxConcurrency: Int,
   val bufferSize: Int,
   val terminateGracePeriod: FiniteDuration,
-  val stsAssumeRole: Option[STSAssumeRoleSettings]
+  val stsAssumeRole: Option[STSAssumeRoleSettings],
+  val initialPositionInStream: Either[InitialPositionInStream, Date]
 )
 
 object KinesisConsumerSettings {
@@ -34,14 +37,15 @@ object KinesisConsumerSettings {
     maxConcurrency: Int = Int.MaxValue,
     bufferSize: Int = 10,
     terminateGracePeriod: FiniteDuration = 10.seconds,
-    stsAssumeRole: Option[STSAssumeRoleSettings] = None
+    stsAssumeRole: Option[STSAssumeRoleSettings] = None,
+    initialPositionInStream: Either[InitialPositionInStream, Date] = Left(InitialPositionInStream.LATEST)
   ): Either[Throwable, KinesisConsumerSettings] =
     (bufferSize, maxConcurrency, terminateGracePeriod) match {
       case (bs, _, _) if bs < 1 => Left(BufferSizeException("Must be greater than 0"))
       case (_, mc, _) if mc < 1 => Left(MaxConcurrencyException("Must be greater than 0"))
       case (bs, mc, period) =>
         Right(
-          new KinesisConsumerSettings(streamName, appName, region, mc, bs, period, stsAssumeRole)
+          new KinesisConsumerSettings(streamName, appName, region, mc, bs, period, stsAssumeRole, initialPositionInStream)
         )
     }
 }

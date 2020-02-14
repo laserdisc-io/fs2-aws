@@ -16,7 +16,7 @@ import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient
 import software.amazon.awssdk.services.sts.StsClient
 import software.amazon.awssdk.services.sts.auth.StsAssumeRoleCredentialsProvider
 import software.amazon.awssdk.services.sts.model.AssumeRoleRequest
-import software.amazon.kinesis.common.ConfigsBuilder
+import software.amazon.kinesis.common.{ConfigsBuilder, InitialPositionInStreamExtended}
 import software.amazon.kinesis.coordinator.Scheduler
 import software.amazon.kinesis.processor.ShardRecordProcessorFactory
 import software.amazon.kinesis.retrieval.KinesisClientRecord
@@ -67,6 +67,17 @@ object consumer {
       recordProcessorFactory
     )
 
+    val retrievalConfig = configsBuilder.retrievalConfig()
+    retrievalConfig.initialPositionInStreamExtended(
+      settings.initialPositionInStream match {
+        case Left(position) =>
+          InitialPositionInStreamExtended.newInitialPosition(position)
+
+        case Right(date) =>
+          InitialPositionInStreamExtended.newInitialPositionAtTimestamp(date)
+      }
+    )
+
     new Scheduler(
       configsBuilder.checkpointConfig(),
       configsBuilder.coordinatorConfig(),
@@ -74,7 +85,7 @@ object consumer {
       configsBuilder.lifecycleConfig(),
       configsBuilder.metricsConfig(),
       configsBuilder.processorConfig(),
-      configsBuilder.retrievalConfig()
+      retrievalConfig
     )
   }
 
