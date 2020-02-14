@@ -18,7 +18,7 @@ libraryDependencies ++= Seq(
   "org.slf4j"            % "jcl-over-slf4j"           % "1.7.30",
   "org.slf4j"            % "jul-to-slf4j"             % "1.7.30",
   "io.chrisdavenport"    %% "log4cats-slf4j"          % "1.0.1",
-  "io.github.howardjohn" %% "scanamo-circe"           % "0.2.2-SNAPSHOT"
+  "io.github.howardjohn" %% "scanamo-circe"           % "1.0.5"
 )
 
 addCompilerPlugin("com.olegpy"     %% "better-monadic-for" % "0.3.1")
