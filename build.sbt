@@ -1,4 +1,4 @@
-organization := "io.laserdisc",
+organization := "io.laserdisc"
 name         := "fs2-aws"
 scalaVersion := "2.12.10"
 
