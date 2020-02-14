@@ -67,29 +67,30 @@ lazy val publishSettings = Seq(
   pomIncludeRepository   := (_ => false)
 )
 
-inThisBuild(List(
-  licenses := Seq(
-    "MIT" -> url("https://raw.githubusercontent.com/laserdisc-io/fs2-aws/master/LICENSE")
-  ),
-  homepage := Some(url("https://github.com/laserdisc-io/fs2-aws/")),
-  developers := List(
-    Developer(
-      "dmateusp",
-      "Daniel Mateus Pires",
-      "dmateusp@gmail.com",
-      url("https://github.com/dmateusp")
+inThisBuild(
+  List(
+    licenses := Seq(
+      "MIT" -> url("https://raw.githubusercontent.com/laserdisc-io/fs2-aws/master/LICENSE")
     ),
-    Developer("semenodm", "Dmytro Semenov", "", url("https://github.com/semenodm"))
-  ),
-  scmInfo := Some(
-    ScmInfo(
-      url("https://github.com/laserdisc-io/fs2-aws/tree/master"),
-      "scm:git:git@github.com:laserdisc-io/fs2-aws.git",
-      "scm:git:git@github.com:laserdisc-io/fs2-aws.git"
-    )
-  ),
-
-  pgpPublicRing    := file(".travis/local.pubring.asc"),
-  pgpSecretRing    := file(".travis/local.secring.asc"),
-  releaseEarlyWith := SonatypePublisher
-))
+    homepage := Some(url("https://github.com/laserdisc-io/fs2-aws/")),
+    developers := List(
+      Developer(
+        "dmateusp",
+        "Daniel Mateus Pires",
+        "dmateusp@gmail.com",
+        url("https://github.com/dmateusp")
+      ),
+      Developer("semenodm", "Dmytro Semenov", "", url("https://github.com/semenodm"))
+    ),
+    scmInfo := Some(
+      ScmInfo(
+        url("https://github.com/laserdisc-io/fs2-aws/tree/master"),
+        "scm:git:git@github.com:laserdisc-io/fs2-aws.git",
+        "scm:git:git@github.com:laserdisc-io/fs2-aws.git"
+      )
+    ),
+    pgpPublicRing    := file(".travis/local.pubring.asc"),
+    pgpSecretRing    := file(".travis/local.secring.asc"),
+    releaseEarlyWith := SonatypePublisher
+  )
+)
