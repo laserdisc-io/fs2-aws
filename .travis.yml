@@ -19,7 +19,7 @@ script:
 after_success:
 - sbt ++$TRAVIS_SCALA_VERSION coverageReport coveralls
 - if [[ -n "${TRAVIS_TAG}" && "${TRAVIS_PULL_REQUEST}" = "false" ]]; then
-    sbt -Dsbt.color=always -Dsbt.supershell=false ++$TRAVIS_SCALA_VERSION releaseEarly;
+    sbt -Dsbt.color=always -Dsbt.supershell=false ++$TRAVIS_SCALA_VERSION +releaseEarly +sonatypeBundleRelease;
   fi
 - bash <(curl -s https://codecov.io/bash)
 before_cache:
