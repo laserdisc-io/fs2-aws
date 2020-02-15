@@ -9,7 +9,6 @@ val AwsSdkVersion = "1.11.717"
 val cirisVersion  = "0.12.1"
 
 lazy val root = (project in file("."))
-  .aggregate(`fs2-aws`, `fs2-aws-testkit`, `fs2-aws-dynamodb`, `fs2-aws-core`, `fs2-aws-examples`)
   .settings(
     skip in publish := true
   )
@@ -156,7 +155,6 @@ inThisBuild(
     publishMavenStyle      := true,
     Test / publishArtifact := true,
     pomIncludeRepository   := (_ => false),
-    sonatypeProfileName    := "io.laserdisc",
     pgpPublicRing          := file(".travis/local.pubring.asc"),
     pgpSecretRing          := file(".travis/local.secring.asc"),
     releaseEarlyWith       := SonatypePublisher
