@@ -27,7 +27,7 @@ case class TestKinesisProducerClient[F[_], T](state: Ref[F, List[T]])(
             .toEither
             .flatMap(_.as[T])
             .liftTo[F]
-      _ <- state.modify(orig ⇒ (t :: orig, orig))
+      _ <- state.modify(orig => (t :: orig, orig))
       res = {
         val future: SettableFuture[UserRecordResult] = SettableFuture.create()
         future.set(new UserRecordResult(List[Attempt]().asJava, "seq #", "shard #", true))
