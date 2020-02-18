@@ -22,12 +22,12 @@ case class TestKinesisProducerClient[F[_], T](state: Ref[F, List[T]])(
     data: ByteBuffer
   )(implicit F: Sync[F]): F[ListenableFuture[UserRecordResult]] =
     for {
-      t ← CirceSupportParser
-           .parseFromByteBuffer(data)
-           .toEither
-           .flatMap(_.as[T])
-           .liftTo[F]
-      _ ← state.modify(orig ⇒ (t :: orig, orig))
+      t <- CirceSupportParser
+            .parseFromByteBuffer(data)
+            .toEither
+            .flatMap(_.as[T])
+            .liftTo[F]
+      _ <- state.modify(orig ⇒ (t :: orig, orig))
       res = {
         val future: SettableFuture[UserRecordResult] = SettableFuture.create()
         future.set(new UserRecordResult(List[Attempt]().asJava, "seq #", "shard #", true))
