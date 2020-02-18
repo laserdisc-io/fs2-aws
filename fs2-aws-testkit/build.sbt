@@ -1,8 +1,7 @@
-name := "fs2-aws-testkit"
+organization := "io.laserdisc"
+name         := "fs2-aws-testkit"
 
-scalaVersion := "2.12.9"
-
-releasePublishArtifactsAction := PgpKeys.publishSigned.value
+scalaVersion := "2.12.10"
 
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest"               % "3.1.0",
