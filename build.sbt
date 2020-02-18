@@ -107,7 +107,10 @@ lazy val `fs2-aws-testkit` = (project in file("fs2-aws-testkit"))
       "io.circe"     %% "circe-core"           % circeVersion,
       "io.circe"     %% "circe-generic"        % circeVersion,
       "io.circe"     %% "circe-generic-extras" % circeVersion,
-      "io.circe"     %% "circe-parser"         % circeVersion
+      "io.circe"     %% "circe-parser"         % circeVersion,
+      "org.scalatest" %% "scalatest"               % "3.1.0",
+      "org.mockito"   % "mockito-core"             % "3.2.4",
+      "org.mockito"   %% "mockito-scala-scalatest" % "1.11.2"
 
     )
   )
