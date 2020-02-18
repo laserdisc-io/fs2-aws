@@ -7,7 +7,7 @@ scalaVersion := "2.12.10"
 val fs2Version    = "2.2.2"
 val AwsSdkVersion = "1.11.724"
 val cirisVersion  = "0.12.1"
-val circeVersion   = "0.12.2"
+val circeVersion  = "0.12.2"
 
 lazy val root = (project in file("."))
   .aggregate(`fs2-aws`, `fs2-aws-testkit`, `fs2-aws-dynamodb`, `fs2-aws-core`, `fs2-aws-examples`)
@@ -104,14 +104,13 @@ lazy val `fs2-aws-testkit` = (project in file("fs2-aws-testkit"))
   .settings(
     name := "fs2-aws-testkit",
     libraryDependencies ++= Seq(
-      "io.circe"     %% "circe-core"           % circeVersion,
-      "io.circe"     %% "circe-generic"        % circeVersion,
-      "io.circe"     %% "circe-generic-extras" % circeVersion,
-      "io.circe"     %% "circe-parser"         % circeVersion,
+      "io.circe"      %% "circe-core"              % circeVersion,
+      "io.circe"      %% "circe-generic"           % circeVersion,
+      "io.circe"      %% "circe-generic-extras"    % circeVersion,
+      "io.circe"      %% "circe-parser"            % circeVersion,
       "org.scalatest" %% "scalatest"               % "3.1.0",
       "org.mockito"   % "mockito-core"             % "3.2.4",
       "org.mockito"   %% "mockito-scala-scalatest" % "1.11.2"
-
     )
   )
   .settings(commonSettings)
