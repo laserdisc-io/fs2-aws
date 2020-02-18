@@ -7,7 +7,7 @@ scalaVersion := "2.12.10"
 val fs2Version    = "2.2.2"
 val AwsSdkVersion = "1.11.724"
 val cirisVersion  = "0.12.1"
-val circeVersion  = "0.12.2"
+val circeVersion  = "0.13.0"
 
 lazy val root = (project in file("."))
   .aggregate(`fs2-aws`, `fs2-aws-testkit`, `fs2-aws-dynamodb`, `fs2-aws-core`, `fs2-aws-examples`)
