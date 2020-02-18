@@ -3,16 +3,34 @@ package fs2.aws.testkit
 import java.nio.ByteBuffer
 
 import cats.effect.Sync
-import com.amazonaws.services.kinesis.producer.UserRecordResult
-import com.google.common.util.concurrent.ListenableFuture
+import cats.effect.concurrent.Ref
+import com.amazonaws.services.kinesis.producer.{ Attempt, UserRecordResult }
+import com.google.common.util.concurrent.{ ListenableFuture, SettableFuture }
 import fs2.aws.internal.KinesisProducerClient
+import cats.implicits._
+import io.circe.Decoder
+import io.circe.jawn.CirceSupportParser
 
-case class TestKinesisProducerClient[F[_]](
-  respondWith: UserRecordResult,
-  ops: F[ListenableFuture[UserRecordResult]]
+case class TestKinesisProducerClient[F[_], T](state: Ref[F, List[T]])(
+  implicit decoder: Decoder[T]
 ) extends KinesisProducerClient[F] {
-  override def putData(streamName: String, partitionKey: String, data: ByteBuffer)(
-    implicit e: Sync[F]
-  ): F[ListenableFuture[UserRecordResult]] =
-    ops
+  override def putData(
+    streamName: String,
+    partitionKey: String,
+    data: ByteBuffer
+  )(implicit F: Sync[F]): F[ListenableFuture[UserRecordResult]] =
+    for {
+      t ← CirceSupportParser
+           .parseFromByteBuffer(data)
+           .toEither
+           .flatMap(_.as[T])
+           .liftTo[F]
+      _ ← state.modify(orig ⇒ (t :: orig, orig))
+      res = {
+        val future: SettableFuture[UserRecordResult] = SettableFuture.create()
+        future.set(new UserRecordResult(List[Attempt]().asJava, "seq #", "shard #", true))
+        future
+      }
+
+    } yield res
 }
