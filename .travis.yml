@@ -1,29 +1,31 @@
+dist: xenial
 sudo: false
-
 language: scala
-
 jdk:
-  - openjdk8
-  - openjdk11
-
+- openjdk11
 scala:
-  - 2.12.9
-
-branches:
-  only:
-    - master
-
+- 2.12.10
+env:
+  global:
+  - secure: rvdf3N7qS1pej1P5KfDZGHxXjjSmbqEFW1nmSVvgAAuhTvWvmUc+Yzc6uJUypXhKxpECqZ2vZFJcU66n/LlBGd9tNXcRoWvKQksFj5C8pffpv8gzC5u+w2ec2xRgU7gXMAA/GcjnuJyo+/2bMZ8w6bja6OkCflvxGyrseiXCf9gveT0+a+pI15DkttJX23fhXwxH9scB1W4IKy3Ku7MzD6snsP5dPz9OBKSl3AxCWGOFQKCmqUH+Fz0WUrvDhzuNykzVqVPIKtAlYDmWK9Hx+laTFYhOr344TgMamhiIhH61UMpwNKEc/uP36BwG+pxDzTMJd2iEPjQCi3j/KfnIfxtQFqtiQSE02eyBUcYtngLNTTAAzwGYuj5fFbSk4YDoqjSVQBgE6X0t8axYEO1fizE6IqwnkFmxCDXHJGjjxLv5gMwIm7m/ekwkqZ2tURAjM4YV2pPKgd22ORcfwnwOiQ25Abty7I0yUv9ac+cTdHH8QEoFd3jSjmDGmAAHCr6oQIrWrVCGDyrAM6NJO2zDxosfDw9g5bVEGXca5rxKTf2wxKTk8Umr86LM7Ledpmy7gfVY7/nh63JNFKQKr5B9WKiMpO5nRtGjFG3uguVxoJBZbpts7MQLjAnS0oDkEB7QxL3IF9556ymayH6ScyTOwwKPRlumRN5lbmFApoO06oE=
+  - secure: IH5MaGQL043xRHC0kOTxnjURR8sNoy+7XWFbBea1xyw3kM3fy2XHg+arBFi42Xy00mkADct192z8ri9CeQYMf4kJUL98sfnLkI5Po8+NlwjUpLYjkMhv62eh8A0caFZU69bZKc8tCrTVlbKtCRjMIGLkKeWqQTViV7RQfywIqMC43NbKnS3KulUdqF2NSaVLIK6SsvHDTH8S8guNG7ogD6XEU/mJHvQw04jYhoeiXB/J8JQs4N44sIrP/J1i+n7d3JfQu2K/QQz4/Z0JfySvJ1JL9aV+XpmIdunQ5eJ3c8KeokmQUmgcRAh5gWrL0h+JyMvr8J0vw0oGOgLfpKtFS2x1TET9ROfBtRqAthelzEfnxAtZUHyoygnPy6pCa8uGg4q45GRfXu2JcFlOUBz29m8HQj2P2nSFkAe+uF2gwGD8rRAEnd9NvgBem+GHF3vmeTHI5pWo8uNIluk+wOw0+/8dk9+Q64k/37fR1WF/6ctNrRYufxD5PqJxjeGTABpgn892DNswLdPjd8BhEW0QcTgYoNsRvKGdkkugvXyRM/3uEuVsVKIyI5HbYf6ULNTltjxY5Pbp+3E7EfK4OrQ/Ij+BRswplF82fHlrkPwWxZjmAlEhUn1e+G/S/2XVJpmJucIAeyuGXiNUHFEznGuzMGPFSRT4fno+ksuGcYYSUyE=
+  - secure: qMZDo6wTlteSTEa4IzFi6DaS0rkNB86lwIc+TpdgLqjfpmKGimmC8tNl26Ed9GvmxEzlBaSTaR70rqjOV/lMtaOa3ocZJfhn4EmbNYALCiZcF9bgehmNbUqkU7QXq1x3nevj7X8n+BNHDobmZRuyanmLzkugdHIJ2xFYdVQ15wW/tYabozbPJO4U7IADQKR9sd/0l/xGLU7ixTXxRQ+lCzHfaErjkLNw+QeOvIDd7PYeamzR5a+ZwvvkJpra5bS40eT9D91UB6vzXsGSzv414fwlkbz2uqU7ribza6lrqfM31Is+cK+KyGHxjg6aVVdTl1dXvgoKUekolqbte8FYRvUVktqgd0CWSnW1PWBxS7dqRtkBHugzPQSovnK4t4qBGd5w7ogtd5ITcrCZ+XOTytXIHKxhBMwiPoN0reRyKp6KUP7Gm150ShahwmAs/FjLpWsnI6MCqnJfSww9SWbwhTYyyARgAQ4bQMLkktbOUikJEd9ijQy82xqaoy5YtXA846nS+FDmp7207CruAM4x1U/YpdD4l7nHm4F0sk2DqpUd+N1Z2nhn7uWBd3DbgPOnwPerlM17h1g4PyyX3ch97DKDPy9Bxcsv7ecLutRnzLJJYkk975Ey14sPWjDc0/u+qRBoKxAdjAR18TlKNW6j/tcx+KZt/rgsz2AvfvX8s/k=
+before_install:
+- if [[ -n "${TRAVIS_TAG}" && "${TRAVIS_PULL_REQUEST}" = "false" ]]; then
+    openssl aes-256-cbc -K $encrypted_f6487627a419_key -iv $encrypted_f6487627a419_iv -in .travis/secrets.tar.enc -out .travis/local.secrets.tar -d; tar xv -C .travis -f .travis/local.secrets.tar;
+  fi
 script:
-  - sbt ++$TRAVIS_SCALA_VERSION clean coverage test scalafmtCheck scalafmtSbtCheck
-
+- sbt ++$TRAVIS_SCALA_VERSION clean coverage test scalafmtCheck scalafmtSbtCheck
 after_success:
-  - sbt ++$TRAVIS_SCALA_VERSION coverageReport coveralls
-
+- sbt ++$TRAVIS_SCALA_VERSION coverageReport coveralls
+- if [[ -n "${TRAVIS_TAG}" && "${TRAVIS_PULL_REQUEST}" = "false" ]]; then
+    sbt -Dsbt.color=always -Dsbt.supershell=false ++$TRAVIS_SCALA_VERSION +releaseEarly;
+  fi
+- bash <(curl -s https://codecov.io/bash)
 before_cache:
-  - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
-  - find $HOME/.sbt        -name "*.lock"               -print -delete
-
+- find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
+- find $HOME/.sbt        -name "*.lock"               -print -delete
 cache:
   directories:
-    - "$HOME/.ivy2/cache"
-    - "$HOME/.sbt"
+  - "$HOME/.ivy2/cache"
+  - "$HOME/.sbt"

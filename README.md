@@ -1,7 +1,7 @@
 # fs2-aws
-[![Build Status](https://travis-ci.com/saksdirect/fs2-aws.svg?branch=master)](https://travis-ci.com/saksdirect/fs2-aws)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.dmateusp/fs2-aws_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.github.dmateusp/fs2-aws_2.12)
-[![Coverage Status](https://coveralls.io/repos/github/dmateusp/fs2-aws/badge.svg?branch=master)](https://coveralls.io/github/dmateusp/fs2-aws?branch=master)
+[![Build Status](https://travis-ci.org/laserdisc-io/fs2-aws.svg?branch=master)](https://travis-ci.org/laserdisc-io/fs2-aws)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.laserdisc/fs2-aws_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.laserdisc/fs2-aws_2.12)
+[![Coverage Status](https://coveralls.io/repos/github/laserdisc-io/fs2-aws/badge.svg?branch=master)](https://coveralls.io/github/laserdisc-io/fs2-aws?branch=master)
 
 fs2 Streaming utilities for interacting with AWS
 
@@ -11,6 +11,14 @@ fs2-aws provides an [fs2](https://github.com/functional-streams-for-scala/fs2) i
 
 The design goals are the same as fs2:
 > compositionality, expressiveness, resource safety, and speed
+
+## Using:
+
+Find [the latest release version](https://github.com/laserdisc-io/fs2-aws/releases) and add the following dependency:
+
+```sbt
+libraryDependencies +=  "io.laserdisc" %% "fs2-aws" % "VERSION"
+```
 
 ## S3
 ### Streaming a file from S3

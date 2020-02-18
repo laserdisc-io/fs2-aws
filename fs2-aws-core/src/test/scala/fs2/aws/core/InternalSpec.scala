@@ -1,8 +1,7 @@
-package fs2.aws
+package fs2.aws.core
 
-import fs2.Stream
 import cats.effect.{ ContextShift, IO }
-import fs2.aws.internal._
+import fs2.Stream
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
