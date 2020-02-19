@@ -5,7 +5,7 @@ name         := "fs2-aws"
 scalaVersion := "2.12.10"
 
 val fs2Version    = "2.2.2"
-val AwsSdkVersion = "1.11.724"
+val AwsSdkVersion = "1.11.725"
 val cirisVersion  = "0.12.1"
 val circeVersion  = "0.12.2"
 
@@ -115,7 +115,7 @@ lazy val `fs2-aws-testkit` = (project in file("fs2-aws-testkit"))
   )
   .settings(commonSettings)
 
-addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.0")
+addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
 addCommandAlias("format", ";scalafmt;test:scalafmt;scalafmtSbt")
 addCommandAlias("checkFormat", ";scalafmtCheck;test:scalafmtCheck;scalafmtSbtCheck")
 
@@ -139,7 +139,7 @@ lazy val commonSettings = Seq(
   addCompilerPlugin("org.spire-math" %% "kind-projector"     % "0.9.3")
 )
 
-addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.0")
+addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
 
 lazy val publishSettings = Seq(
   )
