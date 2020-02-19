@@ -5,8 +5,9 @@ name         := "fs2-aws"
 scalaVersion := "2.12.10"
 
 val fs2Version    = "2.2.2"
-val AwsSdkVersion = "1.11.717"
+val AwsSdkVersion = "1.11.724"
 val cirisVersion  = "0.12.1"
+val circeVersion  = "0.12.2"
 
 lazy val root = (project in file("."))
   .aggregate(`fs2-aws`, `fs2-aws-testkit`, `fs2-aws-dynamodb`, `fs2-aws-core`, `fs2-aws-examples`)
@@ -82,7 +83,7 @@ lazy val `fs2-aws` = (project in file("fs2-aws"))
       "com.amazonaws"           % "aws-java-sdk-sqs"              % AwsSdkVersion,
       "com.amazonaws"           % "amazon-kinesis-producer"       % "0.14.0",
       "software.amazon.kinesis" % "amazon-kinesis-client"         % "2.2.8",
-      "software.amazon.awssdk"  % "sts"                           % "2.10.66",
+      "software.amazon.awssdk"  % "sts"                           % "2.10.67",
       "org.scalatest"           %% "scalatest"                    % "3.1.0" % Test,
       "org.mockito"             % "mockito-core"                  % "3.2.4" % Test,
       "org.mockito"             %% "mockito-scala-scalatest"      % "1.11.2" % Test,
@@ -100,9 +101,21 @@ lazy val `fs2-aws` = (project in file("fs2-aws"))
 
 lazy val `fs2-aws-testkit` = (project in file("fs2-aws-testkit"))
   .dependsOn(`fs2-aws`)
+  .settings(
+    name := "fs2-aws-testkit",
+    libraryDependencies ++= Seq(
+      "io.circe"      %% "circe-core"              % circeVersion,
+      "io.circe"      %% "circe-generic"           % circeVersion,
+      "io.circe"      %% "circe-generic-extras"    % circeVersion,
+      "io.circe"      %% "circe-parser"            % circeVersion,
+      "org.scalatest" %% "scalatest"               % "3.1.0",
+      "org.mockito"   % "mockito-core"             % "3.2.4",
+      "org.mockito"   %% "mockito-scala-scalatest" % "1.11.2"
+    )
+  )
   .settings(commonSettings)
 
-addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.10")
+addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.0")
 addCommandAlias("format", ";scalafmt;test:scalafmt;scalafmtSbt")
 addCommandAlias("checkFormat", ";scalafmtCheck;test:scalafmtCheck;scalafmtSbtCheck")
 
@@ -126,7 +139,7 @@ lazy val commonSettings = Seq(
   addCompilerPlugin("org.spire-math" %% "kind-projector"     % "0.9.3")
 )
 
-addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.10")
+addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.0")
 
 lazy val publishSettings = Seq(
   )
