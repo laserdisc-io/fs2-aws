@@ -22,7 +22,7 @@ lazy val `fs2-aws-core` = (project in file("fs2-aws-core"))
       "co.fs2"        %% "fs2-core"                % "2.2.2",
       "co.fs2"        %% "fs2-io"                  % "2.2.2",
       "org.mockito"   % "mockito-core"             % "3.3.0" % Test,
-      "org.mockito"   %% "mockito-scala-scalatest" % "1.11.2" % Test
+      "org.mockito"   %% "mockito-scala-scalatest" % "1.11.2" % Test,
       "org.scalatest" %% "scalatest"               % "3.1.1" % Test,
       "org.typelevel" %% "alleycats-core"          % "2.1.1"
     ),
@@ -39,7 +39,7 @@ lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb"))
     coverageFailOnMinimum := true,
     libraryDependencies ++= Seq(
       "co.fs2"        %% "fs2-core"                        % fs2Version,
-      "co.fs2"        %% "fs2-io"                          % fs2Version, 
+      "co.fs2"        %% "fs2-io"                          % fs2Version,
       "org.mockito"   % "mockito-core"                     % "3.3.0" % Test,
       "org.scalatest" %% "scalatest"                       % "3.1.1" % Test,
       "org.typelevel" %% "alleycats-core"                  % "2.1.1",
@@ -86,7 +86,6 @@ lazy val `fs2-aws` = (project in file("fs2-aws"))
       "org.mockito"             % "mockito-core"                  % "3.3.0" % Test,
       "org.scalatest"           %% "scalatest"                    % "3.1.1" % Test,
       "software.amazon.awssdk"  % "sts"                           % "2.10.72",
-     
       "org.mockito"             %% "mockito-scala-scalatest"      % "1.11.3" % Test,
       "com.amazonaws"           % "aws-java-sdk-sqs"              % AwsSdkVersion excludeAll ("commons-logging", "commons-logging"),
       "com.amazonaws"           % "amazon-sqs-java-messaging-lib" % "1.0.8" excludeAll ("commons-logging", "commons-logging"),
