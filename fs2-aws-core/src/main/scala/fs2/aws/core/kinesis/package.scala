@@ -4,10 +4,9 @@ import cats.effect.Concurrent
 import cats.effect.concurrent.Ref
 import cats.implicits._
 import fs2.concurrent.Queue
-import fs2.{Pipe, Stream}
-import alleycats.std.all._
+import fs2.{ Pipe, Stream }
 
-package object internal {
+package object core {
 
   /** Helper flow to group elements of a stream into K substreams.
     * Grows with the number of distinct 'K' selectors
@@ -23,11 +22,12 @@ package object internal {
     *  @param selector partitioning function based on the element
     *  @return a FS2 pipe producing a new sub-stream of elements grouped by the selector
     */
-  def groupBy[F[_], A, K](selector: A => F[K])(
-      implicit F: Concurrent[F]): Pipe[F, A, (K, Stream[F, A])] = { in =>
+  def groupBy[F[_], A, K](
+    selector: A => F[K]
+  )(implicit F: Concurrent[F]): Pipe[F, A, (K, Stream[F, A])] = { in =>
     Stream.eval(Ref.of[F, Map[K, Queue[F, Option[A]]]](Map.empty)).flatMap { queueMap =>
       val cleanup = {
-        queueMap.get.flatMap(_.traverse_(_.enqueue1(None)))
+        queueMap.get.flatMap(_.values.toList.traverse_(_.enqueue1(None)))
       }
 
       (in ++ Stream.eval_(cleanup))
@@ -39,7 +39,9 @@ package object internal {
                 for {
                   newQ <- Queue.unbounded[F, Option[A]] // Create a new queue
                   _    <- queueMap.modify(queues => (queues + (key -> newQ), queues))
-                  _    <- newQ.enqueue1(elem.some) // Enqueue the element lifted into an Option to the new queue
+                  _ <- newQ.enqueue1(
+                        elem.some
+                      ) // Enqueue the element lifted into an Option to the new queue
                 } yield (key -> newQ.dequeue.unNoneTerminate).some
               }(_.enqueue1(elem.some) as None)
           }.flatten
