@@ -21,8 +21,8 @@ lazy val `fs2-aws-core` = (project in file("fs2-aws-core"))
     libraryDependencies ++= Seq(
       "co.fs2"        %% "fs2-core"                % "2.2.2",
       "co.fs2"        %% "fs2-io"                  % "2.2.2",
+      "org.scalatest" %% "scalatest"               % "3.1.1" % Test,
       "org.typelevel" %% "alleycats-core"          % "2.1.1",
-      "org.scalatest" %% "scalatest"               % "3.1.0" % Test,
       "org.mockito"   % "mockito-core"             % "3.2.4" % Test,
       "org.mockito"   %% "mockito-scala-scalatest" % "1.11.2" % Test
     ),
@@ -40,8 +40,8 @@ lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb"))
     libraryDependencies ++= Seq(
       "co.fs2"        %% "fs2-core"                        % fs2Version,
       "co.fs2"        %% "fs2-io"                          % fs2Version,
+      "org.scalatest" %% "scalatest"                       % "3.1.1" % Test,
       "org.typelevel" %% "alleycats-core"                  % "2.1.1",
-      "org.scalatest" %% "scalatest"                       % "3.1.0" % Test,
       "org.mockito"   % "mockito-core"                     % "3.2.4" % Test,
       "org.mockito"   %% "mockito-scala-scalatest"         % "1.11.2" % Test,
       "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.5.0",
@@ -83,8 +83,8 @@ lazy val `fs2-aws` = (project in file("fs2-aws"))
       "com.amazonaws"           % "aws-java-sdk-sqs"              % AwsSdkVersion,
       "com.amazonaws"           % "amazon-kinesis-producer"       % "0.14.0",
       "software.amazon.kinesis" % "amazon-kinesis-client"         % "2.2.9",
+      "org.scalatest"           %% "scalatest"                    % "3.1.1" % Test,
       "software.amazon.awssdk"  % "sts"                           % "2.10.72",
-      "org.scalatest"           %% "scalatest"                    % "3.1.0" % Test,
       "org.mockito"             % "mockito-core"                  % "3.2.4" % Test,
       "org.mockito"             %% "mockito-scala-scalatest"      % "1.11.2" % Test,
       "com.amazonaws"           % "aws-java-sdk-sqs"              % AwsSdkVersion excludeAll ("commons-logging", "commons-logging"),
@@ -108,7 +108,7 @@ lazy val `fs2-aws-testkit` = (project in file("fs2-aws-testkit"))
       "io.circe"      %% "circe-generic"           % circeVersion,
       "io.circe"      %% "circe-generic-extras"    % circeVersion,
       "io.circe"      %% "circe-parser"            % circeVersion,
-      "org.scalatest" %% "scalatest"               % "3.1.0",
+      "org.scalatest" %% "scalatest"               % "3.1.1",
       "org.mockito"   % "mockito-core"             % "3.2.4",
       "org.mockito"   %% "mockito-scala-scalatest" % "1.11.2"
     )
