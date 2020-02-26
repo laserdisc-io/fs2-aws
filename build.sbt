@@ -24,7 +24,7 @@ lazy val `fs2-aws-core` = (project in file("fs2-aws-core"))
       "org.scalatest" %% "scalatest"               % "3.1.1" % Test,
       "org.typelevel" %% "alleycats-core"          % "2.1.1",
       "org.mockito"   % "mockito-core"             % "3.2.4" % Test,
-      "org.mockito"   %% "mockito-scala-scalatest" % "1.11.2" % Test
+      "org.mockito"   %% "mockito-scala-scalatest" % "1.11.3" % Test
     ),
     coverageMinimum       := 40,
     coverageFailOnMinimum := true
@@ -43,7 +43,7 @@ lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb"))
       "org.scalatest" %% "scalatest"                       % "3.1.1" % Test,
       "org.typelevel" %% "alleycats-core"                  % "2.1.1",
       "org.mockito"   % "mockito-core"                     % "3.2.4" % Test,
-      "org.mockito"   %% "mockito-scala-scalatest"         % "1.11.2" % Test,
+      "org.mockito"   %% "mockito-scala-scalatest"         % "1.11.3" % Test,
       "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.5.0",
       "io.laserdisc"  %% "scanamo-circe"                   % "1.0.5"
     )
@@ -57,7 +57,7 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
     coverageMinimum := 0,
     libraryDependencies ++= Seq(
       "org.mockito"       % "mockito-core"             % "3.2.4" % Test,
-      "org.mockito"       %% "mockito-scala-scalatest" % "1.11.2" % Test,
+      "org.mockito"       %% "mockito-scala-scalatest" % "1.11.3" % Test,
       "ch.qos.logback"    % "logback-classic"          % "1.2.3",
       "ch.qos.logback"    % "logback-core"             % "1.2.3",
       "org.slf4j"         % "jcl-over-slf4j"           % "1.7.30",
@@ -86,7 +86,7 @@ lazy val `fs2-aws` = (project in file("fs2-aws"))
       "org.scalatest"           %% "scalatest"                    % "3.1.1" % Test,
       "software.amazon.awssdk"  % "sts"                           % "2.10.72",
       "org.mockito"             % "mockito-core"                  % "3.2.4" % Test,
-      "org.mockito"             %% "mockito-scala-scalatest"      % "1.11.2" % Test,
+      "org.mockito"             %% "mockito-scala-scalatest"      % "1.11.3" % Test,
       "com.amazonaws"           % "aws-java-sdk-sqs"              % AwsSdkVersion excludeAll ("commons-logging", "commons-logging"),
       "com.amazonaws"           % "amazon-sqs-java-messaging-lib" % "1.0.8" excludeAll ("commons-logging", "commons-logging"),
       "is.cir"                  %% "ciris-core"                   % cirisVersion,
@@ -110,7 +110,7 @@ lazy val `fs2-aws-testkit` = (project in file("fs2-aws-testkit"))
       "io.circe"      %% "circe-parser"            % circeVersion,
       "org.scalatest" %% "scalatest"               % "3.1.1",
       "org.mockito"   % "mockito-core"             % "3.2.4",
-      "org.mockito"   %% "mockito-scala-scalatest" % "1.11.2"
+      "org.mockito"   %% "mockito-scala-scalatest" % "1.11.3"
     )
   )
   .settings(commonSettings)
