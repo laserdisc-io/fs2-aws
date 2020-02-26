@@ -304,6 +304,5 @@ object consumer {
   def checkpointRecords_[F[_]](
     checkpointSettings: KinesisCheckpointSettings = KinesisCheckpointSettings.defaultInstance
   )(implicit F: ConcurrentEffect[F], timer: Timer[F]): Pipe[F, CommittableRecord, Unit] =
-    _.through(checkpointRecords(checkpointSettings))
-      .map(_ => ())
+    _.through(checkpointRecords(checkpointSettings)).void
 }
