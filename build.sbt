@@ -21,7 +21,7 @@ lazy val `fs2-aws-core` = (project in file("fs2-aws-core"))
     libraryDependencies ++= Seq(
       "co.fs2"        %% "fs2-core"                % "2.2.2",
       "co.fs2"        %% "fs2-io"                  % "2.2.2",
-      "org.typelevel" %% "alleycats-core"          % "2.1.0",
+      "org.typelevel" %% "alleycats-core"          % "2.1.1",
       "org.scalatest" %% "scalatest"               % "3.1.0" % Test,
       "org.mockito"   % "mockito-core"             % "3.2.4" % Test,
       "org.mockito"   %% "mockito-scala-scalatest" % "1.11.2" % Test
@@ -40,7 +40,7 @@ lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb"))
     libraryDependencies ++= Seq(
       "co.fs2"        %% "fs2-core"                        % fs2Version,
       "co.fs2"        %% "fs2-io"                          % fs2Version,
-      "org.typelevel" %% "alleycats-core"                  % "2.1.0",
+      "org.typelevel" %% "alleycats-core"                  % "2.1.1",
       "org.scalatest" %% "scalatest"                       % "3.1.0" % Test,
       "org.mockito"   % "mockito-core"                     % "3.2.4" % Test,
       "org.mockito"   %% "mockito-scala-scalatest"         % "1.11.2" % Test,
