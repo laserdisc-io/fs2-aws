@@ -25,8 +25,8 @@ package object aws {
     decoder: Message => Either[Throwable, O]
   ): F[ReceiverCallback[Either[Throwable, O]]] =
     F.delay(
-      new ReceiverCallback[Either[Throwable, O]](
-        r => F.runAsync(queue.enqueue1(r))(_ => IO.unit).unsafeRunSync()
+      new ReceiverCallback[Either[Throwable, O]](r =>
+        F.runAsync(queue.enqueue1(r))(_ => IO.unit).unsafeRunSync()
       )
     )
 
