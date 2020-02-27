@@ -112,10 +112,11 @@ package object dynamodb {
 
     // Initialize a KCL worker which appends to the internal stream queue on message receipt
     def instantiateWorker(queue: Queue[F, CommittableRecord]): F[Worker] = Sync[F].delay {
-      workerFactory(() =>
-        new RecordProcessor(
-          record => Effect[F].runAsync(queue.enqueue1(record))(_ => IO.unit).unsafeRunSync,
-          streamConfig.terminateGracePeriod
+      workerFactory(
+        () =>
+          new RecordProcessor(
+            record => Effect[F].runAsync(queue.enqueue1(record))(_ => IO.unit).unsafeRunSync,
+            streamConfig.terminateGracePeriod
         )
       )
     }
@@ -125,9 +126,13 @@ package object dynamodb {
     for {
       buffer <- Stream.eval(Queue.bounded[F, CommittableRecord](streamConfig.bufferSize))
       worker = instantiateWorker(buffer)
-      stream <- buffer.dequeue concurrently Stream.eval(worker.map(_.run)) onFinalize worker.map(
-                 _.shutdown
-               )
+      stream <- buffer.dequeue
+                 .onFinalize(
+                   worker.map(
+                     _.shutdown
+                   )
+                 )
+                 .concurrently(Stream.eval(worker.map(_.run)))
     } yield stream
   }
 
