@@ -111,7 +111,7 @@ package object dynamodb {
   ): fs2.Stream[F, CommittableRecord] = {
 
     // Initialize a KCL worker which appends to the internal stream queue on message receipt
-    def instantiateWorker(queue: Queue[F, CommittableRecord]): F[Worker] = Sync[F].delay {
+    def instantiateWorker(queue: Queue[F, CommittableRecord]): Stream[F, Worker] = Stream.emit {
       workerFactory(() =>
         new RecordProcessor(
           record => Effect[F].runAsync(queue.enqueue1(record))(_ => IO.unit).unsafeRunSync,
@@ -124,10 +124,10 @@ package object dynamodb {
     // Expose the elements by dequeuing the internal buffer
     for {
       buffer <- Stream.eval(Queue.bounded[F, CommittableRecord](streamConfig.bufferSize))
-      worker = instantiateWorker(buffer)
-      stream <- buffer.dequeue concurrently Stream.eval(worker.map(_.run)) onFinalize worker.map(
-                 _.shutdown
-               )
+      worker <- instantiateWorker(buffer)
+      stream <- buffer.dequeue
+                 .onFinalize(Sync[F].delay(worker.shutdown()))
+                 .concurrently(Stream.eval(Sync[F].delay(worker.run())))
     } yield stream
   }
 
@@ -156,18 +156,8 @@ package object dynamodb {
         .flatMap { cr =>
           fs2.Stream.eval_(
             F.async[Record] { cb =>
-              if (cr.canCheckpoint()) {
-                cr.checkpoint()
-                cb(Right(cr.record))
-              } else {
-                cb(
-                  Left(
-                    new RuntimeException(
-                      "Record processor has been shutdown and therefore cannot checkpoint records"
-                    )
-                  )
-                )
-              }
+              cr.checkpoint()
+              cb(Right(cr.record))
             }
           )
         }
