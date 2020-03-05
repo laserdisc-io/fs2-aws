@@ -5,7 +5,7 @@ name         := "fs2-aws"
 scalaVersion := "2.12.10"
 
 val fs2Version    = "2.2.2"
-val AwsSdkVersion = "1.11.734"
+val AwsSdkVersion = "1.11.736"
 val cirisVersion  = "0.12.1"
 val circeVersion  = "0.13.0"
 
