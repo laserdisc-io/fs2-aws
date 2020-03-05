@@ -92,7 +92,7 @@ lazy val `fs2-aws` = (project in file("fs2-aws"))
       "is.cir"                  %% "ciris-core"                   % cirisVersion,
       "is.cir"                  %% "ciris-enumeratum"             % cirisVersion,
       "is.cir"                  %% "ciris-refined"                % cirisVersion,
-      "eu.timepit"              %% "refined"                      % "0.9.12"
+      "eu.timepit"              %% "refined"                      % "0.9.13"
     ),
     coverageMinimum       := 40,
     coverageFailOnMinimum := true
