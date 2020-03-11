@@ -1,6 +1,6 @@
 package fs2.aws
 
-import cats.effect.{ ConcurrentEffect, Effect, IO, Sync, Timer }
+import cats.effect.{ Blocker, ConcurrentEffect, ContextShift, Effect, IO, Sync, Timer }
 import cats.implicits._
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.regions.Regions
@@ -53,10 +53,10 @@ package object dynamodb {
     *  @param streamName name of the Kinesis stream to consume from
     *  @return an infinite fs2 Stream that emits Kinesis Records
     */
-  def readFromDynamDBStream[F[_]](
+  def readFromDynamDBStream[F[_]: ConcurrentEffect: ContextShift](
     appName: String,
     streamName: String
-  )(implicit F: ConcurrentEffect[F]): fs2.Stream[F, CommittableRecord] = {
+  ): fs2.Stream[F, CommittableRecord] = {
     val workerConfig = new KinesisClientLibConfiguration(
       appName,
       streamName,
@@ -77,7 +77,7 @@ package object dynamodb {
     *  @param streamConfig configuration for the internal stream
     *  @return an infinite fs2 Stream that emits Kinesis Records
     */
-  def readFromDynamoDBStream[F[_]](
+  def readFromDynamoDBStream[F[_]: ConcurrentEffect: ContextShift](
     workerConfiguration: KinesisClientLibConfiguration,
     dynamoDBStreamsClient: AmazonDynamoDBStreams =
       AmazonDynamoDBStreamsClientBuilder.standard().withRegion(Regions.US_EAST_1).build(),
@@ -86,7 +86,7 @@ package object dynamodb {
     cloudWatchClient: AmazonCloudWatch =
       AmazonCloudWatchClientBuilder.standard().withRegion(Regions.US_EAST_1).build(),
     streamConfig: KinesisStreamSettings = KinesisStreamSettings.defaultInstance
-  )(implicit F: ConcurrentEffect[F]): fs2.Stream[F, CommittableRecord] =
+  ): fs2.Stream[F, CommittableRecord] =
     readFromDynamoDBStream(
       defaultWorker(_)(
         workerConfiguration,
@@ -105,7 +105,7 @@ package object dynamodb {
     *  @param streamConfig configuration for the internal stream
     *  @return an infinite fs2 Stream that emits Kinesis Records
     */
-  private[aws] def readFromDynamoDBStream[F[_]: ConcurrentEffect](
+  private[aws] def readFromDynamoDBStream[F[_]: ConcurrentEffect: ContextShift](
     workerFactory: =>IRecordProcessorFactory => Worker,
     streamConfig: KinesisStreamSettings
   ): fs2.Stream[F, CommittableRecord] = {
@@ -119,15 +119,16 @@ package object dynamodb {
         )
       )
     }
-
     // Instantiate a new bounded queue and concurrently run the queue populator
     // Expose the elements by dequeuing the internal buffer
     for {
       buffer <- Stream.eval(Queue.bounded[F, CommittableRecord](streamConfig.bufferSize))
       worker <- instantiateWorker(buffer)
-      stream <- buffer.dequeue
-                 .onFinalize(Sync[F].delay(worker.shutdown()))
-                 .concurrently(Stream.eval(Sync[F].delay(worker.run())))
+      stream <- buffer.dequeue concurrently Stream.eval(
+                 Blocker[F].use(blocker => blocker.delay(worker.run()))
+               ) onFinalize Sync[
+                 F
+               ].delay(worker.shutdown())
     } yield stream
   }
 

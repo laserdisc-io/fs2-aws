@@ -2,7 +2,7 @@ package fs2.aws.kinesis
 
 import java.util.UUID
 
-import cats.effect.{ ConcurrentEffect, IO, Timer }
+import cats.effect.{ Blocker, ConcurrentEffect, ContextShift, IO, Sync, Timer }
 import cats.implicits._
 import fs2.aws.core
 import fs2.{ Chunk, Pipe, RaiseThrowable, Stream }
@@ -97,10 +97,10 @@ object consumer {
     * @param streamName name of the Kinesis stream to consume from
     * @return an infinite fs2 Stream that emits Kinesis Records
     */
-  def readFromKinesisStream[F[_]](
+  def readFromKinesisStream[F[_]: ConcurrentEffect: ContextShift](
     appName: String,
     streamName: String
-  )(implicit F: ConcurrentEffect[F], rt: RaiseThrowable[F]): Stream[F, CommittableRecord] =
+  )(implicit rt: RaiseThrowable[F]): Stream[F, CommittableRecord] =
     KinesisConsumerSettings(streamName, appName) match {
       case Right(config) => readFromKinesisStream(config)
       case Left(err)     => Stream.raiseError(err)
@@ -113,9 +113,9 @@ object consumer {
     * @param consumerConfig configuration parameters for the KCL
     * @return an infinite fs2 Stream that emits Kinesis Records
     */
-  def readFromKinesisStream[F[_]](
+  def readFromKinesisStream[F[_]: ConcurrentEffect: ContextShift](
     consumerConfig: KinesisConsumerSettings
-  )(implicit F: ConcurrentEffect[F]): Stream[F, CommittableRecord] =
+  ): Stream[F, CommittableRecord] =
     readFromKinesisStream(
       consumerConfig,
       defaultScheduler(_, consumerConfig, mkDefaultKinesisClient(consumerConfig))
@@ -130,11 +130,11 @@ object consumer {
     * @param kinesisClient preconfigured kineiss klient, usefull when you need STS access
     * @return an infinite fs2 Stream that emits Kinesis Records
     */
-  def readFromKinesisStream[F[_]](
+  def readFromKinesisStream[F[_]: ConcurrentEffect: ContextShift](
     appName: String,
     streamName: String,
     kinesisClient: KinesisAsyncClient
-  )(implicit F: ConcurrentEffect[F], rt: RaiseThrowable[F]): Stream[F, CommittableRecord] =
+  )(implicit rt: RaiseThrowable[F]): Stream[F, CommittableRecord] =
     KinesisConsumerSettings(streamName, appName) match {
       case Right(config) => readFromKinesisStream(config, kinesisClient)
       case Left(err)     => Stream.raiseError(err)
@@ -148,10 +148,10 @@ object consumer {
     * @param kinesisClient preconfigured kineiss klient, usefull when you need STS access
     * @return an infinite fs2 Stream that emits Kinesis Records
     */
-  def readFromKinesisStream[F[_]](
+  def readFromKinesisStream[F[_]: ConcurrentEffect: ContextShift](
     consumerConfig: KinesisConsumerSettings,
     kinesisClient: KinesisAsyncClient
-  )(implicit F: ConcurrentEffect[F]): Stream[F, CommittableRecord] =
+  ): Stream[F, CommittableRecord] =
     readFromKinesisStream(consumerConfig, defaultScheduler(_, consumerConfig, kinesisClient))
 
   /** Initialize a worker and start streaming records from a Kinesis stream
@@ -191,16 +191,17 @@ object consumer {
     * @param streamConfig  configuration for the internal stream
     * @return an infinite fs2 Stream that emits Kinesis Records
     */
-  private[aws] def readFromKinesisStream[F[_]](
+  private[aws] def readFromKinesisStream[F[_]: ConcurrentEffect: ContextShift](
     streamConfig: KinesisConsumerSettings,
     workerFactory: ShardRecordProcessorFactory => Scheduler
-  )(implicit F: ConcurrentEffect[F]): Stream[F, CommittableRecord] = {
+  ): Stream[F, CommittableRecord] = {
 
     // Initialize a KCL worker which appends to the internal stream queue on message receipt
-    def instantiateWorker(queue: Queue[F, CommittableRecord]): F[Scheduler] = F.delay {
+    def instantiateWorker(queue: Queue[F, CommittableRecord]): F[Scheduler] = Sync[F].delay {
       workerFactory(() =>
         new SingleRecordProcessor(
-          record => F.runAsync(queue.enqueue1(record))(_ => IO.unit).unsafeRunSync,
+          record =>
+            ConcurrentEffect[F].runAsync(queue.enqueue1(record))(_ => IO.unit).unsafeRunSync,
           streamConfig.terminateGracePeriod
         )
       )
@@ -211,7 +212,9 @@ object consumer {
     for {
       buffer <- Stream.eval(Queue.bounded[F, CommittableRecord](streamConfig.bufferSize))
       worker = instantiateWorker(buffer)
-      stream <- buffer.dequeue concurrently Stream.eval(worker.map(_.run)) onFinalize worker.map(
+      stream <- buffer.dequeue concurrently Stream.eval(
+                 Blocker[F].use(blocker => blocker.blockOn(worker.map(_.run())))
+               ) onFinalize worker.map(
                  _.shutdown
                )
     } yield stream
