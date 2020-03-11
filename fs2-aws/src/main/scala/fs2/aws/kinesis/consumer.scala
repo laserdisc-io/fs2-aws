@@ -161,9 +161,9 @@ object consumer {
     * @param consumerConfig configuration parameters for the KCL
     * @return an infinite fs2 Stream that emits Kinesis Records Chunks
     */
-  def readChunkedFromKinesisStream[F[_]](
+  def readChunkedFromKinesisStream[F[_]: ConcurrentEffect: ContextShift](
     consumerConfig: KinesisConsumerSettings
-  )(implicit F: ConcurrentEffect[F]): Stream[F, Chunk[CommittableRecord]] =
+  ): Stream[F, Chunk[CommittableRecord]] =
     readChunksFromKinesisStream(
       consumerConfig,
       defaultScheduler(_, consumerConfig, mkDefaultKinesisClient(consumerConfig))
@@ -177,10 +177,10 @@ object consumer {
     * @param kinesisClient preconfigured kineiss klient, usefull when you need STS access
     * @return an infinite fs2 Stream that emits Kinesis Records Chunks
     */
-  def readChunkedFromKinesisStream[F[_]](
+  def readChunkedFromKinesisStream[F[_]: ConcurrentEffect: ContextShift](
     consumerConfig: KinesisConsumerSettings,
     kinesisClient: KinesisAsyncClient
-  )(implicit F: ConcurrentEffect[F]): Stream[F, Chunk[CommittableRecord]] =
+  ): Stream[F, Chunk[CommittableRecord]] =
     readChunksFromKinesisStream(consumerConfig, defaultScheduler(_, consumerConfig, kinesisClient))
 
   /** Intialize a worker and start streaming records from a Kinesis stream
@@ -197,7 +197,7 @@ object consumer {
   ): Stream[F, CommittableRecord] = {
 
     // Initialize a KCL worker which appends to the internal stream queue on message receipt
-    def instantiateWorker(queue: Queue[F, CommittableRecord]): F[Scheduler] = Sync[F].delay {
+    def instantiateWorker(queue: Queue[F, CommittableRecord]): Stream[F, Scheduler] = Stream.emit {
       workerFactory(() =>
         new SingleRecordProcessor(
           record =>
@@ -211,38 +211,38 @@ object consumer {
     // Expose the elements by dequeuing the internal buffer
     for {
       buffer <- Stream.eval(Queue.bounded[F, CommittableRecord](streamConfig.bufferSize))
-      worker = instantiateWorker(buffer)
+      worker <- instantiateWorker(buffer)
       stream <- buffer.dequeue concurrently Stream.eval(
-                 Blocker[F].use(blocker => blocker.blockOn(worker.map(_.run())))
-               ) onFinalize worker.map(
-                 _.shutdown
-               )
+                 Blocker[F].use(blocker => blocker.delay(worker.run()))
+               ) onFinalize Sync[F].delay(worker.shutdown())
     } yield stream
   }
 
-  private[aws] def readChunksFromKinesisStream[F[_]](
+  private[aws] def readChunksFromKinesisStream[F[_]: ConcurrentEffect: ContextShift](
     streamConfig: KinesisConsumerSettings,
     workerFactory: =>ShardRecordProcessorFactory => Scheduler
-  )(implicit F: ConcurrentEffect[F]): Stream[F, Chunk[CommittableRecord]] = {
+  ): Stream[F, Chunk[CommittableRecord]] = {
 
     // Initialize a KCL worker which appends to the internal stream queue on message receipt
-    def instantiateWorker(queue: Queue[F, Chunk[CommittableRecord]]): F[Scheduler] = F.delay {
-      workerFactory(() =>
-        new ChunkedRecordProcessor(
-          records => F.runAsync(queue.enqueue1(records))(_ => IO.unit).unsafeRunSync,
-          streamConfig.terminateGracePeriod
+    def instantiateWorker(queue: Queue[F, Chunk[CommittableRecord]]): fs2.Stream[F, Scheduler] =
+      Stream.emit(
+        workerFactory(() =>
+          new ChunkedRecordProcessor(
+            records =>
+              ConcurrentEffect[F].runAsync(queue.enqueue1(records))(_ => IO.unit).unsafeRunSync,
+            streamConfig.terminateGracePeriod
+          )
         )
       )
-    }
 
     // Instantiate a new bounded queue and concurrently run the queue populator
     // Expose the elements by dequeuing the internal buffer
     for {
       buffer <- Stream.eval(Queue.bounded[F, Chunk[CommittableRecord]](streamConfig.bufferSize))
-      worker = instantiateWorker(buffer)
-      stream <- buffer.dequeue concurrently Stream.eval(worker.map(_.run)) onFinalize worker.map(
-                 _.shutdown
-               )
+      worker <- instantiateWorker(buffer)
+      stream <- buffer.dequeue concurrently Stream.eval(
+                 Blocker[F].use(blocker => blocker.delay(worker.run()))
+               ) onFinalize Sync[F].delay(worker.shutdown())
     } yield stream
   }
 
