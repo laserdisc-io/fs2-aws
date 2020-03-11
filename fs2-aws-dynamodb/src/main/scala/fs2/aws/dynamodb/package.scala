@@ -1,6 +1,6 @@
 package fs2.aws
 
-import cats.effect.{ Blocker, ConcurrentEffect, ContextShift, Effect, IO, Sync, Timer }
+import cats.effect._
 import cats.implicits._
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.regions.Regions
@@ -112,10 +112,11 @@ package object dynamodb {
 
     // Initialize a KCL worker which appends to the internal stream queue on message receipt
     def instantiateWorker(queue: Queue[F, CommittableRecord]): Stream[F, Worker] = Stream.emit {
-      workerFactory(() =>
-        new RecordProcessor(
-          record => Effect[F].runAsync(queue.enqueue1(record))(_ => IO.unit).unsafeRunSync,
-          streamConfig.terminateGracePeriod
+      workerFactory(
+        () =>
+          new RecordProcessor(
+            record => Effect[F].runAsync(queue.enqueue1(record))(_ => IO.unit).unsafeRunSync,
+            streamConfig.terminateGracePeriod
         )
       )
     }
