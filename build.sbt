@@ -22,7 +22,7 @@ lazy val `fs2-aws-core` = (project in file("fs2-aws-core"))
       "co.fs2"        %% "fs2-core"                % "2.2.2",
       "co.fs2"        %% "fs2-io"                  % "2.2.2",
       "org.mockito"   % "mockito-core"             % "3.3.0" % Test,
-      "org.mockito"   %% "mockito-scala-scalatest" % "1.11.4" % Test,
+      "org.mockito"   %% "mockito-scala-scalatest" % "1.12.0" % Test,
       "org.scalatest" %% "scalatest"               % "3.1.1" % Test,
       "org.typelevel" %% "alleycats-core"          % "2.1.1"
     ),
