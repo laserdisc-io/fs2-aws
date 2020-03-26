@@ -100,9 +100,6 @@ lazy val `fs2-aws` = (project in file("fs2-aws"))
       "org.mockito"             %% "mockito-scala-scalatest"      % "1.11.3" % Test,
       "com.amazonaws"           % "aws-java-sdk-sqs"              % AwsSdkVersion excludeAll ("commons-logging", "commons-logging"),
       "com.amazonaws"           % "amazon-sqs-java-messaging-lib" % "1.0.8" excludeAll ("commons-logging", "commons-logging"),
-//      "is.cir"                  %% "ciris-core"                   % cirisVersion,
-//      "is.cir"                  %% "ciris-enumeratum"             % cirisVersion,
-//      "is.cir"                  %% "ciris-refined"                % cirisVersion,
       "eu.timepit" %% "refined" % "0.9.13"
     ),
     coverageMinimum       := 40,
