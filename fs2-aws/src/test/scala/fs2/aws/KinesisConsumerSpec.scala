@@ -47,7 +47,7 @@ class KinesisConsumerSpec
     PatienceConfig(timeout = scaled(Span(2, Seconds)), interval = scaled(Span(5, Millis)))
 
   "KinesisWorker source" should "successfully read data from the Kinesis stream" in new WorkerContext
-    with TestData {
+  with TestData {
     semaphore.acquire()
     recordProcessor.initialize(initializationInput)
     recordProcessor.processRecords(recordsInput.build())
@@ -55,7 +55,7 @@ class KinesisConsumerSpec
     eventually(verify(mockScheduler, times(1)).run())
 
     eventually(timeout(1.second)) {
-      val commitableRecord = output.head
+      val commitableRecord = output.result().head
       commitableRecord.record.data() should be(record.data())
       commitableRecord.recordProcessorStartingSequenceNumber shouldBe initializationInput
         .extendedSequenceNumber()
@@ -66,7 +66,7 @@ class KinesisConsumerSpec
   }
 
   it should "not shutdown the worker if the stream is drained but has not failed" in new WorkerContext
-    with TestData {
+  with TestData {
     semaphore.acquire()
     recordProcessor.initialize(initializationInput)
     recordProcessor.processRecords(recordsInput.records(List(record)).build())
@@ -76,7 +76,7 @@ class KinesisConsumerSpec
   }
 
   it should "shutdown the worker if the stream terminates" in new WorkerContext(errorStream = true)
-    with TestData {
+  with TestData {
     semaphore.acquire()
     recordProcessor.initialize(initializationInput)
     recordProcessor.processRecords(recordsInput.records(List(record)).build())
@@ -94,7 +94,7 @@ class KinesisConsumerSpec
     }
 
     // Should process all 10 messages
-    eventually(output.size shouldBe 10)
+    eventually(output.result().size shouldBe 10)
 
     // Send a batch that exceeds the internal buffer size
     for (i <- 1 to 50) {
@@ -104,14 +104,14 @@ class KinesisConsumerSpec
     }
 
     // Should have processed all 60 messages
-    eventually(output.size shouldBe 60)
+    eventually(output.result().size shouldBe 60)
 
     eventually(verify(mockScheduler, times(0)).shutdown())
     semaphore.release()
   }
 
   it should "not drop messages in case of back-pressure with multiple shard workers" in new WorkerContext
-    with TestData {
+  with TestData {
     semaphore.acquire()
     recordProcessor.initialize(initializationInput)
     recordProcessor2.initialize(
@@ -131,7 +131,7 @@ class KinesisConsumerSpec
     }
 
     // Should process all 10 messages
-    eventually(output.size shouldBe 10)
+    eventually(output.result().size shouldBe 10)
 
     // Each shard is assigned its own worker thread, so we get messages
     // from each thread simultaneously.
@@ -148,7 +148,7 @@ class KinesisConsumerSpec
     simulateWorkerThread(recordProcessor2)
 
     // Should have processed all 60 messages
-    eventually(output.size shouldBe 60)
+    eventually(output.result().size shouldBe 60)
     semaphore.release()
   }
 
@@ -275,14 +275,15 @@ class KinesisConsumerSpec
     val record = mock(classOf[KinesisClientRecord])
     when(record.sequenceNumber()).thenReturn("1")
 
-    val input = (1 to 100).map(idx =>
-      new CommittableRecord(
-        s"shard-1",
-        mock(classOf[ExtendedSequenceNumber]),
-        idx,
-        record,
-        recordProcessor,
-        checkpointer
+    val input = (1 to 100).map(
+      idx =>
+        new CommittableRecord(
+          s"shard-1",
+          mock(classOf[ExtendedSequenceNumber]),
+          idx,
+          record,
+          recordProcessor,
+          checkpointer
       )
     )
 
@@ -301,7 +302,7 @@ class KinesisConsumerSpec
 
     val semaphore = new Semaphore(1)
     semaphore.acquire()
-    var output: List[CommittableRecord] = List()
+    var output = List.newBuilder[CommittableRecord]
 
     protected val mockScheduler: Scheduler = mock(classOf[Scheduler])
 
@@ -326,7 +327,7 @@ class KinesisConsumerSpec
 
     val stream =
       readFromKinesisStream[IO](config, builder)
-        .through(_.evalMap(i => IO.delay(() => output = output :+ i)))
+        .through(_.evalMap(i => IO.delay(output += i)))
         .map(i => if (errorStream) throw new Exception("boom") else i)
         .compile
         .toVector
