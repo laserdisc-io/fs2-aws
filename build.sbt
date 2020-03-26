@@ -9,7 +9,7 @@ lazy val supportedScalaVersions = List(scala212, scala213)
 
 crossScalaVersions in ThisBuild := supportedScalaVersions
 
-scalaVersion       in ThisBuild := scala213
+scalaVersion in ThisBuild := scala213
 
 val fs2Version    = "2.2.2"
 val AwsSdkVersion = "1.11.745"
@@ -19,8 +19,8 @@ val circeVersion  = "0.13.0"
 lazy val root = (project in file("."))
   .aggregate(`fs2-aws`, `fs2-aws-testkit`, `fs2-aws-dynamodb`, `fs2-aws-core`, `fs2-aws-examples`)
   .settings(
-    publishArtifact := false,
-      crossScalaVersions := Nil
+    publishArtifact    := false,
+    crossScalaVersions := Nil
   )
 
 lazy val `fs2-aws-core` = (project in file("fs2-aws-core"))
@@ -103,7 +103,7 @@ lazy val `fs2-aws` = (project in file("fs2-aws"))
 //      "is.cir"                  %% "ciris-core"                   % cirisVersion,
 //      "is.cir"                  %% "ciris-enumeratum"             % cirisVersion,
 //      "is.cir"                  %% "ciris-refined"                % cirisVersion,
-      "eu.timepit"              %% "refined"                      % "0.9.13"
+      "eu.timepit" %% "refined" % "0.9.13"
     ),
     coverageMinimum       := 40,
     coverageFailOnMinimum := true
@@ -132,7 +132,6 @@ addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
 addCommandAlias("format", ";scalafmt;test:scalafmt;scalafmtSbt")
 addCommandAlias("checkFormat", ";scalafmtCheck;test:scalafmtCheck;scalafmtSbtCheck")
 
-
 def commonOptions(scalaVersion: String) =
   CrossVersion.partialVersion(scalaVersion) match {
     case Some((2, 12)) =>
@@ -141,9 +140,9 @@ def commonOptions(scalaVersion: String) =
   }
 
 lazy val commonSettings = Seq(
-  organization := "io.laserdisc",
+  organization       := "io.laserdisc",
   crossScalaVersions := supportedScalaVersions,
-  scalaVersion := scala213,
+  scalaVersion       := scala213,
   scalacOptions ++= Seq(
     "-target:jvm-1.8",
     "-encoding",
@@ -154,11 +153,10 @@ lazy val commonSettings = Seq(
     "-language:higherKinds",         // allow higher kinded types without `import scala.language.higherKinds`
     "-language:implicitConversions", // allow use of implicit conversions
     "-Xlint",                        // enable handy linter warnings
-    "-Xfatal-warnings"              // turn compiler warnings into errors
+    "-Xfatal-warnings"               // turn compiler warnings into errors
   ),
-  addCompilerPlugin("com.olegpy"     %% "better-monadic-for" % "0.3.1"),
-
-   addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
+  addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1"),
+  addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.10.3")
 )
 
 addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")

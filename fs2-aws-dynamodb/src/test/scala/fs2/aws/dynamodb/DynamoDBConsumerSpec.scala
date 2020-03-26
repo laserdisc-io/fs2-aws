@@ -45,7 +45,7 @@ class DynamoDBConsumerSpec
     PatienceConfig(timeout = scaled(Span(2, Seconds)), interval = scaled(Span(5, Millis)))
 
   "KinesisWorker source" should "successfully read data from the Kinesis stream" in new WorkerContext
-  with TestData {
+    with TestData {
     semaphore.acquire()
     recordProcessor.initialize(initializationInput)
     recordProcessor.processRecords(recordsInput)
@@ -63,7 +63,7 @@ class DynamoDBConsumerSpec
   }
 
   it should "not shutdown the worker if the stream is drained but has not failed" in new WorkerContext
-  with TestData {
+    with TestData {
     semaphore.acquire()
     recordProcessor.initialize(initializationInput)
     recordProcessor.processRecords(recordsInput)
@@ -73,7 +73,7 @@ class DynamoDBConsumerSpec
   }
 
   it should "shutdown the worker if the stream terminates" in new WorkerContext(errorStream = true)
-  with TestData {
+    with TestData {
     semaphore.acquire()
     recordProcessor.initialize(initializationInput)
     recordProcessor.processRecords(recordsInput)
@@ -108,7 +108,7 @@ class DynamoDBConsumerSpec
   }
 
   it should "not drop messages in case of back-pressure with multiple shard workers" in new WorkerContext
-  with TestData {
+    with TestData {
     semaphore.acquire()
     recordProcessor.initialize(initializationInput)
     recordProcessor2.initialize(initializationInput.withShardId("shard2"))
