@@ -45,7 +45,7 @@ class DynamoDBConsumerSpec
     PatienceConfig(timeout = scaled(Span(2, Seconds)), interval = scaled(Span(5, Millis)))
 
   "KinesisWorker source" should "successfully read data from the Kinesis stream" in new WorkerContext
-    with TestData {
+  with TestData {
     semaphore.acquire()
     recordProcessor.initialize(initializationInput)
     recordProcessor.processRecords(recordsInput)
@@ -53,7 +53,7 @@ class DynamoDBConsumerSpec
     eventually(verify(mockWorker, times(1)).run())
 
     eventually(timeout(1.second)) {
-      val commitableRecord = output.head
+      val commitableRecord = output.result().head
       commitableRecord.record.getData                        should be(record.getData)
       commitableRecord.recordProcessorStartingSequenceNumber shouldBe initializationInput.getExtendedSequenceNumber
       commitableRecord.shardId                               shouldBe initializationInput.getShardId
@@ -63,7 +63,7 @@ class DynamoDBConsumerSpec
   }
 
   it should "not shutdown the worker if the stream is drained but has not failed" in new WorkerContext
-    with TestData {
+  with TestData {
     semaphore.acquire()
     recordProcessor.initialize(initializationInput)
     recordProcessor.processRecords(recordsInput)
@@ -73,7 +73,7 @@ class DynamoDBConsumerSpec
   }
 
   it should "shutdown the worker if the stream terminates" in new WorkerContext(errorStream = true)
-    with TestData {
+  with TestData {
     semaphore.acquire()
     recordProcessor.initialize(initializationInput)
     recordProcessor.processRecords(recordsInput)
@@ -91,7 +91,7 @@ class DynamoDBConsumerSpec
     }
 
     // Should process all 10 messages
-    eventually(output.size shouldBe (10))
+    eventually(output.result().size shouldBe (10))
 
     // Send a batch that exceeds the internal buffer size
     for (i <- 1 to 50) {
@@ -101,14 +101,14 @@ class DynamoDBConsumerSpec
     }
 
     // Should have processed all 60 messages
-    eventually(output.size shouldBe (60))
+    eventually(output.result().size shouldBe (60))
 
     eventually(verify(mockWorker, times(0)).shutdown())
     semaphore.release()
   }
 
   it should "not drop messages in case of back-pressure with multiple shard workers" in new WorkerContext
-    with TestData {
+  with TestData {
     semaphore.acquire()
     recordProcessor.initialize(initializationInput)
     recordProcessor2.initialize(initializationInput.withShardId("shard2"))
@@ -122,7 +122,7 @@ class DynamoDBConsumerSpec
     }
 
     // Should process all 10 messages
-    eventually(output.size shouldBe (10))
+    eventually(output.result().size shouldBe (10))
 
     // Each shard is assigned its own worker thread, so we get messages
     // from each thread simultaneously.
@@ -139,7 +139,7 @@ class DynamoDBConsumerSpec
     simulateWorkerThread(recordProcessor2)
 
     // Should have processed all 60 messages
-    eventually(output.size shouldBe (60))
+    eventually(output.result().size shouldBe (60))
     semaphore.release()
   }
 
@@ -288,7 +288,7 @@ class DynamoDBConsumerSpec
 
     val semaphore = new Semaphore(1)
     semaphore.acquire()
-    var output: List[CommittableRecord] = List()
+    var output = List.newBuilder[CommittableRecord]
 
     protected val mockWorker: Worker = mock(classOf[Worker])
 
@@ -316,7 +316,7 @@ class DynamoDBConsumerSpec
 
     val stream: Unit =
       readFromDynamoDBStream[IO](builder, config)
-        .through(_.evalMap(i => IO(output = output :+ i)))
+        .through(_.evalMap(i => IO.delay(output += i)))
         .map(i => if (errorStream) throw new Exception("boom") else i)
         .compile
         .toVector

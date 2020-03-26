@@ -47,7 +47,7 @@ class KinesisConsumerSpec
     PatienceConfig(timeout = scaled(Span(2, Seconds)), interval = scaled(Span(5, Millis)))
 
   "KinesisWorker source" should "successfully read data from the Kinesis stream" in new WorkerContext
-    with TestData {
+  with TestData {
     semaphore.acquire()
     recordProcessor.initialize(initializationInput)
     recordProcessor.processRecords(recordsInput.build())
@@ -66,7 +66,7 @@ class KinesisConsumerSpec
   }
 
   it should "not shutdown the worker if the stream is drained but has not failed" in new WorkerContext
-    with TestData {
+  with TestData {
     semaphore.acquire()
     recordProcessor.initialize(initializationInput)
     recordProcessor.processRecords(recordsInput.records(List(record)).build())
@@ -76,7 +76,7 @@ class KinesisConsumerSpec
   }
 
   it should "shutdown the worker if the stream terminates" in new WorkerContext(errorStream = true)
-    with TestData {
+  with TestData {
     semaphore.acquire()
     recordProcessor.initialize(initializationInput)
     recordProcessor.processRecords(recordsInput.records(List(record)).build())
@@ -111,7 +111,7 @@ class KinesisConsumerSpec
   }
 
   it should "not drop messages in case of back-pressure with multiple shard workers" in new WorkerContext
-    with TestData {
+  with TestData {
     semaphore.acquire()
     recordProcessor.initialize(initializationInput)
     recordProcessor2.initialize(
@@ -275,14 +275,15 @@ class KinesisConsumerSpec
     val record = mock(classOf[KinesisClientRecord])
     when(record.sequenceNumber()).thenReturn("1")
 
-    val input = (1 to 100).map(idx =>
-      new CommittableRecord(
-        s"shard-1",
-        mock(classOf[ExtendedSequenceNumber]),
-        idx,
-        record,
-        recordProcessor,
-        checkpointer
+    val input = (1 to 100).map(
+      idx =>
+        new CommittableRecord(
+          s"shard-1",
+          mock(classOf[ExtendedSequenceNumber]),
+          idx,
+          record,
+          recordProcessor,
+          checkpointer
       )
     )
 
@@ -326,7 +327,7 @@ class KinesisConsumerSpec
 
     val stream =
       readFromKinesisStream[IO](config, builder)
-        .through(_.evalMap(i => IO(output = output :+ i)))
+        .through(_.evalMap(i => IO.delay(() => output = output :+ i)))
         .map(i => if (errorStream) throw new Exception("boom") else i)
         .compile
         .toVector

@@ -2,7 +2,14 @@ import scoverage.ScoverageKeys.coverageMinimum
 
 organization := "io.laserdisc"
 name         := "fs2-aws"
-scalaVersion := "2.12.10"
+
+lazy val scala212               = "2.12.10"
+lazy val scala213               = "2.13.1"
+lazy val supportedScalaVersions = List(scala212, scala213)
+
+crossScalaVersions in ThisBuild := supportedScalaVersions
+
+scalaVersion       in ThisBuild := scala213
 
 val fs2Version    = "2.2.2"
 val AwsSdkVersion = "1.11.745"
@@ -12,7 +19,8 @@ val circeVersion  = "0.13.0"
 lazy val root = (project in file("."))
   .aggregate(`fs2-aws`, `fs2-aws-testkit`, `fs2-aws-dynamodb`, `fs2-aws-core`, `fs2-aws-examples`)
   .settings(
-    publishArtifact := false
+    publishArtifact := false,
+      crossScalaVersions := Nil
   )
 
 lazy val `fs2-aws-core` = (project in file("fs2-aws-core"))
@@ -30,6 +38,7 @@ lazy val `fs2-aws-core` = (project in file("fs2-aws-core"))
     coverageFailOnMinimum := true
   )
   .settings(commonSettings)
+  .settings(scalacOptions := commonOptions(scalaVersion.value))
 
 lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb"))
   .dependsOn(`fs2-aws-core`)
@@ -45,10 +54,11 @@ lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb"))
       "org.typelevel" %% "alleycats-core"                  % "2.1.1",
       "org.mockito"   %% "mockito-scala-scalatest"         % "1.11.3" % Test,
       "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.5.0",
-      "io.laserdisc"  %% "scanamo-circe"                   % "1.0.5"
+      "io.laserdisc"  %% "scanamo-circe"                   % "1.0.8"
     )
   )
   .settings(commonSettings)
+  .settings(scalacOptions := commonOptions(scalaVersion.value))
 
 lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
   .dependsOn(`fs2-aws-dynamodb`)
@@ -63,10 +73,11 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
       "org.slf4j"         % "jcl-over-slf4j"           % "1.7.30",
       "org.slf4j"         % "jul-to-slf4j"             % "1.7.30",
       "io.chrisdavenport" %% "log4cats-slf4j"          % "1.0.1",
-      "io.laserdisc"      %% "scanamo-circe"           % "1.0.5"
+      "io.laserdisc"      %% "scanamo-circe"           % "1.0.8"
     )
   )
   .settings(commonSettings)
+  .settings(scalacOptions := commonOptions(scalaVersion.value))
   .settings(
     skip in publish := true
   )
@@ -89,15 +100,16 @@ lazy val `fs2-aws` = (project in file("fs2-aws"))
       "org.mockito"             %% "mockito-scala-scalatest"      % "1.11.3" % Test,
       "com.amazonaws"           % "aws-java-sdk-sqs"              % AwsSdkVersion excludeAll ("commons-logging", "commons-logging"),
       "com.amazonaws"           % "amazon-sqs-java-messaging-lib" % "1.0.8" excludeAll ("commons-logging", "commons-logging"),
-      "is.cir"                  %% "ciris-core"                   % cirisVersion,
-      "is.cir"                  %% "ciris-enumeratum"             % cirisVersion,
-      "is.cir"                  %% "ciris-refined"                % cirisVersion,
+//      "is.cir"                  %% "ciris-core"                   % cirisVersion,
+//      "is.cir"                  %% "ciris-enumeratum"             % cirisVersion,
+//      "is.cir"                  %% "ciris-refined"                % cirisVersion,
       "eu.timepit"              %% "refined"                      % "0.9.13"
     ),
     coverageMinimum       := 40,
     coverageFailOnMinimum := true
   )
   .settings(commonSettings)
+  .settings(scalacOptions := commonOptions(scalaVersion.value))
 
 lazy val `fs2-aws-testkit` = (project in file("fs2-aws-testkit"))
   .dependsOn(`fs2-aws`)
@@ -114,14 +126,24 @@ lazy val `fs2-aws-testkit` = (project in file("fs2-aws-testkit"))
     )
   )
   .settings(commonSettings)
+  .settings(scalacOptions := commonOptions(scalaVersion.value))
 
 addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
 addCommandAlias("format", ";scalafmt;test:scalafmt;scalafmtSbt")
 addCommandAlias("checkFormat", ";scalafmtCheck;test:scalafmtCheck;scalafmtSbtCheck")
 
+
+def commonOptions(scalaVersion: String) =
+  CrossVersion.partialVersion(scalaVersion) match {
+    case Some((2, 12)) =>
+      Seq("-Ypartial-unification")
+    case _ => Seq.empty
+  }
+
 lazy val commonSettings = Seq(
   organization := "io.laserdisc",
-  scalaVersion := "2.12.10",
+  crossScalaVersions := supportedScalaVersions,
+  scalaVersion := scala213,
   scalacOptions ++= Seq(
     "-target:jvm-1.8",
     "-encoding",
@@ -132,11 +154,11 @@ lazy val commonSettings = Seq(
     "-language:higherKinds",         // allow higher kinded types without `import scala.language.higherKinds`
     "-language:implicitConversions", // allow use of implicit conversions
     "-Xlint",                        // enable handy linter warnings
-    "-Xfatal-warnings",              // turn compiler warnings into errors
-    "-Ypartial-unification"          // allow the compiler to unify type constructors of different arities
+    "-Xfatal-warnings"              // turn compiler warnings into errors
   ),
   addCompilerPlugin("com.olegpy"     %% "better-monadic-for" % "0.3.1"),
-  addCompilerPlugin("org.spire-math" %% "kind-projector"     % "0.9.3")
+
+   addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
 )
 
 addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
