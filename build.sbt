@@ -45,7 +45,7 @@ lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb"))
       "org.typelevel" %% "alleycats-core"                  % "2.1.1",
       "org.mockito"   %% "mockito-scala-scalatest"         % "1.11.3" % Test,
       "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.5.0",
-      "io.laserdisc"  %% "scanamo-circe"                   % "1.0.5"
+      "io.laserdisc"  %% "scanamo-circe"                   % "1.0.8"
     )
   )
   .settings(commonSettings)
@@ -63,7 +63,7 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
       "org.slf4j"         % "jcl-over-slf4j"           % "1.7.30",
       "org.slf4j"         % "jul-to-slf4j"             % "1.7.30",
       "io.chrisdavenport" %% "log4cats-slf4j"          % "1.0.1",
-      "io.laserdisc"      %% "scanamo-circe"           % "1.0.5"
+      "io.laserdisc"      %% "scanamo-circe"           % "1.0.8"
     )
   )
   .settings(commonSettings)
