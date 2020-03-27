@@ -31,8 +31,7 @@ lazy val `fs2-aws-core` = (project in file("fs2-aws-core"))
       "co.fs2"        %% "fs2-io"                  % "2.2.2",
       "org.mockito"   % "mockito-core"             % "3.3.0" % Test,
       "org.mockito"   %% "mockito-scala-scalatest" % "1.11.4" % Test,
-      "org.scalatest" %% "scalatest"               % "3.1.1" % Test,
-      "org.typelevel" %% "alleycats-core"          % "2.1.1"
+      "org.scalatest" %% "scalatest"               % "3.1.1" % Test
     ),
     coverageMinimum       := 40,
     coverageFailOnMinimum := true
@@ -51,7 +50,6 @@ lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb"))
       "co.fs2"        %% "fs2-io"                          % fs2Version,
       "org.mockito"   % "mockito-core"                     % "3.3.0" % Test,
       "org.scalatest" %% "scalatest"                       % "3.1.1" % Test,
-      "org.typelevel" %% "alleycats-core"                  % "2.1.1",
       "org.mockito"   %% "mockito-scala-scalatest"         % "1.11.3" % Test,
       "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.5.0",
       "io.laserdisc"  %% "scanamo-circe"                   % "1.0.8"
