@@ -55,7 +55,7 @@ class KinesisConsumerSpec
     eventually(verify(mockScheduler, times(1)).run())
 
     eventually(timeout(1.second)) {
-      val commitableRecord = output.head
+      val commitableRecord = output.result().head
       commitableRecord.record.data() should be(record.data())
       commitableRecord.recordProcessorStartingSequenceNumber shouldBe initializationInput
         .extendedSequenceNumber()
@@ -94,7 +94,7 @@ class KinesisConsumerSpec
     }
 
     // Should process all 10 messages
-    eventually(output.size shouldBe 10)
+    eventually(output.result().size shouldBe 10)
 
     // Send a batch that exceeds the internal buffer size
     for (i <- 1 to 50) {
@@ -104,7 +104,7 @@ class KinesisConsumerSpec
     }
 
     // Should have processed all 60 messages
-    eventually(output.size shouldBe 60)
+    eventually(output.result().size shouldBe 60)
 
     eventually(verify(mockScheduler, times(0)).shutdown())
     semaphore.release()
@@ -131,7 +131,7 @@ class KinesisConsumerSpec
     }
 
     // Should process all 10 messages
-    eventually(output.size shouldBe 10)
+    eventually(output.result().size shouldBe 10)
 
     // Each shard is assigned its own worker thread, so we get messages
     // from each thread simultaneously.
@@ -148,7 +148,7 @@ class KinesisConsumerSpec
     simulateWorkerThread(recordProcessor2)
 
     // Should have processed all 60 messages
-    eventually(output.size shouldBe 60)
+    eventually(output.result().size shouldBe 60)
     semaphore.release()
   }
 
@@ -301,7 +301,7 @@ class KinesisConsumerSpec
 
     val semaphore = new Semaphore(1)
     semaphore.acquire()
-    var output: List[CommittableRecord] = List()
+    var output = List.newBuilder[CommittableRecord]
 
     protected val mockScheduler: Scheduler = mock(classOf[Scheduler])
 
@@ -326,7 +326,7 @@ class KinesisConsumerSpec
 
     val stream =
       readFromKinesisStream[IO](config, builder)
-        .through(_.evalMap(i => IO(output = output :+ i)))
+        .through(_.evalMap(i => IO.delay(output += i)))
         .map(i => if (errorStream) throw new Exception("boom") else i)
         .compile
         .toVector
