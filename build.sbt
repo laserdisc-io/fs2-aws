@@ -51,7 +51,7 @@ lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb"))
       "org.mockito"   % "mockito-core"                     % "3.3.3" % Test,
       "org.scalatest" %% "scalatest"                       % "3.1.1" % Test,
       "org.mockito"   %% "mockito-scala-scalatest"         % "1.11.3" % Test,
-      "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.5.0",
+      "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.5.1",
       "io.laserdisc"  %% "scanamo-circe"                   % "1.0.8"
     )
   )
