@@ -30,7 +30,7 @@ lazy val `fs2-aws-core` = (project in file("fs2-aws-core"))
       "co.fs2"        %% "fs2-core"                % "2.3.0",
       "co.fs2"        %% "fs2-io"                  % "2.3.0",
       "org.mockito"   % "mockito-core"             % "3.3.3" % Test,
-      "org.mockito"   %% "mockito-scala-scalatest" % "1.11.4" % Test,
+      "org.mockito"   %% "mockito-scala-scalatest" % "1.13.4" % Test,
       "org.scalatest" %% "scalatest"               % "3.1.1" % Test
     ),
     coverageMinimum       := 40,
