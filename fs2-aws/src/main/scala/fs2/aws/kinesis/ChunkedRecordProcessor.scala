@@ -32,6 +32,6 @@ private[aws] class ChunkedRecordProcessor(
           processRecordsInput.checkpointer()
         )
       }
-    cb(Chunk(batch: _*))
+    cb(Chunk(batch.toSeq: _*))
   }
 }
