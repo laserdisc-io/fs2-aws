@@ -27,10 +27,10 @@ lazy val `fs2-aws-core` = (project in file("fs2-aws-core"))
   .settings(
     name := "fs2-aws-core",
     libraryDependencies ++= Seq(
-      "co.fs2"        %% "fs2-core"                % "2.2.2",
-      "co.fs2"        %% "fs2-io"                  % "2.2.2",
+      "co.fs2"        %% "fs2-core"                % "2.3.0",
+      "co.fs2"        %% "fs2-io"                  % "2.3.0",
       "org.mockito"   % "mockito-core"             % "3.3.3" % Test,
-      "org.mockito"   %% "mockito-scala-scalatest" % "1.11.4" % Test,
+      "org.mockito"   %% "mockito-scala-scalatest" % "1.13.5" % Test,
       "org.scalatest" %% "scalatest"               % "3.1.1" % Test
     ),
     coverageMinimum       := 40,
@@ -94,7 +94,7 @@ lazy val `fs2-aws` = (project in file("fs2-aws"))
       "software.amazon.kinesis" % "amazon-kinesis-client"         % "2.2.10",
       "org.mockito"             % "mockito-core"                  % "3.3.3" % Test,
       "org.scalatest"           %% "scalatest"                    % "3.1.1" % Test,
-      "software.amazon.awssdk"  % "sts"                           % "2.10.87",
+      "software.amazon.awssdk"  % "sts"                           % "2.10.91",
       "org.mockito"             %% "mockito-scala-scalatest"      % "1.11.3" % Test,
       "com.amazonaws"           % "aws-java-sdk-sqs"              % AwsSdkVersion excludeAll ("commons-logging", "commons-logging"),
       "com.amazonaws"           % "amazon-sqs-java-messaging-lib" % "1.0.8" excludeAll ("commons-logging", "commons-logging"),
