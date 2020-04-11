@@ -4,15 +4,18 @@ import java.util.UUID
 
 import cats.effect.{ Blocker, ConcurrentEffect, ContextShift, IO, Sync, Timer }
 import cats.implicits._
+
 import fs2.aws.core
 import fs2.{ Chunk, Pipe, RaiseThrowable, Stream }
 import fs2.aws.internal.Exceptions.KinesisCheckpointException
 import fs2.concurrent.Queue
+
+import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider
+import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient
-import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient
 import software.amazon.awssdk.services.sts.StsClient
 import software.amazon.awssdk.services.sts.auth.StsAssumeRoleCredentialsProvider
 import software.amazon.awssdk.services.sts.model.AssumeRoleRequest
@@ -95,13 +98,15 @@ object consumer {
     * @tparam F effect type of the fs2 stream
     * @param appName    name of the Kinesis application. Used by KCL when resharding
     * @param streamName name of the Kinesis stream to consume from
+    * @param region     AWS region in which the Kinesis stream resides
     * @return an infinite fs2 Stream that emits Kinesis Records
     */
   def readFromKinesisStream[F[_]: ConcurrentEffect: ContextShift](
     appName: String,
-    streamName: String
+    streamName: String,
+    region: Region
   )(implicit rt: RaiseThrowable[F]): Stream[F, CommittableRecord] =
-    KinesisConsumerSettings(streamName, appName) match {
+    KinesisConsumerSettings.build(streamName, appName, region) match {
       case Right(config) => readFromKinesisStream(config)
       case Left(err)     => Stream.raiseError(err)
     }
@@ -127,15 +132,17 @@ object consumer {
     * @tparam F effect type of the fs2 stream
     * @param appName    name of the Kinesis application. Used by KCL when resharding
     * @param streamName name of the Kinesis stream to consume from
+    * @param region     AWS region in which the Kinesis stream resides
     * @param kinesisClient preconfigured kineiss klient, usefull when you need STS access
     * @return an infinite fs2 Stream that emits Kinesis Records
     */
   def readFromKinesisStream[F[_]: ConcurrentEffect: ContextShift](
     appName: String,
     streamName: String,
+    region: Region,
     kinesisClient: KinesisAsyncClient
   )(implicit rt: RaiseThrowable[F]): Stream[F, CommittableRecord] =
-    KinesisConsumerSettings(streamName, appName) match {
+    KinesisConsumerSettings.build(streamName, appName, region) match {
       case Right(config) => readFromKinesisStream(config, kinesisClient)
       case Left(err)     => Stream.raiseError(err)
     }

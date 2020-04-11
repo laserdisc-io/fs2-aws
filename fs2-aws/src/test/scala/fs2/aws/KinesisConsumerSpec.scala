@@ -322,7 +322,7 @@ class KinesisConsumerSpec
     }
 
     val config =
-      KinesisConsumerSettings("testStream", "testApp", Region.US_EAST_1, 10, 10, 10.seconds).right.get
+      KinesisConsumerSettings.build("testStream", "testApp", Region.US_EAST_1, 10, 10, 10.seconds).right.get
 
     val stream =
       readFromKinesisStream[IO](config, builder)
@@ -367,7 +367,7 @@ class KinesisConsumerSpec
     val recordProcessor    = new SingleRecordProcessor(_ => (), 1.seconds)
     val checkpointerShard1 = mock(classOf[ShardRecordProcessorCheckpointer])
     val settings =
-      KinesisCheckpointSettings(maxBatchSize = Int.MaxValue, maxBatchWait = 500.millis).right
+      KinesisCheckpointSettings.build(maxBatchSize = Int.MaxValue, maxBatchWait = 500.millis).right
         .getOrElse(throw new Error())
 
     def startStream(input: Seq[CommittableRecord]) =

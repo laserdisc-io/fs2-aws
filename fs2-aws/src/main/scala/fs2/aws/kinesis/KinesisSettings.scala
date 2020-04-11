@@ -30,10 +30,10 @@ class KinesisConsumerSettings private (
 )
 
 object KinesisConsumerSettings {
-  def apply(
+  def build(
     streamName: String,
     appName: String,
-    region: Region = Region.US_EAST_1,
+    region: Region,
     maxConcurrency: Int = Int.MaxValue,
     bufferSize: Int = 10,
     terminateGracePeriod: FiniteDuration = 10.seconds,
@@ -76,7 +76,7 @@ class STSAssumeRoleSettings private (
 )
 
 object STSAssumeRoleSettings {
-  def apply(roleArn: String, roleSessionName: String) =
+  def apply(roleArn: String, roleSessionName: String): STSAssumeRoleSettings =
     new STSAssumeRoleSettings(roleArn, roleSessionName)
 }
 
@@ -93,7 +93,7 @@ class KinesisCheckpointSettings private (
 object KinesisCheckpointSettings {
   val defaultInstance = new KinesisCheckpointSettings(1000, 10.seconds)
 
-  def apply(
+  def build(
     maxBatchSize: Int,
     maxBatchWait: FiniteDuration
   ): Either[Throwable, KinesisCheckpointSettings] =

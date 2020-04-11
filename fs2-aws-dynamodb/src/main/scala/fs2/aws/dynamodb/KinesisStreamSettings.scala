@@ -24,20 +24,20 @@ class KinesisCheckpointSettings private (
 object KinesisStreamSettings {
   val defaultInstance: KinesisStreamSettings = new KinesisStreamSettings(10, 10.seconds)
 
-  def apply(
+  def build(
     bufferSize: Int,
     terminateGracePeriod: FiniteDuration
   ): Either[Throwable, KinesisStreamSettings] =
     (bufferSize, terminateGracePeriod) match {
       case (bs, _) if bs < 1 => Left(new RuntimeException("Must be greater than 0"))
-      case (bs, period)      => Right(new KinesisStreamSettings(bufferSize, period))
+      case (_, period)       => Right(new KinesisStreamSettings(bufferSize, period))
     }
 }
 
 object KinesisCheckpointSettings {
   val defaultInstance = new KinesisCheckpointSettings(1000, 10.seconds)
 
-  def apply(
+  def build(
     maxBatchSize: Int,
     maxBatchWait: FiniteDuration
   ): Either[Throwable, KinesisCheckpointSettings] =

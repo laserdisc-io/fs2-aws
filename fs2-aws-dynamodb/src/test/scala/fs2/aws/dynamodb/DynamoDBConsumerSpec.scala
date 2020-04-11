@@ -1,5 +1,4 @@
-package fs2
-package aws
+package fs2.aws
 
 import java.util.Date
 import java.util.concurrent.Semaphore
@@ -312,7 +311,7 @@ class DynamoDBConsumerSpec
       mockWorker
     }
 
-    val config: KinesisStreamSettings = KinesisStreamSettings(bufferSize = 10, 10.seconds).right.get
+    val config: KinesisStreamSettings = KinesisStreamSettings.build(bufferSize = 10, 10.seconds).right.get
 
     val stream: Unit =
       readFromDynamoDBStream[IO](builder, config)
@@ -353,7 +352,7 @@ class DynamoDBConsumerSpec
       classOf[IRecordProcessorCheckpointer]
     )
     val settings: KinesisCheckpointSettings =
-      KinesisCheckpointSettings(maxBatchSize = 100, maxBatchWait = 500.millis).right.get
+      KinesisCheckpointSettings.build(maxBatchSize = 100, maxBatchWait = 500.millis).right.get
 
     def startStream(input: Seq[CommittableRecord]): Unit =
       fs2.Stream
