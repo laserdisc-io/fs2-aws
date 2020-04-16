@@ -262,29 +262,21 @@ object consumer {
     implicit F: ConcurrentEffect[F],
     timer: Timer[F]
   ): Pipe[F, CommittableRecord, KinesisClientRecord] = {
-    def checkpoint(checkpointSettings: KinesisCheckpointSettings, parallelism: Int)(
-      implicit F: ConcurrentEffect[F],
-      timer: Timer[F]
+    def checkpoint(
+      checkpointSettings: KinesisCheckpointSettings,
+      parallelism: Int
     ): Pipe[F, CommittableRecord, KinesisClientRecord] =
       _.groupWithin(checkpointSettings.maxBatchSize, checkpointSettings.maxBatchWait)
         .collect { case chunk if chunk.size > 0 => chunk.toList.max }
         .flatMap { cr =>
-          fs2.Stream.eval_(
-            F.async[KinesisClientRecord] { cb =>
-              if (cr.canCheckpoint) {
-                cr.checkpoint()
-                cb(Right(cr.record))
-              } else {
-                cb(
-                  Left(
-                    KinesisCheckpointException(
-                      "Record processor has been shutdown and therefore cannot checkpoint records"
-                    )
-                  )
-                )
-              }
-            }
-          )
+          fs2.Stream.eval_ {
+            cr.canCheckpoint.ifM(
+              cr.checkpoint.as(cr.record),
+              KinesisCheckpointException(
+                "Record processor has been shutdown and therefore cannot checkpoint records"
+              ).raiseError[F, KinesisClientRecord]
+            )
+          }
         }
 
     def bypass: Pipe[F, CommittableRecord, KinesisClientRecord] = _.map(r => r.record)
