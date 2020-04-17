@@ -90,10 +90,7 @@ class DynamoEventParserSpec extends AnyWordSpec with Matchers {
       val r = new Record()
       r.setEventName(OperationType.REMOVE)
       r.withDynamodb(sr)
-      val thrown = intercept[Exception] {
-        parseDynamoEvent[IO, Json](new RecordAdapter(r)).unsafeRunSync()
-      }
-      thrown.getMessage should be("NEW_IMAGE is not supported with REMOVE")
+      parseDynamoEvent[IO, Json](new RecordAdapter(r)).unsafeRunSync() should be(Unsupported)
     }
   }
 }
