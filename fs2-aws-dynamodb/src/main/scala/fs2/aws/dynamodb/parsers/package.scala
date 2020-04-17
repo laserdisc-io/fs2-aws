@@ -28,7 +28,8 @@ package object parsers {
       case ("OLD_IMAGE" | "NEW_AND_OLD_IMAGES", "REMOVE") =>
         parseDynamoRecord(record.getInternalObject.getDynamodb.getOldImage)
           .map(after => Delete(after))
-      case ("NEW_IMAGE", "REMOVE") => Sync[F].pure(Unsupported[T])
+      case ("NEW_IMAGE", "REMOVE") =>
+        Sync[F].pure(Unsupported("NEW_IMAGE is not supported with REMOVE"))
       case (viewType, operationType) =>
         Sync[F].raiseError(new RuntimeException(s"$viewType is not supported with $operationType"))
     }
