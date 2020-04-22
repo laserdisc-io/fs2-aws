@@ -98,7 +98,7 @@ lazy val `fs2-aws` = (project in file("fs2-aws"))
       "org.mockito"             %% "mockito-scala-scalatest"      % "1.11.3" % Test,
       "com.amazonaws"           % "aws-java-sdk-sqs"              % AwsSdkVersion excludeAll ("commons-logging", "commons-logging"),
       "com.amazonaws"           % "amazon-sqs-java-messaging-lib" % "1.0.8" excludeAll ("commons-logging", "commons-logging"),
-      "eu.timepit"              %% "refined"                      % "0.9.13"
+      "eu.timepit"              %% "refined"                      % "0.9.14"
     ),
     coverageMinimum       := 40,
     coverageFailOnMinimum := true
