@@ -69,6 +69,24 @@ package object s3 {
       closeAfterUse = true
     )
 
+  def readS3VersionedFile[F[_]](
+    bucket: String,
+    key: String,
+    version: String,
+    blockingEC: ExecutionContext,
+    amazonS3: AmazonS3 = AmazonS3ClientBuilder.defaultClient()
+  )(
+    implicit F: Effect[F],
+    cs: ContextShift[F],
+    s3Client: S3Client[F] = S3Client[F](amazonS3)
+  ): Stream[F, Byte] =
+    readInputStream[F](
+      s3Client.getObjectContent(new GetObjectRequest(bucket, key, version)),
+      chunkSize = 8192,
+      blocker = Blocker.liftExecutionContext(blockingEC),
+      closeAfterUse = true
+    )
+
   def uploadS3FileMultipart[F[_]](
     bucket: String,
     key: String,
