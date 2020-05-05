@@ -54,6 +54,19 @@ class S3Spec extends AnyFlatSpec with Matchers {
     )
   }
 
+  "Downloading the versioned JSON test file" should "return the same content" in {
+    readS3VersionedFile[IO]("resources", "jsontest.json", version = "ABC", blockingEC, mockS3)
+      .through(fs2.text.utf8Decode)
+      .through(fs2.text.lines)
+      .compile
+      .toVector
+      .unsafeRunSync
+      .reduce(_ + _)
+      .concat("") should be(
+      """{"this": 1}{"is": 2}{"versioned": 3}{"content": 4}"""
+    )
+  }
+
   "big chunk size but small entire text" should "be trimmed to content" in {
     readS3FileMultipart[IO]("resources", "jsontest1.json", 25, mockS3)
       .through(fs2.text.utf8Decode)
