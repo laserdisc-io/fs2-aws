@@ -12,7 +12,7 @@ crossScalaVersions in ThisBuild := supportedScalaVersions
 scalaVersion in ThisBuild := scala213
 
 val fs2Version    = "2.2.2"
-val AwsSdkVersion = "1.11.762"
+val AwsSdkVersion = "1.11.772"
 val cirisVersion  = "0.12.1"
 val circeVersion  = "0.13.0"
 
@@ -30,7 +30,7 @@ lazy val `fs2-aws-core` = (project in file("fs2-aws-core"))
       "co.fs2"        %% "fs2-core"                % "2.3.0",
       "co.fs2"        %% "fs2-io"                  % "2.3.0",
       "org.mockito"   % "mockito-core"             % "3.3.3" % Test,
-      "org.mockito"   %% "mockito-scala-scalatest" % "1.13.11" % Test,
+      "org.mockito"   %% "mockito-scala-scalatest" % "1.14.0" % Test,
       "org.scalatest" %% "scalatest"               % "3.1.1" % Test
     ),
     coverageMinimum       := 40,
