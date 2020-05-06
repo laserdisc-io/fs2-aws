@@ -54,7 +54,11 @@ package object utils {
       IO[ByteArrayInputStream] {
         val fileContent: Array[Byte] =
           try {
-            Source.fromResource(getObjectRequest.getKey).mkString.getBytes
+            val testS3Resource = Option(getObjectRequest.getVersionId) match {
+              case Some(version) => s"${getObjectRequest.getKey}_v$version"
+              case None          => getObjectRequest.getKey
+            }
+            Source.fromResource(testS3Resource).mkString.getBytes
           } catch {
             case _: FileNotFoundException => throw new AmazonS3Exception("File not found")
             case e: Throwable             => throw e
