@@ -23,7 +23,12 @@ class S3Spec extends AnyFlatSpec with Matchers {
   val mockS3                          = mock[AmazonS3]
 
   ignore should "stdout the jsonfile" in {
-    readS3FileMultipart[IO]("resources", "jsontest.json", 25, mockS3).compile.toVector.unsafeRunSync should be(
+    readS3FileMultipart[IO](
+      "resources",
+      "jsontest.json",
+      25,
+      mockS3
+    ).compile.toVector.unsafeRunSync should be(
       Vector()
     )
   }

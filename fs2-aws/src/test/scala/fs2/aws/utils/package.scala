@@ -20,12 +20,11 @@ package object utils {
       getObjectRequest: GetObjectRequest
     )(implicit e: Effect[IO]): IO[Either[Throwable, InputStream]] =
       getObjectRequest match {
-        case goe: GetObjectRequest => {
+        case goe: GetObjectRequest =>
           IO[Either[Throwable, ByteArrayInputStream]] {
             val fileContent: Array[Byte] =
-              try {
-                Source.fromResource(goe.getKey).mkString.getBytes
-              } catch {
+              try Source.fromResource(goe.getKey).mkString.getBytes
+              catch {
                 case _: FileNotFoundException => throw new AmazonS3Exception("File not found")
                 case e: Throwable             => throw e
               }
@@ -40,11 +39,15 @@ package object utils {
             case Left(e) => Left(e)
             case Right(is) =>
               Thread.sleep(500) // simulate a call to S3
-              Right(new S3ObjectInputStream(is, new HttpRequestBase {
-                def getMethod = ""
-              }))
+              Right(
+                new S3ObjectInputStream(
+                  is,
+                  new HttpRequestBase {
+                    def getMethod = ""
+                  }
+                )
+              )
           }
-        }
         case _ => throw new SdkClientException("Invalid GetObjectRequest")
       }
 
@@ -67,9 +70,12 @@ package object utils {
 
       }.map { is =>
         Thread.sleep(500) // simulate a call to S3
-        new S3ObjectInputStream(is, new HttpRequestBase {
-          def getMethod = ""
-        })
+        new S3ObjectInputStream(
+          is,
+          new HttpRequestBase {
+            def getMethod = ""
+          }
+        )
       }
   }
 

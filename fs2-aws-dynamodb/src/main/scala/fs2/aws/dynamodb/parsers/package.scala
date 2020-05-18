@@ -12,7 +12,10 @@ package object parsers {
   def parseDynamoEvent[F[_]: Sync, T](
     record: RecordAdapter
   )(implicit df: DynamoFormat[T]): F[DynamoDBBeforeAfter[T]] =
-    (record.getInternalObject.getDynamodb.getStreamViewType, record.getInternalObject.getEventName) match {
+    (
+      record.getInternalObject.getDynamodb.getStreamViewType,
+      record.getInternalObject.getEventName
+    ) match {
       case ("NEW_IMAGE" | "NEW_AND_OLD_IMAGES", "INSERT") =>
         parseDynamoRecord(record.getInternalObject.getDynamodb.getNewImage)
           .map(after => Insert(after))

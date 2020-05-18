@@ -8,11 +8,13 @@ import javax.jms.{ MessageListener, Session }
 
 import scala.language.higherKinds
 
-class SQSConsumerBuilder[F[_]](val sqsConfig: SqsConfig, val listener: MessageListener)(
-  implicit F: Effect[F]
-) extends ConsumerBuilder[F] {
+class SQSConsumerBuilder[F[_]](
+  val sqsConfig: SqsConfig,
+  val listener: MessageListener
+)(implicit F: Effect[F])
+    extends ConsumerBuilder[F] {
 
-  val start: F[SQSConsumer] = {
+  val start: F[SQSConsumer] =
     F.delay {
       new SQSConsumer {
         override val callback: MessageListener = listener
@@ -34,11 +36,11 @@ class SQSConsumerBuilder[F[_]](val sqsConfig: SqsConfig, val listener: MessageLi
           connection.stop()
       }
     }
-  }
 }
 
 object SQSConsumerBuilder {
-  def apply[F[_]](sqsConfig: SqsConfig, listener: MessageListener)(
-    implicit F: Effect[F]
-  ): SQSConsumerBuilder[F] = new SQSConsumerBuilder[F](sqsConfig, listener)
+  def apply[F[_]](
+    sqsConfig: SqsConfig,
+    listener: MessageListener
+  )(implicit F: Effect[F]): SQSConsumerBuilder[F] = new SQSConsumerBuilder[F](sqsConfig, listener)
 }

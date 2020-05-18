@@ -70,10 +70,7 @@ object KinesisConsumerSettings {
   * @param roleArn The Amazon Resource Name (ARN) of the role to assume.
   * @param roleSessionName An identifier for the assumed role session.
   */
-class STSAssumeRoleSettings private (
-  val roleArn: String,
-  val roleSessionName: String
-)
+class STSAssumeRoleSettings private (val roleArn: String, val roleSessionName: String)
 
 object STSAssumeRoleSettings {
   def apply(roleArn: String, roleSessionName: String) =
@@ -85,10 +82,7 @@ object STSAssumeRoleSettings {
   *  @param maxBatchSize the maximum number of records to aggregate before checkpointing the cluster of records. Passing 1 means checkpoint on every record
   *  @param maxBatchWait the maximum amount of time to wait before checkpointing the cluster of records
   */
-class KinesisCheckpointSettings private (
-  val maxBatchSize: Int,
-  val maxBatchWait: FiniteDuration
-)
+class KinesisCheckpointSettings private (val maxBatchSize: Int, val maxBatchWait: FiniteDuration)
 
 object KinesisCheckpointSettings {
   val defaultInstance = new KinesisCheckpointSettings(1000, 10.seconds)

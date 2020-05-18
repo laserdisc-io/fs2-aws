@@ -26,9 +26,8 @@ package object core {
     selector: A => F[K]
   )(implicit F: Concurrent[F]): Pipe[F, A, (K, Stream[F, A])] = { in =>
     Stream.eval(Ref.of[F, Map[K, Queue[F, Option[A]]]](Map.empty)).flatMap { queueMap =>
-      val cleanup = {
+      val cleanup =
         queueMap.get.flatMap(_.values.toList.traverse_(_.enqueue1(None)))
-      }
 
       (in ++ Stream.eval_(cleanup))
         .evalMap { elem =>
@@ -40,8 +39,8 @@ package object core {
                   newQ <- Queue.unbounded[F, Option[A]] // Create a new queue
                   _    <- queueMap.modify(queues => (queues + (key -> newQ), queues))
                   _ <- newQ.enqueue1(
-                        elem.some
-                      ) // Enqueue the element lifted into an Option to the new queue
+                         elem.some
+                       ) // Enqueue the element lifted into an Option to the new queue
                 } yield (key -> newQ.dequeue.unNoneTerminate).some
               }(_.enqueue1(elem.some) as None)
           }.flatten

@@ -54,7 +54,7 @@ class DynamoDBConsumerSpec
 
     eventually(timeout(1.second)) {
       val commitableRecord = output.result().head
-      commitableRecord.record.getData                        should be(record.getData)
+      commitableRecord.record.getData                          should be(record.getData)
       commitableRecord.recordProcessorStartingSequenceNumber shouldBe initializationInput.getExtendedSequenceNumber
       commitableRecord.shardId                               shouldBe initializationInput.getShardId
       commitableRecord.millisBehindLatest                    shouldBe recordsInput.getMillisBehindLatest
@@ -328,11 +328,10 @@ class DynamoDBConsumerSpec
       classOf[IRecordProcessorCheckpointer]
     )
 
-    val initializationInput: InitializationInput = {
+    val initializationInput: InitializationInput =
       new InitializationInput()
         .withShardId("shardId")
         .withExtendedSequenceNumber(ExtendedSequenceNumber.AT_TIMESTAMP)
-    }
     val record: Record =
       new RecordAdapter(
         new model.Record()

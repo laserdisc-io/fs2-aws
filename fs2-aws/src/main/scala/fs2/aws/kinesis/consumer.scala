@@ -197,15 +197,16 @@ object consumer {
   ): Stream[F, CommittableRecord] = {
 
     // Initialize a KCL worker which appends to the internal stream queue on message receipt
-    def instantiateWorker(queue: Queue[F, CommittableRecord]): Stream[F, Scheduler] = Stream.emit {
-      workerFactory(() =>
-        new SingleRecordProcessor(
-          record =>
-            ConcurrentEffect[F].runAsync(queue.enqueue1(record))(_ => IO.unit).unsafeRunSync,
-          streamConfig.terminateGracePeriod
+    def instantiateWorker(queue: Queue[F, CommittableRecord]): Stream[F, Scheduler] =
+      Stream.emit {
+        workerFactory(() =>
+          new SingleRecordProcessor(
+            record =>
+              ConcurrentEffect[F].runAsync(queue.enqueue1(record))(_ => IO.unit).unsafeRunSync,
+            streamConfig.terminateGracePeriod
+          )
         )
-      )
-    }
+      }
 
     // Instantiate a new bounded queue and concurrently run the queue populator
     // Expose the elements by dequeuing the internal buffer
@@ -213,8 +214,8 @@ object consumer {
       buffer <- Stream.eval(Queue.bounded[F, CommittableRecord](streamConfig.bufferSize))
       worker <- instantiateWorker(buffer)
       stream <- buffer.dequeue concurrently Stream.eval(
-                 Blocker[F].use(blocker => blocker.delay(worker.run()))
-               ) onFinalize Sync[F].delay(worker.shutdown())
+                  Blocker[F].use(blocker => blocker.delay(worker.run()))
+                ) onFinalize Sync[F].delay(worker.shutdown())
     } yield stream
   }
 
@@ -241,8 +242,8 @@ object consumer {
       buffer <- Stream.eval(Queue.bounded[F, Chunk[CommittableRecord]](streamConfig.bufferSize))
       worker <- instantiateWorker(buffer)
       stream <- buffer.dequeue concurrently Stream.eval(
-                 Blocker[F].use(blocker => blocker.delay(worker.run()))
-               ) onFinalize Sync[F].delay(worker.shutdown())
+                  Blocker[F].use(blocker => blocker.delay(worker.run()))
+                ) onFinalize Sync[F].delay(worker.shutdown())
     } yield stream
   }
 

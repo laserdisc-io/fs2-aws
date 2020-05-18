@@ -13,9 +13,10 @@ import io.circe.jawn.CirceSupportParser
 
 import scala.collection.JavaConverters._
 
-case class TestKinesisProducerClient[F[_], T](state: Ref[F, List[T]])(
-  implicit decoder: Decoder[T]
-) extends KinesisProducerClient[F] {
+case class TestKinesisProducerClient[F[_], T](
+  state: Ref[F, List[T]]
+)(implicit decoder: Decoder[T])
+    extends KinesisProducerClient[F] {
   override def putData(
     streamName: String,
     partitionKey: String,
@@ -23,10 +24,10 @@ case class TestKinesisProducerClient[F[_], T](state: Ref[F, List[T]])(
   )(implicit F: Sync[F]): F[ListenableFuture[UserRecordResult]] =
     for {
       t <- CirceSupportParser
-            .parseFromByteBuffer(data)
-            .toEither
-            .flatMap(_.as[T])
-            .liftTo[F]
+             .parseFromByteBuffer(data)
+             .toEither
+             .flatMap(_.as[T])
+             .liftTo[F]
       _ <- state.modify(orig => (t :: orig, orig))
       res = {
         val future: SettableFuture[UserRecordResult] = SettableFuture.create()

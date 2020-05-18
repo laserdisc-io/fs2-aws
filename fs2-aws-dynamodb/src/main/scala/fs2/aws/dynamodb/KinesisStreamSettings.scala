@@ -6,20 +6,14 @@ import scala.concurrent.duration._
   *
   *  @param bufferSize size of the internal buffer used when reading messages from Kinesis
   */
-class KinesisStreamSettings private (
-  val bufferSize: Int,
-  val terminateGracePeriod: FiniteDuration
-)
+class KinesisStreamSettings private (val bufferSize: Int, val terminateGracePeriod: FiniteDuration)
 
 /** Settings for configuring the Kinesis checkpointer pipe
   *
   *  @param maxBatchSize the maximum number of records to aggregate before checkpointing the cluster of records. Passing 1 means checkpoint on every record
   *  @param maxBatchWait the maximum amount of time to wait before checkpointing the cluster of records
   */
-class KinesisCheckpointSettings private (
-  val maxBatchSize: Int,
-  val maxBatchWait: FiniteDuration
-)
+class KinesisCheckpointSettings private (val maxBatchSize: Int, val maxBatchWait: FiniteDuration)
 
 object KinesisStreamSettings {
   val defaultInstance: KinesisStreamSettings = new KinesisStreamSettings(10, 10.seconds)

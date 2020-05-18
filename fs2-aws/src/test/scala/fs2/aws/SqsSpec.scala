@@ -50,15 +50,15 @@ class SqsSpec extends AsyncFlatSpec with Matchers with MockitoSugar {
     val r = for {
       d <- Deferred[IO, MessageListener]
       res <- IO.racePair(stream(d), d.get).flatMap {
-              case Right((streamFiber, listener)) =>
-                listener.onMessage(new SQSTextMessage("1"))
-                listener.onMessage(new SQSTextMessage("2"))
-                listener.onMessage(new SQSTextMessage("fail"))
-                listener.onMessage(new SQSTextMessage("4"))
-                listener.onMessage(new SQSTextMessage("5"))
-                streamFiber.join
-              case _ => IO(Nil)
-            }
+               case Right((streamFiber, listener)) =>
+                 listener.onMessage(new SQSTextMessage("1"))
+                 listener.onMessage(new SQSTextMessage("2"))
+                 listener.onMessage(new SQSTextMessage("fail"))
+                 listener.onMessage(new SQSTextMessage("4"))
+                 listener.onMessage(new SQSTextMessage("5"))
+                 streamFiber.join
+               case _ => IO(Nil)
+             }
     } yield res
 
     val future = r.unsafeToFuture()

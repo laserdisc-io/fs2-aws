@@ -322,7 +322,14 @@ class KinesisConsumerSpec
     }
 
     val config =
-      KinesisConsumerSettings("testStream", "testApp", Region.US_EAST_1, 10, 10, 10.seconds).right.get
+      KinesisConsumerSettings(
+        "testStream",
+        "testApp",
+        Region.US_EAST_1,
+        10,
+        10,
+        10.seconds
+      ).right.get
 
     val stream =
       readFromKinesisStream[IO](config, builder)
@@ -338,13 +345,12 @@ class KinesisConsumerSpec
       classOf[ShardRecordProcessorCheckpointer]
     )
 
-    val initializationInput = {
+    val initializationInput =
       InitializationInput
         .builder()
         .shardId("shardId")
         .extendedSequenceNumber(ExtendedSequenceNumber.AT_TIMESTAMP)
         .build()
-    }
 
     val record: KinesisClientRecord =
       KinesisClientRecord

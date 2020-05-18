@@ -15,10 +15,8 @@ import scala.concurrent.duration.FiniteDuration
   *  @constructor create a new instance with a callback function to perform on record receive
   *  @param cb callback function to run on record receive, passing the new CommittableRecord
   */
-class RecordProcessor(
-  cb: CommittableRecord => Unit,
-  terminateGracePeriod: FiniteDuration
-) extends v2.IRecordProcessor {
+class RecordProcessor(cb: CommittableRecord => Unit, terminateGracePeriod: FiniteDuration)
+    extends v2.IRecordProcessor {
   private var shardId: String                                  = _
   private var extendedSequenceNumber: ExtendedSequenceNumber   = _
   var latestCheckpointer: Option[IRecordProcessorCheckpointer] = None

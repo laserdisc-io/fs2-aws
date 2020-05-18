@@ -20,7 +20,9 @@ package object aws {
       item     <- builder(sqsConfig, callback).serve(q.dequeue.rethrow)
     } yield item
 
-  def callback[F[_], O](queue: Queue[F, Either[Throwable, O]])(
+  def callback[F[_], O](
+    queue: Queue[F, Either[Throwable, O]]
+  )(
     implicit F: ConcurrentEffect[F],
     decoder: Message => Either[Throwable, O]
   ): F[ReceiverCallback[Either[Throwable, O]]] =

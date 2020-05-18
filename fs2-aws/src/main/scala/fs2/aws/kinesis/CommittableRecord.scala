@@ -40,9 +40,12 @@ object CommittableRecord {
   // same sequence number but will differ by subsequence number
   implicit val orderBySequenceNumber: Ordering[CommittableRecord] =
     Ordering[(String, Long)].on(cr ⇒
-      (cr.sequenceNumber, cr.record match {
-        case ur: KinesisClientRecord ⇒ ur.subSequenceNumber()
-        case _                       ⇒ 0
-      })
+      (
+        cr.sequenceNumber,
+        cr.record match {
+          case ur: KinesisClientRecord ⇒ ur.subSequenceNumber()
+          case _                       ⇒ 0
+        }
+      )
     )
 }
