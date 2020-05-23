@@ -131,7 +131,7 @@ object publisher {
     implicit ec: ExecutionContext,
     encoder: I => ByteBuffer
   ): Pipe[F, (String, I), I] =
-    _.through(writeObjectAndBypass(streamName, producer, encoder)).map(_._1)
+    _.through(writeObjectAndBypass(streamName, producer, encoder)).map { case (evt, _) => evt }
 
   /** Writes the bytestream to a Kinesis stream via a Sink
     *
