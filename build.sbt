@@ -93,7 +93,7 @@ lazy val `fs2-aws` = (project in file("fs2-aws"))
       "com.amazonaws"           % "amazon-kinesis-producer"       % "0.14.0",
       "software.amazon.kinesis" % "amazon-kinesis-client"         % "2.2.10",
       "org.mockito"             % "mockito-core"                  % "3.3.3" % Test,
-      "software.amazon.awssdk"  % "sts"                           % "2.13.21",
+      "software.amazon.awssdk"  % "sts"                           % "2.13.25",
       "org.scalatest"           %% "scalatest"                    % "3.1.2" % Test,
       "org.mockito"             %% "mockito-scala-scalatest"      % "1.11.3" % Test,
       "com.amazonaws"           % "aws-java-sdk-sqs"              % AwsSdkVersion excludeAll ("commons-logging", "commons-logging"),
