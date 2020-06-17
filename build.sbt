@@ -4,20 +4,20 @@ organization := "io.laserdisc"
 name         := "fs2-aws"
 
 lazy val scala212               = "2.12.10"
-lazy val scala213               = "2.13.1"
+lazy val scala213               = "2.13.2"
 lazy val supportedScalaVersions = List(scala212, scala213)
 
 crossScalaVersions in ThisBuild := supportedScalaVersions
 
 scalaVersion in ThisBuild := scala213
 
-val fs2Version              = "2.2.2"
-val AwsSdkVersion           = "1.11.772"
+val fs2Version              = "2.4.2"
+val AwsSdkVersion           = "1.11.804"
 val cirisVersion            = "0.12.1"
 val circeVersion            = "0.13.0"
 val scalaTestVersion        = "3.1.2"
 val mockitoCoreVersion      = "3.3.3"
-val mockitoScalaTestVersion = "1.11.3"
+val mockitoScalaTestVersion = "1.14.4"
 
 lazy val root = (project in file("."))
   .aggregate(
@@ -37,10 +37,10 @@ lazy val `fs2-aws-core` = (project in file("fs2-aws-core"))
   .settings(
     name := "fs2-aws-core",
     libraryDependencies ++= Seq(
-      "co.fs2"        %% "fs2-core"                % "2.3.0",
-      "co.fs2"        %% "fs2-io"                  % "2.3.0",
+      "co.fs2"        %% "fs2-core"                % fs2Version,
+      "co.fs2"        %% "fs2-io"                  % fs2Version,
       "org.mockito"   % "mockito-core"             % mockitoCoreVersion % Test,
-      "org.mockito"   %% "mockito-scala-scalatest" % "1.14.2" % Test,
+      "org.mockito"   %% "mockito-scala-scalatest" % mockitoScalaTestVersion % Test,
       "org.scalatest" %% "scalatest"               % scalaTestVersion % Test
     ),
     coverageMinimum       := 40,
@@ -117,9 +117,9 @@ lazy val `fs2-aws` = (project in file("fs2-aws"))
       "com.amazonaws"           % "aws-java-sdk-s3"               % AwsSdkVersion,
       "com.amazonaws"           % "aws-java-sdk-sqs"              % AwsSdkVersion,
       "com.amazonaws"           % "amazon-kinesis-producer"       % "0.14.0",
-      "software.amazon.kinesis" % "amazon-kinesis-client"         % "2.2.10",
+      "software.amazon.kinesis" % "amazon-kinesis-client"         % "2.2.11",
       "org.mockito"             % "mockito-core"                  % mockitoCoreVersion % Test,
-      "software.amazon.awssdk"  % "sts"                           % "2.13.21",
+      "software.amazon.awssdk"  % "sts"                           % "2.13.38",
       "org.scalatest"           %% "scalatest"                    % scalaTestVersion % Test,
       "org.mockito"             %% "mockito-scala-scalatest"      % mockitoScalaTestVersion % Test,
       "com.amazonaws"           % "aws-java-sdk-sqs"              % AwsSdkVersion excludeAll ("commons-logging", "commons-logging"),
