@@ -17,7 +17,7 @@ val cirisVersion            = "0.12.1"
 val circeVersion            = "0.13.0"
 val scalaTestVersion        = "3.1.2"
 val mockitoCoreVersion      = "3.3.3"
-val mockitoScalaTestVersion = "1.14.4"
+val mockitoScalaTestVersion = "1.14.7"
 
 lazy val root = (project in file("."))
   .aggregate(
