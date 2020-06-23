@@ -15,7 +15,7 @@ val fs2Version              = "2.4.2"
 val AwsSdkVersion           = "1.11.804"
 val cirisVersion            = "0.12.1"
 val circeVersion            = "0.13.0"
-val scalaTestVersion        = "3.1.2"
+val scalaTestVersion        = "3.2.0"
 val mockitoCoreVersion      = "3.3.3"
 val mockitoScalaTestVersion = "1.14.4"
 
