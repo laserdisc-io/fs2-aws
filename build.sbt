@@ -12,7 +12,7 @@ crossScalaVersions in ThisBuild := supportedScalaVersions
 scalaVersion in ThisBuild := scala213
 
 val fs2Version              = "2.4.2"
-val AwsSdkVersion           = "1.11.804"
+val AwsSdkVersion           = "1.11.812"
 val cirisVersion            = "0.12.1"
 val circeVersion            = "0.13.0"
 val scalaTestVersion        = "3.2.0"
