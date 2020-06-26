@@ -57,7 +57,7 @@ lazy val `fs2-aws-ciris` = (project in file("fs2-aws-ciris"))
       "org.scalatest" %% "scalatest"               % scalaTestVersion % Test,
       "org.mockito"   % "mockito-core"             % mockitoCoreVersion % Test,
       "org.mockito"   %% "mockito-scala-scalatest" % mockitoScalaTestVersion % Test,
-      "is.cir"        %% "ciris"                   % "1.1.0"
+      "is.cir"        %% "ciris"                   % "1.1.1"
     ),
     coverageMinimum       := 40,
     coverageFailOnMinimum := true
