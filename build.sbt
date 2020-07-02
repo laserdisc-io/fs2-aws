@@ -17,7 +17,7 @@ val cirisVersion            = "0.12.1"
 val circeVersion            = "0.13.0"
 val scalaTestVersion        = "3.2.0"
 val mockitoCoreVersion      = "3.3.3"
-val mockitoScalaTestVersion = "1.14.4"
+val mockitoScalaTestVersion = "1.14.8"
 
 lazy val root = (project in file("."))
   .aggregate(
@@ -57,7 +57,7 @@ lazy val `fs2-aws-ciris` = (project in file("fs2-aws-ciris"))
       "org.scalatest" %% "scalatest"               % scalaTestVersion % Test,
       "org.mockito"   % "mockito-core"             % mockitoCoreVersion % Test,
       "org.mockito"   %% "mockito-scala-scalatest" % mockitoScalaTestVersion % Test,
-      "is.cir"        %% "ciris"                   % "1.1.0"
+      "is.cir"        %% "ciris"                   % "1.1.1"
     ),
     coverageMinimum       := 40,
     coverageFailOnMinimum := true
