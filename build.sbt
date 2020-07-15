@@ -16,7 +16,7 @@ val AwsSdkVersion           = "1.11.820"
 val cirisVersion            = "0.12.1"
 val circeVersion            = "0.13.0"
 val scalaTestVersion        = "3.2.0"
-val mockitoCoreVersion      = "3.3.3"
+val mockitoCoreVersion      = "3.4.0"
 val mockitoScalaTestVersion = "1.14.8"
 
 lazy val root = (project in file("."))
