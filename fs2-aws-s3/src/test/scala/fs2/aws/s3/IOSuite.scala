@@ -15,5 +15,7 @@ trait IOSuite extends FunSuite {
       case ioa: IO[_] => IO.suspend(ioa).unsafeToFuture
     })
 
-  val blocker = Blocker.liftExecutionContext(ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(6)))
+  val blocker = Blocker.liftExecutionContext(
+    ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(6))
+  )
 }

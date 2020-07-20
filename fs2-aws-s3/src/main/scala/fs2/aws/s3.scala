@@ -15,7 +15,7 @@ import eu.timepit.refined.numeric.Greater
 import eu.timepit.refined.types.string.NonEmptyString
 import fs2._
 import software.amazon.awssdk.core.ResponseInputStream
-import software.amazon.awssdk.core.sync.{RequestBody, ResponseTransformer}
+import software.amazon.awssdk.core.sync.{ RequestBody, ResponseTransformer }
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model._
 
@@ -31,7 +31,11 @@ object s3 {
   /* A purely functional abstraction over the S3 API based on fs2.Stream */
   trait S3[F[_]] {
     def uploadFile(bucket: BucketName, key: FileKey): Pipe[F, Byte, ETag]
-    def uploadFileMultipart(bucket: BucketName, key: FileKey, partSize: PartSizeMB): Pipe[F, Byte, ETag]
+    def uploadFileMultipart(
+      bucket: BucketName,
+      key: FileKey,
+      partSize: PartSizeMB
+    ): Pipe[F, Byte, ETag]
     def readFile(bucket: BucketName, key: FileKey): Stream[F, Byte]
     def readFileMultipart(bucket: BucketName, key: FileKey, partSize: PartSizeMB): Stream[F, Byte]
   }
@@ -42,27 +46,28 @@ object s3 {
     type UploadId = String
 
     /**
-     * It creates an instance of the purely functional S3 API.
-     *
-     * Example:
-     *
-     * {{{
-     * S3.create[IO](client, blocker).flatMap { s3 =>
-     *   streamOfBytes
-     *     .through(s3.uploadFileMultipart(BucketName("foo"), FileKey("bar"), partSize = 5))
-     *     .evalMap(t => IO(println(s"eTag: $t")))
-     *     .compile
-     *     .drain
-     * }
-     * }}}
-     */
+      * It creates an instance of the purely functional S3 API.
+      *
+      * Example:
+      *
+      * {{{
+      * S3.create[IO](client, blocker).flatMap { s3 =>
+      *   streamOfBytes
+      *     .through(s3.uploadFileMultipart(BucketName("foo"), FileKey("bar"), partSize = 5))
+      *     .evalMap(t => IO(println(s"eTag: $t")))
+      *     .compile
+      *     .drain
+      * }
+      * }}}
+      */
     def create[F[_]: Concurrent: ContextShift](client: S3Client, blocker: Blocker): F[S3[F]] =
       new S3[F] {
+
         /**
-         * Uploads a file in one request. Suitable for small files.
-         *
-         * For big files, consider using [[uploadFileMultipart]] instead.
-         */
+          * Uploads a file in one request. Suitable for small files.
+          *
+          * For big files, consider using [[uploadFileMultipart]] instead.
+          */
         def uploadFile(bucket: BucketName, key: FileKey): Pipe[F, Byte, ETag] =
           in => {
             Stream.eval {
@@ -81,16 +86,20 @@ object s3 {
           }
 
         /**
-         * Uploads a file in multiple parts of the specifed @partSize per request. Suitable for big files.
-         *
-         * It does so in constant memory. So at a given time, only the number of bytes indicated by @partSize
-         * will be loaded in memory.
-         *
-         * For small files, consider using [[uploadFile]] instead.
-         *
-         * @partSize the part size indicated in MBs. It must be at least 5, as required by AWS.
-         */
-        def uploadFileMultipart(bucket: BucketName, key: FileKey, partSize: PartSizeMB): Pipe[F, Byte, ETag] = {
+          * Uploads a file in multiple parts of the specifed @partSize per request. Suitable for big files.
+          *
+          * It does so in constant memory. So at a given time, only the number of bytes indicated by @partSize
+          * will be loaded in memory.
+          *
+          * For small files, consider using [[uploadFile]] instead.
+          *
+          * @partSize the part size indicated in MBs. It must be at least 5, as required by AWS.
+          */
+        def uploadFileMultipart(
+          bucket: BucketName,
+          key: FileKey,
+          partSize: PartSizeMB
+        ): Pipe[F, Byte, ETag] = {
           val chunkSizeBytes = partSize * 1000000
 
           def initiateMultipartUpload: F[UploadId] =
@@ -124,18 +133,22 @@ object s3 {
 
           def completeUpload(uploadId: UploadId): Pipe[F, List[(PartETag, PartId)], ETag] =
             _.evalMap { tags =>
-              val parts = tags.map { case (t, i) => CompletedPart.builder().partNumber(i).eTag(t).build() }.asJava
-              blocker.delay {
-                client.completeMultipartUpload(
-                  CompleteMultipartUploadRequest
-                    .builder()
-                    .bucket(bucket.value)
-                    .key(key.value)
-                    .uploadId(uploadId)
-                    .multipartUpload(CompletedMultipartUpload.builder().parts(parts).build())
-                    .build()
-                )
-              }.map(_.eTag())
+              val parts = tags.map {
+                case (t, i) => CompletedPart.builder().partNumber(i).eTag(t).build()
+              }.asJava
+              blocker
+                .delay {
+                  client.completeMultipartUpload(
+                    CompleteMultipartUploadRequest
+                      .builder()
+                      .bucket(bucket.value)
+                      .key(key.value)
+                      .uploadId(uploadId)
+                      .multipartUpload(CompletedMultipartUpload.builder().parts(parts).build())
+                      .build()
+                  )
+                }
+                .map(_.eTag())
             }
 
           in => {
@@ -152,10 +165,10 @@ object s3 {
         }
 
         /**
-         * Reads a file in one request. Suitable for small files.
-         *
-         * For big files, consider using [[readFileMultipart]] instead.
-         */
+          * Reads a file in one request. Suitable for small files.
+          *
+          * For big files, consider using [[readFileMultipart]] instead.
+          */
         def readFile(bucket: BucketName, key: FileKey): Stream[F, Byte] =
           fs2.io.readInputStream(
             blocker.delay(
@@ -173,14 +186,18 @@ object s3 {
           )
 
         /**
-         * Reads a file in multiple parts of the specifed @partSize per request. Suitable for big files.
-         *
-         * It does so in constant memory. So at a given time, only the number of bytes indicated by @partSize
-         * will be loaded in memory.
-         *
-         * For small files, consider using [[readFile]] instead.
-         */
-        def readFileMultipart(bucket: BucketName, key: FileKey, partSize: PartSizeMB): Stream[F, Byte] = {
+          * Reads a file in multiple parts of the specifed @partSize per request. Suitable for big files.
+          *
+          * It does so in constant memory. So at a given time, only the number of bytes indicated by @partSize
+          * will be loaded in memory.
+          *
+          * For small files, consider using [[readFile]] instead.
+          */
+        def readFileMultipart(
+          bucket: BucketName,
+          key: FileKey,
+          partSize: PartSizeMB
+        ): Stream[F, Byte] = {
           val chunkSizeBytes = partSize.value * 1000000
 
           // Range must be in the form "bytes=0-500" -> https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.35
@@ -217,7 +234,7 @@ object s3 {
                 case Some(o) =>
                   if (o.size < chunkSizeBytes) Pull.output(o)
                   else Pull.output(o) >> go(offset + o.size)
-                case None    => Pull.done
+                case None => Pull.done
               }
 
           go(0).stream

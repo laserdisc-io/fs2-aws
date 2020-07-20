@@ -3,7 +3,7 @@ package fs2.aws
 import java.net.URI
 import java.nio.file.Paths
 
-import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
+import software.amazon.awssdk.auth.credentials.{ AwsBasicCredentials, StaticCredentialsProvider }
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
 
@@ -18,7 +18,8 @@ class S3Suite extends IOSuite {
     AwsBasicCredentials.create("AKIAIOSFODNN7EXAMPLE", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
 
   val client =
-    S3Client.builder()
+    S3Client
+      .builder()
       .credentialsProvider(StaticCredentialsProvider.create(credentials))
       .endpointOverride(URI.create("http://localhost:9000"))
       .region(Region.US_EAST_1)
@@ -32,10 +33,11 @@ class S3Suite extends IOSuite {
   test("Upload JSON test file & read it back") {
     S3.create[IO](client, blocker).flatMap { s3 =>
       val upload =
-        fs2.io.file.readAll[IO](Paths.get(testFile.getPath), blocker, 4096)
-        .through(s3.uploadFile(bucket, fileKey))
-        .compile
-        .drain
+        fs2.io.file
+          .readAll[IO](Paths.get(testFile.getPath), blocker, 4096)
+          .through(s3.uploadFile(bucket, fileKey))
+          .compile
+          .drain
 
       val read =
         s3.readFile(bucket, fileKey)
@@ -44,8 +46,9 @@ class S3Suite extends IOSuite {
           .compile
           .toVector
           .map { res =>
-            val expected = """{"test": 1}{"test": 2}{"test": 3}{"test": 4}{"test": 5}{"test": 6}{"test": 7}{"test": 8}"""
-            assert(res.reduce(_ + _).concat("") ===  expected)
+            val expected =
+              """{"test": 1}{"test": 2}{"test": 3}{"test": 4}{"test": 5}{"test": 6}{"test": 7}{"test": 8}"""
+            assert(res.reduce(_ + _).concat("") === expected)
           }
 
       upload >> read
@@ -57,10 +60,11 @@ class S3Suite extends IOSuite {
       val fileKeyMix = FileKey("jsontest-mix.json")
 
       val upload =
-        fs2.io.file.readAll[IO](Paths.get(testFile.getPath), blocker, 4096)
-        .through(s3.uploadFileMultipart(bucket, fileKeyMix, 5))
-        .compile
-        .drain
+        fs2.io.file
+          .readAll[IO](Paths.get(testFile.getPath), blocker, 4096)
+          .through(s3.uploadFileMultipart(bucket, fileKeyMix, 5))
+          .compile
+          .drain
 
       val read =
         s3.readFile(bucket, fileKeyMix)
@@ -69,8 +73,9 @@ class S3Suite extends IOSuite {
           .compile
           .toVector
           .map { res =>
-            val expected = """{"test": 1}{"test": 2}{"test": 3}{"test": 4}{"test": 5}{"test": 6}{"test": 7}{"test": 8}"""
-            assert(res.reduce(_ + _).concat("") ===  expected)
+            val expected =
+              """{"test": 1}{"test": 2}{"test": 3}{"test": 4}{"test": 5}{"test": 6}{"test": 7}{"test": 8}"""
+            assert(res.reduce(_ + _).concat("") === expected)
           }
 
       upload >> read
@@ -82,10 +87,11 @@ class S3Suite extends IOSuite {
       val fileKeyMultipart = FileKey("jsontest-multipart.json")
 
       val upload =
-        fs2.io.file.readAll[IO](Paths.get(testFile.getPath), blocker, 4096)
-        .through(s3.uploadFileMultipart(bucket, fileKeyMultipart, 5))
-        .compile
-        .drain
+        fs2.io.file
+          .readAll[IO](Paths.get(testFile.getPath), blocker, 4096)
+          .through(s3.uploadFileMultipart(bucket, fileKeyMultipart, 5))
+          .compile
+          .drain
 
       val read =
         s3.readFileMultipart(bucket, fileKeyMultipart, 5)
@@ -94,8 +100,9 @@ class S3Suite extends IOSuite {
           .compile
           .toVector
           .map { res =>
-            val expected = """{"test": 1}{"test": 2}{"test": 3}{"test": 4}{"test": 5}{"test": 6}{"test": 7}{"test": 8}"""
-            assert(res.reduce(_ + _).concat("") ===  expected)
+            val expected =
+              """{"test": 1}{"test": 2}{"test": 3}{"test": 4}{"test": 5}{"test": 6}{"test": 7}{"test": 8}"""
+            assert(res.reduce(_ + _).concat("") === expected)
           }
 
       upload >> read

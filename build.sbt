@@ -109,7 +109,7 @@ lazy val `fs2-aws-s3` = (project in file("fs2-aws-s3"))
       "software.amazon.awssdk" % "s3"        % V.AwsSdkS3,
       "org.scalameta"          %% "munit"    % V.Munit % Test
     ),
-    testFrameworks += new TestFramework("munit.Framework"),
+    testFrameworks        += new TestFramework("munit.Framework"),
     coverageMinimum       := 0,
     coverageFailOnMinimum := true
   )
