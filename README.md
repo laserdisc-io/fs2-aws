@@ -21,23 +21,92 @@ libraryDependencies +=  "io.laserdisc" %% "fs2-aws" % "VERSION"
 ```
 
 ## S3
-### Streaming a file from S3
-Creates a stream of `Byte`s; size of each part downlaoded is the `chunkSize`.
 
-Example using IO for effects (any monad `F <: Effect` can be used):
+The module `fs2-aws-s3` provides a purely functional API to operate with the AWS-S3 API. It defines four functions:
+
 ```scala
-readS3FileMultipart[IO]("testBucket", "testFile", 25)
-  .through(io.file.writeAll(Paths.get("testFile.txt")))
+trait S3[F[_]] {
+  def uploadFile(bucket: BucketName, key: FileKey): Pipe[F, Byte, ETag]
+  def uploadFileMultipart(
+    bucket: BucketName,
+    key: FileKey,
+    partSize: PartSizeMB
+  ): Pipe[F, Byte, ETag]
+  def readFile(bucket: BucketName, key: FileKey): Stream[F, Byte]
+  def readFileMultipart(bucket: BucketName, key: FileKey, partSize: PartSizeMB): Stream[F, Byte]
+}
+```
+
+You can find out more in the scaladocs for each function, but as a rule of thumb for:
+
+- Small files: use `readFile` and `uploadFile`.
+- Big files: use `readFileMultipart` and `uploadFileMultipart`.
+
+You can also combine them as you see fit. For example, use `uploadFileMultipart` and then read it in one shot using `readFile`.
+
+### Getting started with the S3 module
+
+In order to create an instance of `S3` we need to first create an `S3Client`, as well as a `cats.effect.Blocker`. Here's an example of the former:
+
+```scala
+import cats.effect._
+import java.net.URI
+import software.amazon.awssdk.services.s3.S3Client
+
+val mkS3Client: Resource[IO, S3Client] =
+  Resource.fromAutoCloseable(
+    IO(S3Client.builder().endpointOverride(URI.create("localhost:9000")).build())
+  )
+```
+
+A `Blocker` can be easily created using its `apply` method and then share it. You should only create a single instance. Now we can create our `S3[IO]` instance:
+
+```scala
+import fs2.aws.s3._
+
+S3.create[IO](client, blocker).flatMap { s3 =>
+  // do stuff with s3 here (or just share it with other functions)
+}
+```
+
+Create it once and share it as an argument, as any other resource.
+
+### Reading a file from S3
+
+The simple way:
+
+```scala
+s3.readFile(BucketName("test"), FileKey("foo"))
+  .through(fs2.text.utf8Decode)
+  .through(fs2.text.lines)
+  .evalMap(line => IO(println(line)))
+```
+
+The streaming way in a multipart fashion (part size is indicated in MBs and must be 5 or higher):
+
+```scala
+s3.readFileMultipart(BucketName("test"), FileKey("foo"), partSize = 5)
+  .through(fs2.text.utf8Decode)
+  .through(fs2.text.lines)
+  .evalMap(line => IO(println(line)))
 ```
 
 ### Writing to a file in S3
-A Pipe and Sink allow for writing a stream of `Byte`s to S3; size of each part uploaded is the `chunkSize`.
 
-Example using IO for effects (any monad `F <: Effect` can be used):
+The simple way:
+
 ```scala
-Stream("test data")
-  .flatMap(_.getBytes)
-  .uploadS3FileMultipart[IO]("testBucket", "testFile")
+Stream.emits("test data".getBytes("UTF-8"))
+  .through(s3.uploadFile(BucketName("foo"), FileKey("bar"), partSize = 5))
+  .evalMap(t => IO(println(s"eTag: $t")))
+```
+
+The streaming way in a multipart fashion. Again, part size is indicated in MBs and must be 5 or higher.
+
+```scala
+Stream.emits("test data".getBytes("UTF-8"))
+  .through(s3.uploadFileMultipart(BucketName("foo"), FileKey("bar"), partSize = 5))
+  .evalMap(t => IO(println(s"eTag: $t")))
 ```
 
 ## Kinesis
@@ -111,7 +180,7 @@ fs2.aws
 ```
 
 Testing
-```scala 
+```scala
 //create stream for testing
 def stream(deferedListener: Deferred[IO, MessageListener]) =
             aws.testkit
@@ -120,8 +189,8 @@ def stream(deferedListener: Deferred[IO, MessageListener]) =
               .take(2)
               .compile
               .toList
-              
-//create the program for testing the stream               
+
+//create the program for testing the stream
 import io.circe.syntax._
 import io.circe.generic.auto._
 val quote = Quote(...)
@@ -135,7 +204,7 @@ val program : IO[List[(Quote, MessageListener)]] = for {
               case _ => IO(Nil)
             }
           } yield r
-          
+
 //Assert results
 val result = program
             .unsafeRunSync()
