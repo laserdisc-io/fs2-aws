@@ -3,10 +3,11 @@ package fs2.aws
 import java.net.URI
 import java.nio.ByteBuffer
 
-import scala.jdk.CollectionConverters._
+import scala.collection.JavaConverters._
 
 import cats.effect._
 import cats.implicits._
+import eu.timepit.refined._
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.boolean.Or
@@ -22,7 +23,7 @@ import software.amazon.awssdk.services.s3.model._
 object s3 {
   // Each part must be at least 5 MB in size
   // https://sdk.amazonaws.com/java/api/latest/software/amazon/awssdk/services/s3/S3Client.html#uploadPart-software.amazon.awssdk.services.s3.model.UploadPartRequest-software.amazon.awssdk.core.sync.RequestBody-
-  type PartSizeMB = Int Refined (Greater[5] Or Equal[5])
+  type PartSizeMB = Int Refined (Greater[W.`5`.T] Or Equal[W.`5`.T])
   type ETag       = String
 
   final case class BucketName(value: NonEmptyString)
