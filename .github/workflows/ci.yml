@@ -16,7 +16,7 @@ jobs:
       - name: "Starting up MinIO 🐳"
       - run: docker-compose up -d
 
-      - name: "running shasum"
+      - name: "Running shasum"
       - run: |
           shasum build.sbt \
             project/plugins.sbt \
@@ -37,7 +37,7 @@ jobs:
           path: "~/.cache/coursier"
           restore-keys: coursier
 
-      - name: "java ${{ matrix.java}} setup"
+      - name: "Java ${{ matrix.java}} setup"
         uses: "olafurpg/setup-java@v6"
         with:
           java-version: "${{ matrix.java}}"
