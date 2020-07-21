@@ -27,11 +27,7 @@ The module `fs2-aws-s3` provides a purely functional API to operate with the AWS
 ```scala
 trait S3[F[_]] {
   def uploadFile(bucket: BucketName, key: FileKey): Pipe[F, Byte, ETag]
-  def uploadFileMultipart(
-    bucket: BucketName,
-    key: FileKey,
-    partSize: PartSizeMB
-  ): Pipe[F, Byte, ETag]
+  def uploadFileMultipart(bucket: BucketName, key: FileKey, partSize: PartSizeMB): Pipe[F, Byte, ETag]
   def readFile(bucket: BucketName, key: FileKey): Stream[F, Byte]
   def readFileMultipart(bucket: BucketName, key: FileKey, partSize: PartSizeMB): Stream[F, Byte]
 }
@@ -55,7 +51,7 @@ import software.amazon.awssdk.services.s3.S3Client
 
 val mkS3Client: Resource[IO, S3Client] =
   Resource.fromAutoCloseable(
-    IO(S3Client.builder().endpointOverride(URI.create("localhost:9000")).build())
+    IO(S3Client.builder().endpointOverride(URI.create("http://localhost:9000")).build())
   )
 ```
 
