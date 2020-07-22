@@ -6,6 +6,7 @@ import java.nio.file.Paths
 import software.amazon.awssdk.auth.credentials.{ AwsBasicCredentials, StaticCredentialsProvider }
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException
 
 import cats.effect._
 import cats.implicits._
@@ -55,7 +56,7 @@ class S3Suite extends IOSuite {
     }
   }
 
-  test("Upload JSON test file in multipart fashion & read it back in a one go") {
+  test("Upload JSON test file in multipart fashion & read it back in a one go, then delete it and try to read it again") {
     S3.create[IO](client, blocker).flatMap { s3 =>
       val fileKeyMix = FileKey("jsontest-mix.json")
 
@@ -78,7 +79,15 @@ class S3Suite extends IOSuite {
             assert(res.reduce(_ + _).concat("") === expected)
           }
 
-      upload >> read
+      val delete =
+        s3.delete(bucket, fileKeyMix)
+
+      val readNonExisting =
+        read.as(fail("expecting NoSuchKeyException")).handleError {
+          case _: NoSuchKeyException => assert(true)
+        }
+
+      upload >> read >> delete >> readNonExisting
     }
   }
 
