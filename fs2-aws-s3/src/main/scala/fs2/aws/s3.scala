@@ -31,6 +31,7 @@ object s3 {
 
   /* A purely functional abstraction over the S3 API based on fs2.Stream */
   trait S3[F[_]] {
+    def delete(bucket: BucketName, key: FileKey): F[Unit]
     def uploadFile(bucket: BucketName, key: FileKey): Pipe[F, Byte, ETag]
     def uploadFileMultipart(
       bucket: BucketName,
@@ -65,7 +66,21 @@ object s3 {
       new S3[F] {
 
         /**
-          * Uploads a file in one request. Suitable for small files.
+          * Deletes a file in a single request.
+          */
+        def delete(bucket: BucketName, key: FileKey): F[Unit] =
+          blocker.delay {
+            client.deleteObject(
+              DeleteObjectRequest
+                .builder()
+                .bucket(bucket.value)
+                .key(key.value)
+                .build()
+            )
+          }.void
+
+        /**
+          * Uploads a file in a single request. Suitable for small files.
           *
           * For big files, consider using [[uploadFileMultipart]] instead.
           */
@@ -166,7 +181,7 @@ object s3 {
         }
 
         /**
-          * Reads a file in one request. Suitable for small files.
+          * Reads a file in a single request. Suitable for small files.
           *
           * For big files, consider using [[readFileMultipart]] instead.
           */

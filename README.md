@@ -26,6 +26,7 @@ The module `fs2-aws-s3` provides a purely functional API to operate with the AWS
 
 ```scala
 trait S3[F[_]] {
+  def delete(bucket: BucketName, key: FileKey): F[Unit]
   def uploadFile(bucket: BucketName, key: FileKey): Pipe[F, Byte, ETag]
   def uploadFileMultipart(bucket: BucketName, key: FileKey, partSize: PartSizeMB): Pipe[F, Byte, ETag]
   def readFile(bucket: BucketName, key: FileKey): Stream[F, Byte]
@@ -103,6 +104,14 @@ The streaming way in a multipart fashion. Again, part size is indicated in MBs a
 Stream.emits("test data".getBytes("UTF-8"))
   .through(s3.uploadFileMultipart(BucketName("foo"), FileKey("bar"), partSize = 5))
   .evalMap(t => IO(println(s"eTag: $t")))
+```
+
+### Deleting a file in S3
+
+There is a simple function to delete a file.
+
+```scala
+s3.delete(BucketName("foo"), FileKey("bar"))
 ```
 
 ## Kinesis
