@@ -8,7 +8,7 @@ import eu.timepit.refined.auto._
 import fs2.aws
 import fs2.aws.sqs.{ ConsumerBuilder, SQSConsumer, SqsConfig }
 import javax.jms.{ Message, MessageListener, TextMessage }
-import org.mockito.scalatest.MockitoSugar
+import org.mockito.MockitoSugar
 import org.scalatest.flatspec.AsyncFlatSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -22,7 +22,7 @@ class SqsSpec extends AsyncFlatSpec with Matchers with MockitoSugar {
     if ("fail" == text) Left(intercept[Exception](()))
     else Right(text.toInt)
   }
-  "SQS endpoint" should "stream messages" in {
+  it should "stream messages" in {
 
     def stream(d: Deferred[IO, MessageListener]) =
       aws
