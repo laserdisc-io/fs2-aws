@@ -12,13 +12,12 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.concurrent.ExecutionContext
 
 class KinesisProducerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach {
-  override def beforeEach {
+  override def beforeEach(): Unit =
     KinesisStub.clear()
-  }
 
   trait KinesisProducerTestContext {
     implicit val ec: ExecutionContext             = ExecutionContext.global
@@ -43,7 +42,7 @@ class KinesisProducerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
       .attempt
       .compile
       .toVector
-      .unsafeRunSync
+      .unsafeRunSync()
 
     output.size         should be(1)
     output.head.isRight should be(true)
@@ -61,7 +60,7 @@ class KinesisProducerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
       )
       .compile
       .toVector
-      .unsafeRunSync
+      .unsafeRunSync()
 
     KinesisStub._data.size should be(1)
     KinesisStub._data.head should be(ByteBuffer.wrap("someData".getBytes))
@@ -80,7 +79,7 @@ class KinesisProducerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
       )
       .compile
       .toVector
-      .unsafeRunSync
+      .unsafeRunSync()
 
     KinesisStub._data.size should be(1)
     KinesisStub._data.head should be(ByteBuffer.wrap("someData".getBytes))
@@ -100,11 +99,13 @@ class KinesisProducerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
       .attempt
       .compile
       .toVector
-      .unsafeRunSync
+      .unsafeRunSync()
 
-    output.size                     should be(1)
-    output.head.isLeft              should be(true)
-    output.head.left.get.getMessage should be("couldn't connect to kinesis")
+    output.size        should be(1)
+    output.head.isLeft should be(true)
+    output.head.left.getOrElse(throw new Error()).getMessage should be(
+      "couldn't connect to kinesis"
+    )
   }
 
   "error thrown when invoking writeToKinesis_" should "return an error in the stream" in new KinesisProducerTestContext {
@@ -119,7 +120,7 @@ class KinesisProducerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
         )
         .compile
         .toVector
-        .unsafeRunSync
+        .unsafeRunSync()
     }
   }
 

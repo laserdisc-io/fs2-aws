@@ -18,7 +18,7 @@ class InternalSpec extends AnyFlatSpec with Matchers {
       .through(groupBy(i => IO(i % k)))
       .compile
       .toVector
-      .unsafeRunSync
+      .unsafeRunSync()
 
     streams.size shouldBe k
   }
@@ -29,10 +29,10 @@ class InternalSpec extends AnyFlatSpec with Matchers {
       .through(groupBy(i => IO(i % 2)))
       .compile
       .toVector
-      .unsafeRunSync
+      .unsafeRunSync()
 
-    streams.filter(_._1 == 0).head._2.compile.toVector.unsafeRunSync shouldBe List(2, 4, 6, 8, 10)
-    streams.filter(_._1 == 1).head._2.compile.toVector.unsafeRunSync shouldBe List(1, 3, 5, 7, 9)
+    streams.filter(_._1 == 0).head._2.compile.toVector.unsafeRunSync() shouldBe List(2, 4, 6, 8, 10)
+    streams.filter(_._1 == 1).head._2.compile.toVector.unsafeRunSync() shouldBe List(1, 3, 5, 7, 9)
   }
 
   it should "fail on exception" in {
@@ -42,7 +42,7 @@ class InternalSpec extends AnyFlatSpec with Matchers {
       .attempt
       .compile
       .toVector
-      .unsafeRunSync
+      .unsafeRunSync()
 
     streams.size        shouldBe 1
     streams.head.isLeft shouldBe true
