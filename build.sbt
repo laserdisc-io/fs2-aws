@@ -128,7 +128,7 @@ lazy val `fs2-aws` = (project in file("fs2-aws"))
       "com.amazonaws"           % "amazon-kinesis-producer"  % "0.14.0",
       "software.amazon.kinesis" % "amazon-kinesis-client"    % "2.2.11",
       "org.mockito"             % "mockito-core"             % V.MockitoCore % Test,
-      "software.amazon.awssdk"  % "sts"                      % "2.13.61",
+      "software.amazon.awssdk"  % "sts"                      % "2.13.66",
       "org.scalatest"           %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"             %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
       "eu.timepit"              %% "refined"                 % V.Refined
