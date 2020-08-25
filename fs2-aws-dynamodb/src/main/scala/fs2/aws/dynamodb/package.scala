@@ -114,7 +114,7 @@ package object dynamodb {
     def instantiateWorker(queue: Queue[F, CommittableRecord]): Stream[F, Worker] = Stream.emit {
       workerFactory(() =>
         new RecordProcessor(
-          record => Effect[F].runAsync(queue.enqueue1(record))(_ => IO.unit).unsafeRunSync,
+          record => Effect[F].runAsync(queue.enqueue1(record))(_ => IO.unit).unsafeRunSync(),
           streamConfig.terminateGracePeriod
         )
       )

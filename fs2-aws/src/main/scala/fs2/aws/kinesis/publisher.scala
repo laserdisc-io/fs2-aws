@@ -128,8 +128,7 @@ object publisher {
     parallelism: Int = 10,
     producer: KinesisProducerClient[F] = new KinesisProducerClientImpl[F]
   )(
-    implicit ec: ExecutionContext,
-    encoder: I => ByteBuffer
+    implicit encoder: I => ByteBuffer
   ): Pipe[F, (String, I), I] =
     _.through(writeObjectAndBypass(streamName, producer, encoder)).map { case (evt, _) => evt }
 

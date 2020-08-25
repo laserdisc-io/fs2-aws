@@ -11,7 +11,7 @@ import cats.implicits._
 import io.circe.Decoder
 import io.circe.jawn.CirceSupportParser
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 case class TestKinesisProducerClient[F[_], T](state: Ref[F, List[T]])(
   implicit decoder: Decoder[T]

@@ -1,10 +1,13 @@
 package fs2.aws.kinesis
 
+import java.util.concurrent.Semaphore
+
 import fs2.Chunk
 import software.amazon.kinesis.lifecycle.events._
+import software.amazon.kinesis.processor.ShardRecordProcessor
+import software.amazon.kinesis.retrieval.kpl.ExtendedSequenceNumber
 
-import scala.collection.JavaConverters._
-import scala.concurrent.duration.FiniteDuration
+import scala.jdk.CollectionConverters._
 
 /** Concrete implementation of the AWS RecordProcessor interface.
   * Wraps incoming records into CommitableRecord types to allow for downstream
@@ -13,15 +16,36 @@ import scala.concurrent.duration.FiniteDuration
   *  @constructor create a new instance with a callback function to perform on record receive
   *  @param cb callback function to run on record receive, passing the new CommittableRecord
   */
-private[aws] class ChunkedRecordProcessor(
-  cb: Chunk[CommittableRecord] => Unit,
-  override val terminateGracePeriod: FiniteDuration
-) extends RecordProcessor {
+private[aws] class ChunkedRecordProcessor(cb: Chunk[CommittableRecord] => Unit)
+    extends ShardRecordProcessor {
+  private[kinesis] var shardId: String                                = _
+  private[kinesis] var extendedSequenceNumber: ExtendedSequenceNumber = _
+  private[kinesis] var isShutdown: Boolean                            = false
+  private[aws] val lastRecordSemaphore                                = new Semaphore(1)
+
+  override def initialize(initializationInput: InitializationInput): Unit = {
+    shardId = initializationInput.shardId()
+    extendedSequenceNumber = initializationInput.extendedSequenceNumber()
+  }
+
+  override def leaseLost(leaseLostInput: LeaseLostInput): Unit = {}
+
+  override def shardEnded(shardEndedInput: ShardEndedInput): Unit = {
+    isShutdown = true
+    lastRecordSemaphore.acquire()
+    shardEndedInput.checkpointer().checkpoint()
+  }
+
+  override def shutdownRequested(shutdownRequestedInput: ShutdownRequestedInput): Unit =
+    isShutdown = true
 
   override def processRecords(processRecordsInput: ProcessRecordsInput): Unit = {
+    if (processRecordsInput.isAtShardEnd)
+      lastRecordSemaphore.acquire()
     val batch = processRecordsInput
       .records()
       .asScala
+      .toList
       .map { record =>
         CommittableRecord(
           shardId,
@@ -29,9 +53,18 @@ private[aws] class ChunkedRecordProcessor(
           processRecordsInput.millisBehindLatest(),
           record,
           recordProcessor = this,
-          processRecordsInput.checkpointer()
+          processRecordsInput.checkpointer(),
+          lastRecordSemaphore
         )
       }
-    cb(Chunk(batch.toSeq: _*))
+
+    val chunk =
+      if (processRecordsInput.isAtShardEnd)
+        batch match {
+          case head :+ last => head :+ last.copy(isLastInShard = true)
+          case Nil          => Nil
+        }
+      else batch
+    cb(Chunk(chunk: _*))
   }
 }

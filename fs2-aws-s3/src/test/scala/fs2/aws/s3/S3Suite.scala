@@ -56,7 +56,9 @@ class S3Suite extends IOSuite {
     }
   }
 
-  test("Upload JSON test file in multipart fashion & read it back in a one go, then delete it and try to read it again") {
+  test(
+    "Upload JSON test file in multipart fashion & read it back in a one go, then delete it and try to read it again"
+  ) {
     S3.create[IO](client, blocker).flatMap { s3 =>
       val fileKeyMix = FileKey("jsontest-mix.json")
 

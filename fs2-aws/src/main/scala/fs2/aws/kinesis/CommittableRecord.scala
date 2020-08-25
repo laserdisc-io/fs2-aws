@@ -1,7 +1,8 @@
 package fs2.aws.kinesis
 
-import cats.effect.Sync
+import java.util.concurrent.Semaphore
 
+import cats.effect.Sync
 import software.amazon.kinesis.processor.RecordProcessorCheckpointer
 import software.amazon.kinesis.retrieval.KinesisClientRecord
 import software.amazon.kinesis.retrieval.kpl.ExtendedSequenceNumber
@@ -20,8 +21,10 @@ case class CommittableRecord(
   recordProcessorStartingSequenceNumber: ExtendedSequenceNumber,
   millisBehindLatest: Long,
   record: KinesisClientRecord,
-  recordProcessor: RecordProcessor,
-  checkpointer: RecordProcessorCheckpointer
+  recordProcessor: ChunkedRecordProcessor,
+  checkpointer: RecordProcessorCheckpointer,
+  lastRecordSemaphore: Semaphore,
+  isLastInShard: Boolean = false
 ) {
   val sequenceNumber: String                = record.sequenceNumber()
   val subSequenceNumber: Long               = record.subSequenceNumber()
@@ -29,6 +32,7 @@ case class CommittableRecord(
   def checkpoint[F[_]: Sync]: F[Unit] =
     Sync[F].delay {
       checkpointer.checkpoint(record.sequenceNumber(), record.subSequenceNumber())
+      if (isLastInShard) lastRecordSemaphore.release()
     }
 
 }
@@ -39,10 +43,10 @@ object CommittableRecord {
   // Records that have been batched by the KCL producer all have the
   // same sequence number but will differ by subsequence number
   implicit val orderBySequenceNumber: Ordering[CommittableRecord] =
-    Ordering[(String, Long)].on(cr ⇒
+    Ordering[(String, Long)].on(cr =>
       (cr.sequenceNumber, cr.record match {
-        case ur: KinesisClientRecord ⇒ ur.subSequenceNumber()
-        case _                       ⇒ 0
+        case ur: KinesisClientRecord => ur.subSequenceNumber()
+        case _                       => 0
       })
     )
 }

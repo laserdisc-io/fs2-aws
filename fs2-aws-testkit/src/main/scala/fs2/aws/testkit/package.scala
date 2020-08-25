@@ -1,7 +1,7 @@
 package fs2.aws
 
-import scala.concurrent.duration._
+import fs2.aws.kinesis.ChunkedRecordProcessor
 
 package object testkit {
-  val TestRecordProcessor = new kinesis.SingleRecordProcessor(_ => (), 10.seconds)
+  val TestRecordProcessor = new ChunkedRecordProcessor(_ => ())
 }
