@@ -113,9 +113,8 @@ package object dynamodb {
     // Initialize a KCL worker which appends to the internal stream queue on message receipt
     def instantiateWorker(queue: Queue[F, CommittableRecord]): Stream[F, Worker] = Stream.emit {
       workerFactory(() =>
-        new RecordProcessor(
-          record => Effect[F].runAsync(queue.enqueue1(record))(_ => IO.unit).unsafeRunSync(),
-          streamConfig.terminateGracePeriod
+        new RecordProcessor(record =>
+          Effect[F].runAsync(queue.enqueue1(record))(_ => IO.unit).unsafeRunSync()
         )
       )
     }
@@ -141,33 +140,22 @@ package object dynamodb {
     *  @param checkpointSettings configure maxBatchSize and maxBatchWait time before triggering a checkpoint
     *  @return a stream of Record types representing checkpointed messages
     */
-  def checkpointRecords[F[_]](
+  def checkpointRecords[F[_]: ConcurrentEffect: Timer](
     checkpointSettings: KinesisCheckpointSettings = KinesisCheckpointSettings.defaultInstance,
     parallelism: Int = 10
-  )(
-    implicit F: ConcurrentEffect[F],
-    timer: Timer[F]
   ): Pipe[F, CommittableRecord, Record] = {
-    def checkpoint(checkpointSettings: KinesisCheckpointSettings, parallelism: Int)(
-      implicit F: ConcurrentEffect[F],
-      timer: Timer[F]
+    def checkpoint(
+      checkpointSettings: KinesisCheckpointSettings
     ): Pipe[F, CommittableRecord, Record] =
       _.groupWithin(checkpointSettings.maxBatchSize, checkpointSettings.maxBatchWait)
-        .collect { case chunk if chunk.size > 0 => chunk.toList.max }
-        .flatMap { cr =>
-          fs2.Stream.eval_(
-            F.async[Record] { cb =>
-              cr.checkpoint()
-              cb(Right(cr.record))
-            }
-          )
-        }
+        .collect { case chunk if chunk.size > 0 => chunk.size -> chunk.toList.max }
+        .flatMap { case (len, cr) => fs2.Stream.eval_(cr.checkpoint[F](len).as(cr.record)) }
 
     def bypass: Pipe[F, CommittableRecord, Record] = _.map(r => r.record)
 
-    _.through(core.groupBy(r => F.delay(r.shardId))).map {
+    _.through(core.groupBy(r => Sync[F].delay(r.shardId))).map {
       case (_, st) =>
-        st.broadcastThrough(checkpoint(checkpointSettings, parallelism), bypass)
+        st.broadcastThrough(checkpoint(checkpointSettings), bypass)
     }.parJoinUnbounded
   }
 

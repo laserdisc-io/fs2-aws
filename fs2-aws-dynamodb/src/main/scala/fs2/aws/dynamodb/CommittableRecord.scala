@@ -1,5 +1,8 @@
 package fs2.aws.dynamodb
 
+import java.util.concurrent.Phaser
+
+import cats.effect.Sync
 import com.amazonaws.services.dynamodbv2.streamsadapter.model.RecordAdapter
 import com.amazonaws.services.kinesis.clientlibrary.types.ExtendedSequenceNumber
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer
@@ -19,16 +22,20 @@ case class CommittableRecord(
   millisBehindLatest: Long,
   record: RecordAdapter,
   recordProcessor: RecordProcessor,
-  checkpointer: IRecordProcessorCheckpointer
+  checkpointer: IRecordProcessorCheckpointer,
+  inFlightRecordsPhaser: Phaser
 ) {
   val sequenceNumber: String = record.getSequenceNumber
 
   def canCheckpoint(): Boolean = !recordProcessor.isShutdown
-  def checkpoint(): Unit       = checkpointer.checkpoint(record)
+  def checkpoint[F[_]: Sync](n: Int): F[Unit] = Sync[F].delay {
+    checkpointer.checkpoint(record)
+    // de-register all records in checkpoint batch individually
+    (0 to n).foreach(_ => inFlightRecordsPhaser.arriveAndDeregister())
+  }
 }
 
 object CommittableRecord {
-
   implicit val orderBySequenceNumber: Ordering[CommittableRecord] =
     Ordering[String].on(cr => cr.sequenceNumber)
 }
