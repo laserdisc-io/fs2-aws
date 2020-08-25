@@ -1,4 +1,6 @@
-package fs2.aws.kinesis
+package fs2
+package aws
+package kinesis
 
 import java.util.concurrent.Semaphore
 
