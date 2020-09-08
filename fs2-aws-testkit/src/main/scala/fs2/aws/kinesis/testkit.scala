@@ -1,8 +1,8 @@
-package fs2.aws
+package fs2
+package aws
+package kinesis
 
 import cats.effect.{ ConcurrentEffect, ContextShift }
-import fs2.Stream
-import fs2.aws.kinesis.{ ChunkedRecordProcessor, CommittableRecord, KinesisConsumerSettings }
 import software.amazon.awssdk.regions.Region
 import software.amazon.kinesis.coordinator.Scheduler
 import software.amazon.kinesis.processor.ShardRecordProcessorFactory
