@@ -10,7 +10,6 @@ import cats.effect.{ ContextShift, IO, Timer }
 import cats.implicits._
 import fs2.aws.kinesis.consumer.{ readFromKinesisStream, _ }
 import org.mockito.Mockito._
-import org.mockito.invocation.InvocationOnMock
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.Eventually
 import org.scalatest.flatspec.AnyFlatSpec
@@ -54,8 +53,6 @@ class KinesisConsumerSpec
         recordProcessor.processRecords(recordsInput.build())
       }
     ).parMapN { case (msgs, _) => msgs }.unsafeRunSync()
-
-    verify(mockScheduler, times(1)).run()
 
     val commitableRecord = res.head
     commitableRecord.record.data() should be(record.data())
@@ -363,9 +360,9 @@ class KinesisConsumerSpec
 
     protected val mockScheduler: Scheduler = mock(classOf[Scheduler])
 
-    when(mockScheduler.run()).thenAnswer((_: InvocationOnMock) => ())
+    doAnswer(_ => println("running kinesis scheduler")).when(mockScheduler).run()
 
-    when(mockScheduler.shutdown()).thenAnswer((_: InvocationOnMock) => ())
+    doAnswer(_ => ()).when(mockScheduler).shutdown()
 
     var recordProcessorFactory: ShardRecordProcessorFactory = _
     var recordProcessor: ShardRecordProcessor               = _
