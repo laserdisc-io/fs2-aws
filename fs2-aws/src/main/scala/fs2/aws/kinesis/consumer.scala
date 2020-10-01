@@ -231,22 +231,20 @@ object consumer {
     * @return a stream of Record types representing checkpointed messages
     */
   def checkpointRecords[F[_]: ConcurrentEffect: Timer](
-    checkpointSettings: KinesisCheckpointSettings = KinesisCheckpointSettings.defaultInstance,
-    parallelism: Int = 10
+    checkpointSettings: KinesisCheckpointSettings = KinesisCheckpointSettings.defaultInstance
   ): Pipe[F, CommittableRecord, KinesisClientRecord] = {
     def checkpoint(
-      checkpointSettings: KinesisCheckpointSettings,
-      parallelism: Int
+      checkpointSettings: KinesisCheckpointSettings
     ): Pipe[F, CommittableRecord, KinesisClientRecord] =
       _.groupWithin(checkpointSettings.maxBatchSize, checkpointSettings.maxBatchWait)
         .collect { case chunk if chunk.size > 0 => chunk.toList.max }
-        .flatMap(cr => fs2.Stream.eval_(cr.checkpoint.as(cr.record)))
+        .evalMap(cr => cr.checkpoint.as(cr.record))
 
     def bypass: Pipe[F, CommittableRecord, KinesisClientRecord] = _.map(r => r.record)
 
     _.through(core.groupBy(r => Sync[F].pure(r.shardId))).map {
       case (_, st) =>
-        st.broadcastThrough(checkpoint(checkpointSettings, parallelism), bypass)
+        st.broadcastThrough(checkpoint(checkpointSettings), bypass)
     }.parJoinUnbounded
   }
 
