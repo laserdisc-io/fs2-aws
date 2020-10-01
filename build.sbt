@@ -182,17 +182,13 @@ lazy val `fs2-aws-benchmarks` = (project in file("fs2-aws-benchmarks"))
   .settings(
     name := "fs2-aws-benchmarks",
     libraryDependencies ++= Seq(
-      "com.storm-enroute" %% "scalameter"     % "0.19" % Test,
-      "ch.qos.logback"    % "logback-classic" % "1.2.3",
-      "ch.qos.logback"    % "logback-core"    % "1.2.3",
-      "org.slf4j"         % "jcl-over-slf4j"  % "1.7.30",
-      "org.slf4j"         % "jul-to-slf4j"    % "1.7.30"
-    ),
-    testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework"),
-    logBuffered    := false
+      "ch.qos.logback" % "logback-classic" % "1.2.3",
+      "ch.qos.logback" % "logback-core"    % "1.2.3",
+      "org.slf4j"      % "jcl-over-slf4j"  % "1.7.30",
+      "org.slf4j"      % "jul-to-slf4j"    % "1.7.30"
+    )
   )
-  .settings(commonSettings)
-  .settings(scalacOptions ++= commonOptions(scalaVersion.value))
+  .enablePlugins(JmhPlugin)
 
 lazy val `fs2-aws-sqs-testkit` = (project in file("fs2-aws-sqs-testkit"))
   .dependsOn(`fs2-aws-sqs`)
