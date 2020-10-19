@@ -1,5 +1,5 @@
 object V {
-  val AwsSdk           = "1.11.875"
+  val AwsSdk           = "1.11.882"
   val AwsSdkS3         = "2.14.28"
   val Circe            = "0.13.0"
   val Ciris            = "0.12.1"
