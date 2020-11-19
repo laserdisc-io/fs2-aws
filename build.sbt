@@ -121,17 +121,17 @@ lazy val `fs2-aws` = (project in file("fs2-aws"))
   .settings(
     name := "fs2-aws",
     libraryDependencies ++= Seq(
-      "co.fs2"                  %% "fs2-core"                % V.Fs2,
-      "co.fs2"                  %% "fs2-io"                  % V.Fs2,
-      "com.amazonaws"           % "aws-java-sdk-kinesis"     % V.AwsSdk,
-      "com.amazonaws"           % "aws-java-sdk-s3"          % V.AwsSdk,
-      "com.amazonaws"           % "amazon-kinesis-producer"  % "0.14.1",
-      "software.amazon.kinesis" % "amazon-kinesis-client"    % "1.13.3", // holding off on "2.3.1" until https://github.com/awslabs/amazon-kinesis-client/issues/746 is fixed
-      "org.mockito"             % "mockito-core"             % V.MockitoCore % Test,
-      "software.amazon.awssdk"  % "sts"                      % "2.15.24",
-      "org.scalatest"           %% "scalatest"               % V.ScalaTest % Test,
-      "org.mockito"             %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
-      "eu.timepit"              %% "refined"                 % V.Refined
+      "co.fs2"                 %% "fs2-core"                % V.Fs2,
+      "co.fs2"                 %% "fs2-io"                  % V.Fs2,
+      "com.amazonaws"          % "aws-java-sdk-kinesis"     % V.AwsSdk,
+      "com.amazonaws"          % "aws-java-sdk-s3"          % V.AwsSdk,
+      "com.amazonaws"          % "amazon-kinesis-producer"  % "0.14.1",
+      "com.amazonaws"          % "amazon-kinesis-client"    % "1.13.3", // holding off on "2.3.1" until https://github.com/awslabs/amazon-kinesis-client/issues/746 is fixed
+      "org.mockito"            % "mockito-core"             % V.MockitoCore % Test,
+      "software.amazon.awssdk" % "sts"                      % "2.15.24",
+      "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
+      "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
+      "eu.timepit"             %% "refined"                 % V.Refined
     ),
     coverageMinimum       := 40,
     coverageFailOnMinimum := true
