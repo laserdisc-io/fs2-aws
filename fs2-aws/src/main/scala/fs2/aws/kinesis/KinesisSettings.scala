@@ -24,6 +24,7 @@ class KinesisConsumerSettings private (
   val region: Region,
   val maxConcurrency: Int,
   val bufferSize: Int,
+  val terminateGracePeriod: FiniteDuration,
   val stsAssumeRole: Option[STSAssumeRoleSettings],
   val initialPositionInStream: Either[InitialPositionInStream, Date]
 )
@@ -35,15 +36,16 @@ object KinesisConsumerSettings {
     region: Region = Region.US_EAST_1,
     maxConcurrency: Int = Int.MaxValue,
     bufferSize: Int = 10,
+    terminateGracePeriod: FiniteDuration = 10.seconds,
     stsAssumeRole: Option[STSAssumeRoleSettings] = None,
     initialPositionInStream: Either[InitialPositionInStream, Date] = Left(
       InitialPositionInStream.LATEST
     )
   ): Either[Throwable, KinesisConsumerSettings] =
-    (bufferSize, maxConcurrency) match {
-      case (bs, _) if bs < 1 => Left(BufferSizeException("Must be greater than 0"))
-      case (_, mc) if mc < 1 => Left(MaxConcurrencyException("Must be greater than 0"))
-      case (bs, mc) =>
+    (bufferSize, maxConcurrency, terminateGracePeriod) match {
+      case (bs, _, _) if bs < 1 => Left(BufferSizeException("Must be greater than 0"))
+      case (_, mc, _) if mc < 1 => Left(MaxConcurrencyException("Must be greater than 0"))
+      case (bs, mc, period) =>
         Right(
           new KinesisConsumerSettings(
             streamName,
@@ -51,6 +53,7 @@ object KinesisConsumerSettings {
             region,
             mc,
             bs,
+            period,
             stsAssumeRole,
             initialPositionInStream
           )

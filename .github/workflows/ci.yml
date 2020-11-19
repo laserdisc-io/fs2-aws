@@ -43,7 +43,7 @@ jobs:
           java-version: "${{ matrix.java}}"
 
       - name: "Scala tests & coverage"
-        run: "sbt build"
+        run: "sbt coverage test scalafmtCheck scalafmtSbtCheck"
 
       - name: "Shutting down MinIO 🐳"
         run: docker-compose down

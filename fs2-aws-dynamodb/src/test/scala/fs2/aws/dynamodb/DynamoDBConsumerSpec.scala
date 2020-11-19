@@ -26,7 +26,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time._
 
-import scala.jdk.CollectionConverters._
+import scala.collection.JavaConverters._
 import scala.collection.immutable
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
@@ -276,7 +276,7 @@ class DynamoDBConsumerSpec
       .through(checkpointRecords[IO](settings))
       .compile
       .toVector
-      .unsafeRunSync() should have message "you have no power here"
+      .unsafeRunSync should have message "you have no power here"
 
     eventually(verify(checkpointer).checkpoint(input.record))
   }
@@ -312,9 +312,7 @@ class DynamoDBConsumerSpec
       mockWorker
     }
 
-    val config: KinesisStreamSettings =
-      KinesisStreamSettings(bufferSize = 10, 10.seconds)
-        .getOrElse(throw new RuntimeException("cannot create Kinesis Settings"))
+    val config: KinesisStreamSettings = KinesisStreamSettings(bufferSize = 10, 10.seconds).right.get
 
     val stream: Unit =
       readFromDynamoDBStream[IO](builder, config)
@@ -355,8 +353,7 @@ class DynamoDBConsumerSpec
       classOf[IRecordProcessorCheckpointer]
     )
     val settings: KinesisCheckpointSettings =
-      KinesisCheckpointSettings(maxBatchSize = 100, maxBatchWait = 500.millis)
-        .getOrElse(throw new RuntimeException("Cannot create Kinesis Checkpoint Settings"))
+      KinesisCheckpointSettings(maxBatchSize = 100, maxBatchWait = 500.millis).right.get
 
     def startStream(input: Seq[CommittableRecord]): Unit =
       fs2.Stream

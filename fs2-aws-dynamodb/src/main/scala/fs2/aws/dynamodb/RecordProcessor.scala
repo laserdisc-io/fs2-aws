@@ -5,7 +5,7 @@ import com.amazonaws.services.kinesis.clientlibrary.interfaces._
 import com.amazonaws.services.kinesis.clientlibrary.types._
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.ShutdownReason
 
-import scala.jdk.CollectionConverters._
+import scala.collection.JavaConverters._
 import scala.concurrent.duration.FiniteDuration
 
 /** Concrete implementation of the AWS RecordProcessor interface.

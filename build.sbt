@@ -3,8 +3,8 @@ import scoverage.ScoverageKeys.coverageMinimum
 organization := "io.laserdisc"
 name         := "fs2-aws"
 
-lazy val scala212               = "2.12.12"
-lazy val scala213               = "2.13.3"
+lazy val scala212               = "2.12.10"
+lazy val scala213               = "2.13.2"
 lazy val supportedScalaVersions = List(scala212, scala213)
 
 crossScalaVersions in ThisBuild := supportedScalaVersions
@@ -40,7 +40,7 @@ lazy val `fs2-aws-core` = (project in file("fs2-aws-core"))
     coverageFailOnMinimum := true
   )
   .settings(commonSettings)
-  .settings(scalacOptions ++= commonOptions(scalaVersion.value))
+  .settings(scalacOptions := commonOptions(scalaVersion.value))
 
 lazy val `fs2-aws-ciris` = (project in file("fs2-aws-ciris"))
   .dependsOn(`fs2-aws`)
@@ -56,7 +56,7 @@ lazy val `fs2-aws-ciris` = (project in file("fs2-aws-ciris"))
     coverageFailOnMinimum := true
   )
   .settings(commonSettings)
-  .settings(scalacOptions ++= commonOptions(scalaVersion.value))
+  .settings(scalacOptions := commonOptions(scalaVersion.value))
 
 lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb"))
   .dependsOn(`fs2-aws-core`)
@@ -75,7 +75,7 @@ lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb"))
     )
   )
   .settings(commonSettings)
-  .settings(scalacOptions ++= commonOptions(scalaVersion.value))
+  .settings(scalacOptions := commonOptions(scalaVersion.value))
 
 lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
   .dependsOn(`fs2-aws-dynamodb`)
@@ -94,7 +94,7 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
     )
   )
   .settings(commonSettings)
-  .settings(scalacOptions ++= commonOptions(scalaVersion.value))
+  .settings(scalacOptions := commonOptions(scalaVersion.value))
   .settings(
     skip in publish := true
   )
@@ -137,7 +137,7 @@ lazy val `fs2-aws` = (project in file("fs2-aws"))
     coverageFailOnMinimum := true
   )
   .settings(commonSettings)
-  .settings(scalacOptions ++= commonOptions(scalaVersion.value))
+  .settings(scalacOptions := commonOptions(scalaVersion.value))
 
 lazy val `fs2-aws-sqs` = (project in file("fs2-aws-sqs"))
   .settings(
@@ -156,7 +156,7 @@ lazy val `fs2-aws-sqs` = (project in file("fs2-aws-sqs"))
     coverageFailOnMinimum := true
   )
   .settings(commonSettings)
-  .settings(scalacOptions ++= commonOptions(scalaVersion.value))
+  .settings(scalacOptions := commonOptions(scalaVersion.value))
 
 lazy val `fs2-aws-testkit` = (project in file("fs2-aws-testkit"))
   .dependsOn(`fs2-aws`)
@@ -173,7 +173,7 @@ lazy val `fs2-aws-testkit` = (project in file("fs2-aws-testkit"))
     )
   )
   .settings(commonSettings)
-  .settings(scalacOptions ++= commonOptions(scalaVersion.value))
+  .settings(scalacOptions := commonOptions(scalaVersion.value))
 
 lazy val `fs2-aws-sqs-testkit` = (project in file("fs2-aws-sqs-testkit"))
   .dependsOn(`fs2-aws-sqs`)
@@ -186,12 +186,11 @@ lazy val `fs2-aws-sqs-testkit` = (project in file("fs2-aws-sqs-testkit"))
     )
   )
   .settings(commonSettings)
-  .settings(scalacOptions ++= commonOptions(scalaVersion.value))
+  .settings(scalacOptions := commonOptions(scalaVersion.value))
 
 addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
 addCommandAlias("format", ";scalafmt;test:scalafmt;scalafmtSbt")
 addCommandAlias("checkFormat", ";scalafmtCheck;test:scalafmtCheck;scalafmtSbtCheck")
-addCommandAlias("build", ";checkFormat;clean;+test;coverage")
 
 def commonOptions(scalaVersion: String) =
   CrossVersion.partialVersion(scalaVersion) match {
@@ -204,8 +203,8 @@ lazy val commonSettings = Seq(
   organization       := "io.laserdisc",
   crossScalaVersions := supportedScalaVersions,
   scalaVersion       := scala213,
-  fork               in Test := true,
   scalacOptions ++= Seq(
+    "-target:jvm-1.8",
     "-encoding",
     "UTF-8",                         // source files are in UTF-8
     "-deprecation",                  // warn about use of deprecated APIs
@@ -213,10 +212,8 @@ lazy val commonSettings = Seq(
     "-feature",                      // warn about misused language features
     "-language:higherKinds",         // allow higher kinded types without `import scala.language.higherKinds`
     "-language:implicitConversions", // allow use of implicit conversions
-    "-language:postfixOps",
-    "-Xlint",             // enable handy linter warnings
-    "-Xfatal-warnings",   // turn compiler warnings into errors
-    "-Ywarn-macros:after" // allows the compiler to resolve implicit imports being flagged as unused
+    "-Xlint",                        // enable handy linter warnings
+    "-Xfatal-warnings"               // turn compiler warnings into errors
   ),
   addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1"),
   addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.10.3"),

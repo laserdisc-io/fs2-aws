@@ -1,6 +1,5 @@
 package fs2.aws.kinesis
 
-import fs2.Chunk
 import software.amazon.kinesis.lifecycle.events._
 
 import scala.collection.JavaConverters._
@@ -13,16 +12,13 @@ import scala.concurrent.duration.FiniteDuration
   *  @constructor create a new instance with a callback function to perform on record receive
   *  @param cb callback function to run on record receive, passing the new CommittableRecord
   */
-private[aws] class ChunkedRecordProcessor(
-  cb: Chunk[CommittableRecord] => Unit,
+private[aws] class SingleRecordProcessor(
+  cb: CommittableRecord => Unit,
   override val terminateGracePeriod: FiniteDuration
 ) extends RecordProcessor {
-
-  override def processRecords(processRecordsInput: ProcessRecordsInput): Unit = {
-    val batch = processRecordsInput
-      .records()
-      .asScala
-      .map { record =>
+  override def processRecords(processRecordsInput: ProcessRecordsInput): Unit =
+    processRecordsInput.records().asScala.foreach { record =>
+      cb(
         CommittableRecord(
           shardId,
           extendedSequenceNumber,
@@ -31,7 +27,6 @@ private[aws] class ChunkedRecordProcessor(
           recordProcessor = this,
           processRecordsInput.checkpointer()
         )
-      }
-    cb(Chunk(batch.toSeq: _*))
-  }
+      )
+    }
 }

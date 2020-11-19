@@ -30,5 +30,5 @@ case class CommittableRecord(
 object CommittableRecord {
 
   implicit val orderBySequenceNumber: Ordering[CommittableRecord] =
-    Ordering[String].on(cr => cr.sequenceNumber)
+    Ordering[String].on(cr ⇒ cr.sequenceNumber)
 }

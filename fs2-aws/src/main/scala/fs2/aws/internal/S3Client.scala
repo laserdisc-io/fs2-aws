@@ -6,7 +6,7 @@ import cats.effect.Effect
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model._
 
-import scala.jdk.CollectionConverters._
+import scala.collection.JavaConverters._
 import scala.util.control.Exception
 
 private[aws] object S3Client {
