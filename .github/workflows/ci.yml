@@ -38,7 +38,7 @@ jobs:
           restore-keys: coursier
 
       - name: "Java ${{ matrix.java}} setup"
-        uses: "olafurpg/setup-java@v6"
+        uses: "olafurpg/setup-scala@v10"
         with:
           java-version: "${{ matrix.java}}"
 
