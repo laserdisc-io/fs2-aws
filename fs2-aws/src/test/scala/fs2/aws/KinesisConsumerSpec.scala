@@ -1,14 +1,18 @@
-package fs2
-package aws
-package kinesis
+package fs2.aws
 
 import java.nio.ByteBuffer
 import java.time.Instant
 import java.util.concurrent.Semaphore
 
 import cats.effect.{ ContextShift, IO, Timer }
-import cats.implicits._
+import cats.implicits.{ catsSyntaxTuple2Parallel, catsSyntaxTuple3Parallel }
 import fs2.aws.kinesis.consumer.{ readFromKinesisStream, _ }
+import fs2.aws.kinesis.{
+  ChunkedRecordProcessor,
+  CommittableRecord,
+  KinesisCheckpointSettings,
+  KinesisConsumerSettings
+}
 import org.mockito.Mockito._
 import org.mockito.invocation.InvocationOnMock
 import org.scalatest.BeforeAndAfterEach
@@ -24,9 +28,10 @@ import software.amazon.kinesis.processor.{ ShardRecordProcessor, ShardRecordProc
 import software.amazon.kinesis.retrieval.KinesisClientRecord
 import software.amazon.kinesis.retrieval.kpl.ExtendedSequenceNumber
 
-import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext
 import scala.jdk.CollectionConverters._
+import cats.implicits._
 import org.mockito.ArgumentMatchers.any
 
 class KinesisConsumerSpec
