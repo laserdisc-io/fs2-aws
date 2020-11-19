@@ -190,13 +190,13 @@ object consumer {
     * @param streamConfig  configuration for the internal stream
     * @return an infinite fs2 Stream that emits Kinesis Records
     */
-  private[kinesis] def readFromKinesisStream[F[_]: ConcurrentEffect: ContextShift](
+  private[aws] def readFromKinesisStream[F[_]: ConcurrentEffect: ContextShift](
     streamConfig: KinesisConsumerSettings,
     schedulerFactory: ShardRecordProcessorFactory => Scheduler
   ): Stream[F, CommittableRecord] =
     readChunksFromKinesisStream[F](streamConfig, schedulerFactory).flatMap(fs2.Stream.chunk)
 
-  private[kinesis] def readChunksFromKinesisStream[F[_]: ConcurrentEffect: ContextShift](
+  private[aws] def readChunksFromKinesisStream[F[_]: ConcurrentEffect: ContextShift](
     streamConfig: KinesisConsumerSettings,
     schedulerFactory: ShardRecordProcessorFactory => Scheduler
   ): Stream[F, Chunk[CommittableRecord]] = {
