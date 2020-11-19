@@ -2,10 +2,9 @@ package fs2
 package aws
 
 import java.util.Date
-import java.util.concurrent.{ Phaser, Semaphore }
+import java.util.concurrent.Semaphore
 
 import cats.effect.{ ContextShift, IO, Timer }
-import cats.implicits._
 import com.amazonaws.services.dynamodbv2.model
 import com.amazonaws.services.dynamodbv2.model.{ AttributeValue, StreamRecord }
 import com.amazonaws.services.dynamodbv2.streamsadapter.model.RecordAdapter
@@ -18,19 +17,19 @@ import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{ ShutdownReason,
 import com.amazonaws.services.kinesis.clientlibrary.types._
 import com.amazonaws.services.kinesis.model.Record
 import fs2.aws.dynamodb._
-import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import org.mockito.invocation.InvocationOnMock
+import org.mockito.stubbing.Answer
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.Eventually
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time._
 
-import scala.collection.immutable
-import scala.concurrent.ExecutionContext
-import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
+import scala.collection.immutable
+import scala.concurrent.duration._
+import scala.concurrent.{ ExecutionContext, Future }
 
 class DynamoDBConsumerSpec
     extends AnyFlatSpec
@@ -47,162 +46,104 @@ class DynamoDBConsumerSpec
 
   "KinesisWorker source" should "successfully read data from the Kinesis stream" in new WorkerContext
     with TestData {
+    semaphore.acquire()
+    recordProcessor.initialize(initializationInput)
+    recordProcessor.processRecords(recordsInput)
 
-    val res = (
-      stream.take(1).compile.toList,
-      IO.delay {
-        semaphore.acquire()
-        recordProcessor.initialize(initializationInput)
-        recordProcessor.processRecords(recordsInput)
-      }
-    ).parMapN { case (msgs, _) => msgs }.unsafeRunSync()
+    eventually(verify(mockWorker, times(1)).run())
 
-    verify(mockWorker, times(1)).run()
-
-    val commitableRecord = res.head
-    commitableRecord.record.getData                        should be(record.getData)
-    commitableRecord.recordProcessorStartingSequenceNumber shouldBe initializationInput.getExtendedSequenceNumber
-    commitableRecord.shardId                               shouldBe initializationInput.getShardId
-    commitableRecord.millisBehindLatest                    shouldBe recordsInput.getMillisBehindLatest
+    eventually(timeout(1.second)) {
+      val commitableRecord = output.result().head
+      commitableRecord.record.getData                        should be(record.getData)
+      commitableRecord.recordProcessorStartingSequenceNumber shouldBe initializationInput.getExtendedSequenceNumber
+      commitableRecord.shardId                               shouldBe initializationInput.getShardId
+      commitableRecord.millisBehindLatest                    shouldBe recordsInput.getMillisBehindLatest
+    }
+    semaphore.release()
   }
 
-  it should "Shutdown the worker if the stream is drained and has not failed" in new WorkerContext
+  it should "not shutdown the worker if the stream is drained but has not failed" in new WorkerContext
     with TestData {
-    (
-      stream.take(1).compile.toList,
-      IO.delay {
-        semaphore.acquire()
-        recordProcessor.initialize(initializationInput)
-        recordProcessor.processRecords(recordsInput)
-      }
-    ).parMapN { case (_, _) => () }.unsafeRunSync()
+    semaphore.acquire()
+    recordProcessor.initialize(initializationInput)
+    recordProcessor.processRecords(recordsInput)
 
-    verify(mockWorker, times(1)).shutdown()
+    eventually(verify(mockWorker, times(0)).shutdown())
+    semaphore.release()
   }
 
   it should "shutdown the worker if the stream terminates" in new WorkerContext(errorStream = true)
     with TestData {
-    intercept[Exception] {
-      (
-        stream.take(1).compile.toList,
-        IO.delay {
-          semaphore.acquire()
-          recordProcessor.initialize(initializationInput)
-          recordProcessor.processRecords(recordsInput)
-        }
-      ).parMapN { case (_, _) => () }.unsafeRunSync()
-    }
-    verify(mockWorker, times(1)).shutdown()
+    semaphore.acquire()
+    recordProcessor.initialize(initializationInput)
+    recordProcessor.processRecords(recordsInput)
+
+    eventually(verify(mockWorker, times(1)).shutdown())
   }
 
   it should "not drop messages in case of back-pressure" in new WorkerContext with TestData {
+    semaphore.acquire()
     // Create and send 10 records (to match buffer size)
-    val res = (
-      stream.take(10).compile.toList,
-      IO.delay {
-        semaphore.acquire()
-        recordProcessor.initialize(initializationInput)
-        for (i <- 1 to 10) {
-          val record: Record = mock(classOf[RecordAdapter])
-          when(record.getSequenceNumber).thenReturn(i.toString)
-          recordProcessor.processRecords(recordsInput.withRecords(List(record).asJava))
-        }
-      }
-    ).parMapN { case (msgs, _) => msgs }.unsafeRunSync()
+    for (i <- 1 to 10) {
+      val record: Record = mock(classOf[RecordAdapter])
+      when(record.getSequenceNumber).thenReturn(i.toString)
+      recordProcessor.processRecords(recordsInput.withRecords(List(record).asJava))
+    }
 
-    res should have size 10
+    // Should process all 10 messages
+    eventually(output.result().size shouldBe (10))
 
     // Send a batch that exceeds the internal buffer size
-    val res2 = (
-      stream.take(50).compile.toList,
-      IO.delay {
-        semaphore.acquire()
-        recordProcessor.initialize(initializationInput)
-        for (i <- 1 to 50) {
-          val record: Record = mock(classOf[RecordAdapter])
-          when(record.getSequenceNumber).thenReturn(i.toString)
-          recordProcessor.processRecords(recordsInput.withRecords(List(record).asJava))
-        }
-      }
-    ).parMapN { case (msgs, _) => msgs }.unsafeRunSync()
+    for (i <- 1 to 50) {
+      val record: Record = mock(classOf[RecordAdapter])
+      when(record.getSequenceNumber).thenReturn(i.toString)
+      recordProcessor.processRecords(recordsInput.withRecords(List(record).asJava))
+    }
 
-    res2 should have size 50
+    // Should have processed all 60 messages
+    eventually(output.result().size shouldBe (60))
+
+    eventually(verify(mockWorker, times(0)).shutdown())
+    semaphore.release()
   }
 
   it should "not drop messages in case of back-pressure with multiple shard workers" in new WorkerContext
     with TestData {
+    semaphore.acquire()
+    recordProcessor.initialize(initializationInput)
+    recordProcessor2.initialize(initializationInput.withShardId("shard2"))
 
-    val res = (
-      stream.take(10).compile.toList,
-      IO.delay {
-        semaphore.acquire()
-        recordProcessor.initialize(initializationInput)
-        for (i <- 1 to 5) {
-          val record: Record = mock(classOf[RecordAdapter])
-          when(record.getSequenceNumber).thenReturn(i.toString)
-          recordProcessor.processRecords(recordsInput.withRecords(List(record).asJava))
-        }
-      },
-      IO.delay {
-        semaphore.acquire()
-        recordProcessor2.initialize(initializationInput.withShardId("shard2"))
-
-        // Create and send 10 records (to match buffer size)
-        for (i <- 1 to 5) {
-          val record: Record = mock(classOf[RecordAdapter])
-          when(record.getSequenceNumber).thenReturn(i.toString)
-          recordProcessor2.processRecords(recordsInput.withRecords(List(record).asJava))
-        }
-      }
-    ).parMapN { case (msgs, _, _) => msgs }.unsafeRunSync()
+    // Create and send 10 records (to match buffer size)
+    for (i <- 1 to 5) {
+      val record: Record = mock(classOf[RecordAdapter])
+      when(record.getSequenceNumber).thenReturn(i.toString)
+      recordProcessor.processRecords(recordsInput.withRecords(List(record).asJava))
+      recordProcessor2.processRecords(recordsInput.withRecords(List(record).asJava))
+    }
 
     // Should process all 10 messages
-    res should have size 10
-  }
+    eventually(output.result().size shouldBe (10))
 
-  it should "delay the end of shard checkpoint until all messages are drained" in new WorkerContext
-    with TestData {
-    val nRecords = 5
-    val res = (
-      stream
-        .take(nRecords)
-        //emulate message processing latency to reproduce the situation when End of Shard arrives BEFORE
-        // all in-flight records are done
-        .parEvalMap(3)(msg => IO.sleep(200 millis) >> IO.pure(msg))
-        .through(
-          checkpointRecords[IO](
-            KinesisCheckpointSettings(maxBatchSize = Int.MaxValue, maxBatchWait = 500.millis)
-              .getOrElse(throw new Error())
-          )
-        )
-        .compile
-        .toList,
-      IO.delay {
-        semaphore.acquire()
-        recordProcessor.initialize(initializationInput)
-        (1 to nRecords).foreach { i =>
+    // Each shard is assigned its own worker thread, so we get messages
+    // from each thread simultaneously.
+    def simulateWorkerThread(rp: IRecordProcessor): Future[Unit] =
+      Future {
+        for (i <- 1 to 25) { // 10 is a buffer size
           val record: Record = mock(classOf[RecordAdapter])
           when(record.getSequenceNumber).thenReturn(i.toString)
-          val ri = new ProcessRecordsInput()
-            .withCheckpointer(checkpointer)
-            .withMillisBehindLatest(1L)
-            .withRecords(List(record).asJava)
-          recordProcessor.processRecords(ri)
+          rp.processRecords(recordsInput.withRecords(List(record).asJava))
         }
-        //Immediately publish end of shard event
-        recordProcessor.shutdown(
-          new ShutdownInput()
-            .withCheckpointer(checkpointer)
-            .withShutdownReason(ShutdownReason.TERMINATE)
-        )
       }
-    ).parMapN { case (msgs, _) => msgs }.unsafeRunSync()
 
-    res should have size 5
+    simulateWorkerThread(recordProcessor)
+    simulateWorkerThread(recordProcessor2)
+
+    // Should have processed all 60 messages
+    eventually(output.result().size shouldBe (60))
+    semaphore.release()
   }
 
   "KinesisWorker checkpoint pipe" should "checkpoint batch of records with same sequence number" in new KinesisWorkerCheckpointContext {
-    val inFlightRecordsPhaser = new Phaser(1)
     val input: immutable.IndexedSeq[CommittableRecord] = (1 to 3) map { i =>
       val record = mock(classOf[RecordAdapter])
       when(record.getSequenceNumber).thenReturn(i.toString)
@@ -212,8 +153,7 @@ class DynamoDBConsumerSpec
         1L,
         record,
         recordProcessor,
-        checkpointerShard1,
-        inFlightRecordsPhaser
+        checkpointerShard1
       )
     }
 
@@ -228,7 +168,6 @@ class DynamoDBConsumerSpec
     val checkpointerShard2: IRecordProcessorCheckpointer =
       mock(classOf[IRecordProcessorCheckpointer])
 
-    val inFlightRecordsPhaser = new Phaser(1)
     val input: immutable.IndexedSeq[CommittableRecord] = (1 to 6) map { i =>
       if (i <= 3) {
         val record = mock(classOf[RecordAdapter])
@@ -239,8 +178,7 @@ class DynamoDBConsumerSpec
           i,
           record,
           recordProcessor,
-          checkpointerShard1,
-          inFlightRecordsPhaser
+          checkpointerShard1
         )
       } else {
         val record = mock(classOf[RecordAdapter])
@@ -251,8 +189,7 @@ class DynamoDBConsumerSpec
           i,
           record,
           recordProcessor,
-          checkpointerShard2,
-          inFlightRecordsPhaser
+          checkpointerShard2
         )
       }
     }
@@ -282,8 +219,7 @@ class DynamoDBConsumerSpec
         1L,
         record,
         recordProcessor,
-        checkpointerShard1,
-        recordProcessor.inFlightRecordsPhaser
+        checkpointerShard1
       )
     }
 
@@ -292,10 +228,35 @@ class DynamoDBConsumerSpec
     verify(checkpointerShard1, times(0)).checkpoint()
   }
 
+  it should "checkpoint one last time if the IRecordProcessor has been shutdown with TERMINATE reason" in new KinesisWorkerCheckpointContext {
+    recordProcessor.shutdown(
+      new ShutdownInput()
+        .withShutdownReason(ShutdownReason.TERMINATE)
+        .withCheckpointer(checkpointerShard1)
+    )
+
+    val input: immutable.IndexedSeq[CommittableRecord] = (1 to 3) map { i =>
+      val record = mock(classOf[RecordAdapter])
+      when(record.getSequenceNumber).thenReturn("1")
+      new CommittableRecord(
+        "shard-1",
+        mock(classOf[ExtendedSequenceNumber]),
+        1L,
+        record,
+        recordProcessor,
+        checkpointerShard1
+      )
+    }
+
+    startStream(input)
+
+    verify(checkpointerShard1, times(1)).checkpoint()
+  }
+
   it should "fail with Exception if checkpoint action fails" in new KinesisWorkerCheckpointContext {
     val checkpointer: IRecordProcessorCheckpointer = mock(classOf[IRecordProcessorCheckpointer])
-    val inFlightRecordsPhaser                      = new Phaser(1)
-    val record: RecordAdapter                      = mock(classOf[RecordAdapter])
+
+    val record: RecordAdapter = mock(classOf[RecordAdapter])
     when(record.getSequenceNumber).thenReturn("1")
 
     val input = new CommittableRecord(
@@ -304,8 +265,7 @@ class DynamoDBConsumerSpec
       1L,
       record,
       recordProcessor,
-      checkpointer,
-      inFlightRecordsPhaser
+      checkpointer
     )
 
     val failure = new RuntimeException("you have no power here")
@@ -321,7 +281,10 @@ class DynamoDBConsumerSpec
     eventually(verify(checkpointer).checkpoint(input.record))
   }
 
-  abstract private class WorkerContext(errorStream: Boolean = false) {
+  abstract private class WorkerContext(
+    backpressureTimeout: FiniteDuration = 1.minute,
+    errorStream: Boolean = false
+  ) {
 
     val semaphore = new Semaphore(1)
     semaphore.acquire()
@@ -329,9 +292,13 @@ class DynamoDBConsumerSpec
 
     protected val mockWorker: Worker = mock(classOf[Worker])
 
-    when(mockWorker.run()).thenAnswer((invocation: InvocationOnMock) => ())
+    when(mockWorker.run()).thenAnswer(new Answer[Unit] {
+      override def answer(invocation: InvocationOnMock): Unit = ()
+    })
 
-    when(mockWorker.shutdown()).thenAnswer((invocation: InvocationOnMock) => ())
+    when(mockWorker.shutdown()).thenAnswer(new Answer[Unit] {
+      override def answer(invocation: InvocationOnMock): Unit = ()
+    })
 
     var recordProcessorFactory: IRecordProcessorFactory = _
     var recordProcessor: IRecordProcessor               = _
@@ -340,7 +307,6 @@ class DynamoDBConsumerSpec
     val builder: IRecordProcessorFactory => Worker = { x: IRecordProcessorFactory =>
       recordProcessorFactory = x
       recordProcessor = x.createProcessor()
-      semaphore.release()
       recordProcessor2 = x.createProcessor()
       semaphore.release()
       mockWorker
@@ -350,34 +316,25 @@ class DynamoDBConsumerSpec
       KinesisStreamSettings(bufferSize = 10, 10.seconds)
         .getOrElse(throw new RuntimeException("cannot create Kinesis Settings"))
 
-    val stream: Stream[IO, CommittableRecord] =
+    val stream: Unit =
       readFromDynamoDBStream[IO](builder, config)
+        .through(_.evalMap(i => IO.delay(output += i)))
         .map(i => if (errorStream) throw new Exception("boom") else i)
+        .compile
+        .toVector
+        .unsafeRunAsync(_ => ())
   }
 
   private trait TestData {
-    @volatile var endOfShardSeen = false
-
     protected val checkpointer: IRecordProcessorCheckpointer = mock(
       classOf[IRecordProcessorCheckpointer]
     )
-
-    doAnswer { _ =>
-      endOfShardSeen = true
-      null
-    }.when(checkpointer).checkpoint()
-
-    doAnswer { _ =>
-      if (endOfShardSeen) throw new Exception("Checkpointing after End Of Shard")
-      null
-    }.when(checkpointer).checkpoint(any[Record])
 
     val initializationInput: InitializationInput = {
       new InitializationInput()
         .withShardId("shardId")
         .withExtendedSequenceNumber(ExtendedSequenceNumber.AT_TIMESTAMP)
     }
-
     val record: Record =
       new RecordAdapter(
         new model.Record()
@@ -393,7 +350,7 @@ class DynamoDBConsumerSpec
   }
 
   private trait KinesisWorkerCheckpointContext {
-    val recordProcessor = new RecordProcessor(_ => ())
+    val recordProcessor = new RecordProcessor(_ => (), 1.seconds)
     val checkpointerShard1: IRecordProcessorCheckpointer = mock(
       classOf[IRecordProcessorCheckpointer]
     )
