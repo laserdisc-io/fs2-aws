@@ -15,6 +15,8 @@ lazy val root = (project in file("."))
   .aggregate(
     `fs2-aws`,
     `fs2-aws-s3`,
+    `fs2-aws-sqs`,
+    `fs2-aws-sqs-testkit`,
     `fs2-aws-testkit`,
     `fs2-aws-dynamodb`,
     `fs2-aws-core`,
