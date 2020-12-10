@@ -8,5 +8,6 @@ project/plugins/project/
 .history
 .cache
 .lib/
+.bsp/
 local.*
 .DS_Store
