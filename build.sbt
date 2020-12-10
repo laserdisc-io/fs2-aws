@@ -203,7 +203,16 @@ def commonOptions(scalaVersion: String) =
   }
 
 lazy val commonSettings = Seq(
-  organization       := "io.laserdisc",
+  organization := "io.laserdisc",
+  developers := List(
+    Developer(
+      "semenodm",
+      "Dmytro Semenov",
+      "sdo.semenov@gmail.com",
+      url("https://github.com/semenodm")
+    )
+  ),
+  licenses           ++= Seq(("MIT", url("http://opensource.org/licenses/MIT"))),
   crossScalaVersions := supportedScalaVersions,
   scalaVersion       := scala213,
   fork               in Test := true,
