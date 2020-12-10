@@ -1,0 +1,24 @@
+name: Build
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK
+        uses: olafurpg/setup-scala@v10
+      - name: Cache SBT
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/coursier/v1
+            ~/.sbt
+          key: sbt-${{ hashFiles('**/build.sbt') }}
+      - name: "Starting up MinIO 🐳"
+        run: docker-compose up -d
+      - name: Run tests
+        run: csbt +clean +test
+      - name: "Shutting down MinIO 🐳"
+        run: docker-compose down
