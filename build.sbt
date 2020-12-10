@@ -143,7 +143,7 @@ lazy val `fs2-aws` = (project in file("fs2-aws"))
 
 lazy val `fs2-aws-sqs` = (project in file("fs2-aws-sqs"))
   .settings(
-    name := "fs2-aws",
+    name := "fs2-aws-sqs",
     libraryDependencies ++= Seq(
       "co.fs2"        %% "fs2-core"                     % V.Fs2,
       "co.fs2"        %% "fs2-io"                       % V.Fs2,
@@ -180,7 +180,7 @@ lazy val `fs2-aws-testkit` = (project in file("fs2-aws-testkit"))
 lazy val `fs2-aws-sqs-testkit` = (project in file("fs2-aws-sqs-testkit"))
   .dependsOn(`fs2-aws-sqs`)
   .settings(
-    name := "fs2-aws-testkit",
+    name := "fs2-aws-sqs-testkit",
     libraryDependencies ++= Seq(
       "org.scalatest" %% "scalatest"               % V.ScalaTest,
       "org.mockito"   % "mockito-core"             % V.MockitoCore,
