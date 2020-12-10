@@ -213,6 +213,7 @@ lazy val commonSettings = Seq(
     )
   ),
   licenses           ++= Seq(("MIT", url("http://opensource.org/licenses/MIT"))),
+  homepage           := Some(url("https://github.com/laserdisc-io/fs2-aws")),
   crossScalaVersions := supportedScalaVersions,
   scalaVersion       := scala213,
   fork               in Test := true,
