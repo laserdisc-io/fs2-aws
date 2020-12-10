@@ -1,5 +1,6 @@
 # fs2-aws
-[![Build Status](https://travis-ci.org/laserdisc-io/fs2-aws.svg?branch=master)](https://travis-ci.org/laserdisc-io/fs2-aws)
+![Build](https://github.com/laserdisc-io/fs2-aws/workflows/Build/badge.svg)
+![Release](https://github.com/laserdisc-io/fs2-aws/workflows/Release/badge.svg)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.laserdisc/fs2-aws_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.laserdisc/fs2-aws_2.12)
 [![Coverage Status](https://coveralls.io/repos/github/laserdisc-io/fs2-aws/badge.svg?branch=master)](https://coveralls.io/github/laserdisc-io/fs2-aws?branch=master)
 
