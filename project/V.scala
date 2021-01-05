@@ -8,5 +8,5 @@ object V {
   val Refined          = "0.9.19"
   val ScalaTest        = "3.2.3"
   val MockitoScalaTest = "1.15.1"
-  val MockitoCore      = "3.6.28"
+  val MockitoCore      = "3.7.0"
 }
