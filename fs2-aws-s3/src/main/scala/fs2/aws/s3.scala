@@ -102,7 +102,7 @@ object s3 {
           }
 
         /**
-          * Uploads a file in multiple parts of the specifed @partSize per request. Suitable for big files.
+          * Uploads a file in multiple parts of the specified @partSize per request. Suitable for big files.
           *
           * It does so in constant memory. So at a given time, only the number of bytes indicated by @partSize
           * will be loaded in memory.
@@ -116,7 +116,7 @@ object s3 {
           key: FileKey,
           partSize: PartSizeMB
         ): Pipe[F, Byte, ETag] = {
-          val chunkSizeBytes = partSize * 1000000
+          val chunkSizeBytes = partSize * 1048576
 
           def initiateMultipartUpload: F[UploadId] =
             blocker
@@ -167,6 +167,18 @@ object s3 {
                 .map(_.eTag())
             }
 
+          def cancelUpload(uploadId: UploadId): F[Unit] =
+            Sync[F].delay {
+              client.abortMultipartUpload(
+                AbortMultipartUploadRequest
+                  .builder()
+                  .bucket(bucket.value)
+                  .key(key.value)
+                  .uploadId(uploadId)
+                  .build()
+              )
+            }.void
+
           in => {
             Stream
               .eval(initiateMultipartUpload)
@@ -176,6 +188,9 @@ object s3 {
                   .through(uploadPart(uploadId))
                   .fold[List[(PartETag, PartId)]](List.empty)(_ :+ _)
                   .through(completeUpload(uploadId))
+                  .handleErrorWith(ex =>
+                    Stream.eval(cancelUpload(uploadId) >> Sync[F].raiseError[ETag](ex))
+                  )
               }
           }
         }
