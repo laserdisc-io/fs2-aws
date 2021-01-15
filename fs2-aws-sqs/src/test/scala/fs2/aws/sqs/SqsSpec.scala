@@ -2,24 +2,19 @@ package sqs
 
 import cats.effect.{ ContextShift, IO, Timer }
 import fs2.aws.sqs.SQS
-import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.{ mock, when }
-import org.scalatest.flatspec.AsyncFlatSpec
+import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import software.amazon.awssdk.auth.credentials.{ AwsBasicCredentials, StaticCredentialsProvider }
+import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
-import software.amazon.awssdk.services.sqs.model.{
-  Message,
-  ReceiveMessageRequest,
-  ReceiveMessageResponse,
-  SendMessageRequest,
-  SendMessageResponse
-}
+import software.amazon.awssdk.services.sqs.model._
 
-import java.util.concurrent.CompletableFuture
+import java.net.URI
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.DurationInt
 
-class SqsSpec extends AsyncFlatSpec with Matchers {
+class SqsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
   implicit val ec: ExecutionContext             = ExecutionContext.global
   implicit val ioContextShift: ContextShift[IO] = IO.contextShift(ec)
   implicit val ioTimer: Timer[IO]               = IO.timer(ec)
@@ -28,83 +23,82 @@ class SqsSpec extends AsyncFlatSpec with Matchers {
     if ("fail" == text) Left(new Exception("failure"))
     else Right(text.toInt)
   }
-  it should "stream messages" in {
-    val sqs = mock(classOf[SqsAsyncClient])
-    when(sqs.receiveMessage(any[ReceiveMessageRequest]))
-      .thenReturn(
-        CompletableFuture
-          .completedFuture(
-            ReceiveMessageResponse.builder().messages(Message.builder().body("1").build()).build()
-          )
+  val sqsClient: SqsAsyncClient = mkSQSClient(4566)
+  var queueUrl: String          = _
+
+  override def beforeAll(): Unit =
+    queueUrl = SQS
+      .eff[IO, CreateQueueResponse](
+        sqsClient.createQueue(CreateQueueRequest.builder().queueName("names").build())
       )
-      .thenReturn(
-        CompletableFuture
-          .completedFuture(
-            ReceiveMessageResponse.builder().messages(Message.builder().body("2").build()).build()
-          )
-      )
-      .thenReturn(
-        CompletableFuture
-          .completedFuture(
-            ReceiveMessageResponse
-              .builder()
-              .messages(Message.builder().body("fail").build())
-              .build()
-          )
-      )
-      .thenReturn(
-        CompletableFuture
-          .completedFuture(
-            ReceiveMessageResponse.builder().messages(Message.builder().body("4").build()).build()
-          )
-      )
-      .thenReturn(
-        CompletableFuture
-          .completedFuture(
-            ReceiveMessageResponse
-              .builder()
-              .messages(Message.builder().body("5").build())
-              .build()
-          )
-      )
-    val r = (for {
-      sqs <- fs2.Stream.eval(
-              SQS.create[IO](SqsConfig(queueUrl = "dummy", pollRate = 10 milliseconds), sqs)
-            )
-      sqsS <- sqs.sqsStream
-    } yield sqsS)
-      .take(5)
-      .compile
-      .toList
+      .map(_.queueUrl())
       .unsafeRunSync()
 
-    r should be(
-      List(
-        Message.builder().body("1").build(),
-        Message.builder().body("2").build(),
-        Message.builder().body("fail").build(),
-        Message.builder().body("4").build(),
-        Message.builder().body("5").build()
+  // Delete the temp file
+  override def afterAll(): Unit =
+    SQS
+      .eff[IO, DeleteQueueResponse](
+        sqsClient.deleteQueue(DeleteQueueRequest.builder().queueUrl(queueUrl).build())
       )
-    )
+      .unsafeRunSync()
+
+  "SQS" should {
+    "publish messages" in {
+      (for {
+        sqs <- fs2.Stream.eval(
+                SQS
+                  .create[IO](SqsConfig(queueUrl = queueUrl, pollRate = 10 milliseconds), sqsClient)
+              )
+        sqsS <- fs2
+                 .Stream("Barry", "Dmytro", "Ryan", "John", "Vlad")
+                 .covary[IO]
+                 .through(sqs.sendMessagePipe)
+      } yield sqsS).compile.drain.unsafeRunSync()
+
+    }
+
+    "stream messages" in {
+      val r = (for {
+        sqs <- fs2.Stream.eval(
+                SQS
+                  .create[IO](
+                    SqsConfig(
+                      queueUrl = queueUrl,
+                      pollRate = 10 milliseconds,
+                      fetchMessageCount = 1
+                    ),
+                    sqsClient
+                  )
+              )
+        sqsS <- sqs.sqsStream.map(_.body())
+      } yield sqsS)
+        .take(5)
+        .compile
+        .toList
+        .unsafeRunSync()
+
+      r should be(
+        List(
+          "Barry",
+          "Dmytro",
+          "Ryan",
+          "John",
+          "Vlad"
+        )
+      )
+    }
+
   }
-  "messages" should "be sent to SQS endpoint" in {
-    val msgs = List("1", "2", "3", "4", "5")
 
-    val sqs = mock(classOf[SqsAsyncClient])
-    when(sqs.sendMessage(any[SendMessageRequest])).thenReturn(
-      CompletableFuture.completedFuture(SendMessageResponse.builder().messageId("123").build())
-    )
+  def mkSQSClient(sqsPort: Int) = {
+    val credentials =
+      AwsBasicCredentials.create("accesskey", "secretkey")
 
-    val r = for {
-      sqs <- fs2.Stream.eval(
-              SQS.create[IO](SqsConfig(queueUrl = "dummy", pollRate = 10 milliseconds), sqs)
-            )
-      r <- fs2.Stream.emits(msgs).through(sqs.sendMessagePipe)
-    } yield r
-
-    val res = r.compile.toList.unsafeRunSync()
-
-    res.length should be(5)
+    SqsAsyncClient
+      .builder()
+      .credentialsProvider(StaticCredentialsProvider.create(credentials))
+      .endpointOverride(URI.create(s"http://localhost:$sqsPort"))
+      .region(Region.US_EAST_1)
+      .build()
   }
 }
