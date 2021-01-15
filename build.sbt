@@ -107,7 +107,7 @@ lazy val `fs2-aws-s3` = (project in file("fs2-aws-s3"))
       "co.fs2"                 %% "fs2-core" % V.Fs2,
       "co.fs2"                 %% "fs2-io"   % V.Fs2,
       "eu.timepit"             %% "refined"  % V.Refined,
-      "software.amazon.awssdk" % "s3"        % V.AwsSdkS3,
+      "software.amazon.awssdk" % "s3"        % V.AwsSdk,
       "org.scalameta"          %% "munit"    % V.Munit % Test
     ),
     testFrameworks        += new TestFramework("munit.Framework"),
@@ -124,8 +124,6 @@ lazy val `fs2-aws` = (project in file("fs2-aws"))
     libraryDependencies ++= Seq(
       "co.fs2"                  %% "fs2-core"                % V.Fs2,
       "co.fs2"                  %% "fs2-io"                  % V.Fs2,
-      "com.amazonaws"           % "aws-java-sdk-kinesis"     % V.AwsSdk,
-      "com.amazonaws"           % "aws-java-sdk-s3"          % V.AwsSdk,
       "com.amazonaws"           % "amazon-kinesis-producer"  % "0.14.3",
       "software.amazon.kinesis" % "amazon-kinesis-client"    % "2.3.2",
       "org.mockito"             % "mockito-core"             % V.MockitoCore % Test,
@@ -146,7 +144,7 @@ lazy val `fs2-aws-sqs` = (project in file("fs2-aws-sqs"))
     libraryDependencies ++= Seq(
       "co.fs2"                 %% "fs2-core"                % V.Fs2,
       "co.fs2"                 %% "fs2-io"                  % V.Fs2,
-      "software.amazon.awssdk" % "sqs"                      % V.AwsSdkS3,
+      "software.amazon.awssdk" % "sqs"                      % V.AwsSdk,
       "org.mockito"            % "mockito-core"             % V.MockitoCore % Test,
       "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
