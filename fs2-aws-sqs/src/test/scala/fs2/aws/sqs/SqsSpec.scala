@@ -1,6 +1,7 @@
-package fs2.aws.sqs
+package sqs
 
 import cats.effect.{ ContextShift, IO, Timer }
+import fs2.aws.sqs.SQS
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{ mock, when }
 import org.scalatest.flatspec.AsyncFlatSpec
@@ -66,10 +67,13 @@ class SqsSpec extends AsyncFlatSpec with Matchers {
               .build()
           )
       )
-    val r = sqsStream[IO](
-      SqsConfig(queueUrl = "dummy", pollRate = 10 milliseconds),
-      sqs
-    ).take(5)
+    val r = (for {
+      sqs <- fs2.Stream.eval(
+              SQS.create[IO](SqsConfig(queueUrl = "dummy", pollRate = 10 milliseconds), sqs)
+            )
+      sqsS <- sqs.sqsStream
+    } yield sqsS)
+      .take(5)
       .compile
       .toList
       .unsafeRunSync()
@@ -91,9 +95,15 @@ class SqsSpec extends AsyncFlatSpec with Matchers {
     when(sqs.sendMessage(any[SendMessageRequest])).thenReturn(
       CompletableFuture.completedFuture(SendMessageResponse.builder().messageId("123").build())
     )
-    val r = sendToSqs[IO]("", sqsClient = sqs)
 
-    val res = r(fs2.Stream.emits(msgs)).compile.toList.unsafeRunSync()
+    val r = for {
+      sqs <- fs2.Stream.eval(
+              SQS.create[IO](SqsConfig(queueUrl = "dummy", pollRate = 10 milliseconds), sqs)
+            )
+      r <- fs2.Stream.emits(msgs).through(sqs.sendMessagePipe)
+    } yield r
+
+    val res = r.compile.toList.unsafeRunSync()
 
     res.length should be(5)
   }
