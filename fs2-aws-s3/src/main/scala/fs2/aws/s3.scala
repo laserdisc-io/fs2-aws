@@ -168,7 +168,7 @@ object s3 {
             }
 
           def cancelUpload(uploadId: UploadId): F[Unit] =
-            Sync[F].delay {
+            blocker.delay {
               client.abortMultipartUpload(
                 AbortMultipartUploadRequest
                   .builder()
