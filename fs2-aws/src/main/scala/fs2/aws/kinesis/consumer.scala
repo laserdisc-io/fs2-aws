@@ -238,7 +238,7 @@ object consumer {
     ): Pipe[F, CommittableRecord, KinesisClientRecord] =
       _.groupWithin(checkpointSettings.maxBatchSize, checkpointSettings.maxBatchWait)
         .collect { case chunk if chunk.size > 0 => chunk.toList.max }
-        .evalMap(cr => cr.checkpoint.as(cr.record))
+        .flatMap(cr => fs2.Stream.eval_(cr.checkpoint.as(cr.record)))
 
     def bypass: Pipe[F, CommittableRecord, KinesisClientRecord] = _.map(r => r.record)
 
