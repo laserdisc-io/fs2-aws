@@ -19,11 +19,11 @@ jobs:
       - name: "Starting up MinIO 🐳"
         run: docker-compose up -d
       - name: Run tests
-        run: csbt "project fs2-aws-benchmarks" "jmh:run -i 3 -wi 3 -f1 -t1 -rf json -rff kinesis_bench.json"
+        run: csbt +clean +test
       - name: "Shutting down MinIO 🐳"
         run: docker-compose down
       - name: Run Benchmarks
-        run:
+        run: csbt "project fs2-aws-benchmarks" "jmh:run -i 3 -wi 3 -f1 -t1 -rf json -rff kinesis_bench.json"
       - name: Upload Benchmark Results
         uses: actions/upload-artifact@v2
         with:
