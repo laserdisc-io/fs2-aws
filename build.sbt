@@ -15,6 +15,7 @@ lazy val root = (project in file("."))
   .aggregate(
     `fs2-aws`,
     `fs2-aws-s3`,
+    `fs2-aws-sqs`,
     `fs2-aws-testkit`,
     `fs2-aws-dynamodb`,
     `fs2-aws-core`,
@@ -107,7 +108,7 @@ lazy val `fs2-aws-s3` = (project in file("fs2-aws-s3"))
       "co.fs2"                 %% "fs2-core" % V.Fs2,
       "co.fs2"                 %% "fs2-io"   % V.Fs2,
       "eu.timepit"             %% "refined"  % V.Refined,
-      "software.amazon.awssdk" % "s3"        % V.AwsSdkS3,
+      "software.amazon.awssdk" % "s3"        % V.AwsSdk,
       "org.scalameta"          %% "munit"    % V.Munit % Test
     ),
     testFrameworks        += new TestFramework("munit.Framework"),
@@ -124,12 +125,10 @@ lazy val `fs2-aws` = (project in file("fs2-aws"))
     libraryDependencies ++= Seq(
       "co.fs2"                  %% "fs2-core"                % V.Fs2,
       "co.fs2"                  %% "fs2-io"                  % V.Fs2,
-      "com.amazonaws"           % "aws-java-sdk-kinesis"     % V.AwsSdk,
-      "com.amazonaws"           % "aws-java-sdk-s3"          % V.AwsSdk,
-      "com.amazonaws"           % "amazon-kinesis-producer"  % "0.14.1",
+      "com.amazonaws"           % "amazon-kinesis-producer"  % "0.14.3",
       "software.amazon.kinesis" % "amazon-kinesis-client"    % "2.3.2",
       "org.mockito"             % "mockito-core"             % V.MockitoCore % Test,
-      "software.amazon.awssdk"  % "sts"                      % "2.15.35",
+      "software.amazon.awssdk"  % "sts"                      % "2.15.62",
       "org.scalatest"           %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"             %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
       "eu.timepit"              %% "refined"                 % V.Refined
@@ -142,16 +141,15 @@ lazy val `fs2-aws` = (project in file("fs2-aws"))
 
 lazy val `fs2-aws-sqs` = (project in file("fs2-aws-sqs"))
   .settings(
-    name := "fs2-aws",
+    name := "fs2-aws-sqs",
     libraryDependencies ++= Seq(
-      "co.fs2"        %% "fs2-core"                     % V.Fs2,
-      "co.fs2"        %% "fs2-io"                       % V.Fs2,
-      "com.amazonaws" % "aws-java-sdk-sqs"              % V.AwsSdk excludeAll ("commons-logging", "commons-logging"),
-      "com.amazonaws" % "amazon-sqs-java-messaging-lib" % "1.0.8" excludeAll ("commons-logging", "commons-logging"),
-      "org.mockito"   % "mockito-core"                  % V.MockitoCore % Test,
-      "org.scalatest" %% "scalatest"                    % V.ScalaTest % Test,
-      "org.mockito"   %% "mockito-scala-scalatest"      % V.MockitoScalaTest % Test,
-      "eu.timepit"    %% "refined"                      % V.Refined
+      "co.fs2"                 %% "fs2-core"                % V.Fs2,
+      "co.fs2"                 %% "fs2-io"                  % V.Fs2,
+      "software.amazon.awssdk" % "sqs"                      % V.AwsSdk,
+      "org.mockito"            % "mockito-core"             % V.MockitoCore % Test,
+      "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
+      "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
+      "eu.timepit"             %% "refined"                 % V.Refined
     ),
     coverageMinimum       := 55.80,
     coverageFailOnMinimum := true
@@ -190,19 +188,6 @@ lazy val `fs2-aws-benchmarks` = (project in file("fs2-aws-benchmarks"))
   )
   .enablePlugins(JmhPlugin)
 
-lazy val `fs2-aws-sqs-testkit` = (project in file("fs2-aws-sqs-testkit"))
-  .dependsOn(`fs2-aws-sqs`)
-  .settings(
-    name := "fs2-aws-testkit",
-    libraryDependencies ++= Seq(
-      "org.scalatest" %% "scalatest"               % V.ScalaTest,
-      "org.mockito"   % "mockito-core"             % V.MockitoCore,
-      "org.mockito"   %% "mockito-scala-scalatest" % V.MockitoScalaTest
-    )
-  )
-  .settings(commonSettings)
-  .settings(scalacOptions ++= commonOptions(scalaVersion.value))
-
 addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
 addCommandAlias("format", ";scalafmt;test:scalafmt;scalafmtSbt")
 addCommandAlias("checkFormat", ";scalafmtCheck;test:scalafmtCheck;scalafmtSbtCheck")
@@ -216,7 +201,17 @@ def commonOptions(scalaVersion: String) =
   }
 
 lazy val commonSettings = Seq(
-  organization       := "io.laserdisc",
+  organization := "io.laserdisc",
+  developers := List(
+    Developer(
+      "semenodm",
+      "Dmytro Semenov",
+      "sdo.semenov@gmail.com",
+      url("https://github.com/semenodm")
+    )
+  ),
+  licenses           ++= Seq(("MIT", url("http://opensource.org/licenses/MIT"))),
+  homepage           := Some(url("https://github.com/laserdisc-io/fs2-aws")),
   crossScalaVersions := supportedScalaVersions,
   scalaVersion       := scala213,
   fork               in Test := true,
@@ -235,41 +230,7 @@ lazy val commonSettings = Seq(
   ),
   addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1"),
   addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.10.3"),
-  libraryDependencies += "org.scala-lang.modules" %% "scala-collection-compat" % "2.3.1"
+  libraryDependencies += "org.scala-lang.modules" %% "scala-collection-compat" % "2.3.2"
 )
 
 addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
-
-lazy val publishSettings = Seq(
-  )
-
-inThisBuild(
-  List(
-    licenses := Seq(
-      "MIT" -> url("https://raw.githubusercontent.com/laserdisc-io/fs2-aws/master/LICENSE")
-    ),
-    homepage := Some(url("https://github.com/laserdisc-io/fs2-aws/")),
-    developers := List(
-      Developer(
-        "dmateusp",
-        "Daniel Mateus Pires",
-        "dmateusp@gmail.com",
-        url("https://github.com/dmateusp")
-      ),
-      Developer("semenodm", "Dmytro Semenov", "", url("https://github.com/semenodm"))
-    ),
-    scmInfo := Some(
-      ScmInfo(
-        url("https://github.com/laserdisc-io/fs2-aws/tree/master"),
-        "scm:git:git@github.com:laserdisc-io/fs2-aws.git",
-        "scm:git:git@github.com:laserdisc-io/fs2-aws.git"
-      )
-    ),
-    publishMavenStyle      := true,
-    Test / publishArtifact := true,
-    pomIncludeRepository   := (_ => false),
-    pgpPublicRing          := file(".travis/local.pubring.asc"),
-    pgpSecretRing          := file(".travis/local.secring.asc"),
-    releaseEarlyWith       := SonatypePublisher
-  )
-)
