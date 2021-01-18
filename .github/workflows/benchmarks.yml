@@ -3,7 +3,8 @@ name: Benchmarks
 on: [push]
 
 jobs:
-  build:
+  benchmarks:
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
