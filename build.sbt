@@ -20,7 +20,8 @@ lazy val root = (project in file("."))
     `fs2-aws-dynamodb`,
     `fs2-aws-core`,
     `fs2-aws-examples`,
-    `fs2-aws-ciris`
+    `fs2-aws-ciris`,
+    `fs2-aws-benchmarks`
   )
   .settings(
     publishArtifact    := false,
@@ -126,11 +127,11 @@ lazy val `fs2-aws` = (project in file("fs2-aws"))
       "co.fs2"                  %% "fs2-io"                  % V.Fs2,
       "com.amazonaws"           % "amazon-kinesis-producer"  % "0.14.3",
       "software.amazon.kinesis" % "amazon-kinesis-client"    % "2.3.2",
-      "org.mockito"             % "mockito-core"             % V.MockitoCore % Test,
-      "software.amazon.awssdk"  % "sts"                      % "2.15.62",
+      "software.amazon.awssdk"  % "sts"                      % V.AwsSdk,
+      "eu.timepit"              %% "refined"                 % V.Refined,
       "org.scalatest"           %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"             %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
-      "eu.timepit"              %% "refined"                 % V.Refined
+      "org.mockito"             % "mockito-core"             % V.MockitoCore % Test
     ),
     coverageMinimum       := 40,
     coverageFailOnMinimum := true
@@ -172,6 +173,20 @@ lazy val `fs2-aws-testkit` = (project in file("fs2-aws-testkit"))
   )
   .settings(commonSettings)
   .settings(scalacOptions ++= commonOptions(scalaVersion.value))
+
+lazy val `fs2-aws-benchmarks` = (project in file("fs2-aws-benchmarks"))
+  .dependsOn(`fs2-aws`)
+  .dependsOn(`fs2-aws-testkit`)
+  .settings(
+    name := "fs2-aws-benchmarks",
+    libraryDependencies ++= Seq(
+      "ch.qos.logback" % "logback-classic" % "1.2.3",
+      "ch.qos.logback" % "logback-core"    % "1.2.3",
+      "org.slf4j"      % "jcl-over-slf4j"  % "1.7.30",
+      "org.slf4j"      % "jul-to-slf4j"    % "1.7.30"
+    )
+  )
+  .enablePlugins(JmhPlugin)
 
 addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
 addCommandAlias("format", ";scalafmt;test:scalafmt;scalafmtSbt")
