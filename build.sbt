@@ -18,6 +18,7 @@ lazy val root = (project in file("."))
     `fs2-aws-sqs`,
     `fs2-aws-testkit`,
     `fs2-aws-dynamodb`,
+    `fs2-aws-sns`,
     `fs2-aws-core`,
     `fs2-aws-examples`,
     `fs2-aws-ciris`,
@@ -146,6 +147,25 @@ lazy val `fs2-aws-sqs` = (project in file("fs2-aws-sqs"))
       "co.fs2"                 %% "fs2-core"                % V.Fs2,
       "co.fs2"                 %% "fs2-io"                  % V.Fs2,
       "software.amazon.awssdk" % "sqs"                      % V.AwsSdk,
+      "org.mockito"            % "mockito-core"             % V.MockitoCore % Test,
+      "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
+      "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
+      "eu.timepit"             %% "refined"                 % V.Refined
+    ),
+    coverageMinimum       := 55.80,
+    coverageFailOnMinimum := true
+  )
+  .settings(commonSettings)
+  .settings(scalacOptions ++= commonOptions(scalaVersion.value))
+
+lazy val `fs2-aws-sns` = (project in file("fs2-aws-sns"))
+  .dependsOn(`fs2-aws`)
+  .settings(
+    name := "fs2-aws-sns",
+    libraryDependencies ++= Seq(
+      "co.fs2"                 %% "fs2-core"                % V.Fs2,
+      "co.fs2"                 %% "fs2-io"                  % V.Fs2,
+      "software.amazon.awssdk" % "sns"                      % V.AwsSdk,
       "org.mockito"            % "mockito-core"             % V.MockitoCore % Test,
       "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
