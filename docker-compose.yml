@@ -25,5 +25,5 @@ services:
     ports:
       - 4566:4566
     environment:
-      - "SERVICES=sqs"
-      - "DEFAULT_REGION=us-east-1"
+      - SERVICES=sqs,sns
+      - DEFAULT_REGION=us-east-1

@@ -169,6 +169,7 @@ lazy val `fs2-aws-sns` = (project in file("fs2-aws-sns"))
       "org.mockito"            % "mockito-core"             % V.MockitoCore % Test,
       "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
+      "software.amazon.awssdk" % "sqs"                      % V.AwsSdk % Test,
       "eu.timepit"             %% "refined"                 % V.Refined
     ),
     coverageMinimum       := 55.80,
