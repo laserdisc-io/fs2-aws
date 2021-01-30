@@ -1,11 +1,11 @@
 package fs2.aws.sns
 
-import cats.effect.{ContextShift, IO, Timer}
+import cats.effect.{ ContextShift, IO, Timer }
 import fs2.aws.sns.sns.SNS
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
+import software.amazon.awssdk.auth.credentials.{ AwsBasicCredentials, StaticCredentialsProvider }
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.sns.SnsAsyncClient
 import software.amazon.awssdk.services.sns.model._
@@ -14,6 +14,7 @@ import software.amazon.awssdk.services.sqs.model._
 
 import java.net.URI
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.DurationInt
 import scala.jdk.CollectionConverters.CollectionHasAsScala
 import scala.util.matching.Regex
 
@@ -31,35 +32,35 @@ class SnsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
   var queueUrl: String          = _
   val pattern: Regex            = new Regex("\"Message\": \"[0-9]\"")
 
-  override def beforeAll(): Unit = {
-    topicArn = CompletableFutureLift
-      .eff[IO, CreateTopicResponse](
-        snsClient.createTopic(CreateTopicRequest.builder().name("topic").build())
-      )
-      .map(_.topicArn())
-      .unsafeRunSync()
+  override def beforeAll(): Unit =
+    (for {
+      topic <- CompletableFutureLift
+                .eff[IO, CreateTopicResponse](
+                  snsClient.createTopic(CreateTopicRequest.builder().name("topic").build())
+                )
+                .map(_.topicArn())
 
-    queueUrl = CompletableFutureLift
-      .eff[IO, CreateQueueResponse](
-        sqsClient.createQueue(CreateQueueRequest.builder().queueName("names").build())
-      )
-      .map(_.queueUrl())
-      .unsafeRunSync()
-  }
+      queueUrlV <- CompletableFutureLift
+                    .eff[IO, CreateQueueResponse](
+                      sqsClient.createQueue(CreateQueueRequest.builder().queueName("names").build())
+                    )
+                    .map(_.queueUrl())
+    } yield {
+      topicArn = topic
+      queueUrl = queueUrlV
+    }).unsafeRunSync()
 
-  override def afterAll(): Unit = {
-    CompletableFutureLift
-      .eff[IO, DeleteTopicResponse](
-        snsClient.deleteTopic(DeleteTopicRequest.builder().topicArn(topicArn).build())
-      )
-      .unsafeRunSync()
-
-    CompletableFutureLift
-      .eff[IO, DeleteQueueResponse](
-        sqsClient.deleteQueue(DeleteQueueRequest.builder().queueUrl(queueUrl).build())
-      )
-      .unsafeRunSync()
-  }
+  override def afterAll(): Unit =
+    (for {
+      _ <- CompletableFutureLift
+            .eff[IO, DeleteTopicResponse](
+              snsClient.deleteTopic(DeleteTopicRequest.builder().topicArn(topicArn).build())
+            )
+      _ <- CompletableFutureLift
+            .eff[IO, DeleteQueueResponse](
+              sqsClient.deleteQueue(DeleteQueueRequest.builder().queueUrl(queueUrl).build())
+            )
+    } yield {}).unsafeRunSync()
 
   "SNS" should {
     "publish messages" in {
@@ -105,7 +106,7 @@ class SnsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
                                 .build()
                             )
                         )
-                      )
+                      ).delayBy(3.seconds)
       } yield {
         sqsMessages
           .messages()
@@ -117,7 +118,7 @@ class SnsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
         .toList
         .unsafeRunSync()
 
-      messages.flatten should contain theSameElementsAs(List("1", "2", "3", "4", "5"))
+      messages.flatten should contain theSameElementsAs (List("1", "2", "3", "4", "5"))
     }
   }
 
