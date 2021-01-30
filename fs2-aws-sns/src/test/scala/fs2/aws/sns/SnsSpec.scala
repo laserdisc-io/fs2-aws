@@ -15,7 +15,7 @@ import software.amazon.awssdk.services.sqs.model._
 import java.net.URI
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.DurationInt
-import scala.jdk.CollectionConverters.CollectionHasAsScala
+import scala.jdk.CollectionConverters._
 import scala.util.matching.Regex
 
 class SnsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
