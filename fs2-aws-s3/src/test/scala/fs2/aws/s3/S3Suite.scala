@@ -2,16 +2,15 @@ package fs2.aws
 
 import java.net.URI
 import java.nio.file.Paths
-
 import software.amazon.awssdk.auth.credentials.{ AwsBasicCredentials, StaticCredentialsProvider }
 import software.amazon.awssdk.regions.Region
-import software.amazon.awssdk.services.s3.S3Client
+import software.amazon.awssdk.services.s3.{ S3AsyncClient, S3Client }
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException
-
 import cats.effect._
 import cats.implicits._
 import eu.timepit.refined.auto._
 import fs2.aws.s3._
+import io.laserdisc.pure.s3.tagless.Interpreter
 
 class S3Suite extends IOSuite {
 
@@ -19,7 +18,7 @@ class S3Suite extends IOSuite {
     AwsBasicCredentials.create("AKIAIOSFODNN7EXAMPLE", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
 
   val client =
-    S3Client
+    S3AsyncClient
       .builder()
       .credentialsProvider(StaticCredentialsProvider.create(credentials))
       .endpointOverride(URI.create("http://localhost:9000"))
@@ -31,8 +30,10 @@ class S3Suite extends IOSuite {
   val bucket  = BucketName("resources")
   val fileKey = FileKey("jsontest.json")
 
+  val s3 = Interpreter[IO](blocker).create(client)
+
   test("Upload JSON test file & read it back") {
-    S3.create[IO](client, blocker).flatMap { s3 =>
+    S3.create[IO](s3, blocker).flatMap { s3 =>
       val upload =
         fs2.io.file
           .readAll[IO](Paths.get(testFile.getPath), blocker, 4096)
@@ -59,7 +60,7 @@ class S3Suite extends IOSuite {
   test(
     "Upload JSON test file in multipart fashion & read it back in a one go, then delete it and try to read it again"
   ) {
-    S3.create[IO](client, blocker).flatMap { s3 =>
+    S3.create[IO](s3, blocker).flatMap { s3 =>
       val fileKeyMix = FileKey("jsontest-mix.json")
 
       val upload =
@@ -94,7 +95,7 @@ class S3Suite extends IOSuite {
   }
 
   test("Upload JSON test file & read it back in multipart fashion all the way") {
-    S3.create[IO](client, blocker).flatMap { s3 =>
+    S3.create[IO](s3, blocker).flatMap { s3 =>
       val fileKeyMultipart = FileKey("jsontest-multipart.json")
 
       val upload =

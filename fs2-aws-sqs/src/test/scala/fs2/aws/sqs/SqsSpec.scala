@@ -1,7 +1,8 @@
 package sqs
 
-import cats.effect.{ ContextShift, IO, Timer }
+import cats.effect.{ Blocker, ContextShift, IO, Timer }
 import fs2.aws.sqs.SQS
+import io.laserdisc.pure.sqs.tagless.Interpreter
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -23,31 +24,34 @@ class SqsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
     if ("fail" == text) Left(new Exception("failure"))
     else Right(text.toInt)
   }
+  val blocker                   = Blocker.liftExecutionContext(ec)
   val sqsClient: SqsAsyncClient = mkSQSClient(4566)
+  val ip                        = Interpreter[IO](blocker).SqsAsyncClientInterpreter
   var queueUrl: String          = _
 
   override def beforeAll(): Unit =
-    queueUrl = SQS
-      .eff[IO, CreateQueueResponse](
-        sqsClient.createQueue(CreateQueueRequest.builder().queueName("names").build())
-      )
+    queueUrl = ip
+      .createQueue(CreateQueueRequest.builder().queueName("names").build())
       .map(_.queueUrl())
+      .run(sqsClient)
       .unsafeRunSync()
 
   // Delete the temp file
   override def afterAll(): Unit =
-    SQS
-      .eff[IO, DeleteQueueResponse](
-        sqsClient.deleteQueue(DeleteQueueRequest.builder().queueUrl(queueUrl).build())
-      )
+    ip.deleteQueue(DeleteQueueRequest.builder().queueUrl(queueUrl).build())
+      .run(sqsClient)
       .unsafeRunSync()
 
   "SQS" should {
     "publish messages" in {
       (for {
+
         sqs <- fs2.Stream.eval(
                 SQS
-                  .create[IO](SqsConfig(queueUrl = queueUrl, pollRate = 10 milliseconds), sqsClient)
+                  .create[IO](
+                    SqsConfig(queueUrl = queueUrl, pollRate = 10 milliseconds),
+                    Interpreter[IO](blocker).create(sqsClient)
+                  )
               )
         sqsS <- fs2
                  .Stream("Barry", "Dmytro", "Ryan", "John", "Vlad")
@@ -67,7 +71,7 @@ class SqsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
                       pollRate = 10 milliseconds,
                       fetchMessageCount = 1
                     ),
-                    sqsClient
+                    Interpreter[IO](blocker).create(sqsClient)
                   )
               )
         sqsS <- sqs.sqsStream.map(_.body())

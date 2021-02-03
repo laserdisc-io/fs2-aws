@@ -1,7 +1,10 @@
 package fs2.aws.sns
 
-import cats.effect.{ ContextShift, IO, Timer }
+import cats.effect.{ Blocker, ContextShift, IO, Timer }
 import fs2.aws.sns.sns.SNS
+import io.laserdisc.pure.sns.tagless.{ Interpreter, SnsAsyncClientOp }
+import io.laserdisc.pure.sqs.tagless
+import io.laserdisc.pure.sqs.tagless.SqsAsyncClientOp
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -20,8 +23,6 @@ import scala.util.matching.Regex
 
 class SnsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
 
-  import fs2.aws.helper._
-
   implicit val ec: ExecutionContext             = ExecutionContext.global
   implicit val ioContextShift: ContextShift[IO] = IO.contextShift(ec)
   implicit val ioTimer: Timer[IO]               = IO.timer(ec)
@@ -31,19 +32,18 @@ class SnsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
   var topicArn: String          = _
   var queueUrl: String          = _
   val pattern: Regex            = new Regex("\"Message\": \"[0-9]\"")
+  val blocker                   = Blocker.liftExecutionContext(ec)
 
+  val sns: SnsAsyncClientOp[IO] = Interpreter[IO](blocker).create(snsClient)
+  val sqs: SqsAsyncClientOp[IO] = tagless.Interpreter[IO](blocker).create(sqsClient)
   override def beforeAll(): Unit =
     (for {
-      topic <- CompletableFutureLift
-                .eff[IO, CreateTopicResponse](
-                  snsClient.createTopic(CreateTopicRequest.builder().name("topic").build())
-                )
+      topic <- sns
+                .createTopic(CreateTopicRequest.builder().name("topic").build())
                 .map(_.topicArn())
 
-      queueUrlV <- CompletableFutureLift
-                    .eff[IO, CreateQueueResponse](
-                      sqsClient.createQueue(CreateQueueRequest.builder().queueName("names").build())
-                    )
+      queueUrlV <- sqs
+                    .createQueue(CreateQueueRequest.builder().queueName("names").build())
                     .map(_.queueUrl())
     } yield {
       topicArn = topic
@@ -52,53 +52,43 @@ class SnsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
 
   override def afterAll(): Unit =
     (for {
-      _ <- CompletableFutureLift
-            .eff[IO, DeleteTopicResponse](
-              snsClient.deleteTopic(DeleteTopicRequest.builder().topicArn(topicArn).build())
-            )
-      _ <- CompletableFutureLift
-            .eff[IO, DeleteQueueResponse](
-              sqsClient.deleteQueue(DeleteQueueRequest.builder().queueUrl(queueUrl).build())
-            )
+      _ <- sns.deleteTopic(DeleteTopicRequest.builder().topicArn(topicArn).build())
+      _ <- sqs.deleteQueue(DeleteQueueRequest.builder().queueUrl(queueUrl).build())
     } yield {}).unsafeRunSync()
 
   "SNS" should {
     "publish messages" in {
       val messages = (for {
-        sns <- fs2.Stream.eval(SNS.create[IO](snsClient))
+        sns_ <- fs2.Stream.eval(SNS.create[IO](sns))
         sqsArn <- fs2.Stream.eval(
-                   CompletableFutureLift.eff[IO, GetQueueAttributesResponse](
-                     sqsClient
-                       .getQueueAttributes(
-                         GetQueueAttributesRequest
-                           .builder()
-                           .queueUrl(queueUrl)
-                           .attributeNames(QueueAttributeName.QUEUE_ARN)
-                           .build()
-                       )
-                   )
+                   sqs
+                     .getQueueAttributes(
+                       GetQueueAttributesRequest
+                         .builder()
+                         .queueUrl(queueUrl)
+                         .attributeNames(QueueAttributeName.QUEUE_ARN)
+                         .build()
+                     )
                  )
 
         _ <- fs2.Stream.eval(
-              CompletableFutureLift.eff[IO, SubscribeResponse](
-                snsClient.subscribe(
-                  SubscribeRequest
-                    .builder()
-                    .protocol("sqs")
-                    .endpoint(sqsArn.attributes().get(QueueAttributeName.QUEUE_ARN))
-                    .topicArn(topicArn)
-                    .build()
-                )
+              sns.subscribe(
+                SubscribeRequest
+                  .builder()
+                  .protocol("sqs")
+                  .endpoint(sqsArn.attributes().get(QueueAttributeName.QUEUE_ARN))
+                  .topicArn(topicArn)
+                  .build()
               )
             )
         _ <- fs2
               .Stream("1", "2", "3", "4", "5")
               .covary[IO]
-              .through(sns.publish(topicArn))
+              .through(sns_.publish(topicArn))
 
-        sqsMessages <- fs2.Stream.eval(
-                        CompletableFutureLift.eff[IO, ReceiveMessageResponse](
-                          sqsClient
+        sqsMessages <- fs2.Stream
+                        .eval(
+                          sqs
                             .receiveMessage(
                               ReceiveMessageRequest
                                 .builder()
@@ -106,7 +96,7 @@ class SnsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
                                 .build()
                             )
                         )
-                      ).delayBy(3.seconds)
+                        .delayBy(3.seconds)
       } yield {
         sqsMessages
           .messages()
