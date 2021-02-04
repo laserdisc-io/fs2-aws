@@ -301,6 +301,8 @@ class TaglessGen(
   def fInterp[A](implicit ev: ClassTag[A]): String = {
     val oname = ev.runtimeClass.getSimpleName // original name, without name mapping
     s"""
+       |  def ${oname}Resource(builder : ${oname}Builder) : Resource[M, $oname] = Resource.fromAutoCloseable(asyncM.delay(builder.build()))
+       |  def ${oname}OpResource(builder: ${oname}Builder) =${oname}Resource(builder).map(create)
        |  def create(client : $oname) : ${oname}Op[M] = new ${oname}Op[M] {
        |
        |    // domain-specific operations are implemented in terms of `primitive`
@@ -326,9 +328,10 @@ class TaglessGen(
       |
       |// Library imports
       |import cats.data.Kleisli
-      |import cats.effect.{ Async, Blocker, ContextShift, ExitCase }
+      |import cats.effect.{ Async, Blocker, ContextShift,  Resource }
       |import java.util.concurrent.CompletionException
       |import scala.concurrent.ExecutionContext
+      |import software.amazon.awssdk.services.$awsService.model._
       |
       |// Types referenced
       |${managed.map(ClassTag(_)).flatMap(imports(_)).distinct.sorted.mkString("\n")}

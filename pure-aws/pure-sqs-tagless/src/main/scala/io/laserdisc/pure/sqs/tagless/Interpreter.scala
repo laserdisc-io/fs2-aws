@@ -2,13 +2,35 @@ package io.laserdisc.pure.sqs.tagless
 
 // Library imports
 import cats.data.Kleisli
-import cats.effect.{ Async, Blocker, ContextShift }
+import cats.effect.{ Async, Blocker, ContextShift, Resource }
+import software.amazon.awssdk.services.sqs.SqsAsyncClientBuilder
 
 import java.util.concurrent.CompletionException
 
 // Types referenced
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
-import software.amazon.awssdk.services.sqs.model._
+import software.amazon.awssdk.services.sqs.model.{
+  AddPermissionRequest,
+  ChangeMessageVisibilityBatchRequest,
+  ChangeMessageVisibilityRequest,
+  CreateQueueRequest,
+  DeleteMessageBatchRequest,
+  DeleteMessageRequest,
+  DeleteQueueRequest,
+  GetQueueAttributesRequest,
+  GetQueueUrlRequest,
+  ListDeadLetterSourceQueuesRequest,
+  ListQueueTagsRequest,
+  ListQueuesRequest,
+  PurgeQueueRequest,
+  ReceiveMessageRequest,
+  RemovePermissionRequest,
+  SendMessageBatchRequest,
+  SendMessageRequest,
+  SetQueueAttributesRequest,
+  TagQueueRequest,
+  UntagQueueRequest
+}
 
 import java.util.concurrent.CompletableFuture
 
@@ -117,6 +139,10 @@ trait Interpreter[M[_]] { outer =>
 
   }
 
+  def SqsAsyncClientResource(builder: SqsAsyncClientBuilder): Resource[M, SqsAsyncClient] =
+    Resource.fromAutoCloseable(asyncM.delay(builder.build()))
+  def SqsAsyncClientOpResource(builder: SqsAsyncClientBuilder) =
+    SqsAsyncClientResource(builder).map(create)
   def create(client: SqsAsyncClient): SqsAsyncClientOp[M] = new SqsAsyncClientOp[M] {
 
     // domain-specific operations are implemented in terms of `primitive`

@@ -2,8 +2,9 @@ package io.laserdisc.pure.s3.tagless
 
 // Library imports
 import cats.data.Kleisli
-import cats.effect.{ Async, Blocker, ContextShift }
-import software.amazon.awssdk.services.s3.model.{ GetObjectResponse, GetObjectTorrentResponse }
+import cats.effect.{ Async, Blocker, ContextShift, Resource }
+import software.amazon.awssdk.services.s3.S3AsyncClientBuilder
+import software.amazon.awssdk.services.s3.model._
 
 import java.util.concurrent.CompletionException
 
@@ -340,6 +341,10 @@ trait Interpreter[M[_]] { outer =>
 
   }
 
+  def S3AsyncClientResource(builder: S3AsyncClientBuilder): Resource[M, S3AsyncClient] =
+    Resource.fromAutoCloseable(asyncM.delay(builder.build()))
+  def S3AsyncClientOpResource(builder: S3AsyncClientBuilder) =
+    S3AsyncClientResource(builder).map(create)
   def create(client: S3AsyncClient): S3AsyncClientOp[M] = new S3AsyncClientOp[M] {
 
     // domain-specific operations are implemented in terms of `primitive`

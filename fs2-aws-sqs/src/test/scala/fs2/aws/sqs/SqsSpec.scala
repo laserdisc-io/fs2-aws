@@ -1,8 +1,8 @@
 package sqs
 
-import cats.effect.{ Blocker, ContextShift, IO, Timer }
+import cats.effect.{ Blocker, ContextShift, IO, Resource, Timer }
 import fs2.aws.sqs.SQS
-import io.laserdisc.pure.sqs.tagless.Interpreter
+import io.laserdisc.pure.sqs.tagless.{ Interpreter, SqsAsyncClientOp }
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -24,61 +24,68 @@ class SqsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
     if ("fail" == text) Left(new Exception("failure"))
     else Right(text.toInt)
   }
-  val blocker                   = Blocker.liftExecutionContext(ec)
-  val sqsClient: SqsAsyncClient = mkSQSClient(4566)
-  val ip                        = Interpreter[IO](blocker).SqsAsyncClientInterpreter
-  var queueUrl: String          = _
+  val blocker                                           = Blocker.liftExecutionContext(ec)
+  val sqsOpResource: Resource[IO, SqsAsyncClientOp[IO]] = mkSQSClient(4566)
+  var queueUrl: String                                  = _
 
   override def beforeAll(): Unit =
-    queueUrl = ip
-      .createQueue(CreateQueueRequest.builder().queueName("names").build())
-      .map(_.queueUrl())
-      .run(sqsClient)
+    queueUrl = sqsOpResource
+      .use(
+        _.createQueue(CreateQueueRequest.builder().queueName("names").build())
+          .map(_.queueUrl())
+      )
       .unsafeRunSync()
 
   // Delete the temp file
   override def afterAll(): Unit =
-    ip.deleteQueue(DeleteQueueRequest.builder().queueUrl(queueUrl).build())
-      .run(sqsClient)
+    sqsOpResource
+      .use(_.deleteQueue(DeleteQueueRequest.builder().queueUrl(queueUrl).build()))
       .unsafeRunSync()
 
   "SQS" should {
     "publish messages" in {
-      (for {
+      sqsOpResource
+        .use { sqsOp =>
+          (for {
 
-        sqs <- fs2.Stream.eval(
-                SQS
-                  .create[IO](
-                    SqsConfig(queueUrl = queueUrl, pollRate = 10 milliseconds),
-                    Interpreter[IO](blocker).create(sqsClient)
+            sqs <- fs2.Stream.eval(
+                    SQS
+                      .create[IO](
+                        SqsConfig(queueUrl = queueUrl, pollRate = 10 milliseconds),
+                        sqsOp
+                      )
                   )
-              )
-        sqsS <- fs2
-                 .Stream("Barry", "Dmytro", "Ryan", "John", "Vlad")
-                 .covary[IO]
-                 .through(sqs.sendMessagePipe)
-      } yield sqsS).compile.drain.unsafeRunSync()
+            sqsS <- fs2
+                     .Stream("Barry", "Dmytro", "Ryan", "John", "Vlad")
+                     .covary[IO]
+                     .through(sqs.sendMessagePipe)
+          } yield sqsS).compile.drain
+        }
+        .unsafeRunSync()
 
     }
 
     "stream messages" in {
-      val r = (for {
-        sqs <- fs2.Stream.eval(
-                SQS
-                  .create[IO](
-                    SqsConfig(
-                      queueUrl = queueUrl,
-                      pollRate = 10 milliseconds,
-                      fetchMessageCount = 1
-                    ),
-                    Interpreter[IO](blocker).create(sqsClient)
+      val r = sqsOpResource
+        .use { sqsOp =>
+          (for {
+            sqs <- fs2.Stream.eval(
+                    SQS
+                      .create[IO](
+                        SqsConfig(
+                          queueUrl = queueUrl,
+                          pollRate = 10 milliseconds,
+                          fetchMessageCount = 1
+                        ),
+                        sqsOp
+                      )
                   )
-              )
-        sqsS <- sqs.sqsStream.map(_.body())
-      } yield sqsS)
-        .take(5)
-        .compile
-        .toList
+            sqsS <- sqs.sqsStream.map(_.body())
+          } yield sqsS)
+            .take(5)
+            .compile
+            .toList
+        }
         .unsafeRunSync()
 
       r should be(
@@ -97,12 +104,12 @@ class SqsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
   def mkSQSClient(sqsPort: Int) = {
     val credentials =
       AwsBasicCredentials.create("accesskey", "secretkey")
-
-    SqsAsyncClient
-      .builder()
-      .credentialsProvider(StaticCredentialsProvider.create(credentials))
-      .endpointOverride(URI.create(s"http://localhost:$sqsPort"))
-      .region(Region.US_EAST_1)
-      .build()
+    Interpreter[IO](blocker).SqsAsyncClientOpResource(
+      SqsAsyncClient
+        .builder()
+        .credentialsProvider(StaticCredentialsProvider.create(credentials))
+        .endpointOverride(URI.create(s"http://localhost:$sqsPort"))
+        .region(Region.US_EAST_1)
+    )
   }
 }

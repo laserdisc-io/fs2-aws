@@ -2,13 +2,48 @@ package io.laserdisc.pure.sns.tagless
 
 // Library imports
 import cats.data.Kleisli
-import cats.effect.{ Async, Blocker, ContextShift }
+import cats.effect.{ Async, Blocker, ContextShift, Resource }
+import software.amazon.awssdk.services.sns.SnsAsyncClientBuilder
 
 import java.util.concurrent.CompletionException
 
 // Types referenced
 import software.amazon.awssdk.services.sns.SnsAsyncClient
-import software.amazon.awssdk.services.sns.model._
+import software.amazon.awssdk.services.sns.model.{
+  AddPermissionRequest,
+  CheckIfPhoneNumberIsOptedOutRequest,
+  ConfirmSubscriptionRequest,
+  CreatePlatformApplicationRequest,
+  CreatePlatformEndpointRequest,
+  CreateTopicRequest,
+  DeleteEndpointRequest,
+  DeletePlatformApplicationRequest,
+  DeleteTopicRequest,
+  GetEndpointAttributesRequest,
+  GetPlatformApplicationAttributesRequest,
+  GetSmsAttributesRequest,
+  GetSubscriptionAttributesRequest,
+  GetTopicAttributesRequest,
+  ListEndpointsByPlatformApplicationRequest,
+  ListPhoneNumbersOptedOutRequest,
+  ListPlatformApplicationsRequest,
+  ListSubscriptionsByTopicRequest,
+  ListSubscriptionsRequest,
+  ListTagsForResourceRequest,
+  ListTopicsRequest,
+  OptInPhoneNumberRequest,
+  PublishRequest,
+  RemovePermissionRequest,
+  SetEndpointAttributesRequest,
+  SetPlatformApplicationAttributesRequest,
+  SetSmsAttributesRequest,
+  SetSubscriptionAttributesRequest,
+  SetTopicAttributesRequest,
+  SubscribeRequest,
+  TagResourceRequest,
+  UnsubscribeRequest,
+  UntagResourceRequest
+}
 
 import java.util.concurrent.CompletableFuture
 
@@ -154,6 +189,10 @@ trait Interpreter[M[_]] { outer =>
 
   }
 
+  def SnsAsyncClientResource(builder: SnsAsyncClientBuilder): Resource[M, SnsAsyncClient] =
+    Resource.fromAutoCloseable(asyncM.delay(builder.build()))
+  def SnsAsyncClientOpResource(builder: SnsAsyncClientBuilder) =
+    SnsAsyncClientResource(builder).map(create)
   def create(client: SnsAsyncClient): SnsAsyncClientOp[M] = new SnsAsyncClientOp[M] {
 
     // domain-specific operations are implemented in terms of `primitive`
