@@ -187,6 +187,13 @@ class TaglessGen(
         s"|    override def $mname$ctparams(${cargs.mkString(", ")}) = $ep(_.$mname($args))"
     }
 
+    def kleisliLensImpl: String = {
+      val ep = if (isRetFuture) "eff1" else "primitive1"
+      if (cargs.isEmpty) s"|    override def $mname = Kleisli(e => $ep(f(e).$mname))"
+      else
+        s"|    override def $mname$ctparams(${cargs.mkString(", ")}) = Kleisli(e => $ep(f(e).$mname($args)))"
+    }
+
     def fImpl: String = {
       val ep = if (isRetFuture) "eff1" else "primitive1"
       if (cargs.isEmpty) s"|    override def $mname = $ep(client.$mname)"
@@ -293,7 +300,10 @@ class TaglessGen(
        |
        |    // domain-specific operations are implemented in terms of `primitive`
        |${ctors[A].map(_.kleisliImpl).mkString("\n")}
-       |
+       |      def lens[E](f: E => $oname): ${oname}Op[Kleisli[M, E, *]] =
+       |          new ${oname}Op[Kleisli[M, E, *]] {
+       |${ctors[A].map(_.kleisliLensImpl).mkString("\n")}
+       |      }
        |  }
        |""".trim.stripMargin
   }

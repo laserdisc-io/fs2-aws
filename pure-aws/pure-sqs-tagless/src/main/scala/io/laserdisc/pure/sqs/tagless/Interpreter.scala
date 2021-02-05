@@ -136,7 +136,49 @@ trait Interpreter[M[_]] { outer =>
     override def setQueueAttributes(a: SetQueueAttributesRequest) = eff(_.setQueueAttributes(a))
     override def tagQueue(a: TagQueueRequest)                     = eff(_.tagQueue(a))
     override def untagQueue(a: UntagQueueRequest)                 = eff(_.untagQueue(a))
-
+    def lens[E](f: E => SqsAsyncClient): SqsAsyncClientOp[Kleisli[M, E, *]] =
+      new SqsAsyncClientOp[Kleisli[M, E, *]] {
+        override def addPermission(a: AddPermissionRequest) =
+          Kleisli(e => eff1(f(e).addPermission(a)))
+        override def changeMessageVisibility(a: ChangeMessageVisibilityRequest) =
+          Kleisli(e => eff1(f(e).changeMessageVisibility(a)))
+        override def changeMessageVisibilityBatch(a: ChangeMessageVisibilityBatchRequest) =
+          Kleisli(e => eff1(f(e).changeMessageVisibilityBatch(a)))
+        override def close                              = Kleisli(e => primitive1(f(e).close))
+        override def createQueue(a: CreateQueueRequest) = Kleisli(e => eff1(f(e).createQueue(a)))
+        override def deleteMessage(a: DeleteMessageRequest) =
+          Kleisli(e => eff1(f(e).deleteMessage(a)))
+        override def deleteMessageBatch(a: DeleteMessageBatchRequest) =
+          Kleisli(e => eff1(f(e).deleteMessageBatch(a)))
+        override def deleteQueue(a: DeleteQueueRequest) = Kleisli(e => eff1(f(e).deleteQueue(a)))
+        override def getQueueAttributes(a: GetQueueAttributesRequest) =
+          Kleisli(e => eff1(f(e).getQueueAttributes(a)))
+        override def getQueueUrl(a: GetQueueUrlRequest) = Kleisli(e => eff1(f(e).getQueueUrl(a)))
+        override def listDeadLetterSourceQueues(a: ListDeadLetterSourceQueuesRequest) =
+          Kleisli(e => eff1(f(e).listDeadLetterSourceQueues(a)))
+        override def listDeadLetterSourceQueuesPaginator(a: ListDeadLetterSourceQueuesRequest) =
+          Kleisli(e => primitive1(f(e).listDeadLetterSourceQueuesPaginator(a)))
+        override def listQueueTags(a: ListQueueTagsRequest) =
+          Kleisli(e => eff1(f(e).listQueueTags(a)))
+        override def listQueues                       = Kleisli(e => eff1(f(e).listQueues))
+        override def listQueues(a: ListQueuesRequest) = Kleisli(e => eff1(f(e).listQueues(a)))
+        override def listQueuesPaginator              = Kleisli(e => primitive1(f(e).listQueuesPaginator))
+        override def listQueuesPaginator(a: ListQueuesRequest) =
+          Kleisli(e => primitive1(f(e).listQueuesPaginator(a)))
+        override def purgeQueue(a: PurgeQueueRequest) = Kleisli(e => eff1(f(e).purgeQueue(a)))
+        override def receiveMessage(a: ReceiveMessageRequest) =
+          Kleisli(e => eff1(f(e).receiveMessage(a)))
+        override def removePermission(a: RemovePermissionRequest) =
+          Kleisli(e => eff1(f(e).removePermission(a)))
+        override def sendMessage(a: SendMessageRequest) = Kleisli(e => eff1(f(e).sendMessage(a)))
+        override def sendMessageBatch(a: SendMessageBatchRequest) =
+          Kleisli(e => eff1(f(e).sendMessageBatch(a)))
+        override def serviceName = Kleisli(e => primitive1(f(e).serviceName))
+        override def setQueueAttributes(a: SetQueueAttributesRequest) =
+          Kleisli(e => eff1(f(e).setQueueAttributes(a)))
+        override def tagQueue(a: TagQueueRequest)     = Kleisli(e => eff1(f(e).tagQueue(a)))
+        override def untagQueue(a: UntagQueueRequest) = Kleisli(e => eff1(f(e).untagQueue(a)))
+      }
   }
 
   def SqsAsyncClientResource(builder: SqsAsyncClientBuilder): Resource[M, SqsAsyncClient] =

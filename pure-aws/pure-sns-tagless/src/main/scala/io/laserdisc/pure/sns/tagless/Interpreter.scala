@@ -186,7 +186,92 @@ trait Interpreter[M[_]] { outer =>
     override def tagResource(a: TagResourceRequest)               = eff(_.tagResource(a))
     override def unsubscribe(a: UnsubscribeRequest)               = eff(_.unsubscribe(a))
     override def untagResource(a: UntagResourceRequest)           = eff(_.untagResource(a))
-
+    def lens[E](f: E => SnsAsyncClient): SnsAsyncClientOp[Kleisli[M, E, *]] =
+      new SnsAsyncClientOp[Kleisli[M, E, *]] {
+        override def addPermission(a: AddPermissionRequest) =
+          Kleisli(e => eff1(f(e).addPermission(a)))
+        override def checkIfPhoneNumberIsOptedOut(a: CheckIfPhoneNumberIsOptedOutRequest) =
+          Kleisli(e => eff1(f(e).checkIfPhoneNumberIsOptedOut(a)))
+        override def close = Kleisli(e => primitive1(f(e).close))
+        override def confirmSubscription(a: ConfirmSubscriptionRequest) =
+          Kleisli(e => eff1(f(e).confirmSubscription(a)))
+        override def createPlatformApplication(a: CreatePlatformApplicationRequest) =
+          Kleisli(e => eff1(f(e).createPlatformApplication(a)))
+        override def createPlatformEndpoint(a: CreatePlatformEndpointRequest) =
+          Kleisli(e => eff1(f(e).createPlatformEndpoint(a)))
+        override def createTopic(a: CreateTopicRequest) = Kleisli(e => eff1(f(e).createTopic(a)))
+        override def deleteEndpoint(a: DeleteEndpointRequest) =
+          Kleisli(e => eff1(f(e).deleteEndpoint(a)))
+        override def deletePlatformApplication(a: DeletePlatformApplicationRequest) =
+          Kleisli(e => eff1(f(e).deletePlatformApplication(a)))
+        override def deleteTopic(a: DeleteTopicRequest) = Kleisli(e => eff1(f(e).deleteTopic(a)))
+        override def getEndpointAttributes(a: GetEndpointAttributesRequest) =
+          Kleisli(e => eff1(f(e).getEndpointAttributes(a)))
+        override def getPlatformApplicationAttributes(a: GetPlatformApplicationAttributesRequest) =
+          Kleisli(e => eff1(f(e).getPlatformApplicationAttributes(a)))
+        override def getSMSAttributes = Kleisli(e => eff1(f(e).getSMSAttributes))
+        override def getSMSAttributes(a: GetSmsAttributesRequest) =
+          Kleisli(e => eff1(f(e).getSMSAttributes(a)))
+        override def getSubscriptionAttributes(a: GetSubscriptionAttributesRequest) =
+          Kleisli(e => eff1(f(e).getSubscriptionAttributes(a)))
+        override def getTopicAttributes(a: GetTopicAttributesRequest) =
+          Kleisli(e => eff1(f(e).getTopicAttributes(a)))
+        override def listEndpointsByPlatformApplication(
+          a: ListEndpointsByPlatformApplicationRequest
+        ) = Kleisli(e => eff1(f(e).listEndpointsByPlatformApplication(a)))
+        override def listEndpointsByPlatformApplicationPaginator(
+          a: ListEndpointsByPlatformApplicationRequest
+        )                                     = Kleisli(e => primitive1(f(e).listEndpointsByPlatformApplicationPaginator(a)))
+        override def listPhoneNumbersOptedOut = Kleisli(e => eff1(f(e).listPhoneNumbersOptedOut))
+        override def listPhoneNumbersOptedOut(a: ListPhoneNumbersOptedOutRequest) =
+          Kleisli(e => eff1(f(e).listPhoneNumbersOptedOut(a)))
+        override def listPlatformApplications = Kleisli(e => eff1(f(e).listPlatformApplications))
+        override def listPlatformApplications(a: ListPlatformApplicationsRequest) =
+          Kleisli(e => eff1(f(e).listPlatformApplications(a)))
+        override def listPlatformApplicationsPaginator =
+          Kleisli(e => primitive1(f(e).listPlatformApplicationsPaginator))
+        override def listPlatformApplicationsPaginator(a: ListPlatformApplicationsRequest) =
+          Kleisli(e => primitive1(f(e).listPlatformApplicationsPaginator(a)))
+        override def listSubscriptions = Kleisli(e => eff1(f(e).listSubscriptions))
+        override def listSubscriptions(a: ListSubscriptionsRequest) =
+          Kleisli(e => eff1(f(e).listSubscriptions(a)))
+        override def listSubscriptionsByTopic(a: ListSubscriptionsByTopicRequest) =
+          Kleisli(e => eff1(f(e).listSubscriptionsByTopic(a)))
+        override def listSubscriptionsByTopicPaginator(a: ListSubscriptionsByTopicRequest) =
+          Kleisli(e => primitive1(f(e).listSubscriptionsByTopicPaginator(a)))
+        override def listSubscriptionsPaginator =
+          Kleisli(e => primitive1(f(e).listSubscriptionsPaginator))
+        override def listSubscriptionsPaginator(a: ListSubscriptionsRequest) =
+          Kleisli(e => primitive1(f(e).listSubscriptionsPaginator(a)))
+        override def listTagsForResource(a: ListTagsForResourceRequest) =
+          Kleisli(e => eff1(f(e).listTagsForResource(a)))
+        override def listTopics                       = Kleisli(e => eff1(f(e).listTopics))
+        override def listTopics(a: ListTopicsRequest) = Kleisli(e => eff1(f(e).listTopics(a)))
+        override def listTopicsPaginator              = Kleisli(e => primitive1(f(e).listTopicsPaginator))
+        override def listTopicsPaginator(a: ListTopicsRequest) =
+          Kleisli(e => primitive1(f(e).listTopicsPaginator(a)))
+        override def optInPhoneNumber(a: OptInPhoneNumberRequest) =
+          Kleisli(e => eff1(f(e).optInPhoneNumber(a)))
+        override def publish(a: PublishRequest) = Kleisli(e => eff1(f(e).publish(a)))
+        override def removePermission(a: RemovePermissionRequest) =
+          Kleisli(e => eff1(f(e).removePermission(a)))
+        override def serviceName = Kleisli(e => primitive1(f(e).serviceName))
+        override def setEndpointAttributes(a: SetEndpointAttributesRequest) =
+          Kleisli(e => eff1(f(e).setEndpointAttributes(a)))
+        override def setPlatformApplicationAttributes(a: SetPlatformApplicationAttributesRequest) =
+          Kleisli(e => eff1(f(e).setPlatformApplicationAttributes(a)))
+        override def setSMSAttributes(a: SetSmsAttributesRequest) =
+          Kleisli(e => eff1(f(e).setSMSAttributes(a)))
+        override def setSubscriptionAttributes(a: SetSubscriptionAttributesRequest) =
+          Kleisli(e => eff1(f(e).setSubscriptionAttributes(a)))
+        override def setTopicAttributes(a: SetTopicAttributesRequest) =
+          Kleisli(e => eff1(f(e).setTopicAttributes(a)))
+        override def subscribe(a: SubscribeRequest)     = Kleisli(e => eff1(f(e).subscribe(a)))
+        override def tagResource(a: TagResourceRequest) = Kleisli(e => eff1(f(e).tagResource(a)))
+        override def unsubscribe(a: UnsubscribeRequest) = Kleisli(e => eff1(f(e).unsubscribe(a)))
+        override def untagResource(a: UntagResourceRequest) =
+          Kleisli(e => eff1(f(e).untagResource(a)))
+      }
   }
 
   def SnsAsyncClientResource(builder: SnsAsyncClientBuilder): Resource[M, SnsAsyncClient] =
