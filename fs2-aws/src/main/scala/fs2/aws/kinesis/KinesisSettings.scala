@@ -1,8 +1,9 @@
 package fs2.aws.kinesis
 
-import fs2.aws.internal.Exceptions._
+import java.net.URI
 import java.util.Date
 
+import fs2.aws.internal.Exceptions._
 import software.amazon.awssdk.regions.Region
 import software.amazon.kinesis.common.InitialPositionInStream
 
@@ -15,8 +16,9 @@ import scala.concurrent.duration._
   *  @param region AWS region in which the Kinesis stream resides. Defaults to US-EAST-1
   *  @param maxConcurrency max size of the KinesisAsyncClient HTTP thread pool. Defaults to Int.MaxValue.
   *  @param bufferSize size of the internal buffer used when reading messages from Kinesis
-  *  @param terminateGracePeriod period of time to allow processing of records before performing the final checkpoint and terminating
   *  @param stsAssumeRole If present, the configured client will be setup for AWS cross-account access using the provided tokens
+  *  @param endpoint endpoint for the clients that are created. Default to None (i.e. AWS) but can be overridden (e.g. to localhost)
+  *  @param retrievalMode FanOut (push) or Polling (pull). Defaults to FanOut (the new default in KCL 2.x).
   */
 class KinesisConsumerSettings private (
   val streamName: String,
@@ -25,7 +27,9 @@ class KinesisConsumerSettings private (
   val maxConcurrency: Int,
   val bufferSize: Int,
   val stsAssumeRole: Option[STSAssumeRoleSettings],
-  val initialPositionInStream: Either[InitialPositionInStream, Date]
+  val initialPositionInStream: Either[InitialPositionInStream, Date],
+  val endpoint: Option[URI],
+  val retrievalMode: RetrievalMode
 )
 
 object KinesisConsumerSettings {
@@ -38,7 +42,9 @@ object KinesisConsumerSettings {
     stsAssumeRole: Option[STSAssumeRoleSettings] = None,
     initialPositionInStream: Either[InitialPositionInStream, Date] = Left(
       InitialPositionInStream.LATEST
-    )
+    ),
+    endpoint: Option[String] = None,
+    retrievalMode: RetrievalMode = FanOut
   ): Either[Throwable, KinesisConsumerSettings] =
     (bufferSize, maxConcurrency) match {
       case (bs, _) if bs < 1 => Left(BufferSizeException("Must be greater than 0"))
@@ -52,11 +58,17 @@ object KinesisConsumerSettings {
             mc,
             bs,
             stsAssumeRole,
-            initialPositionInStream
+            initialPositionInStream,
+            endpoint.map(URI.create),
+            retrievalMode
           )
         )
     }
 }
+
+sealed trait RetrievalMode
+case object FanOut  extends RetrievalMode
+case object Polling extends RetrievalMode
 
 /**
   * Used when constructing a [KinesisConsumerSettings] instance that will by used by a client for cross-account access.
