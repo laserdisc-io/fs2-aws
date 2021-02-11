@@ -5,10 +5,9 @@ import cats.implicits._
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.Positive
-import fs2._
-import software.amazon.awssdk.services.sns.SnsAsyncClient
 import software.amazon.awssdk.services.sns.model.{ PublishRequest, PublishResponse }
-
+import fs2.Pipe
+import io.laserdisc.pure.sns.tagless.SnsAsyncClientOp
 object sns {
   type MsgBody     = String
   type PositiveInt = Int Refined Positive
@@ -21,19 +20,14 @@ object sns {
 
   object SNS {
 
-    import fs2.aws.helper.CompletableFutureLift._
-
     def create[F[_]: Concurrent: Async: Timer](
-      snsClient: SnsAsyncClient,
+      sns: SnsAsyncClientOp[F],
       settings: SnsSettings = SnsSettings()
     ): F[SNS[F]] =
       new SNS[F] {
         override def publish(topicArn: String): Pipe[F, MsgBody, PublishResponse] =
           _.mapAsyncUnordered(settings.concurrency)(msg =>
-            eff(
-              snsClient
-                .publish(PublishRequest.builder().message(msg).topicArn(topicArn).build())
-            )
+            sns.publish(PublishRequest.builder().message(msg).topicArn(topicArn).build())
           )
       }.pure[F]
   }
