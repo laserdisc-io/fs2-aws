@@ -25,5 +25,11 @@ services:
     ports:
       - 4566:4566
     environment:
-      - "SERVICES=sqs,sns"
+      - "AWS_ACCESS_KEY_ID=dummy"
+      - "AWS_SECRET_ACCESS_KEY=dummy"
+      - "SERVICES=sqs,sns,kinesis,cloudwatch,dynamodb"
       - "DEFAULT_REGION=us-east-1"
+      - "USE_SSL=true"
+    volumes:
+      - "./scripts/localstack:/docker-entrypoint-initaws.d"
+

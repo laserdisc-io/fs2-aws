@@ -166,6 +166,11 @@ Stream("testData")
 
 AWS credential chain and region can be configured by overriding the respective fields in the KinesisProducerClient parameter to `writeToKinesis`. Defaults to using the default AWS credentials chain and `us-east-1` for region.
 
+### Use with LocalStack
+
+In some situations (e.g. local dev and automated tests), it may be desirable to be able to consume from and publish to Kinesis running inside LocalStack.
+Ensure that the `endpoint` setting is set correctly (e.g. http://localhost:4566) and that `retrievalMode` is set to `Polling` (LocalStack doesn't support `FanOut`).
+
 ## Kinesis Firehose
 **TODO:** Stream get data, Stream send data
 
