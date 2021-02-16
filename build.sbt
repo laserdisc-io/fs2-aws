@@ -296,7 +296,8 @@ lazy val `fs2-aws-benchmarks` = (project in file("fs2-aws-benchmarks"))
       "ch.qos.logback" % "logback-core"    % "1.2.3",
       "org.slf4j"      % "jcl-over-slf4j"  % "1.7.30",
       "org.slf4j"      % "jul-to-slf4j"    % "1.7.30"
-    )
+    ),
+    publishArtifact := false
   )
   .enablePlugins(JmhPlugin)
 
