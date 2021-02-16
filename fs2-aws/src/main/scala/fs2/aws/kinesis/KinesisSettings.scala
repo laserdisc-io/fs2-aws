@@ -1,12 +1,11 @@
 package fs2.aws.kinesis
 
-import java.net.URI
-import java.util.Date
-
 import fs2.aws.internal.Exceptions._
 import software.amazon.awssdk.regions.Region
 import software.amazon.kinesis.common.InitialPositionInStream
 
+import java.net.URI
+import java.util.Date
 import scala.concurrent.duration._
 
 /** Settings for configuring the Kinesis consumer
@@ -78,15 +77,24 @@ case object Polling extends RetrievalMode
   *
   * @param roleArn The Amazon Resource Name (ARN) of the role to assume.
   * @param roleSessionName An identifier for the assumed role session.
+  * @param externalId A unique identifier that might be required when you assume a role in another account.
+  * @param durationSeconds The duration, in seconds, of the role session.
   */
 class STSAssumeRoleSettings private (
   val roleArn: String,
-  val roleSessionName: String
+  val roleSessionName: String,
+  val externalId: Option[String],
+  val durationSeconds: Option[Int]
 )
 
 object STSAssumeRoleSettings {
-  def apply(roleArn: String, roleSessionName: String) =
-    new STSAssumeRoleSettings(roleArn, roleSessionName)
+  def apply(
+    roleArn: String,
+    roleSessionName: String,
+    externalId: Option[String] = None,
+    durationSeconds: Option[Int] = None
+  ) =
+    new STSAssumeRoleSettings(roleArn, roleSessionName, externalId, durationSeconds)
 }
 
 /** Settings for configuring the Kinesis checkpointer pipe

@@ -1,7 +1,5 @@
 package fs2.aws.kinesis
 
-import java.util.UUID
-
 import cats.effect.{ Blocker, ConcurrentEffect, ContextShift, IO, Sync, Timer }
 import cats.implicits._
 import fs2.aws.core
@@ -22,6 +20,8 @@ import software.amazon.kinesis.retrieval.KinesisClientRecord
 import software.amazon.kinesis.retrieval.fanout.FanOutConfig
 import software.amazon.kinesis.retrieval.polling.PollingConfig
 
+import java.util.UUID
+
 object consumer {
   def mkDefaultKinesisClient(settings: KinesisConsumerSettings): KinesisAsyncClient = {
     val builder = KinesisAsyncClient
@@ -31,19 +31,21 @@ object consumer {
       .region(settings.region)
       .credentialsProvider(
         settings.stsAssumeRole
-          .map(stsSettings =>
+          .map { stsSettings =>
+            val assumeRoleRequest = AssumeRoleRequest
+              .builder()
+              .roleArn(stsSettings.roleArn)
+              .roleSessionName(stsSettings.roleSessionName)
+            stsSettings.externalId.foreach(assumeRoleRequest.externalId)
+            stsSettings.durationSeconds.foreach(d => assumeRoleRequest.durationSeconds(d))
             StsAssumeRoleCredentialsProvider
               .builder()
               .stsClient(StsClient.builder.build())
               .refreshRequest(
-                AssumeRoleRequest
-                  .builder()
-                  .roleArn(stsSettings.roleArn)
-                  .roleSessionName(stsSettings.roleSessionName)
-                  .build()
+                assumeRoleRequest.build()
               )
               .build()
-          )
+          }
           .getOrElse(DefaultCredentialsProvider.create())
       )
       .httpClientBuilder(
