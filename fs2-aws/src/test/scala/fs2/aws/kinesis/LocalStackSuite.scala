@@ -1,18 +1,26 @@
 package fs2.aws.kinesis
 
-import cats.effect.{ ContextShift, IO, Timer }
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
+import cats.effect.{ Blocker, ContextShift, IO, Timer }
+import com.amazonaws.auth.{ AWSStaticCredentialsProvider, BasicAWSCredentials }
 import com.amazonaws.services.kinesis.producer.KinesisProducerConfiguration
 import fs2.Stream
 import fs2.aws.internal.KinesisProducerClientImpl
-import fs2.aws.kinesis.consumer.readFromKinesisStream
 import fs2.aws.kinesis.publisher.writeToKinesis
+import io.laserdisc.pure.cloudwatch
+import io.laserdisc.pure.dynamodb
+import io.laserdisc.pure.kinesis
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{ Minutes, Second, Span }
+import software.amazon.awssdk.auth.credentials.{ AwsBasicCredentials, StaticCredentialsProvider }
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
+import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
+import software.amazon.awssdk.services.kinesis.KinesisAsyncClient
 import software.amazon.kinesis.common.InitialPositionInStream
 
+import java.net.URI
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 import scala.concurrent.ExecutionContext
@@ -39,10 +47,13 @@ class LocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
       initialPositionInStream = Left(InitialPositionInStream.TRIM_HORIZON),
       endpoint = Some("http://localhost:4566"),
       retrievalMode = Polling
-    ).toTry.get
+    )
+
+    val credentials =
+      new BasicAWSCredentials("dummy", "dummy")
 
     val producerConfig = new KinesisProducerConfiguration()
-      .setCredentialsProvider(new DefaultAWSCredentialsProviderChain())
+      .setCredentialsProvider(new AWSStaticCredentialsProvider(credentials))
       .setKinesisEndpoint("localhost")
       .setKinesisPort(4566)
       .setCloudwatchEndpoint("localhost")
@@ -53,21 +64,53 @@ class LocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
     val partitionKey = "test"
     val data         = List("foo", "bar", "baz")
 
-    val test = for {
-      _ <- Stream
-            .emits(data)
-            .map(d => (partitionKey, ByteBuffer.wrap(d.getBytes)))
-            .through(
-              writeToKinesis[IO](
-                streamName,
-                producer = new KinesisProducerClientImpl[IO](Some(producerConfig))
-              )
-            )
-            .compile
-            .drain
-      record <- readFromKinesisStream[IO](consumerConfig).take(data.length).compile.toList
-    } yield record
+    val cp = StaticCredentialsProvider.create(AwsBasicCredentials.create("dummy", "dummy"))
 
+    val kac = KinesisAsyncClient
+      .builder()
+      .credentialsProvider(cp)
+      .region(Region.US_EAST_1)
+      .endpointOverride(URI.create("http://localhost:4566"))
+    val dac = DynamoDbAsyncClient
+      .builder()
+      .credentialsProvider(cp)
+      .region(Region.US_EAST_1)
+      .endpointOverride(URI.create("http://localhost:4566"))
+    val cac =
+      CloudWatchAsyncClient
+        .builder()
+        .credentialsProvider(cp)
+        .region(Region.US_EAST_1)
+        .endpointOverride(URI.create("http://localhost:4566"))
+    val test = (for {
+      b <- Blocker[IO]
+      k <- kinesis.tagless.Interpreter[IO](b).KinesisAsyncClientResource(kac)
+      d <- dynamodb.tagless.Interpreter[IO](b).DynamoDbAsyncClientResource(dac)
+      c <- cloudwatch.tagless.Interpreter[IO](b).CloudWatchAsyncClientResource(cac)
+    } yield (k, d, c)).use {
+      case (k, d, c) =>
+        val kAlgebra = Kinesis.create[IO](k, d, c)
+
+        for {
+          _ <- Stream
+                .emits(data)
+                .map(d => (partitionKey, ByteBuffer.wrap(d.getBytes)))
+                .through(
+                  writeToKinesis[IO](
+                    streamName,
+                    producer = new KinesisProducerClientImpl[IO](Some(producerConfig))
+                  )
+                )
+                .compile
+                .drain
+          record <- kAlgebra
+                     .readFromKinesisStream(consumerConfig)
+                     .take(data.length)
+                     .compile
+                     .toList
+        } yield record
+
+    }
     val records = test.unsafeToFuture().futureValue
 
     val actualPartitionKeys = records.map(_.record.partitionKey())
