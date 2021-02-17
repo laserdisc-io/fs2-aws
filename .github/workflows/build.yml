@@ -20,5 +20,8 @@ jobs:
         run: docker-compose up -d
       - name: Run tests
         run: csbt +clean +test
+        env:
+          AWS_ACCESS_KEY_ID: dummy
+          AWS_SECRET_ACCESS_KEY: dummy
       - name: "Shutting down MinIO 🐳"
         run: docker-compose down

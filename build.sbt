@@ -1,4 +1,15 @@
+import FreeGen2.{ freeGen2Classes, freeGen2Dir, freeGen2Package, freeGen2Settings }
+import TaglessGen.{
+  taglessAwsService,
+  taglessGenClasses,
+  taglessGenDir,
+  taglessGenPackage,
+  taglessGenSettings
+}
 import scoverage.ScoverageKeys.coverageMinimum
+import software.amazon.awssdk.services.s3.S3AsyncClient
+import software.amazon.awssdk.services.sns.SnsAsyncClient
+import software.amazon.awssdk.services.sqs.SqsAsyncClient
 
 organization := "io.laserdisc"
 name         := "fs2-aws"
@@ -18,10 +29,14 @@ lazy val root = (project in file("."))
     `fs2-aws-sqs`,
     `fs2-aws-testkit`,
     `fs2-aws-dynamodb`,
+    `fs2-aws-sns`,
     `fs2-aws-core`,
     `fs2-aws-examples`,
     `fs2-aws-ciris`,
-    `fs2-aws-benchmarks`
+    `fs2-aws-benchmarks`,
+    `pure-sqs-tagless`,
+    `pure-sns-tagless`,
+    `pure-s3-tagless`
   )
   .settings(
     publishArtifact    := false,
@@ -80,7 +95,7 @@ lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb"))
   .settings(scalacOptions ++= commonOptions(scalaVersion.value))
 
 lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
-  .dependsOn(`fs2-aws-dynamodb`)
+  .dependsOn(`fs2-aws-dynamodb`, `pure-s3-tagless`, `pure-sns-tagless`, `pure-sqs-tagless`)
   .settings(
     name            := "fs2-aws-examples",
     coverageMinimum := 0,
@@ -117,6 +132,7 @@ lazy val `fs2-aws-s3` = (project in file("fs2-aws-s3"))
   )
   .settings(commonSettings)
   .settings(scalacOptions := commonOptions(scalaVersion.value))
+  .dependsOn(`pure-s3-tagless`)
 
 lazy val `fs2-aws` = (project in file("fs2-aws"))
   .dependsOn(`fs2-aws-core`)
@@ -156,6 +172,102 @@ lazy val `fs2-aws-sqs` = (project in file("fs2-aws-sqs"))
   )
   .settings(commonSettings)
   .settings(scalacOptions ++= commonOptions(scalaVersion.value))
+  .dependsOn(`pure-sqs-tagless`)
+
+lazy val `fs2-aws-sns` = (project in file("fs2-aws-sns"))
+  .settings(
+    name := "fs2-aws-sns",
+    libraryDependencies ++= Seq(
+      "co.fs2"                 %% "fs2-core"                % V.Fs2,
+      "co.fs2"                 %% "fs2-io"                  % V.Fs2,
+      "software.amazon.awssdk" % "sns"                      % V.AwsSdk,
+      "org.mockito"            % "mockito-core"             % V.MockitoCore % Test,
+      "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
+      "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
+      "software.amazon.awssdk" % "sqs"                      % V.AwsSdk % Test,
+      "eu.timepit"             %% "refined"                 % V.Refined
+    ),
+    coverageMinimum       := 55.80,
+    coverageFailOnMinimum := true
+  )
+  .settings(commonSettings)
+  .settings(scalacOptions ++= commonOptions(scalaVersion.value))
+  .dependsOn(`pure-sqs-tagless`, `pure-sns-tagless`)
+
+lazy val `pure-sqs-tagless` = (project in file("pure-aws/pure-sqs-tagless"))
+  .settings(taglessGenSettings)
+  .settings(
+    name := "pure-sqs-tagless",
+    libraryDependencies ++= Seq(
+      "software.amazon.awssdk" % "sqs"                      % V.AwsSdk,
+      "org.mockito"            % "mockito-core"             % V.MockitoCore % Test,
+      "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
+      "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
+      "eu.timepit"             %% "refined"                 % V.Refined,
+      "org.typelevel"          %% "cats-effect"             % "2.3.1",
+      "org.typelevel"          %% "cats-free"               % "2.3.1"
+    ),
+    taglessGenDir     := (scalaSource in Compile).value / "io" / "laserdisc" / "pure" / "sqs" / "tagless",
+    taglessGenPackage := "io.laserdisc.pure.sqs.tagless",
+    taglessAwsService := "sqs",
+    taglessGenClasses := {
+      List[Class[_]](
+        classOf[SqsAsyncClient]
+      )
+    }
+  )
+  .settings(commonSettings)
+  .settings(scalacOptions ++= commonOptions(scalaVersion.value))
+
+lazy val `pure-s3-tagless` = (project in file("pure-aws/pure-s3-tagless"))
+  .settings(taglessGenSettings)
+  .settings(
+    name := "pure-s3-tagless",
+    libraryDependencies ++= Seq(
+      "software.amazon.awssdk" % "s3"                       % V.AwsSdk,
+      "org.mockito"            % "mockito-core"             % V.MockitoCore % Test,
+      "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
+      "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
+      "eu.timepit"             %% "refined"                 % V.Refined,
+      "org.typelevel"          %% "cats-effect"             % "2.3.1",
+      "org.typelevel"          %% "cats-free"               % "2.3.1"
+    ),
+    taglessGenDir     := (scalaSource in Compile).value / "io" / "laserdisc" / "pure" / "s3" / "tagless",
+    taglessGenPackage := "io.laserdisc.pure.s3.tagless",
+    taglessAwsService := "s3",
+    taglessGenClasses := {
+      List[Class[_]](
+        classOf[S3AsyncClient]
+      )
+    }
+  )
+  .settings(commonSettings)
+  .settings(scalacOptions ++= commonOptions(scalaVersion.value))
+
+lazy val `pure-sns-tagless` = (project in file("pure-aws/pure-sns-tagless"))
+  .settings(taglessGenSettings)
+  .settings(
+    name := "pure-sns-tagless",
+    libraryDependencies ++= Seq(
+      "software.amazon.awssdk" % "sns"                      % V.AwsSdk,
+      "org.mockito"            % "mockito-core"             % V.MockitoCore % Test,
+      "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
+      "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
+      "eu.timepit"             %% "refined"                 % V.Refined,
+      "org.typelevel"          %% "cats-effect"             % "2.3.1",
+      "org.typelevel"          %% "cats-free"               % "2.3.1"
+    ),
+    taglessGenDir     := (scalaSource in Compile).value / "io" / "laserdisc" / "pure" / "sns" / "tagless",
+    taglessGenPackage := "io.laserdisc.pure.sns.tagless",
+    taglessAwsService := "sns",
+    taglessGenClasses := {
+      List[Class[_]](
+        classOf[SnsAsyncClient]
+      )
+    }
+  )
+  .settings(commonSettings)
+  .settings(scalacOptions ++= commonOptions(scalaVersion.value))
 
 lazy val `fs2-aws-testkit` = (project in file("fs2-aws-testkit"))
   .dependsOn(`fs2-aws`)
@@ -184,7 +296,8 @@ lazy val `fs2-aws-benchmarks` = (project in file("fs2-aws-benchmarks"))
       "ch.qos.logback" % "logback-core"    % "1.2.3",
       "org.slf4j"      % "jcl-over-slf4j"  % "1.7.30",
       "org.slf4j"      % "jul-to-slf4j"    % "1.7.30"
-    )
+    ),
+    publishArtifact := false
   )
   .enablePlugins(JmhPlugin)
 

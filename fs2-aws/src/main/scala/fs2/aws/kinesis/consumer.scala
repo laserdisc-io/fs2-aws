@@ -1,17 +1,15 @@
 package fs2.aws.kinesis
 
-import java.util.UUID
-
 import cats.effect.{ Blocker, ConcurrentEffect, ContextShift, IO, Sync, Timer }
 import cats.implicits._
 import fs2.aws.core
-import fs2.{ Chunk, Pipe, RaiseThrowable, Stream }
 import fs2.concurrent.Queue
+import fs2.{ Chunk, Pipe, RaiseThrowable, Stream }
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider
+import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient
-import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient
 import software.amazon.awssdk.services.sts.StsClient
 import software.amazon.awssdk.services.sts.auth.StsAssumeRoleCredentialsProvider
 import software.amazon.awssdk.services.sts.model.AssumeRoleRequest
@@ -19,31 +17,44 @@ import software.amazon.kinesis.common.{ ConfigsBuilder, InitialPositionInStreamE
 import software.amazon.kinesis.coordinator.Scheduler
 import software.amazon.kinesis.processor.ShardRecordProcessorFactory
 import software.amazon.kinesis.retrieval.KinesisClientRecord
+import software.amazon.kinesis.retrieval.fanout.FanOutConfig
+import software.amazon.kinesis.retrieval.polling.PollingConfig
+
+import java.util.UUID
 
 object consumer {
-  def mkDefaultKinesisClient(settings: KinesisConsumerSettings): KinesisAsyncClient =
-    KinesisAsyncClient
+  def mkDefaultKinesisClient(settings: KinesisConsumerSettings): KinesisAsyncClient = {
+    val builder = KinesisAsyncClient
       .builder()
+    settings.endpoint.foreach(builder.endpointOverride)
+    builder
       .region(settings.region)
       .credentialsProvider(
         settings.stsAssumeRole
-          .map(stsSettings =>
+          .map { stsSettings =>
+            val assumeRoleRequest = AssumeRoleRequest
+              .builder()
+              .roleArn(stsSettings.roleArn)
+              .roleSessionName(stsSettings.roleSessionName)
+            stsSettings.externalId.foreach(assumeRoleRequest.externalId)
+            stsSettings.durationSeconds.foreach(d => assumeRoleRequest.durationSeconds(d))
             StsAssumeRoleCredentialsProvider
               .builder()
               .stsClient(StsClient.builder.build())
               .refreshRequest(
-                AssumeRoleRequest
-                  .builder()
-                  .roleArn(stsSettings.roleArn)
-                  .roleSessionName(stsSettings.roleSessionName)
-                  .build()
+                assumeRoleRequest.build()
               )
               .build()
-          )
+          }
           .getOrElse(DefaultCredentialsProvider.create())
       )
-      .httpClientBuilder(NettyNioAsyncHttpClient.builder().maxConcurrency(settings.maxConcurrency))
+      .httpClientBuilder(
+        NettyNioAsyncHttpClient
+          .builder()
+          .maxConcurrency(settings.maxConcurrency)
+      )
       .build()
+  }
 
   private def defaultScheduler(
     recordProcessorFactory: ShardRecordProcessorFactory,
@@ -51,10 +62,15 @@ object consumer {
     kinesisClient: KinesisAsyncClient
   ): Scheduler = {
 
+    val dynamoClientBuilder = DynamoDbAsyncClient.builder()
+    settings.endpoint.foreach(dynamoClientBuilder.endpointOverride)
     val dynamoClient: DynamoDbAsyncClient =
-      DynamoDbAsyncClient.builder().region(settings.region).build()
+      dynamoClientBuilder.region(settings.region).build()
+
+    val cloudWatchClientBuilder = CloudWatchAsyncClient.builder()
+    settings.endpoint.foreach(cloudWatchClientBuilder.endpointOverride)
     val cloudWatchClient: CloudWatchAsyncClient =
-      CloudWatchAsyncClient.builder().region(settings.region).build()
+      cloudWatchClientBuilder.region(settings.region).build()
 
     val configsBuilder: ConfigsBuilder = new ConfigsBuilder(
       settings.streamName,
@@ -67,6 +83,12 @@ object consumer {
     )
 
     val retrievalConfig = configsBuilder.retrievalConfig()
+    retrievalConfig.retrievalSpecificConfig(
+      settings.retrievalMode match {
+        case FanOut  => new FanOutConfig(kinesisClient)
+        case Polling => new PollingConfig(settings.streamName, kinesisClient)
+      }
+    )
     retrievalConfig.initialPositionInStreamExtended(
       settings.initialPositionInStream match {
         case Left(position) =>
