@@ -343,7 +343,7 @@ lazy val commonSettings = Seq(
   ),
   addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1"),
   addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.10.3"),
-  libraryDependencies += "org.scala-lang.modules" %% "scala-collection-compat" % "2.3.2"
+  libraryDependencies += "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.1"
 )
 
 addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
