@@ -16,7 +16,9 @@
 
     <!-- turn a few off that make the logs too verbose-->
     <logger name="com.amazonaws" level="DEBUG" />
-    <logger name="software.amazon" level="DEBUG" />
+    <logger name="software.amazon.kinesis.metrics" level="WARN" />
+    <logger name="software.amazon.awssdk" level="WARN" />
+    <logger name="software.amazon" level="INFO" />
     <logger name="org.apache.http" level="ERROR" />
     <logger name="ch.qos.logback" level="ERROR" />
     <logger name="o.a.h.i.c." level="ERROR" />

@@ -3,8 +3,6 @@ package fs2.aws.kinesis
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive
 
-import java.net.URI
-import java.util.Date
 import fs2.aws.internal.Exceptions._
 import software.amazon.awssdk.regions.Region
 import software.amazon.kinesis.common.InitialPositionInStream
