@@ -1,4 +1,3 @@
-import FreeGen2.{ freeGen2Classes, freeGen2Dir, freeGen2Package, freeGen2Settings }
 import TaglessGen.{
   taglessAwsService,
   taglessGenClasses,
@@ -204,8 +203,7 @@ lazy val `pure-sqs-tagless` = (project in file("pure-aws/pure-sqs-tagless"))
       "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
       "eu.timepit"             %% "refined"                 % V.Refined,
-      "org.typelevel"          %% "cats-effect"             % "2.3.1",
-      "org.typelevel"          %% "cats-free"               % "2.4.1"
+      "org.typelevel"          %% "cats-effect"             % "2.3.1"
     ),
     taglessGenDir     := (scalaSource in Compile).value / "io" / "laserdisc" / "pure" / "sqs" / "tagless",
     taglessGenPackage := "io.laserdisc.pure.sqs.tagless",
