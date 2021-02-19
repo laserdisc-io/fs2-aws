@@ -1,4 +1,3 @@
-import FreeGen2.{ freeGen2Classes, freeGen2Dir, freeGen2Package, freeGen2Settings }
 import TaglessGen.{
   taglessAwsService,
   taglessGenClasses,
@@ -158,7 +157,7 @@ lazy val `fs2-aws` = (project in file("fs2-aws"))
     libraryDependencies ++= Seq(
       "co.fs2"                  %% "fs2-core"                % V.Fs2,
       "co.fs2"                  %% "fs2-io"                  % V.Fs2,
-      "com.amazonaws"           % "amazon-kinesis-producer"  % "0.14.3",
+      "com.amazonaws"           % "amazon-kinesis-producer"  % "0.14.5",
       "software.amazon.kinesis" % "amazon-kinesis-client"    % "2.3.3",
       "software.amazon.awssdk"  % "sts"                      % V.AwsSdk,
       "eu.timepit"              %% "refined"                 % V.Refined,
@@ -225,8 +224,7 @@ lazy val `pure-sqs-tagless` = (project in file("pure-aws/pure-sqs-tagless"))
       "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
       "eu.timepit"             %% "refined"                 % V.Refined,
-      "org.typelevel"          %% "cats-effect"             % "2.3.1",
-      "org.typelevel"          %% "cats-free"               % "2.3.1"
+      "org.typelevel"          %% "cats-effect"             % "2.3.1"
     ),
     taglessGenDir     := (scalaSource in Compile).value / "io" / "laserdisc" / "pure" / "sqs" / "tagless",
     taglessGenPackage := "io.laserdisc.pure.sqs.tagless",
@@ -250,8 +248,7 @@ lazy val `pure-s3-tagless` = (project in file("pure-aws/pure-s3-tagless"))
       "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
       "eu.timepit"             %% "refined"                 % V.Refined,
-      "org.typelevel"          %% "cats-effect"             % "2.3.1",
-      "org.typelevel"          %% "cats-free"               % "2.3.1"
+      "org.typelevel"          %% "cats-effect"             % "2.3.1"
     ),
     taglessGenDir     := (scalaSource in Compile).value / "io" / "laserdisc" / "pure" / "s3" / "tagless",
     taglessGenPackage := "io.laserdisc.pure.s3.tagless",
@@ -275,8 +272,7 @@ lazy val `pure-sns-tagless` = (project in file("pure-aws/pure-sns-tagless"))
       "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
       "eu.timepit"             %% "refined"                 % V.Refined,
-      "org.typelevel"          %% "cats-effect"             % "2.3.1",
-      "org.typelevel"          %% "cats-free"               % "2.3.1"
+      "org.typelevel"          %% "cats-effect"             % "2.3.1"
     ),
     taglessGenDir     := (scalaSource in Compile).value / "io" / "laserdisc" / "pure" / "sns" / "tagless",
     taglessGenPackage := "io.laserdisc.pure.sns.tagless",
@@ -439,7 +435,7 @@ lazy val commonSettings = Seq(
   ),
   addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1"),
   addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.10.3"),
-  libraryDependencies += "org.scala-lang.modules" %% "scala-collection-compat" % "2.3.2"
+  libraryDependencies += "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.1"
 )
 
 addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
