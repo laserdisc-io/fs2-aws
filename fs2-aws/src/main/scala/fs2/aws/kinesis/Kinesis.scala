@@ -51,16 +51,6 @@ trait Kinesis[F[_]] {
     consumerConfig: KinesisConsumerSettings
   ): Stream[F, Chunk[CommittableRecord]]
 
-  //TODO: remove this in future. It is exposed only for testing proposes
-  //To test scenarios with SHARD_END cases we need to mock the KCL library
-  // Unfortunately Localstack has limitations, see
-  //https://github.com/laserdisc-io/fs2-aws/discussions/592
-
-//  private[kinesis] def readChunksFromKinesisStream(
-//    streamConfig: KinesisConsumerSettings,
-//    schedulerFactory: ShardRecordProcessorFactory => Scheduler
-//  ): Stream[F, Chunk[CommittableRecord]]
-//
   /** Pipe to checkpoint records in Kinesis, marking them as processed
     * Groups records by shard id, so that each shard is subject to its own clustering of records
     * After accumulating maxBatchSize or reaching maxBatchWait for a respective shard, the latest record is checkpointed

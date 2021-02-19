@@ -98,7 +98,16 @@ lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb"))
   .settings(scalacOptions ++= commonOptions(scalaVersion.value))
 
 lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
-  .dependsOn(`fs2-aws-dynamodb`, `pure-s3-tagless`, `pure-sns-tagless`, `pure-sqs-tagless`)
+  .dependsOn(
+    `fs2-aws-dynamodb`,
+    `pure-s3-tagless`,
+    `pure-sns-tagless`,
+    `pure-sqs-tagless`,
+    `pure-kinesis-tagless`,
+    `pure-dynamodb-tagless`,
+    `pure-cloudwatch-tagless`,
+    `fs2-aws`
+  )
   .settings(
     name            := "fs2-aws-examples",
     coverageMinimum := 0,

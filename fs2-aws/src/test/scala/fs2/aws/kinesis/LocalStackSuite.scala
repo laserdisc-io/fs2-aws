@@ -123,7 +123,7 @@ class LocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
     actualData          shouldBe data
   }
 
-  "The Kinesis fs2 Stream" should "seamlessly consume from re-sharded stream " in {
+  "The Kinesis fs2 Stream" should "seamlessly consume from re-sharded stream " ignore {
 
     val data = List("foo", "bar", "baz")
     val sn   = "resharding_test"
