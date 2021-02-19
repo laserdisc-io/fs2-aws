@@ -20,7 +20,7 @@ import software.amazon.kinesis.retrieval.kpl.ExtendedSequenceNumber
 
 import java.nio.ByteBuffer
 import java.time.Instant
-import java.util.concurrent.Semaphore
+import java.util.concurrent.{ CountDownLatch, Semaphore }
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
@@ -92,7 +92,7 @@ class NewKinesisConsumerSpec
   it should "not drop messages in case of back-pressure" in new WorkerContext with TestData {
     // Create and send 10 records (to match buffer size)
     val res = (
-      stream.take(10).compile.toList,
+      stream.take(60).compile.toList,
       IO.delay {
         semaphore.acquire()
         recordProcessor.initialize(initializationInput)
@@ -101,14 +101,8 @@ class NewKinesisConsumerSpec
           when(record.sequenceNumber()).thenReturn(i.toString)
           recordProcessor.processRecords(recordsInput.records(List(record)).build())
         }
-      }
-    ).parMapN { case (msgs, _) => msgs }.unsafeRunSync()
-
-    res should have size 10
-
-    // Send a batch that exceeds the internal buffer size
-    val res2 = (
-      stream.take(50).compile.toList,
+      },
+      // Send a batch that exceeds the internal buffer size
       IO.delay {
         semaphore.acquire()
         recordProcessor.initialize(initializationInput)
@@ -118,9 +112,9 @@ class NewKinesisConsumerSpec
           recordProcessor.processRecords(recordsInput.records(List(record)).build())
         }
       }
-    ).parMapN { case (msgs, _) => msgs }.unsafeRunSync()
+    ).parMapN { case (msgs, _, _) => msgs }.unsafeRunSync()
 
-    res2 should have size 50
+    res should have size 60
   }
 
   it should "not drop messages in case of back-pressure with multiple shard workers" in new WorkerContext
@@ -353,8 +347,8 @@ class NewKinesisConsumerSpec
 
   abstract private class WorkerContext(errorStream: Boolean = false) {
 
-    val semaphore = new Semaphore(0)
-
+    val semaphore                          = new Semaphore(0)
+    val latch                              = new CountDownLatch(1)
     protected val mockScheduler: Scheduler = mock(classOf[Scheduler])
 
     var recordProcessorFactory: ShardRecordProcessorFactory = _
@@ -362,19 +356,23 @@ class NewKinesisConsumerSpec
     var recordProcessor2: ShardRecordProcessor              = _
     val chunkedRecordProcessor                              = new ChunkedRecordProcessor(_ => ())
 
+    doAnswer(_ => latch.await()).when(mockScheduler).run()
+
     val builder = { x: ShardRecordProcessorFactory =>
       recordProcessorFactory = x
       recordProcessor = x.shardRecordProcessor()
       semaphore.release()
       recordProcessor2 = x.shardRecordProcessor()
       semaphore.release()
-      mockScheduler
+      mockScheduler.pure[IO]
     }
     val config =
       KinesisConsumerSettings("testStream", "testApp", Region.US_EAST_1, 10)
     val k = Kinesis.create[IO](Blocker.liftExecutionContext(ec), builder)
     val stream: fs2.Stream[IO, CommittableRecord] =
-      k.readFromKinesisStream(config).map(i => if (errorStream) throw new Exception("boom") else i)
+      k.readFromKinesisStream(config)
+        .map(i => if (errorStream) throw new Exception("boom") else i)
+        .onFinalize(IO.delay(latch.countDown()))
     val settings =
       KinesisCheckpointSettings(maxBatchSize = Int.MaxValue, maxBatchWait = 500.millis)
         .getOrElse(throw new Error())

@@ -1,9 +1,9 @@
 package fs2.aws.kinesis
 
-import cats.effect.{ Blocker, ConcurrentEffect, ContextShift, IO, Sync, Timer }
+import cats.effect.{ Blocker, Concurrent, ConcurrentEffect, ContextShift, IO, Sync, Timer }
 import cats.implicits._
 import fs2.aws.core
-import fs2.concurrent.Queue
+import fs2.concurrent.{ Queue, SignallingRef }
 import fs2.{ Chunk, Pipe, Stream }
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
@@ -73,29 +73,28 @@ object Kinesis {
     private[kinesis] def readChunksFromKinesisStream(
       blocker: Blocker,
       streamConfig: KinesisConsumerSettings,
-      schedulerFactory: ShardRecordProcessorFactory => Scheduler
+      schedulerFactory: ShardRecordProcessorFactory => F[Scheduler]
     ): Stream[F, Chunk[CommittableRecord]] = {
       // Initialize a KCL scheduler which appends to the internal stream queue on message receipt
       def instantiateScheduler(
-        queue: Queue[F, Chunk[CommittableRecord]]
+        queue: Queue[F, Chunk[CommittableRecord]],
+        signal: SignallingRef[F, Boolean]
       ): fs2.Stream[F, Scheduler] =
-        Stream.emit(
+        Stream.bracket {
           schedulerFactory(() =>
             new ChunkedRecordProcessor(records =>
               ConcurrentEffect[F].runAsync(queue.enqueue1(records))(_ => IO.unit).unsafeRunSync()
             )
-          )
-        )
+          ).flatTap(s => Concurrent[F].start(blocker.delay(s.run()).flatTap(_ => signal.set(true))))
+        }(s => blocker.delay(s.shutdown()))
 
       // Instantiate a new bounded queue and concurrently run the queue populator
       // Expose the elements by dequeuing the internal buffer
       for {
-        buffer    <- Stream.eval(Queue.bounded[F, Chunk[CommittableRecord]](streamConfig.bufferSize))
-        scheduler <- instantiateScheduler(buffer)
-        stream <- buffer.dequeue concurrently Stream
-                   .eval(blocker.delay(scheduler.run())) onFinalize blocker.delay(
-                   scheduler.shutdown()
-                 )
+        buffer          <- Stream.eval(Queue.bounded[F, Chunk[CommittableRecord]](streamConfig.bufferSize))
+        interruptSignal <- Stream.eval(SignallingRef[F, Boolean](false))
+        _               <- instantiateScheduler(buffer, interruptSignal)
+        stream          <- buffer.dequeue.interruptWhen(interruptSignal)
       } yield stream
     }
     def checkpointRecords(
@@ -118,7 +117,7 @@ object Kinesis {
   }
   def create[F[_]: ConcurrentEffect: ContextShift: Timer](
     blocker: Blocker,
-    schedulerFactory: ShardRecordProcessorFactory => Scheduler
+    schedulerFactory: ShardRecordProcessorFactory => F[Scheduler]
   ): Kinesis[F] = new GenericKinesis[F] {
     override def readChunkedFromKinesisStream(
       consumerConfig: KinesisConsumerSettings
@@ -139,7 +138,7 @@ object Kinesis {
       dynamoClient: DynamoDbAsyncClient,
       cloudWatchClient: CloudWatchAsyncClient,
       schedulerId: UUID
-    ): ShardRecordProcessorFactory => Scheduler = { recordProcessorFactory =>
+    ): ShardRecordProcessorFactory => F[Scheduler] = { recordProcessorFactory =>
       val configsBuilder: ConfigsBuilder = new ConfigsBuilder(
         settings.streamName,
         settings.appName,
@@ -175,7 +174,7 @@ object Kinesis {
         configsBuilder.metricsConfig(),
         configsBuilder.processorConfig(),
         retrievalConfig
-      )
+      ).pure[F]
     }
 
     new GenericKinesis[F] {
