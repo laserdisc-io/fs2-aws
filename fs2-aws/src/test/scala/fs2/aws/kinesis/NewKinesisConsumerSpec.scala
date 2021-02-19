@@ -1,14 +1,9 @@
-package fs2
-package aws
-package kinesis
+package fs2.aws.kinesis
 
-import java.nio.ByteBuffer
-import java.time.Instant
-import java.util.concurrent.Semaphore
-
-import cats.effect.{ ContextShift, IO, Timer }
+import cats.effect.{ Blocker, ContextShift, IO, Timer }
 import cats.implicits._
-import fs2.aws.kinesis.consumer.{ readFromKinesisStream, _ }
+import eu.timepit.refined.auto._
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.Eventually
@@ -23,13 +18,14 @@ import software.amazon.kinesis.processor.{ ShardRecordProcessor, ShardRecordProc
 import software.amazon.kinesis.retrieval.KinesisClientRecord
 import software.amazon.kinesis.retrieval.kpl.ExtendedSequenceNumber
 
+import java.nio.ByteBuffer
+import java.time.Instant
+import java.util.concurrent.Semaphore
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
-import org.mockito.ArgumentMatchers.any
-import eu.timepit.refined.auto._
 
-class KinesisConsumerSpec
+class NewKinesisConsumerSpec
     extends AnyFlatSpec
     with Matchers
     with BeforeAndAfterEach
@@ -173,7 +169,7 @@ class KinesisConsumerSpec
         // all in-flight records are done
         .parEvalMap(3)(msg => IO.sleep(200 millis) >> IO.pure(msg))
         .through(
-          checkpointRecords[IO](
+          k.checkpointRecords(
             KinesisCheckpointSettings(maxBatchSize = Int.MaxValue, maxBatchWait = 500.millis)
               .getOrElse(throw new Error())
           )
@@ -200,7 +196,7 @@ class KinesisConsumerSpec
     res should have size 5
   }
 
-  "KinesisWorker checkpoint pipe" should "checkpoint batch of records with same sequence number" in new KinesisWorkerCheckpointContext {
+  "KinesisWorker checkpoint pipe" should "checkpoint batch of records with same sequence number" in new WorkerContext() {
     val lastRecordSemaphore = new Semaphore(1)
     val input = (1 to 3) map { i =>
       val record = mock(classOf[KinesisClientRecord])
@@ -211,7 +207,7 @@ class KinesisConsumerSpec
         mock(classOf[ExtendedSequenceNumber]),
         1L,
         record,
-        recordProcessor,
+        chunkedRecordProcessor,
         checkpointerShard1,
         lastRecordSemaphore
       )
@@ -225,7 +221,7 @@ class KinesisConsumerSpec
     }
   }
 
-  it should "checkpoint batch of records of different shards" in new KinesisWorkerCheckpointContext {
+  it should "checkpoint batch of records of different shards" in new WorkerContext() {
     val checkpointerShard2 = mock(classOf[ShardRecordProcessorCheckpointer])
 
     val lastRecordSemaphore = new Semaphore(1)
@@ -238,7 +234,7 @@ class KinesisConsumerSpec
           mock(classOf[ExtendedSequenceNumber]),
           i,
           record,
-          recordProcessor,
+          chunkedRecordProcessor,
           checkpointerShard1,
           lastRecordSemaphore
         )
@@ -250,7 +246,7 @@ class KinesisConsumerSpec
           mock(classOf[ExtendedSequenceNumber]),
           i,
           record,
-          recordProcessor,
+          chunkedRecordProcessor,
           checkpointerShard2,
           lastRecordSemaphore
         )
@@ -268,8 +264,10 @@ class KinesisConsumerSpec
 
   }
 
-  it should "checkpoint one last time if the RecordProcessor has reached the end of the shard" in new KinesisWorkerCheckpointContext {
-    recordProcessor.shardEnded(ShardEndedInput.builder().checkpointer(checkpointerShard1).build())
+  it should "checkpoint one last time if the RecordProcessor has reached the end of the shard" in new WorkerContext() {
+    chunkedRecordProcessor.shardEnded(
+      ShardEndedInput.builder().checkpointer(checkpointerShard1).build()
+    )
 
     val input = (1 to 3) map { i =>
       val record = mock(classOf[KinesisClientRecord])
@@ -280,9 +278,9 @@ class KinesisConsumerSpec
         mock(classOf[ExtendedSequenceNumber]),
         1L,
         record,
-        recordProcessor,
+        chunkedRecordProcessor,
         checkpointerShard1,
-        recordProcessor.lastRecordSemaphore,
+        chunkedRecordProcessor.lastRecordSemaphore,
         i == 3
       )
     }
@@ -292,7 +290,7 @@ class KinesisConsumerSpec
     verify(checkpointerShard1, times(1)).checkpoint()
   }
 
-  it should "fail with Exception if checkpoint action fails" in new KinesisWorkerCheckpointContext {
+  it should "fail with Exception if checkpoint action fails" in new WorkerContext() {
     val checkpointer = mock(classOf[ShardRecordProcessorCheckpointer])
 
     val lastRecordSemaphore = new Semaphore(1)
@@ -304,7 +302,7 @@ class KinesisConsumerSpec
       mock(classOf[ExtendedSequenceNumber]),
       1L,
       record,
-      recordProcessor,
+      chunkedRecordProcessor,
       checkpointer,
       lastRecordSemaphore
     )
@@ -315,7 +313,7 @@ class KinesisConsumerSpec
 
     the[RuntimeException] thrownBy fs2.Stream
       .emits(Seq(input))
-      .through(checkpointRecords[IO](settings))
+      .through(k.checkpointRecords(settings))
       .compile
       .toVector
       .unsafeRunSync() should have message "you have no power here"
@@ -326,7 +324,7 @@ class KinesisConsumerSpec
     )
   }
 
-  it should "bypass all items when checkpoint" in new KinesisWorkerCheckpointContext {
+  it should "bypass all items when checkpoint" in new WorkerContext() {
     val checkpointer = mock(classOf[ShardRecordProcessorCheckpointer])
 
     val lastRecordSemaphore = new Semaphore(1)
@@ -339,7 +337,7 @@ class KinesisConsumerSpec
         mock(classOf[ExtendedSequenceNumber]),
         idx,
         record,
-        recordProcessor,
+        chunkedRecordProcessor,
         checkpointer,
         lastRecordSemaphore
       )
@@ -347,7 +345,7 @@ class KinesisConsumerSpec
 
     fs2.Stream
       .emits(input)
-      .through(checkpointRecords[IO](settings))
+      .through(k.checkpointRecords(settings))
       .compile
       .toVector
       .unsafeRunSync() should have size 100
@@ -355,19 +353,14 @@ class KinesisConsumerSpec
 
   abstract private class WorkerContext(errorStream: Boolean = false) {
 
-    val semaphore = new Semaphore(1)
-    semaphore.acquire()
-    var output = List.newBuilder[CommittableRecord]
+    val semaphore = new Semaphore(0)
 
     protected val mockScheduler: Scheduler = mock(classOf[Scheduler])
-
-    doAnswer(_ => println("running kinesis scheduler")).when(mockScheduler).run()
-
-    doAnswer(_ => ()).when(mockScheduler).shutdown()
 
     var recordProcessorFactory: ShardRecordProcessorFactory = _
     var recordProcessor: ShardRecordProcessor               = _
     var recordProcessor2: ShardRecordProcessor              = _
+    val chunkedRecordProcessor                              = new ChunkedRecordProcessor(_ => ())
 
     val builder = { x: ShardRecordProcessorFactory =>
       recordProcessorFactory = x
@@ -379,11 +372,22 @@ class KinesisConsumerSpec
     }
     val config =
       KinesisConsumerSettings("testStream", "testApp", Region.US_EAST_1, 10)
-
+    val k = Kinesis.create[IO](Blocker.liftExecutionContext(ec), builder)
     val stream: fs2.Stream[IO, CommittableRecord] =
-      readFromKinesisStream[IO](config, builder).map(i =>
-        if (errorStream) throw new Exception("boom") else i
-      )
+      k.readFromKinesisStream(config).map(i => if (errorStream) throw new Exception("boom") else i)
+    val settings =
+      KinesisCheckpointSettings(maxBatchSize = Int.MaxValue, maxBatchWait = 500.millis)
+        .getOrElse(throw new Error())
+
+    val checkpointerShard1 = mock(classOf[ShardRecordProcessorCheckpointer])
+
+    def startStream(input: Seq[CommittableRecord]): Seq[KinesisClientRecord] =
+      fs2.Stream
+        .emits(input)
+        .through(k.checkpointRecords(settings))
+        .compile
+        .toList
+        .unsafeRunSync()
   }
 
   private trait TestData {
@@ -428,19 +432,4 @@ class KinesisConsumerSpec
         .records(List(record).asJava)
   }
 
-  private trait KinesisWorkerCheckpointContext {
-    val recordProcessor    = new ChunkedRecordProcessor(_ => ())
-    val checkpointerShard1 = mock(classOf[ShardRecordProcessorCheckpointer])
-    val settings =
-      KinesisCheckpointSettings(maxBatchSize = Int.MaxValue, maxBatchWait = 500.millis)
-        .getOrElse(throw new Error())
-
-    def startStream(input: Seq[CommittableRecord]): Seq[KinesisClientRecord] =
-      fs2.Stream
-        .emits(input)
-        .through(checkpointRecords[IO](settings))
-        .compile
-        .toList
-        .unsafeRunSync()
-  }
 }

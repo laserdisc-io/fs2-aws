@@ -22,7 +22,6 @@ import software.amazon.kinesis.retrieval.polling.PollingConfig
 
 import java.util.UUID
 
-@deprecated("use Kinesis algebra instead", "3.1.0")
 object consumer {
   def mkDefaultKinesisClient(settings: KinesisConsumerSettings): KinesisAsyncClient = {
     val builder = KinesisAsyncClient
