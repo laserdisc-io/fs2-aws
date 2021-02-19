@@ -51,11 +51,16 @@ trait Kinesis[F[_]] {
     consumerConfig: KinesisConsumerSettings
   ): Stream[F, Chunk[CommittableRecord]]
 
-  private[kinesis] def readChunksFromKinesisStream(
-    streamConfig: KinesisConsumerSettings,
-    schedulerFactory: ShardRecordProcessorFactory => Scheduler
-  ): Stream[F, Chunk[CommittableRecord]]
+  //TODO: remove this in future. It is exposed only for testing proposes
+  //To test scenarios with SHARD_END cases we need to mock the KCL library
+  // Unfortunately Localstack has limitations, see
+  //https://github.com/laserdisc-io/fs2-aws/discussions/592
 
+//  private[kinesis] def readChunksFromKinesisStream(
+//    streamConfig: KinesisConsumerSettings,
+//    schedulerFactory: ShardRecordProcessorFactory => Scheduler
+//  ): Stream[F, Chunk[CommittableRecord]]
+//
   /** Pipe to checkpoint records in Kinesis, marking them as processed
     * Groups records by shard id, so that each shard is subject to its own clustering of records
     * After accumulating maxBatchSize or reaching maxBatchWait for a respective shard, the latest record is checkpointed
@@ -73,13 +78,72 @@ trait Kinesis[F[_]] {
 
 object Kinesis {
 
+  abstract class GenericKinesis[F[_]: ConcurrentEffect: ContextShift: Timer] extends Kinesis[F] {
+
+    private[kinesis] def readChunksFromKinesisStream(
+      blocker: Blocker,
+      streamConfig: KinesisConsumerSettings,
+      schedulerFactory: ShardRecordProcessorFactory => Scheduler
+    ): Stream[F, Chunk[CommittableRecord]] = {
+      // Initialize a KCL scheduler which appends to the internal stream queue on message receipt
+      def instantiateScheduler(
+        queue: Queue[F, Chunk[CommittableRecord]]
+      ): fs2.Stream[F, Scheduler] =
+        Stream.emit(
+          schedulerFactory(() =>
+            new ChunkedRecordProcessor(records =>
+              ConcurrentEffect[F].runAsync(queue.enqueue1(records))(_ => IO.unit).unsafeRunSync()
+            )
+          )
+        )
+
+      // Instantiate a new bounded queue and concurrently run the queue populator
+      // Expose the elements by dequeuing the internal buffer
+      for {
+        buffer    <- Stream.eval(Queue.bounded[F, Chunk[CommittableRecord]](streamConfig.bufferSize))
+        scheduler <- instantiateScheduler(buffer)
+        stream <- buffer.dequeue concurrently Stream
+                   .eval(blocker.delay(scheduler.run())) onFinalize blocker.delay(
+                   scheduler.shutdown()
+                 )
+      } yield stream
+    }
+    def checkpointRecords(
+      checkpointSettings: KinesisCheckpointSettings // = KinesisCheckpointSettings.defaultInstance
+    ): Pipe[F, CommittableRecord, KinesisClientRecord] = {
+      def checkpoint(
+        checkpointSettings: KinesisCheckpointSettings
+      ): Pipe[F, CommittableRecord, KinesisClientRecord] =
+        _.groupWithin(checkpointSettings.maxBatchSize, checkpointSettings.maxBatchWait)
+          .collect { case chunk if chunk.size > 0 => chunk.toList.max }
+          .flatMap(cr => fs2.Stream.eval_(cr.checkpoint.as(cr.record)))
+
+      def bypass: Pipe[F, CommittableRecord, KinesisClientRecord] = _.map(r => r.record)
+
+      _.through(core.groupBy(r => Sync[F].pure(r.shardId))).map {
+        case (_, st) =>
+          st.broadcastThrough(checkpoint(checkpointSettings), bypass)
+      }.parJoinUnbounded
+    }
+  }
+  def create[F[_]: ConcurrentEffect: ContextShift: Timer](
+    blocker: Blocker,
+    schedulerFactory: ShardRecordProcessorFactory => Scheduler
+  ): Kinesis[F] = new GenericKinesis[F] {
+    override def readChunkedFromKinesisStream(
+      consumerConfig: KinesisConsumerSettings
+    ): Stream[F, Chunk[CommittableRecord]] =
+      readChunksFromKinesisStream(blocker, consumerConfig, schedulerFactory)
+  }
+
   def create[F[_]: ConcurrentEffect: ContextShift: Timer](
     kinesisAsyncClient: KinesisAsyncClient,
     dynamoDbAsyncClient: DynamoDbAsyncClient,
-    cloudWatchAsyncClient: CloudWatchAsyncClient
-  ): Kinesis[F] = new Kinesis[F] {
+    cloudWatchAsyncClient: CloudWatchAsyncClient,
+    blocker: Blocker
+  ): Kinesis[F] = {
 
-    private def defaultScheduler(
+    def defaultScheduler(
       settings: KinesisConsumerSettings,
       kinesisClient: KinesisAsyncClient,
       dynamoClient: DynamoDbAsyncClient,
@@ -124,67 +188,25 @@ object Kinesis {
       )
     }
 
-    def readChunkedFromKinesisStream(
-      consumerConfig: KinesisConsumerSettings
-    ): Stream[F, Chunk[CommittableRecord]] =
-      Stream
-        .eval(Sync[F].delay(UUID.randomUUID()))
-        .flatMap(guid =>
-          readChunksFromKinesisStream(
-            consumerConfig,
-            defaultScheduler(
+    new GenericKinesis[F] {
+      override def readChunkedFromKinesisStream(
+        consumerConfig: KinesisConsumerSettings
+      ): Stream[F, Chunk[CommittableRecord]] =
+        Stream
+          .eval(Sync[F].delay(UUID.randomUUID()))
+          .flatMap(uuid =>
+            readChunksFromKinesisStream(
+              blocker,
               consumerConfig,
-              kinesisAsyncClient,
-              dynamoDbAsyncClient,
-              cloudWatchAsyncClient,
-              guid
+              defaultScheduler(
+                consumerConfig,
+                kinesisAsyncClient,
+                dynamoDbAsyncClient,
+                cloudWatchAsyncClient,
+                uuid
+              )
             )
           )
-        )
-
-    private[kinesis] def readChunksFromKinesisStream(
-      streamConfig: KinesisConsumerSettings,
-      schedulerFactory: ShardRecordProcessorFactory => Scheduler
-    ): Stream[F, Chunk[CommittableRecord]] = {
-      // Initialize a KCL scheduler which appends to the internal stream queue on message receipt
-      def instantiateScheduler(
-        queue: Queue[F, Chunk[CommittableRecord]]
-      ): fs2.Stream[F, Scheduler] =
-        Stream.emit(
-          schedulerFactory(() =>
-            new ChunkedRecordProcessor(records =>
-              ConcurrentEffect[F].runAsync(queue.enqueue1(records))(_ => IO.unit).unsafeRunSync()
-            )
-          )
-        )
-
-      // Instantiate a new bounded queue and concurrently run the queue populator
-      // Expose the elements by dequeuing the internal buffer
-      for {
-        buffer    <- Stream.eval(Queue.bounded[F, Chunk[CommittableRecord]](streamConfig.bufferSize))
-        scheduler <- instantiateScheduler(buffer)
-        stream <- buffer.dequeue concurrently Stream.eval(
-                   Blocker[F].use(blocker => blocker.delay(scheduler.run()))
-                 ) onFinalize Sync[F].delay(scheduler.shutdown())
-      } yield stream
-    }
-
-    def checkpointRecords(
-      checkpointSettings: KinesisCheckpointSettings // = KinesisCheckpointSettings.defaultInstance
-    ): Pipe[F, CommittableRecord, KinesisClientRecord] = {
-      def checkpoint(
-        checkpointSettings: KinesisCheckpointSettings
-      ): Pipe[F, CommittableRecord, KinesisClientRecord] =
-        _.groupWithin(checkpointSettings.maxBatchSize, checkpointSettings.maxBatchWait)
-          .collect { case chunk if chunk.size > 0 => chunk.toList.max }
-          .flatMap(cr => fs2.Stream.eval_(cr.checkpoint.as(cr.record)))
-
-      def bypass: Pipe[F, CommittableRecord, KinesisClientRecord] = _.map(r => r.record)
-
-      _.through(core.groupBy(r => Sync[F].pure(r.shardId))).map {
-        case (_, st) =>
-          st.broadcastThrough(checkpoint(checkpointSettings), bypass)
-      }.parJoinUnbounded
     }
 
   }
