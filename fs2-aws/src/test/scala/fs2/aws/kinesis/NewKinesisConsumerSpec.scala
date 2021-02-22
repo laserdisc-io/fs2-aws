@@ -161,7 +161,6 @@ class NewKinesisConsumerSpec
         .take(nRecords)
         //emulate message processing latency to reproduce the situation when End of Shard arrives BEFORE
         // all in-flight records are done
-        .evalTap(m => IO.delay(println(s"received $m")))
         .parEvalMap(3)(msg => IO.sleep(200 millis) >> IO.pure(msg))
         .through(
           k.checkpointRecords(
@@ -175,7 +174,6 @@ class NewKinesisConsumerSpec
         blocker.blockOn(IO.delay {
           semaphore.acquire()
           recordProcessor.initialize(initializationInput)
-          println("i'm sending messages")
           (1 to nRecords).foreach { i =>
             val record = mock(classOf[KinesisClientRecord])
             when(record.sequenceNumber()).thenReturn(i.toString)
@@ -184,12 +182,10 @@ class NewKinesisConsumerSpec
             )
           }
         } >> IO.delay {
-          println("i'm publishing shard end event")
           //Immediately publish end of shard event
           recordProcessor.shardEnded(
             ShardEndedInput.builder().checkpointer(checkpointer).build()
           )
-          println("i'm dome emulating SHARD_END scenario")
         })
       }
     ).parMapN { case (msgs, _) => msgs }.unsafeRunSync()
