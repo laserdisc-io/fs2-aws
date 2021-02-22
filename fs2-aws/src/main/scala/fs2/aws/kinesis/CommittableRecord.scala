@@ -32,9 +32,7 @@ case class CommittableRecord(
   def checkpoint[F[_]: Sync]: F[Unit] =
     Sync[F].delay {
       checkpointer.checkpoint(record.sequenceNumber(), record.subSequenceNumber())
-      if (isLastInShard) {
-        lastRecordSemaphore.release()
-      }
+      if (isLastInShard) lastRecordSemaphore.release()
     }
 
 }
