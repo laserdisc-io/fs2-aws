@@ -171,24 +171,26 @@ class NewKinesisConsumerSpec
         )
         .compile
         .toList,
-      IO.delay {
-        semaphore.acquire()
-        recordProcessor.initialize(initializationInput)
-        println("i'm sending messages")
-        (1 to nRecords).foreach { i =>
-          val record = mock(classOf[KinesisClientRecord])
-          when(record.sequenceNumber()).thenReturn(i.toString)
-          recordProcessor.processRecords(
-            recordsInput.isAtShardEnd(i == 5).records(List(record)).build()
+      Blocker[IO].use { blocker =>
+        blocker.blockOn(IO.delay {
+          semaphore.acquire()
+          recordProcessor.initialize(initializationInput)
+          println("i'm sending messages")
+          (1 to nRecords).foreach { i =>
+            val record = mock(classOf[KinesisClientRecord])
+            when(record.sequenceNumber()).thenReturn(i.toString)
+            recordProcessor.processRecords(
+              recordsInput.isAtShardEnd(i == 5).records(List(record)).build()
+            )
+          }
+        } >> IO.delay {
+          println("i'm publishing shard end event")
+          //Immediately publish end of shard event
+          recordProcessor.shardEnded(
+            ShardEndedInput.builder().checkpointer(checkpointer).build()
           )
-        }
-      } >> IO.delay {
-        println("i'm publishing shard end event")
-        //Immediately publish end of shard event
-        recordProcessor.shardEnded(
-          ShardEndedInput.builder().checkpointer(checkpointer).build()
-        )
-        println("i'm dome emulating SHARD_END scenario")
+          println("i'm dome emulating SHARD_END scenario")
+        })
       }
     ).parMapN { case (msgs, _) => msgs }.unsafeRunSync()
 
