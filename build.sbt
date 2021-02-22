@@ -6,9 +6,12 @@ import TaglessGen.{
   taglessGenSettings
 }
 import scoverage.ScoverageKeys.coverageMinimum
+import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.sns.SnsAsyncClient
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
+import software.amazon.awssdk.services.kinesis.KinesisAsyncClient
+import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 
 organization := "io.laserdisc"
 name         := "fs2-aws"
@@ -94,7 +97,16 @@ lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb"))
   .settings(scalacOptions ++= commonOptions(scalaVersion.value))
 
 lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
-  .dependsOn(`fs2-aws-dynamodb`, `pure-s3-tagless`, `pure-sns-tagless`, `pure-sqs-tagless`)
+  .dependsOn(
+    `fs2-aws-dynamodb`,
+    `pure-s3-tagless`,
+    `pure-sns-tagless`,
+    `pure-sqs-tagless`,
+    `pure-kinesis-tagless`,
+    `pure-dynamodb-tagless`,
+    `pure-cloudwatch-tagless`,
+    `fs2-aws`
+  )
   .settings(
     name            := "fs2-aws-examples",
     coverageMinimum := 0,
@@ -134,7 +146,12 @@ lazy val `fs2-aws-s3` = (project in file("fs2-aws-s3"))
   .dependsOn(`pure-s3-tagless`)
 
 lazy val `fs2-aws` = (project in file("fs2-aws"))
-  .dependsOn(`fs2-aws-core`)
+  .dependsOn(
+    `fs2-aws-core`,
+    `pure-cloudwatch-tagless`,
+    `pure-dynamodb-tagless`,
+    `pure-kinesis-tagless`
+  )
   .settings(
     name := "fs2-aws",
     libraryDependencies ++= Seq(
@@ -146,7 +163,11 @@ lazy val `fs2-aws` = (project in file("fs2-aws"))
       "eu.timepit"              %% "refined"                 % V.Refined,
       "org.scalatest"           %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"             %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
-      "org.mockito"             % "mockito-core"             % V.MockitoCore % Test
+      "org.mockito"             % "mockito-core"             % V.MockitoCore % Test,
+      "ch.qos.logback"          % "logback-classic"          % "1.2.3",
+      "ch.qos.logback"          % "logback-core"             % "1.2.3",
+      "org.slf4j"               % "jcl-over-slf4j"           % "1.7.30",
+      "org.slf4j"               % "jul-to-slf4j"             % "1.7.30"
     ),
     coverageMinimum       := 40,
     coverageFailOnMinimum := true
@@ -259,6 +280,81 @@ lazy val `pure-sns-tagless` = (project in file("pure-aws/pure-sns-tagless"))
     taglessGenClasses := {
       List[Class[_]](
         classOf[SnsAsyncClient]
+      )
+    }
+  )
+  .settings(commonSettings)
+  .settings(scalacOptions ++= commonOptions(scalaVersion.value))
+
+lazy val `pure-kinesis-tagless` = (project in file("pure-aws/pure-kinesis-tagless"))
+  .settings(taglessGenSettings)
+  .settings(
+    name := "pure-kinesis-tagless",
+    libraryDependencies ++= Seq(
+      "software.amazon.awssdk" % "kinesis"                  % V.AwsSdk,
+      "org.mockito"            % "mockito-core"             % V.MockitoCore % Test,
+      "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
+      "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
+      "eu.timepit"             %% "refined"                 % V.Refined,
+      "org.typelevel"          %% "cats-effect"             % "2.3.1",
+      "org.typelevel"          %% "cats-free"               % "2.3.1"
+    ),
+    taglessGenDir     := (scalaSource in Compile).value / "io" / "laserdisc" / "pure" / "kinesis" / "tagless",
+    taglessGenPackage := "io.laserdisc.pure.kinesis.tagless",
+    taglessAwsService := "kinesis",
+    taglessGenClasses := {
+      List[Class[_]](
+        classOf[KinesisAsyncClient]
+      )
+    }
+  )
+  .settings(commonSettings)
+  .settings(scalacOptions ++= commonOptions(scalaVersion.value))
+
+lazy val `pure-dynamodb-tagless` = (project in file("pure-aws/pure-dynamodb-tagless"))
+  .settings(taglessGenSettings)
+  .settings(
+    name := "pure-dynamodb-tagless",
+    libraryDependencies ++= Seq(
+      "software.amazon.awssdk" % "dynamodb"                 % V.AwsSdk,
+      "org.mockito"            % "mockito-core"             % V.MockitoCore % Test,
+      "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
+      "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
+      "eu.timepit"             %% "refined"                 % V.Refined,
+      "org.typelevel"          %% "cats-effect"             % "2.3.1",
+      "org.typelevel"          %% "cats-free"               % "2.3.1"
+    ),
+    taglessGenDir     := (scalaSource in Compile).value / "io" / "laserdisc" / "pure" / "dynamodb" / "tagless",
+    taglessGenPackage := "io.laserdisc.pure.dynamodb.tagless",
+    taglessAwsService := "dynamodb",
+    taglessGenClasses := {
+      List[Class[_]](
+        classOf[DynamoDbAsyncClient]
+      )
+    }
+  )
+  .settings(commonSettings)
+  .settings(scalacOptions ++= commonOptions(scalaVersion.value))
+
+lazy val `pure-cloudwatch-tagless` = (project in file("pure-aws/pure-cloudwatch-tagless"))
+  .settings(taglessGenSettings)
+  .settings(
+    name := "pure-cloudwatch-tagless",
+    libraryDependencies ++= Seq(
+      "software.amazon.awssdk" % "cloudwatch"               % V.AwsSdk,
+      "org.mockito"            % "mockito-core"             % V.MockitoCore % Test,
+      "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
+      "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
+      "eu.timepit"             %% "refined"                 % V.Refined,
+      "org.typelevel"          %% "cats-effect"             % "2.3.1",
+      "org.typelevel"          %% "cats-free"               % "2.3.1"
+    ),
+    taglessGenDir     := (scalaSource in Compile).value / "io" / "laserdisc" / "pure" / "cloudwatch" / "tagless",
+    taglessGenPackage := "io.laserdisc.pure.cloudwatch.tagless",
+    taglessAwsService := "cloudwatch",
+    taglessGenClasses := {
+      List[Class[_]](
+        classOf[CloudWatchAsyncClient]
       )
     }
   )

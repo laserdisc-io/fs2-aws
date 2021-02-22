@@ -1,5 +1,8 @@
 package fs2.aws.kinesis
 
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.numeric.Positive
+
 import fs2.aws.internal.Exceptions._
 import software.amazon.awssdk.regions.Region
 import software.amazon.kinesis.common.InitialPositionInStream
@@ -7,6 +10,7 @@ import software.amazon.kinesis.common.InitialPositionInStream
 import java.net.URI
 import java.util.Date
 import scala.concurrent.duration._
+import eu.timepit.refined.auto._
 
 /** Settings for configuring the Kinesis consumer
   *
@@ -36,33 +40,26 @@ object KinesisConsumerSettings {
     streamName: String,
     appName: String,
     region: Region = Region.US_EAST_1,
-    maxConcurrency: Int = Int.MaxValue,
-    bufferSize: Int = 10,
+    maxConcurrency: Int Refined Positive = Int.MaxValue,
+    bufferSize: Int Refined Positive = 10,
     stsAssumeRole: Option[STSAssumeRoleSettings] = None,
     initialPositionInStream: Either[InitialPositionInStream, Date] = Left(
       InitialPositionInStream.LATEST
     ),
     endpoint: Option[String] = None,
     retrievalMode: RetrievalMode = FanOut
-  ): Either[Throwable, KinesisConsumerSettings] =
-    (bufferSize, maxConcurrency) match {
-      case (bs, _) if bs < 1 => Left(BufferSizeException("Must be greater than 0"))
-      case (_, mc) if mc < 1 => Left(MaxConcurrencyException("Must be greater than 0"))
-      case (bs, mc) =>
-        Right(
-          new KinesisConsumerSettings(
-            streamName,
-            appName,
-            region,
-            mc,
-            bs,
-            stsAssumeRole,
-            initialPositionInStream,
-            endpoint.map(URI.create),
-            retrievalMode
-          )
-        )
-    }
+  ): KinesisConsumerSettings =
+    new KinesisConsumerSettings(
+      streamName,
+      appName,
+      region,
+      maxConcurrency,
+      bufferSize,
+      stsAssumeRole,
+      initialPositionInStream,
+      endpoint.map(URI.create),
+      retrievalMode
+    )
 }
 
 sealed trait RetrievalMode

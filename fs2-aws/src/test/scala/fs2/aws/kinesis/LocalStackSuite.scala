@@ -39,7 +39,7 @@ class LocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
       initialPositionInStream = Left(InitialPositionInStream.TRIM_HORIZON),
       endpoint = Some("http://localhost:4566"),
       retrievalMode = Polling
-    ).toTry.get
+    )
 
     val producerConfig = new KinesisProducerConfiguration()
       .setCredentialsProvider(new DefaultAWSCredentialsProviderChain())

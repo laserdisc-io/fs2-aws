@@ -4,7 +4,7 @@ import cats.effect.{ Blocker, ConcurrentEffect, ContextShift, IO, Sync, Timer }
 import cats.implicits._
 import fs2.aws.core
 import fs2.concurrent.Queue
-import fs2.{ Chunk, Pipe, RaiseThrowable, Stream }
+import fs2.{ Chunk, Pipe, Stream }
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
@@ -121,11 +121,8 @@ object consumer {
   def readFromKinesisStream[F[_]: ConcurrentEffect: ContextShift](
     appName: String,
     streamName: String
-  )(implicit rt: RaiseThrowable[F]): Stream[F, CommittableRecord] =
-    KinesisConsumerSettings(streamName, appName) match {
-      case Right(config) => readFromKinesisStream(config)
-      case Left(err)     => Stream.raiseError(err)
-    }
+  ): Stream[F, CommittableRecord] =
+    readFromKinesisStream(KinesisConsumerSettings(streamName, appName))
 
   /** Initialize a worker and start streaming records from a Kinesis stream
     * On stream finish (due to error or other), worker will be shutdown
@@ -155,11 +152,8 @@ object consumer {
     appName: String,
     streamName: String,
     kinesisClient: KinesisAsyncClient
-  )(implicit rt: RaiseThrowable[F]): Stream[F, CommittableRecord] =
-    KinesisConsumerSettings(streamName, appName) match {
-      case Right(config) => readFromKinesisStream(config, kinesisClient)
-      case Left(err)     => Stream.raiseError(err)
-    }
+  ): Stream[F, CommittableRecord] =
+    readFromKinesisStream(KinesisConsumerSettings(streamName, appName), kinesisClient)
 
   /** Initialize a worker and start streaming records from a Kinesis stream
     * On stream finish (due to error or other), worker will be shutdown
