@@ -38,7 +38,10 @@ lazy val root = (project in file("."))
     `fs2-aws-benchmarks`,
     `pure-sqs-tagless`,
     `pure-sns-tagless`,
-    `pure-s3-tagless`
+    `pure-s3-tagless`,
+    `pure-cloudwatch-tagless`,
+    `pure-dynamodb-tagless`,
+    `pure-kinesis-tagless`
   )
   .settings(
     publishArtifact    := false,
