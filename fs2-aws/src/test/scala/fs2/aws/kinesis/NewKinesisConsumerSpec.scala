@@ -161,6 +161,7 @@ class NewKinesisConsumerSpec
         .take(nRecords)
         //emulate message processing latency to reproduce the situation when End of Shard arrives BEFORE
         // all in-flight records are done
+        .evalTap(m => IO.delay(println(s"received $m")))
         .parEvalMap(3)(msg => IO.sleep(200 millis) >> IO.pure(msg))
         .through(
           k.checkpointRecords(
