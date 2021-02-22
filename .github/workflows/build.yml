@@ -19,7 +19,7 @@ jobs:
       - name: "Starting up MinIO 🐳"
         run: docker-compose up -d
       - name: Run tests
-        run: csbt +clean +test
+        run: csbt +clean +test +doc
         env:
           AWS_ACCESS_KEY_ID: dummy
           AWS_SECRET_ACCESS_KEY: dummy

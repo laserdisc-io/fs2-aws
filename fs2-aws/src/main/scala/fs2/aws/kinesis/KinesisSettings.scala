@@ -2,7 +2,6 @@ package fs2.aws.kinesis
 
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive
-
 import fs2.aws.internal.Exceptions._
 import software.amazon.awssdk.regions.Region
 import software.amazon.kinesis.common.InitialPositionInStream
@@ -27,8 +26,8 @@ class KinesisConsumerSettings private (
   val streamName: String,
   val appName: String,
   val region: Region,
-  val maxConcurrency: Int,
-  val bufferSize: Int,
+  val maxConcurrency: Int Refined Positive,
+  val bufferSize: Int Refined Positive,
   val stsAssumeRole: Option[STSAssumeRoleSettings],
   val initialPositionInStream: Either[InitialPositionInStream, Date],
   val endpoint: Option[URI],
@@ -40,7 +39,7 @@ object KinesisConsumerSettings {
     streamName: String,
     appName: String,
     region: Region = Region.US_EAST_1,
-    maxConcurrency: Int Refined Positive = Int.MaxValue,
+    maxConcurrency: Int Refined Positive = 100,
     bufferSize: Int Refined Positive = 10,
     stsAssumeRole: Option[STSAssumeRoleSettings] = None,
     initialPositionInStream: Either[InitialPositionInStream, Date] = Left(
