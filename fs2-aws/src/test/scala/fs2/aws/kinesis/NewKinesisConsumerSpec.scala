@@ -181,6 +181,7 @@ class NewKinesisConsumerSpec
             recordsInput.isAtShardEnd(i == 5).records(List(record)).build()
           )
         }
+      } >> IO.delay {
         println("i'm publishing shard end event")
         //Immediately publish end of shard event
         recordProcessor.shardEnded(
