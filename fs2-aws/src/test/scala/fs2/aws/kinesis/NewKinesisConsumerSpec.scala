@@ -153,7 +153,7 @@ class NewKinesisConsumerSpec
     res should have size 10
   }
 
-  it should "delay the end of shard checkpoint until all messages are drained" ignore new WorkerContext
+  it should "delay the end of shard checkpoint until all messages are drained" in new WorkerContext
     with TestData {
     val nRecords = 5
     val res: Seq[KinesisClientRecord] = (
@@ -173,6 +173,7 @@ class NewKinesisConsumerSpec
       IO.delay {
         semaphore.acquire()
         recordProcessor.initialize(initializationInput)
+        println("i'm sending messages")
         (1 to nRecords).foreach { i =>
           val record = mock(classOf[KinesisClientRecord])
           when(record.sequenceNumber()).thenReturn(i.toString)
@@ -180,10 +181,12 @@ class NewKinesisConsumerSpec
             recordsInput.isAtShardEnd(i == 5).records(List(record)).build()
           )
         }
+        println("i'm publishing shard end event")
         //Immediately publish end of shard event
         recordProcessor.shardEnded(
           ShardEndedInput.builder().checkpointer(checkpointer).build()
         )
+        println("i'm dome emulating SHARD_END scenario")
       }
     ).parMapN { case (msgs, _) => msgs }.unsafeRunSync()
 
