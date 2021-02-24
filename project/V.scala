@@ -5,7 +5,7 @@ object V {
   val Munit            = "0.7.21"
   val Fs2              = "2.5.3"
   val Refined          = "0.9.21"
-  val ScalaTest        = "3.2.3"
+  val ScalaTest        = "3.2.5"
   val MockitoScalaTest = "1.16.25"
   val MockitoCore      = "3.7.7"
 }
