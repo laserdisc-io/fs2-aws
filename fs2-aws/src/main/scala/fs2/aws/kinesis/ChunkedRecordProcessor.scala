@@ -64,7 +64,7 @@ private[aws] class ChunkedRecordProcessor(cb: Chunk[CommittableRecord] => Unit)
       if (processRecordsInput.isAtShardEnd)
         batch match {
           case head :+ last => head :+ last.copy(isLastInShard = true)
-          case Nil          => Nil
+          case _            => Nil
         }
       else batch
     cb(Chunk(chunk: _*))
