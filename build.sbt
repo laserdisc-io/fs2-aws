@@ -161,7 +161,7 @@ lazy val `fs2-aws` = (project in file("fs2-aws"))
       "co.fs2"                  %% "fs2-core"                % V.Fs2,
       "co.fs2"                  %% "fs2-io"                  % V.Fs2,
       "com.amazonaws"           % "amazon-kinesis-producer"  % "0.14.5",
-      "software.amazon.kinesis" % "amazon-kinesis-client"    % "2.3.3",
+      "software.amazon.kinesis" % "amazon-kinesis-client"    % "2.3.4",
       "software.amazon.awssdk"  % "sts"                      % V.AwsSdk,
       "eu.timepit"              %% "refined"                 % V.Refined,
       "org.scalatest"           %% "scalatest"               % V.ScalaTest % Test,
@@ -227,7 +227,7 @@ lazy val `pure-sqs-tagless` = (project in file("pure-aws/pure-sqs-tagless"))
       "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
       "eu.timepit"             %% "refined"                 % V.Refined,
-      "org.typelevel"          %% "cats-effect"             % "2.3.1"
+      "org.typelevel"          %% "cats-effect"             % "2.3.3"
     ),
     taglessGenDir     := (scalaSource in Compile).value / "io" / "laserdisc" / "pure" / "sqs" / "tagless",
     taglessGenPackage := "io.laserdisc.pure.sqs.tagless",
@@ -251,7 +251,7 @@ lazy val `pure-s3-tagless` = (project in file("pure-aws/pure-s3-tagless"))
       "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
       "eu.timepit"             %% "refined"                 % V.Refined,
-      "org.typelevel"          %% "cats-effect"             % "2.3.1"
+      "org.typelevel"          %% "cats-effect"             % "2.3.3"
     ),
     taglessGenDir     := (scalaSource in Compile).value / "io" / "laserdisc" / "pure" / "s3" / "tagless",
     taglessGenPackage := "io.laserdisc.pure.s3.tagless",
@@ -275,7 +275,7 @@ lazy val `pure-sns-tagless` = (project in file("pure-aws/pure-sns-tagless"))
       "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
       "eu.timepit"             %% "refined"                 % V.Refined,
-      "org.typelevel"          %% "cats-effect"             % "2.3.1"
+      "org.typelevel"          %% "cats-effect"             % "2.3.3"
     ),
     taglessGenDir     := (scalaSource in Compile).value / "io" / "laserdisc" / "pure" / "sns" / "tagless",
     taglessGenPackage := "io.laserdisc.pure.sns.tagless",
@@ -299,8 +299,7 @@ lazy val `pure-kinesis-tagless` = (project in file("pure-aws/pure-kinesis-tagles
       "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
       "eu.timepit"             %% "refined"                 % V.Refined,
-      "org.typelevel"          %% "cats-effect"             % "2.3.1",
-      "org.typelevel"          %% "cats-free"               % "2.3.1"
+      "org.typelevel"          %% "cats-effect"             % "2.3.3"
     ),
     taglessGenDir     := (scalaSource in Compile).value / "io" / "laserdisc" / "pure" / "kinesis" / "tagless",
     taglessGenPackage := "io.laserdisc.pure.kinesis.tagless",
@@ -324,8 +323,7 @@ lazy val `pure-dynamodb-tagless` = (project in file("pure-aws/pure-dynamodb-tagl
       "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
       "eu.timepit"             %% "refined"                 % V.Refined,
-      "org.typelevel"          %% "cats-effect"             % "2.3.1",
-      "org.typelevel"          %% "cats-free"               % "2.3.1"
+      "org.typelevel"          %% "cats-effect"             % "2.3.3"
     ),
     taglessGenDir     := (scalaSource in Compile).value / "io" / "laserdisc" / "pure" / "dynamodb" / "tagless",
     taglessGenPackage := "io.laserdisc.pure.dynamodb.tagless",
@@ -349,8 +347,7 @@ lazy val `pure-cloudwatch-tagless` = (project in file("pure-aws/pure-cloudwatch-
       "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
       "eu.timepit"             %% "refined"                 % V.Refined,
-      "org.typelevel"          %% "cats-effect"             % "2.3.1",
-      "org.typelevel"          %% "cats-free"               % "2.3.1"
+      "org.typelevel"          %% "cats-effect"             % "2.3.3"
     ),
     taglessGenDir     := (scalaSource in Compile).value / "io" / "laserdisc" / "pure" / "cloudwatch" / "tagless",
     taglessGenPackage := "io.laserdisc.pure.cloudwatch.tagless",
