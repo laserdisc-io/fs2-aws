@@ -58,8 +58,7 @@ object KinesisExample extends IOApp {
       c                  <- CloudwatchInterpreter[F](b).CloudWatchAsyncClientResource(cac)
       kinesisInterpreter = i.create(k)
       _                  <- disposableStream(kinesisInterpreter, streamName)
-      kAlgebra           = Kinesis.create[F](k, d, c, b)
-    } yield kAlgebra
+    } yield Kinesis.create[F](k, d, c, b)
 
   def program[F[_]: Concurrent: Timer: NonEmptyParallel](
     kinesis: Kinesis[F],
