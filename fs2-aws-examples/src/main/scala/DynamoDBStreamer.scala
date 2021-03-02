@@ -1,8 +1,8 @@
 import cats.effect.{ ExitCode, IO, IOApp }
 import fs2.aws.dynamodb
 import fs2.aws.dynamodb.parsers
-import io.chrisdavenport.log4cats.SelfAwareStructuredLogger
-import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
+import org.typelevel.log4cats.SelfAwareStructuredLogger
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 import io.circe.Json
 import io.github.howardjohn.scanamo.CirceDynamoFormat._
 
