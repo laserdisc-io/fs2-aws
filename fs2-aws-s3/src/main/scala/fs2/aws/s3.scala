@@ -221,7 +221,7 @@ object s3 {
           val chunkSizeBytes = partSize.value * 1000000
 
           // Range must be in the form "bytes=0-500" -> https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.35
-          def go(offset: Int): Pull[F, Byte, Unit] =
+          def go(offset: Long): Pull[F, Byte, Unit] =
             fs2.Stream
               .eval {
                 s3.getObject(
