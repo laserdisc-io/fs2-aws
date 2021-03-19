@@ -16,8 +16,8 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 organization := "io.laserdisc"
 name         := "fs2-aws"
 
-lazy val scala212               = "2.12.13"
-lazy val scala213               = "2.13.5"
+lazy val scala212 = "2.12.13"
+lazy val scala213 = "2.13.5"
 
 lazy val supportedScalaVersions = List(scala212, scala213)
 
@@ -82,7 +82,7 @@ lazy val `fs2-aws-ciris` = (project in file("fs2-aws-ciris"))
   .settings(scalacOptions ++= commonOptions(scalaVersion.value))
 
 lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb"))
-  .dependsOn(`fs2-aws-core`)
+  .dependsOn(`fs2-aws-core`, `pure-dynamodb-tagless`)
   .settings(
     name                  := "fs2-aws-dynamodb",
     coverageMinimum       := 40,
@@ -115,14 +115,14 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
     name            := "fs2-aws-examples",
     coverageMinimum := 0,
     libraryDependencies ++= Seq(
-      "org.mockito"       % "mockito-core"             % V.MockitoCore % Test,
-      "org.mockito"       %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
-      "ch.qos.logback"    % "logback-classic"          % "1.2.3",
-      "ch.qos.logback"    % "logback-core"             % "1.2.3",
-      "org.slf4j"         % "jcl-over-slf4j"           % "1.7.30",
-      "org.slf4j"         % "jul-to-slf4j"             % "1.7.30",
-      "org.typelevel" %% "log4cats-slf4j"          % "1.2.0",
-      "io.laserdisc"      %% "scanamo-circe"           % "1.0.8"
+      "org.mockito"    % "mockito-core"             % V.MockitoCore % Test,
+      "org.mockito"    %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
+      "ch.qos.logback" % "logback-classic"          % "1.2.3",
+      "ch.qos.logback" % "logback-core"             % "1.2.3",
+      "org.slf4j"      % "jcl-over-slf4j"           % "1.7.30",
+      "org.slf4j"      % "jul-to-slf4j"             % "1.7.30",
+      "org.typelevel"  %% "log4cats-slf4j"          % "1.2.0",
+      "io.laserdisc"   %% "scanamo-circe"           % "1.0.8"
     )
   )
   .settings(commonSettings)
