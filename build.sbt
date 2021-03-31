@@ -121,7 +121,7 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
       "ch.qos.logback" % "logback-core"             % "1.2.3",
       "org.slf4j"      % "jcl-over-slf4j"           % "1.7.30",
       "org.slf4j"      % "jul-to-slf4j"             % "1.7.30",
-      "org.typelevel"  %% "log4cats-slf4j"          % "1.2.0",
+      "org.typelevel"  %% "log4cats-slf4j"          % "1.2.1",
       "io.laserdisc"   %% "scanamo-circe"           % "1.0.8"
     )
   )
