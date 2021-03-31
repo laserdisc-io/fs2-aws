@@ -117,8 +117,8 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
     libraryDependencies ++= Seq(
       "org.mockito"    % "mockito-core"             % V.MockitoCore % Test,
       "org.mockito"    %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
-      "ch.qos.logback" % "logback-classic"          % "1.2.3",
-      "ch.qos.logback" % "logback-core"             % "1.2.3",
+      "ch.qos.logback" % "logback-classic"          % "1.2.3" % Optional,
+      "ch.qos.logback" % "logback-core"             % "1.2.3" % Optional,
       "org.slf4j"      % "jcl-over-slf4j"           % "1.7.30",
       "org.slf4j"      % "jul-to-slf4j"             % "1.7.30",
       "org.typelevel"  %% "log4cats-slf4j"          % "1.2.0",
@@ -149,6 +149,22 @@ lazy val `fs2-aws-s3` = (project in file("fs2-aws-s3"))
   .settings(scalacOptions := commonOptions(scalaVersion.value))
   .dependsOn(`pure-s3-tagless`)
 
+lazy val `fs2-aws-kms` = (project in file("fs2-aws-kms"))
+  .settings(
+    name := "fs2-aws-kms",
+    libraryDependencies ++= Seq(
+      "co.fs2"        %% "fs2-core"        % V.Fs2,
+      "co.fs2"        %% "fs2-io"          % V.Fs2,
+      "com.amazonaws" % "aws-encryption-sdk-java"   % "2.0.0",
+      "org.scalameta" %% "munit" % V.Munit % Test
+    ),
+    testFrameworks += new TestFramework("munit.Framework"),
+    coverageMinimum := 0,
+    coverageFailOnMinimum := true
+  )
+  .settings(commonSettings)
+  .settings(scalacOptions := commonOptions(scalaVersion.value))
+
 lazy val `fs2-aws` = (project in file("fs2-aws"))
   .dependsOn(
     `fs2-aws-core`,
@@ -168,8 +184,8 @@ lazy val `fs2-aws` = (project in file("fs2-aws"))
       "org.scalatest"           %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"             %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
       "org.mockito"             % "mockito-core"             % V.MockitoCore % Test,
-      "ch.qos.logback"          % "logback-classic"          % "1.2.3",
-      "ch.qos.logback"          % "logback-core"             % "1.2.3",
+      "ch.qos.logback"          % "logback-classic"          % "1.2.3" % Optional,
+      "ch.qos.logback"          % "logback-core"             % "1.2.3" % Optional,
       "org.slf4j"               % "jcl-over-slf4j"           % "1.7.30",
       "org.slf4j"               % "jul-to-slf4j"             % "1.7.30"
     ),
@@ -385,8 +401,8 @@ lazy val `fs2-aws-benchmarks` = (project in file("fs2-aws-benchmarks"))
   .settings(
     name := "fs2-aws-benchmarks",
     libraryDependencies ++= Seq(
-      "ch.qos.logback" % "logback-classic" % "1.2.3",
-      "ch.qos.logback" % "logback-core"    % "1.2.3",
+      "ch.qos.logback" % "logback-classic" % "1.2.3" % Optional,
+      "ch.qos.logback" % "logback-core"    % "1.2.3" % Optional,
       "org.slf4j"      % "jcl-over-slf4j"  % "1.7.30",
       "org.slf4j"      % "jul-to-slf4j"    % "1.7.30"
     ),
