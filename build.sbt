@@ -110,7 +110,8 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
     `pure-kinesis-tagless`,
     `pure-dynamodb-tagless`,
     `pure-cloudwatch-tagless`,
-    `fs2-aws`
+    `fs2-aws`,
+    `fs2-aws-s3`
   )
   .settings(
     name            := "fs2-aws-examples",
@@ -433,7 +434,7 @@ lazy val commonSettings = Seq(
   ),
   addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1"),
   addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.10.3"),
-  libraryDependencies += "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.2"
+  libraryDependencies += "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.3"
 )
 
 addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
