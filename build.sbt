@@ -110,7 +110,8 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
     `pure-kinesis-tagless`,
     `pure-dynamodb-tagless`,
     `pure-cloudwatch-tagless`,
-    `fs2-aws`
+    `fs2-aws`,
+    `fs2-aws-s3`
   )
   .settings(
     name            := "fs2-aws-examples",
