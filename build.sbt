@@ -5,6 +5,7 @@ import TaglessGen.{
   taglessGenPackage,
   taglessGenSettings
 }
+import sbt.Keys.scalaSource
 import scoverage.ScoverageKeys.coverageMinimum
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
 import software.amazon.awssdk.services.s3.S3AsyncClient
@@ -21,9 +22,9 @@ lazy val scala213 = "2.13.5"
 
 lazy val supportedScalaVersions = List(scala212, scala213)
 
-crossScalaVersions in ThisBuild := supportedScalaVersions
+ThisBuild / crossScalaVersions := supportedScalaVersions
 
-scalaVersion in ThisBuild := scala213
+ThisBuild / scalaVersion := scala213
 
 lazy val root = (project in file("."))
   .aggregate(
@@ -128,7 +129,7 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
   .settings(commonSettings)
   .settings(scalacOptions ++= commonOptions(scalaVersion.value))
   .settings(
-    skip in publish := true
+    publish / skip := true
   )
 
 lazy val `fs2-aws-s3` = (project in file("fs2-aws-s3"))
@@ -228,9 +229,9 @@ lazy val `pure-sqs-tagless` = (project in file("pure-aws/pure-sqs-tagless"))
       "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
       "eu.timepit"             %% "refined"                 % V.Refined,
-      "org.typelevel"          %% "cats-effect"             % "2.3.3"
+      "org.typelevel"          %% "cats-effect"             % "2.4.1"
     ),
-    taglessGenDir     := (scalaSource in Compile).value / "io" / "laserdisc" / "pure" / "sqs" / "tagless",
+    taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "sqs" / "tagless",
     taglessGenPackage := "io.laserdisc.pure.sqs.tagless",
     taglessAwsService := "sqs",
     taglessGenClasses := {
@@ -252,9 +253,9 @@ lazy val `pure-s3-tagless` = (project in file("pure-aws/pure-s3-tagless"))
       "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
       "eu.timepit"             %% "refined"                 % V.Refined,
-      "org.typelevel"          %% "cats-effect"             % "2.3.3"
+      "org.typelevel"          %% "cats-effect"             % "2.4.1"
     ),
-    taglessGenDir     := (scalaSource in Compile).value / "io" / "laserdisc" / "pure" / "s3" / "tagless",
+    taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "s3" / "tagless",
     taglessGenPackage := "io.laserdisc.pure.s3.tagless",
     taglessAwsService := "s3",
     taglessGenClasses := {
@@ -276,9 +277,9 @@ lazy val `pure-sns-tagless` = (project in file("pure-aws/pure-sns-tagless"))
       "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
       "eu.timepit"             %% "refined"                 % V.Refined,
-      "org.typelevel"          %% "cats-effect"             % "2.3.3"
+      "org.typelevel"          %% "cats-effect"             % "2.4.1"
     ),
-    taglessGenDir     := (scalaSource in Compile).value / "io" / "laserdisc" / "pure" / "sns" / "tagless",
+    taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "sns" / "tagless",
     taglessGenPackage := "io.laserdisc.pure.sns.tagless",
     taglessAwsService := "sns",
     taglessGenClasses := {
@@ -300,9 +301,9 @@ lazy val `pure-kinesis-tagless` = (project in file("pure-aws/pure-kinesis-tagles
       "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
       "eu.timepit"             %% "refined"                 % V.Refined,
-      "org.typelevel"          %% "cats-effect"             % "2.3.3"
+      "org.typelevel"          %% "cats-effect"             % "2.4.1"
     ),
-    taglessGenDir     := (scalaSource in Compile).value / "io" / "laserdisc" / "pure" / "kinesis" / "tagless",
+    taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "kinesis" / "tagless",
     taglessGenPackage := "io.laserdisc.pure.kinesis.tagless",
     taglessAwsService := "kinesis",
     taglessGenClasses := {
@@ -324,9 +325,9 @@ lazy val `pure-dynamodb-tagless` = (project in file("pure-aws/pure-dynamodb-tagl
       "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
       "eu.timepit"             %% "refined"                 % V.Refined,
-      "org.typelevel"          %% "cats-effect"             % "2.3.3"
+      "org.typelevel"          %% "cats-effect"             % "2.4.1"
     ),
-    taglessGenDir     := (scalaSource in Compile).value / "io" / "laserdisc" / "pure" / "dynamodb" / "tagless",
+    taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "dynamodb" / "tagless",
     taglessGenPackage := "io.laserdisc.pure.dynamodb.tagless",
     taglessAwsService := "dynamodb",
     taglessGenClasses := {
@@ -348,9 +349,9 @@ lazy val `pure-cloudwatch-tagless` = (project in file("pure-aws/pure-cloudwatch-
       "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
       "eu.timepit"             %% "refined"                 % V.Refined,
-      "org.typelevel"          %% "cats-effect"             % "2.3.3"
+      "org.typelevel"          %% "cats-effect"             % "2.4.1"
     ),
-    taglessGenDir     := (scalaSource in Compile).value / "io" / "laserdisc" / "pure" / "cloudwatch" / "tagless",
+    taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "cloudwatch" / "tagless",
     taglessGenPackage := "io.laserdisc.pure.cloudwatch.tagless",
     taglessAwsService := "cloudwatch",
     taglessGenClasses := {
@@ -420,7 +421,7 @@ lazy val commonSettings = Seq(
   homepage           := Some(url("https://github.com/laserdisc-io/fs2-aws")),
   crossScalaVersions := supportedScalaVersions,
   scalaVersion       := scala213,
-  fork               in Test := true,
+  Test / fork        := true,
   scalacOptions ++= Seq(
     "-encoding",
     "UTF-8",                         // source files are in UTF-8
