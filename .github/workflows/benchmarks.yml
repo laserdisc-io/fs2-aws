@@ -17,7 +17,7 @@ jobs:
             ~/.sbt
           key: sbt-${{ hashFiles('**/build.sbt') }}
       - name: Run Benchmarks
-        run: csbt "project fs2-aws-benchmarks" "jmh:run -i 10 -wi 10 -f1 -t1 -rf json -rff kinesis_bench.json"
+        run: sbt "project fs2-aws-benchmarks" "jmh:run -i 10 -wi 10 -f1 -t1 -rf json -rff kinesis_bench.json"
       - name: Upload Benchmark Results
         uses: actions/upload-artifact@v2
         with:
