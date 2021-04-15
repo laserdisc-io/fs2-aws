@@ -24,7 +24,7 @@ object TaglessGen {
 
   lazy val taglessGenSettings = Seq(
     taglessGenClasses := Nil,
-    taglessGenDir     := (sourceManaged in Compile).value,
+    taglessGenDir     := (Compile / sourceManaged).value,
     taglessGenPackage := "aws.tagless",
     taglessGenRenames := Map(classOf[java.sql.Array] -> "SqlArray"),
     taglessGen :=
