@@ -2,7 +2,7 @@
 ![Build](https://github.com/laserdisc-io/fs2-aws/workflows/Build/badge.svg)
 ![Release](https://github.com/laserdisc-io/fs2-aws/workflows/Release/badge.svg)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.laserdisc/fs2-aws_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.laserdisc/fs2-aws_2.12)
-[![Coverage Status](https://coveralls.io/repos/github/laserdisc-io/fs2-aws/badge.svg?branch=master)](https://coveralls.io/github/laserdisc-io/fs2-aws?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/laserdisc-io/fs2-aws/badge.svg?branch=main)](https://coveralls.io/github/laserdisc-io/fs2-aws?branch=main)
 
 fs2 Streaming utilities for interacting with AWS
 
@@ -47,27 +47,35 @@ You can also combine them as you see fit. For example, use `uploadFileMultipart`
 In order to create an instance of `S3` we need to first create an `S3Client`, as well as a `cats.effect.Blocker`. Here's an example of the former:
 
 ```scala
-import cats.effect._
-import java.net.URI
-import software.amazon.awssdk.services.s3.S3Client
-
-val mkS3Client: Resource[IO, S3Client] =
-  Resource.fromAutoCloseable(
-    IO(S3Client.builder().endpointOverride(URI.create("http://localhost:9000")).build())
-  )
+def s3StreamResource: Resource[IO, (S3AsyncClientOp[IO], Blocker)] =
+  for {
+    blocker     <- Blocker[IO]
+    credentials = AwsBasicCredentials.create("accesskey", "secretkey")
+    port        = 4566
+    s3 <- S3Interpreter[IO](blocker).S3AsyncClientOpResource(
+      S3AsyncClient
+        .builder()
+        .credentialsProvider(StaticCredentialsProvider.create(credentials))
+        .endpointOverride(URI.create(s"http://localhost:$port"))
+        .region(Region.US_EAST_1)
+    )
+  } yield s3 -> blocker
 ```
 
-A `Blocker` can be easily created using its `apply` method and then share it. You should only create a single instance. Now we can create our `S3[IO]` instance:
+Now we can create our `S3[IO]` instance:
 
 ```scala
-import fs2.aws.s3._
 
-S3.create[IO](client, blocker).flatMap { s3 =>
-  // do stuff with s3 here (or just share it with other functions)
+s3StreamResource.use {
+  case (s3Ops, blocker) => S3.create(s3Ops, blocker).flatMap{ s3 =>
+    // do stuff with s3 here (or just share it with other functions)
+  }
 }
 ```
 
 Create it once and share it as an argument, as any other resource.
+
+For more details on how to work with S3 streams follow [link](fs2-aws-examples/src/main/scala/S3Example.scala)
 
 ### Reading a file from S3
 
