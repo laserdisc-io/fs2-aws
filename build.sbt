@@ -67,7 +67,6 @@ lazy val `fs2-aws-core` = (project in file("fs2-aws-core"))
   .settings(scalacOptions ++= commonOptions(scalaVersion.value))
 
 lazy val `fs2-aws-ciris` = (project in file("fs2-aws-ciris"))
-//  .dependsOn(`fs2-aws-kinesis`)
   .settings(
     name := "fs2-aws-ciris",
     libraryDependencies ++= Seq(

@@ -2,7 +2,6 @@ package fs2.aws.sqs
 
 import cats.effect.unsafe.IORuntime
 import cats.effect.{ IO, Resource }
-import fs2.aws.sqs.SQS
 import io.laserdisc.pure.sqs.tagless.{ Interpreter, SqsAsyncClientOp }
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers

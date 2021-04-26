@@ -14,7 +14,6 @@ import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.{
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{ ShutdownReason, Worker }
 import com.amazonaws.services.kinesis.clientlibrary.types._
 import com.amazonaws.services.kinesis.model.Record
-import fs2.aws.dynamodb._
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import org.mockito.invocation.InvocationOnMock
