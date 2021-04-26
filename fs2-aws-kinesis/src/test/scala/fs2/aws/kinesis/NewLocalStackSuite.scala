@@ -1,6 +1,7 @@
 package fs2.aws.kinesis
 
-import cats.effect.{ Blocker, ContextShift, IO, Resource, Timer }
+import cats.effect.unsafe.IORuntime
+import cats.effect.{ IO, Resource }
 import com.amazonaws.auth.{ AWSStaticCredentialsProvider, BasicAWSCredentials }
 import com.amazonaws.services.kinesis.producer.KinesisProducerConfiguration
 import fs2.Stream
@@ -37,9 +38,8 @@ import scala.concurrent.duration.DurationInt
 
 class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
 
-  implicit val ec: ExecutionContext             = ExecutionContext.global
-  implicit val timer: Timer[IO]                 = IO.timer(ec)
-  implicit val ioContextShift: ContextShift[IO] = IO.contextShift(ec)
+  implicit val ec: ExecutionContext = ExecutionContext.global
+  implicit val runtime: IORuntime   = IORuntime.global
 
   // this is required to make the KCL work with LocalStack
   System.setProperty("aws.cborEnabled", "false")
@@ -211,13 +211,12 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
     cac: CloudWatchAsyncClientBuilder
   ) =
     for {
-      b                  <- Blocker[IO]
-      i                  = KinesisInterpreter[IO](b)
+      d                  <- DynamoDbInterpreter[IO].DynamoDbAsyncClientResource(dac)
+      c                  <- CloudwatchInterpreter[IO].CloudWatchAsyncClientResource(cac)
+      i                  = KinesisInterpreter[IO]
       k                  <- i.KinesisAsyncClientResource(kac)
-      d                  <- DynamoDbInterpreter[IO](b).DynamoDbAsyncClientResource(dac)
-      c                  <- CloudwatchInterpreter[IO](b).CloudWatchAsyncClientResource(cac)
       kinesisInterpreter = i.create(k)
-      kAlgebra           = Kinesis.create[IO](k, d, c, b)
+      kAlgebra           = Kinesis.create[IO](k, d, c)
     } yield kinesisInterpreter -> kAlgebra
 
 }

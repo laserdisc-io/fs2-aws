@@ -1,18 +1,17 @@
 package fs2.aws.ciris;
 
-import java.util.Date
-
-import cats.effect.{ ContextShift, IO }
+import cats.effect.IO
+import cats.effect.unsafe.IORuntime
 import ciris.{ ConfigException, ConfigValue }
 import org.scalatest.Assertion
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import software.amazon.kinesis.common.InitialPositionInStream
 
-import scala.concurrent.ExecutionContext.Implicits.global;
+import java.util.Date
 
 class CirisDecoderSpec extends AnyWordSpec with Matchers {
-  implicit val cs: ContextShift[IO] = IO.contextShift(global)
+  implicit val runtime: IORuntime = IORuntime.global
 
   "InitialPositionDecoderSpec" should {
 

@@ -1,11 +1,8 @@
 package fs2.aws.kinesis
 
-import java.nio.ByteBuffer
-import java.time.Instant
-
-import cats.effect.{ ContextShift, IO, Sync, Timer }
+import cats.effect.unsafe.IORuntime
+import cats.effect.{ IO, Sync }
 import cats.implicits._
-import fs2.aws.kinesis
 import fs2.aws.testkit.SchedulerFactoryTestContext
 import org.mockito.MockitoSugar.mock
 import org.openjdk.jmh.annotations.{ Benchmark, Scope, State }
@@ -15,13 +12,14 @@ import software.amazon.kinesis.processor.RecordProcessorCheckpointer
 import software.amazon.kinesis.retrieval.KinesisClientRecord
 import software.amazon.kinesis.retrieval.kpl.ExtendedSequenceNumber
 
+import java.nio.ByteBuffer
+import java.time.Instant
 import scala.concurrent.ExecutionContext
 import scala.jdk.CollectionConverters._
 object KinesisFlowBenchmark {
 
-  implicit val ec: ExecutionContext             = ExecutionContext.global
-  implicit val timer: Timer[IO]                 = IO.timer(ec)
-  implicit val ioContextShift: ContextShift[IO] = IO.contextShift(ec)
+  implicit val ec: ExecutionContext = ExecutionContext.global
+  implicit val runtime: IORuntime   = IORuntime.global
 
   @State(Scope.Thread)
   class ThreadState {
@@ -41,12 +39,12 @@ object KinesisFlowBenchmark {
     @Benchmark
     def KinesisStream(state: ThreadState): Unit =
       (for {
-        processorContext <- IO.delay(new SchedulerFactoryTestContext(shards = 10))
-        streamUnderTest  = kinesis.testkit.readFromKinesisStream[IO](processorContext)
+        processorContext <- IO.delay(new SchedulerFactoryTestContext[IO](shards = 10))
+        k                = Kinesis.create(processorContext)
+        streamUnderTest  = k.readFromKinesisStream("foo", "bar")
         _ <- (
               streamUnderTest
-              //                  .evalMap(r => Sync[IO].pure(r.record))
-                .through(consumer.checkpointRecords[IO]())
+                .through(k.checkpointRecords(KinesisCheckpointSettings.defaultInstance))
                 .take(state.records.size * 10)
                 .compile
                 .drain,
@@ -73,7 +71,7 @@ object KinesisFlowBenchmark {
                             .build()
                         )
                       }
-                  }.parUnorderedSequence
+                  }.parSequence
                 }
             ).parMapN { case _ => () }
       } yield ()).unsafeRunSync()

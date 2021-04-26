@@ -20,7 +20,7 @@ object sns {
 
   object SNS {
 
-    def create[F[_]: Concurrent: Async: Timer](
+    def create[F[_]: Concurrent: Async](
       sns: SnsAsyncClientOp[F],
       settings: SnsSettings = SnsSettings()
     ): F[SNS[F]] =

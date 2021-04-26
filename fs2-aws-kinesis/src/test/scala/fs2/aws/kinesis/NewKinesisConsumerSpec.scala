@@ -1,6 +1,7 @@
 package fs2.aws.kinesis
 
-import cats.effect.{ Blocker, ContextShift, IO, Timer }
+import cats.effect.IO
+import cats.effect.unsafe.IORuntime
 import cats.implicits._
 import eu.timepit.refined.auto._
 import org.mockito.ArgumentMatchers.any
@@ -31,9 +32,8 @@ class NewKinesisConsumerSpec
     with BeforeAndAfterEach
     with Eventually {
 
-  implicit val ec: ExecutionContext             = ExecutionContext.global
-  implicit val timer: Timer[IO]                 = IO.timer(ec)
-  implicit val ioContextShift: ContextShift[IO] = IO.contextShift(ec)
+  implicit val ec: ExecutionContext = ExecutionContext.global
+  implicit val runtime: IORuntime   = IORuntime.global
 
   implicit def sList2jList[A](sList: List[A]): java.util.List[A] = sList.asJava
 
@@ -170,23 +170,21 @@ class NewKinesisConsumerSpec
         )
         .compile
         .toList,
-      Blocker[IO].use { blocker =>
-        blocker.blockOn(IO.delay {
-          semaphore.acquire()
-          recordProcessor.initialize(initializationInput)
-          (1 to nRecords).foreach { i =>
-            val record = mock(classOf[KinesisClientRecord])
-            when(record.sequenceNumber()).thenReturn(i.toString)
-            recordProcessor.processRecords(
-              recordsInput.isAtShardEnd(i == 5).records(List(record)).build()
-            )
-          }
-        } >> IO.delay {
-          //Immediately publish end of shard event
-          recordProcessor.shardEnded(
-            ShardEndedInput.builder().checkpointer(checkpointer).build()
+      IO.blocking {
+        semaphore.acquire()
+        recordProcessor.initialize(initializationInput)
+        (1 to nRecords).foreach { i =>
+          val record = mock(classOf[KinesisClientRecord])
+          when(record.sequenceNumber()).thenReturn(i.toString)
+          recordProcessor.processRecords(
+            recordsInput.isAtShardEnd(i == 5).records(List(record)).build()
           )
-        })
+        }
+      } >> IO.delay {
+        //Immediately publish end of shard event
+        recordProcessor.shardEnded(
+          ShardEndedInput.builder().checkpointer(checkpointer).build()
+        )
       }
     ).parMapN { case (msgs, _) => msgs }.unsafeRunSync()
 
@@ -371,7 +369,7 @@ class NewKinesisConsumerSpec
     }
     val config =
       KinesisConsumerSettings("testStream", "testApp", Region.US_EAST_1, 10)
-    val k = Kinesis.create[IO](Blocker.liftExecutionContext(ec), builder)
+    val k = Kinesis.create[IO](builder)
     val stream: fs2.Stream[IO, CommittableRecord] =
       k.readFromKinesisStream(config)
         .map(i => if (errorStream) throw new Exception("boom") else i)

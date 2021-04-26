@@ -1,5 +1,7 @@
+package fs2.aws.examples
+
 import cats.data.Kleisli
-import cats.effect.{ Blocker, ExitCode, IO, IOApp, Resource, Sync, Timer }
+import cats.effect._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import io.laserdisc.pure.sns.tagless.{ SnsAsyncClientOp, Interpreter => SNSInterpreter }
@@ -22,27 +24,27 @@ import scala.jdk.CollectionConverters._
 
 case class Environment(sqs: SqsAsyncClient, sns: SnsAsyncClient)
 object PureAWSKleisli extends IOApp {
+  private val creds                                  = AwsBasicCredentials.create("accesskey", "secretkey")
+  private val port                                   = 4566
   override def run(args: List[String]): IO[ExitCode] =
     //Kleisli example
-    resourcesK.use {
-      case (blocker, e) =>
-        program[Kleisli[IO, Environment, *]](
-          SQSInterpreter[IO](blocker).SqsAsyncClientInterpreter.lens[Environment](_.sqs),
-          SNSInterpreter[IO](blocker).SnsAsyncClientInterpreter.lens[Environment](_.sns)
-        ).run(e)
+    resourcesK.use { e =>
+      program[Kleisli[IO, Environment, *]](
+        SQSInterpreter[IO].SqsAsyncClientInterpreter.lens[Environment](_.sqs),
+        SNSInterpreter[IO].SnsAsyncClientInterpreter.lens[Environment](_.sns)
+      ).run(e)
     } >> //TF example
       resourcesF.use { case (sqs, sns) => program[IO](sqs, sns) }
 
-  def resourcesK: Resource[IO, (Blocker, Environment)] =
+  def resourcesK: Resource[IO, Environment] =
     for {
-      blocker     <- Blocker[IO]
-      credentials = AwsBasicCredentials.create("accesskey", "secretkey")
-      port        = 4566
       sns <- Resource.fromAutoCloseable(
               IO.delay(
                 SnsAsyncClient
                   .builder()
-                  .credentialsProvider(StaticCredentialsProvider.create(credentials))
+                  .credentialsProvider(
+                    StaticCredentialsProvider.create(creds)
+                  )
                   .endpointOverride(URI.create(s"http://localhost:$port"))
                   .region(Region.US_EAST_1)
                   .build()
@@ -52,37 +54,34 @@ object PureAWSKleisli extends IOApp {
               IO.delay(
                 SqsAsyncClient
                   .builder()
-                  .credentialsProvider(StaticCredentialsProvider.create(credentials))
+                  .credentialsProvider(StaticCredentialsProvider.create(creds))
                   .endpointOverride(URI.create(s"http://localhost:$port"))
                   .region(Region.US_EAST_1)
                   .build()
               )
             )
-    } yield blocker -> Environment(sqs, sns)
+    } yield Environment(sqs, sns)
 
   def resourcesF: Resource[IO, (SqsAsyncClientOp[IO], SnsAsyncClientOp[IO])] =
     for {
-      blocker     <- Blocker[IO]
-      credentials = AwsBasicCredentials.create("accesskey", "secretkey")
-      port        = 4566
-      sns <- SNSInterpreter[IO](blocker).SnsAsyncClientOpResource(
+      sns <- SNSInterpreter[IO].SnsAsyncClientOpResource(
               SnsAsyncClient
                 .builder()
-                .credentialsProvider(StaticCredentialsProvider.create(credentials))
+                .credentialsProvider(StaticCredentialsProvider.create(creds))
                 .endpointOverride(URI.create(s"http://localhost:$port"))
                 .region(Region.US_EAST_1)
             )
-      sqs <- SQSInterpreter[IO](blocker).SqsAsyncClientOpResource(
+      sqs <- SQSInterpreter[IO].SqsAsyncClientOpResource(
               SqsAsyncClient
                 .builder()
-                .credentialsProvider(StaticCredentialsProvider.create(credentials))
+                .credentialsProvider(StaticCredentialsProvider.create(creds))
                 .endpointOverride(URI.create(s"http://localhost:$port"))
                 .region(Region.US_EAST_1)
             )
     } yield sqs -> sns
 
   //Program with SQS and SNS algebras
-  def program[F[_]: Sync: Timer](
+  def program[F[_]: Async: Temporal](
     sqsOp: SqsAsyncClientOp[F],
     snsOp: SnsAsyncClientOp[F]
   ): F[ExitCode] =
@@ -111,7 +110,7 @@ object PureAWSKleisli extends IOApp {
               .build()
           )
       _ <- snsOp.publish(PublishRequest.builder().message("Barry").topicArn(topicArn).build())
-      _ <- Timer[F].sleep(5 seconds)
+      _ <- Temporal[F].sleep(5 seconds)
       msg <- sqsOp
               .receiveMessage(
                 ReceiveMessageRequest

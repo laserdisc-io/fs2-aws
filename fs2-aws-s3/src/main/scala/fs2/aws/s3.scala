@@ -1,7 +1,5 @@
 package fs2.aws
 
-import java.net.URI
-import java.nio.ByteBuffer
 import cats.effect._
 import cats.implicits._
 import eu.timepit.refined._
@@ -13,12 +11,10 @@ import eu.timepit.refined.numeric.Greater
 import eu.timepit.refined.types.string.NonEmptyString
 import fs2.{ Chunk, Pipe, Pull }
 import io.laserdisc.pure.s3.tagless.S3AsyncClientOp
-import software.amazon.awssdk.core.ResponseInputStream
 import software.amazon.awssdk.core.async.{ AsyncRequestBody, AsyncResponseTransformer }
-import software.amazon.awssdk.core.sync.{ RequestBody, ResponseTransformer }
-import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model._
 
+import java.nio.ByteBuffer
 import scala.jdk.CollectionConverters._
 
 object s3 {
@@ -67,7 +63,7 @@ object s3 {
       * }
       * }}}
       */
-    def create[F[_]: Concurrent: ContextShift](s3: S3AsyncClientOp[F], blocker: Blocker): F[S3[F]] =
+    def create[F[_]: Async: Concurrent](s3: S3AsyncClientOp[F]): F[S3[F]] =
       new S3[F] {
 
         /**
@@ -203,7 +199,7 @@ object s3 {
                 AsyncResponseTransformer.toBytes[GetObjectResponse]
               )
             )
-            .flatMap(r => fs2.Stream.chunk(Chunk.bytes(r.asByteArray)))
+            .flatMap(r => fs2.Stream.chunk(Chunk(r.asByteArray: _*)))
 
         /**
           * Reads a file in multiple parts of the specifed @partSize per request. Suitable for big files.
@@ -239,10 +235,10 @@ object s3 {
               .flatMap {
                 case Some(resp) =>
                   Pull.eval {
-                    blocker.delay {
+                    Async[F].blocking {
                       val bs  = resp.asByteArray()
                       val len = bs.length
-                      if (len < 0) None else Some(Chunk.bytes(bs, 0, len))
+                      if (len < 0) None else Some(Chunk(bs: _*))
                     }
                   }
                 case None =>

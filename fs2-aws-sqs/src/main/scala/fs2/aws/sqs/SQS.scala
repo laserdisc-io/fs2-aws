@@ -1,6 +1,6 @@
 package fs2.aws.sqs
 
-import cats.effect.{ Async, ContextShift, Timer }
+import cats.effect.Async
 import cats.syntax.applicative._
 import fs2.Pipe
 import fs2.aws.sqs.SQS.MsgBody
@@ -20,7 +20,7 @@ trait SQS[F[_]] {
 
 object SQS {
   type MsgBody = String
-  def create[F[_]: Async: Timer: ContextShift](
+  def create[F[_]: Async](
     sqsConfig: SqsConfig,
     sqs: SqsAsyncClientOp[F]
   ): F[SQS[F]] =

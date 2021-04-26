@@ -1,6 +1,7 @@
-package sqs
+package fs2.aws.sqs
 
-import cats.effect.{ Blocker, ContextShift, IO, Resource, Timer }
+import cats.effect.unsafe.IORuntime
+import cats.effect.{ IO, Resource }
 import fs2.aws.sqs.SQS
 import io.laserdisc.pure.sqs.tagless.{ Interpreter, SqsAsyncClientOp }
 import org.scalatest.BeforeAndAfterAll
@@ -10,21 +11,20 @@ import software.amazon.awssdk.auth.credentials.{ AwsBasicCredentials, StaticCred
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model._
+import sqs.SqsConfig
 
 import java.net.URI
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.DurationInt
 
 class SqsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
-  implicit val ec: ExecutionContext             = ExecutionContext.global
-  implicit val ioContextShift: ContextShift[IO] = IO.contextShift(ec)
-  implicit val ioTimer: Timer[IO]               = IO.timer(ec)
+  implicit val ec: ExecutionContext = ExecutionContext.global
+  implicit val runtime              = IORuntime.global
   implicit val messageDecoder: Message => Either[Throwable, Int] = { sqs_msg =>
     val text = sqs_msg.body()
     if ("fail" == text) Left(new Exception("failure"))
     else Right(text.toInt)
   }
-  val blocker                                           = Blocker.liftExecutionContext(ec)
   val sqsOpResource: Resource[IO, SqsAsyncClientOp[IO]] = mkSQSClient(4566)
   var queueUrl: String                                  = _
 
@@ -104,7 +104,7 @@ class SqsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
   def mkSQSClient(sqsPort: Int) = {
     val credentials =
       AwsBasicCredentials.create("accesskey", "secretkey")
-    Interpreter[IO](blocker).SqsAsyncClientOpResource(
+    Interpreter[IO].SqsAsyncClientOpResource(
       SqsAsyncClient
         .builder()
         .credentialsProvider(StaticCredentialsProvider.create(credentials))

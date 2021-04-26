@@ -2,7 +2,7 @@ package fs2.aws.kinesis
 
 import java.nio.ByteBuffer
 
-import cats.effect.{ Async, Concurrent, Sync }
+import cats.effect.{ Async, Sync }
 import com.amazonaws.services.kinesis.producer.UserRecordResult
 import com.google.common.util.concurrent.{ FutureCallback, Futures, ListenableFuture }
 import fs2.aws.internal._
@@ -45,7 +45,7 @@ object publisher {
     * @param producer   kinesis producer client to use
     * @return a Pipe that accepts a tuple consisting of the partition key string and a ByteBuffer of data  and returns UserRecordResults
     */
-  def writeToKinesis[F[_]: Concurrent](
+  def writeToKinesis[F[_]: Async](
     streamName: String,
     parallelism: Int = 10,
     producer: KinesisProducerClient[F] = new KinesisProducerClientImpl[F]
@@ -54,7 +54,7 @@ object publisher {
     // Evaluate the operation of invoking the Kinesis client
     def registerCallback: Pipe[F, ListenableFuture[UserRecordResult], UserRecordResult] =
       _.mapAsync(parallelism) { f =>
-        Async[F].async[UserRecordResult] { cb =>
+        Async[F].async_[UserRecordResult] { cb =>
           Futures.addCallback(
             f,
             new FutureCallback[UserRecordResult] {
@@ -98,7 +98,7 @@ object publisher {
     * @param encoder implicit I => ByteBuffer encoder
     * @return a Pipe that accepts a tuple consisting of the partition key string and a ByteBuffer of data  and returns UserRecordResults
     */
-  def writeObjectToKinesis[F[_]: Concurrent, I](
+  def writeObjectToKinesis[F[_]: Async, I](
     streamName: String,
     parallelism: Int = 10,
     producer: KinesisProducerClient[F] = new KinesisProducerClientImpl[F]
@@ -123,7 +123,7 @@ object publisher {
     * @param encoder implicit I => ByteBuffer encoder
     * @return a Pipe that accepts a tuple consisting of the partition key string and an entity and returns original entity
     */
-  def writeAndForgetObjectToKinesis[F[_]: Concurrent, I](
+  def writeAndForgetObjectToKinesis[F[_]: Sync, I](
     streamName: String,
     parallelism: Int = 10,
     producer: KinesisProducerClient[F] = new KinesisProducerClientImpl[F]
@@ -140,7 +140,7 @@ object publisher {
     * @param producer     kinesis producer client to use
     * @return a Sink that accepts a stream of bytes
     */
-  def writeToKinesis_[F[_]: Concurrent](
+  def writeToKinesis_[F[_]: Async](
     streamName: String,
     parallelism: Int = 10,
     producer: KinesisProducerClient[F] = new KinesisProducerClientImpl[F]

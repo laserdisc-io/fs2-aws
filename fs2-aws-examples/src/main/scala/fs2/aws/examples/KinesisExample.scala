@@ -1,36 +1,27 @@
+package fs2.aws.examples
+
 import cats.NonEmptyParallel
-import cats.effect.{
-  Blocker,
-  Concurrent,
-  ConcurrentEffect,
-  ContextShift,
-  ExitCode,
-  IO,
-  IOApp,
-  Resource,
-  Sync,
-  Timer
-}
+import cats.effect._
+import com.amazonaws.services.kinesis.producer.KinesisProducerConfiguration
 import fs2.Stream
+import fs2.aws.internal.KinesisProducerClientImpl
+import fs2.aws.kinesis.publisher.writeToKinesis
 import fs2.aws.kinesis.{ Kinesis, KinesisConsumerSettings }
-import io.laserdisc.pure.cloudwatch.tagless.{ Interpreter => CloudwatchInterpreter }
-import io.laserdisc.pure.dynamodb.tagless.{ Interpreter => DynamoDbInterpreter }
-import io.laserdisc.pure.kinesis.tagless.{ KinesisAsyncClientOp, Interpreter => KinesisInterpreter }
+import io.laserdisc.pure.kinesis.tagless.KinesisAsyncClientOp
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClientBuilder
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClientBuilder
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClientBuilder
 import software.amazon.awssdk.services.kinesis.model.{ CreateStreamRequest, DeleteStreamRequest }
+import fs2.aws.examples.syntax._
 import cats.implicits._
-import com.amazonaws.services.kinesis.producer.KinesisProducerConfiguration
-import fs2.aws.internal.KinesisProducerClientImpl
-import fs2.aws.kinesis.publisher.writeToKinesis
+import io.laserdisc.pure.cloudwatch.tagless.{ Interpreter => CloudwatchInterpreter }
+import io.laserdisc.pure.dynamodb.tagless.{ Interpreter => DynamoDbInterpreter }
+import io.laserdisc.pure.kinesis.tagless.{ Interpreter => KinesisInterpreter }
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import java.nio.ByteBuffer
-import syntax._
-
 import java.nio.charset.StandardCharsets
 import scala.concurrent.duration.DurationInt
-import scala.concurrent.ExecutionContext.Implicits.global
 
 object KinesisExample extends IOApp {
   override def run(args: List[String]): IO[ExitCode] = {
@@ -44,23 +35,21 @@ object KinesisExample extends IOApp {
       program[IO](kinesis, appConfig.consumerConfig, appConfig.producerConfig).as(ExitCode.Success)
     )
   }
-  private def kAlgebraResource[F[_]: ConcurrentEffect: ContextShift: Timer](
+  private def kAlgebraResource[F[_]: Async: Concurrent](
     kac: KinesisAsyncClientBuilder,
     dac: DynamoDbAsyncClientBuilder,
     cac: CloudWatchAsyncClientBuilder,
     streamName: String
   ) =
     for {
-      b                  <- Blocker[F]
-      i                  = KinesisInterpreter[F](b)
-      k                  <- i.KinesisAsyncClientResource(kac)
-      d                  <- DynamoDbInterpreter[F](b).DynamoDbAsyncClientResource(dac)
-      c                  <- CloudwatchInterpreter[F](b).CloudWatchAsyncClientResource(cac)
-      kinesisInterpreter = i.create(k)
+      k                  <- KinesisInterpreter[F].KinesisAsyncClientResource(kac)
+      d                  <- DynamoDbInterpreter[F].DynamoDbAsyncClientResource(dac)
+      c                  <- CloudwatchInterpreter[F].CloudWatchAsyncClientResource(cac)
+      kinesisInterpreter = KinesisInterpreter[F].create(k)
       _                  <- disposableStream(kinesisInterpreter, streamName)
-    } yield Kinesis.create[F](k, d, c, b)
+    } yield Kinesis.create[F](k, d, c)
 
-  def program[F[_]: Concurrent: Timer: NonEmptyParallel](
+  def program[F[_]: Async: Concurrent: Temporal: NonEmptyParallel](
     kinesis: Kinesis[F],
     consumerSettings: KinesisConsumerSettings,
     producerConfiguration: KinesisProducerConfiguration

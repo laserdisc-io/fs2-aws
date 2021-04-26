@@ -1,6 +1,8 @@
 package fs2.aws
 
+import cats.Applicative
 import cats.effect._
+import cats.effect.std.{ Dispatcher, Queue }
 import cats.implicits._
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.regions.Regions
@@ -22,27 +24,29 @@ import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{
   Worker
 }
 import com.amazonaws.services.kinesis.model.Record
-import fs2.concurrent.Queue
+import fs2.concurrent.SignallingRef
 import fs2.{ Pipe, Stream }
 
 //This code is almost the same as for Kinesis, except that it based on KCL v1, because DynamoDB streams are not migrated to V2
 // this is why a lot of copy-paste
 
 package object dynamodb {
-  private def defaultWorker(recordProcessorFactory: IRecordProcessorFactory)(
+  private def defaultWorker[F[_]: Applicative](
     workerConfiguration: KinesisClientLibConfiguration,
     dynamoDBStreamsClient: AmazonDynamoDBStreams,
     dynamoDBClient: AmazonDynamoDB,
     cloudWatchClient: AmazonCloudWatch
-  ): Worker = {
+  ): IRecordProcessorFactory => F[Worker] = { recordProcessorFactory =>
     val adapterClient = new AmazonDynamoDBStreamsAdapterClient(dynamoDBStreamsClient)
-    StreamsWorkerFactory.createDynamoDbStreamsWorker(
-      recordProcessorFactory,
-      workerConfiguration,
-      adapterClient,
-      dynamoDBClient,
-      cloudWatchClient
-    )
+    StreamsWorkerFactory
+      .createDynamoDbStreamsWorker(
+        recordProcessorFactory,
+        workerConfiguration,
+        adapterClient,
+        dynamoDBClient,
+        cloudWatchClient
+      )
+      .pure[F]
   }
 
   /** Intialize a worker and start streaming records from a Kinesis stream
@@ -53,7 +57,7 @@ package object dynamodb {
     *  @param streamName name of the Kinesis stream to consume from
     *  @return an infinite fs2 Stream that emits Kinesis Records
     */
-  def readFromDynamDBStream[F[_]: ConcurrentEffect: ContextShift](
+  def readFromDynamDBStream[F[_]: Async](
     appName: String,
     streamName: String
   ): fs2.Stream[F, CommittableRecord] = {
@@ -77,7 +81,7 @@ package object dynamodb {
     *  @param streamConfig configuration for the internal stream
     *  @return an infinite fs2 Stream that emits Kinesis Records
     */
-  def readFromDynamoDBStream[F[_]: ConcurrentEffect: ContextShift](
+  def readFromDynamoDBStream[F[_]: Async: Concurrent](
     workerConfiguration: KinesisClientLibConfiguration,
     dynamoDBStreamsClient: AmazonDynamoDBStreams =
       AmazonDynamoDBStreamsClientBuilder.standard().withRegion(Regions.US_EAST_1).build(),
@@ -87,8 +91,8 @@ package object dynamodb {
       AmazonCloudWatchClientBuilder.standard().withRegion(Regions.US_EAST_1).build(),
     streamConfig: KinesisStreamSettings = KinesisStreamSettings.defaultInstance
   ): fs2.Stream[F, CommittableRecord] =
-    readFromDynamoDBStream(
-      defaultWorker(_)(
+    readFromDynamoDBStream[F](
+      defaultWorker[F](
         workerConfiguration,
         dynamoDBStreamsClient,
         dynamoDBClient,
@@ -105,29 +109,38 @@ package object dynamodb {
     *  @param streamConfig configuration for the internal stream
     *  @return an infinite fs2 Stream that emits Kinesis Records
     */
-  private[aws] def readFromDynamoDBStream[F[_]: ConcurrentEffect: ContextShift](
-    workerFactory: =>IRecordProcessorFactory => Worker,
+  private[aws] def readFromDynamoDBStream[F[_]: Async: Concurrent](
+    workerFactory: IRecordProcessorFactory => F[Worker],
     streamConfig: KinesisStreamSettings
   ): fs2.Stream[F, CommittableRecord] = {
 
-    // Initialize a KCL worker which appends to the internal stream queue on message receipt
-    def instantiateWorker(queue: Queue[F, CommittableRecord]): Stream[F, Worker] = Stream.emit {
-      workerFactory(() =>
-        new RecordProcessor(record =>
-          Effect[F].runAsync(queue.enqueue1(record))(_ => IO.unit).unsafeRunSync()
+    /* Initialize a KCL worker which appends to the internal stream queue on message receipt*/
+    def instantiateWorker(
+      dispatcher: Dispatcher[F],
+      queue: Queue[F, CommittableRecord],
+      signal: SignallingRef[F, Boolean]
+    ): fs2.Stream[F, Worker] =
+      Stream.bracket {
+        workerFactory(() =>
+          new RecordProcessor(record => dispatcher.unsafeRunSync(queue.offer(record)))
+        ).flatTap(s =>
+          Concurrent[F].start(Async[F].blocking(s.run()).flatTap(_ => signal.set(true)))
         )
-      )
-    }
+      }(s => Async[F].blocking(s.shutdown()))
+
     // Instantiate a new bounded queue and concurrently run the queue populator
     // Expose the elements by dequeuing the internal buffer
     for {
-      buffer <- Stream.eval(Queue.bounded[F, CommittableRecord](streamConfig.bufferSize))
-      worker <- instantiateWorker(buffer)
-      stream <- buffer.dequeue concurrently Stream.eval(
-                 Blocker[F].use(blocker => blocker.delay(worker.run()))
-               ) onFinalize Sync[
-                 F
-               ].delay(worker.shutdown())
+      dispatcher      <- Stream.resource(Dispatcher[F])
+      buffer          <- Stream.eval(Queue.bounded[F, CommittableRecord](streamConfig.bufferSize))
+      interruptSignal <- Stream.eval(SignallingRef[F, Boolean](false))
+      _               <- instantiateWorker(dispatcher, buffer, interruptSignal)
+      stream          <- Stream.fromQueueUnterminated(buffer).interruptWhen(interruptSignal)
+//      stream <- buffer.dequeue concurrently Stream.eval(
+//                 Blocker[F].use(blocker => blocker.delay(worker.run()))
+//               ) onFinalize Sync[
+//                 F
+//               ].delay(worker.shutdown())
     } yield stream
   }
 
@@ -140,7 +153,7 @@ package object dynamodb {
     *  @param checkpointSettings configure maxBatchSize and maxBatchWait time before triggering a checkpoint
     *  @return a stream of Record types representing checkpointed messages
     */
-  def checkpointRecords[F[_]: ConcurrentEffect: Timer](
+  def checkpointRecords[F[_]: Async: Concurrent](
     checkpointSettings: KinesisCheckpointSettings = KinesisCheckpointSettings.defaultInstance,
     parallelism: Int = 10
   ): Pipe[F, CommittableRecord, Record] = {
@@ -149,7 +162,7 @@ package object dynamodb {
     ): Pipe[F, CommittableRecord, Record] =
       _.groupWithin(checkpointSettings.maxBatchSize, checkpointSettings.maxBatchWait)
         .collect { case chunk if chunk.size > 0 => chunk.size -> chunk.toList.max }
-        .flatMap { case (len, cr) => fs2.Stream.eval_(cr.checkpoint[F](len).as(cr.record)) }
+        .flatMap { case (len, cr) => fs2.Stream.eval(cr.checkpoint[F](len).as(cr.record)).drain }
 
     def bypass: Pipe[F, CommittableRecord, Record] = _.map(r => r.record)
 
@@ -168,9 +181,9 @@ package object dynamodb {
     *  @param checkpointSettings configure maxBatchSize and maxBatchWait time before triggering a checkpoint
     *  @return a Sink that accepts a stream of CommittableRecords
     */
-  def checkpointRecords_[F[_]](
+  def checkpointRecords_[F[_]: Async: Concurrent](
     checkpointSettings: KinesisCheckpointSettings = KinesisCheckpointSettings.defaultInstance
-  )(implicit F: ConcurrentEffect[F], timer: Timer[F]): Pipe[F, CommittableRecord, Unit] =
-    _.through(checkpointRecords(checkpointSettings))
+  ): Pipe[F, CommittableRecord, Unit] =
+    _.through(checkpointRecords[F](checkpointSettings))
       .map(_ => ())
 }

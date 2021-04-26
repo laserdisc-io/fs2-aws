@@ -1,10 +1,7 @@
-package fs2
-package aws
+package fs2.aws.dynamodb
 
-import java.util.Date
-import java.util.concurrent.{ Phaser, Semaphore }
-
-import cats.effect.{ ContextShift, IO, Timer }
+import cats.effect.IO
+import cats.effect.unsafe.IORuntime
 import cats.implicits._
 import com.amazonaws.services.dynamodbv2.model
 import com.amazonaws.services.dynamodbv2.model.{ AttributeValue, StreamRecord }
@@ -27,6 +24,8 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time._
 
+import java.util.Date
+import java.util.concurrent.{ CountDownLatch, Phaser, Semaphore }
 import scala.collection.immutable
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
@@ -38,9 +37,8 @@ class DynamoDBConsumerSpec
     with BeforeAndAfterEach
     with Eventually {
 
-  implicit val ec: ExecutionContext             = ExecutionContext.global
-  implicit val timer: Timer[IO]                 = IO.timer(ec)
-  implicit val ioContextShift: ContextShift[IO] = IO.contextShift(ec)
+  implicit val ec: ExecutionContext = ExecutionContext.global
+  implicit val runtime: IORuntime   = IORuntime.global
 
   implicit override val patienceConfig: PatienceConfig =
     PatienceConfig(timeout = scaled(Span(2, Seconds)), interval = scaled(Span(5, Millis)))
@@ -95,8 +93,9 @@ class DynamoDBConsumerSpec
     verify(mockWorker, times(1)).shutdown()
   }
 
-  it should "not drop messages in case of back-pressure" in new WorkerContext with TestData {
-    // Create and send 10 records (to match buffer size)
+  it should "not drop messages in case of back-pressure, Create and send 10 records (to match buffer size)" in new WorkerContext
+    with TestData {
+    //
     val res = (
       stream.take(10).compile.toList,
       IO.delay {
@@ -111,8 +110,10 @@ class DynamoDBConsumerSpec
     ).parMapN { case (msgs, _) => msgs }.unsafeRunSync()
 
     res should have size 10
+  }
 
-    // Send a batch that exceeds the internal buffer size
+  it should "not drop messages in case of back-pressure, Send a batch that exceeds the internal buffer size" in new WorkerContext
+    with TestData {
     val res2 = (
       stream.take(50).compile.toList,
       IO.delay {
@@ -329,7 +330,8 @@ class DynamoDBConsumerSpec
 
     protected val mockWorker: Worker = mock(classOf[Worker])
 
-    when(mockWorker.run()).thenAnswer((invocation: InvocationOnMock) => ())
+    val latch = new CountDownLatch(1)
+    doAnswer(_ => latch.await()).when(mockWorker).run()
 
     when(mockWorker.shutdown()).thenAnswer((invocation: InvocationOnMock) => ())
 
@@ -337,20 +339,20 @@ class DynamoDBConsumerSpec
     var recordProcessor: IRecordProcessor               = _
     var recordProcessor2: IRecordProcessor              = _
 
-    val builder: IRecordProcessorFactory => Worker = { x: IRecordProcessorFactory =>
+    val builder: IRecordProcessorFactory => IO[Worker] = { x: IRecordProcessorFactory =>
       recordProcessorFactory = x
       recordProcessor = x.createProcessor()
       semaphore.release()
       recordProcessor2 = x.createProcessor()
       semaphore.release()
-      mockWorker
+      IO(mockWorker)
     }
 
     val config: KinesisStreamSettings =
       KinesisStreamSettings(bufferSize = 10, 10.seconds)
         .getOrElse(throw new RuntimeException("cannot create Kinesis Settings"))
 
-    val stream: Stream[IO, CommittableRecord] =
+    val stream: fs2.Stream[IO, CommittableRecord] =
       readFromDynamoDBStream[IO](builder, config)
         .map(i => if (errorStream) throw new Exception("boom") else i)
   }
