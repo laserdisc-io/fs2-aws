@@ -8,4 +8,5 @@ object V {
   val ScalaTest        = "3.2.8"
   val MockitoScalaTest = "1.16.37"
   val MockitoCore      = "3.9.0"
+  val CE               = "3.1.0"
 }
