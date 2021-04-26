@@ -83,9 +83,7 @@ object Kinesis {
       ): fs2.Stream[F, Scheduler] =
         Stream.bracket {
           schedulerFactory(() =>
-            new ChunkedRecordProcessor(records =>
-              dispatcher.unsafeRunAndForget(queue.offer(records))
-            )
+            new ChunkedRecordProcessor(records => dispatcher.unsafeRunSync(queue.offer(records)))
           ).flatTap(s =>
             Concurrent[F].start(Async[F].blocking(s.run()).flatTap(_ => signal.set(true)))
           )
@@ -109,7 +107,7 @@ object Kinesis {
       ): Pipe[F, CommittableRecord, KinesisClientRecord] =
         _.groupWithin(checkpointSettings.maxBatchSize, checkpointSettings.maxBatchWait)
           .collect { case chunk if chunk.size > 0 => chunk.toList.max }
-          .flatMap(cr => fs2.Stream.eval(cr.checkpoint.as(cr.record)).drain)
+          .evalMap(cr => cr.checkpoint.as(cr.record))
 
       def bypass: Pipe[F, CommittableRecord, KinesisClientRecord] = _.map(r => r.record)
 

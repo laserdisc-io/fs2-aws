@@ -2,7 +2,8 @@ package fs2.aws.kinesis
 
 import cats.effect.unsafe.IORuntime
 import cats.effect.{ IO, Sync }
-import cats.implicits._
+import cats.effect.implicits._
+import cats.syntax.parallel._
 import fs2.aws.testkit.SchedulerFactoryTestContext
 import org.mockito.MockitoSugar.mock
 import org.openjdk.jmh.annotations.{ Benchmark, Scope, State }
@@ -46,6 +47,7 @@ object KinesisFlowBenchmark {
               streamUnderTest
                 .through(k.checkpointRecords(KinesisCheckpointSettings.defaultInstance))
                 .take(state.records.size * 10)
+                .onFinalize(IO.delay(processorContext.latch.countDown()))
                 .compile
                 .drain,
               Sync[IO]
@@ -71,7 +73,7 @@ object KinesisFlowBenchmark {
                             .build()
                         )
                       }
-                  }.parSequence
+                  }.parUnorderedSequence
                 }
             ).parMapN { case _ => () }
       } yield ()).unsafeRunSync()

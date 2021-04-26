@@ -29,7 +29,7 @@ package object core {
         queueMap.get.flatMap(_.values.toList.traverse_(_.offer(None)))
       }
 
-      (in ++ Stream.eval(cleanup).drain)
+      (in ++ Stream.exec(cleanup))
         .evalMap { elem =>
           (selector(elem), queueMap.get).mapN { (key, queues) =>
             queues
@@ -40,7 +40,7 @@ package object core {
                   _    <- queueMap.modify(queues => (queues + (key -> newQ), queues))
                   // Enqueue the element lifted into an Option to the new queue
                   _ <- newQ.offer(elem.some)
-                } yield (key -> Stream.fromQueueNoneTerminated(newQ)).some
+                } yield (key -> Stream.fromQueueNoneTerminated(newQ, 100)).some
               }(_.offer(elem.some) as None)
           }.flatten
         }
