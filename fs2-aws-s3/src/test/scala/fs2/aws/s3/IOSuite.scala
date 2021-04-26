@@ -1,21 +1,16 @@
 package fs2.aws
 
-import java.util.concurrent.Executors
-
 import cats.effect._
+import cats.effect.unsafe.IORuntime
 import munit._
-import scala.concurrent.ExecutionContext
 
 trait IOSuite extends FunSuite {
-  implicit val cs: ContextShift[IO] = IO.contextShift(ExecutionContext.global)
-  implicit val timer: Timer[IO]     = IO.timer(ExecutionContext.global)
+
+  implicit val runtime: IORuntime = IORuntime.global
 
   override def munitValueTransforms: List[ValueTransform] =
     super.munitValueTransforms :+ new ValueTransform("IO", {
-      case ioa: IO[_] => IO.suspend(ioa).unsafeToFuture
+      case ioa: IO[_] => IO.defer(ioa).unsafeToFuture
     })
 
-  val blocker = Blocker.liftExecutionContext(
-    ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(6))
-  )
 }

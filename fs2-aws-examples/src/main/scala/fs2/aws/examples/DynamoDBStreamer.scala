@@ -1,9 +1,11 @@
+package fs2.aws.examples
+
 import cats.effect.{ ExitCode, IO, IOApp }
 import fs2.aws.dynamodb
 import fs2.aws.dynamodb.parsers
+import io.circe.Json
 import org.typelevel.log4cats.SelfAwareStructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
-import io.circe.Json
 import io.github.howardjohn.scanamo.CirceDynamoFormat._
 
 object DynamoDBStreamer extends IOApp {

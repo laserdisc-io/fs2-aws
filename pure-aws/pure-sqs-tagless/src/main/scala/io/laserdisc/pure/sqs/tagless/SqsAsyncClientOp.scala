@@ -1,28 +1,6 @@
 package io.laserdisc.pure.sqs.tagless
 
-import software.amazon.awssdk.services.sqs.model.{
-  AddPermissionRequest,
-  ChangeMessageVisibilityBatchRequest,
-  ChangeMessageVisibilityRequest,
-  CreateQueueRequest,
-  DeleteMessageBatchRequest,
-  DeleteMessageRequest,
-  DeleteQueueRequest,
-  GetQueueAttributesRequest,
-  GetQueueUrlRequest,
-  ListDeadLetterSourceQueuesRequest,
-  ListQueueTagsRequest,
-  ListQueuesRequest,
-  PurgeQueueRequest,
-  ReceiveMessageRequest,
-  RemovePermissionRequest,
-  SendMessageBatchRequest,
-  SendMessageRequest,
-  SetQueueAttributesRequest,
-  TagQueueRequest,
-  UntagQueueRequest,
-  _
-}
+import software.amazon.awssdk.services.sqs.model._
 import software.amazon.awssdk.services.sqs.paginators.{
   ListDeadLetterSourceQueuesPublisher,
   ListQueuesPublisher

@@ -10,6 +10,7 @@ import cats.effect._
 import cats.implicits._
 import eu.timepit.refined.auto._
 import fs2.aws.s3._
+import fs2.io.file.Files
 import io.laserdisc.pure.s3.tagless.{ Interpreter, S3AsyncClientOp }
 
 class S3Suite extends IOSuite {
@@ -19,7 +20,7 @@ class S3Suite extends IOSuite {
       .create("AKIAIOSFODNN7EXAMPLE", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
 
   val s3R: Resource[IO, S3AsyncClientOp[IO]] =
-    Interpreter[IO](blocker).S3AsyncClientOpResource(
+    Interpreter[IO].S3AsyncClientOpResource(
       S3AsyncClient
         .builder()
         .credentialsProvider(StaticCredentialsProvider.create(credentials))
@@ -34,10 +35,10 @@ class S3Suite extends IOSuite {
 
   test("Upload JSON test file & read it back") {
     s3R.use { s3Op =>
-      S3.create[IO](s3Op, blocker).flatMap { s3 =>
+      S3.create[IO](s3Op).flatMap { s3 =>
         val upload =
-          fs2.io.file
-            .readAll[IO](Paths.get(testFile.getPath), blocker, 4096)
+          Files[IO]
+            .readAll(Paths.get(testFile.getPath), 4096)
             .through(s3.uploadFile(bucket, fileKey))
             .compile
             .drain
@@ -63,12 +64,12 @@ class S3Suite extends IOSuite {
     "Upload JSON test file in multipart fashion & read it back in a one go, then delete it and try to read it again"
   ) {
     s3R.use { s3 =>
-      S3.create[IO](s3, blocker).flatMap { s3 =>
+      S3.create[IO](s3).flatMap { s3 =>
         val fileKeyMix = FileKey("jsontest-mix.json")
 
         val upload =
-          fs2.io.file
-            .readAll[IO](Paths.get(testFile.getPath), blocker, 4096)
+          Files[IO]
+            .readAll(Paths.get(testFile.getPath), 4096)
             .through(s3.uploadFileMultipart(bucket, fileKeyMix, 5))
             .compile
             .drain
@@ -89,7 +90,7 @@ class S3Suite extends IOSuite {
           s3.delete(bucket, fileKeyMix)
 
         val readNonExisting =
-          read.as(fail("expecting NoSuchKeyException")).handleError {
+          read.handleError {
             case _: NoSuchKeyException => assert(true)
           }
 
@@ -101,12 +102,12 @@ class S3Suite extends IOSuite {
   test("Upload JSON test file & read it back in multipart fashion all the way") {
 
     s3R.use { s3 =>
-      S3.create[IO](s3, blocker).flatMap { s3 =>
+      S3.create[IO](s3).flatMap { s3 =>
         val fileKeyMultipart = FileKey("jsontest-multipart.json")
 
         val upload =
-          fs2.io.file
-            .readAll[IO](Paths.get(testFile.getPath), blocker, 4096)
+          Files[IO]
+            .readAll(Paths.get(testFile.getPath), 4096)
             .through(s3.uploadFileMultipart(bucket, fileKeyMultipart, 5))
             .compile
             .drain

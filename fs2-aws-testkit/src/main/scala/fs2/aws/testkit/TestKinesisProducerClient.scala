@@ -1,9 +1,7 @@
 package fs2.aws.testkit
 
 import java.nio.ByteBuffer
-
-import cats.effect.Sync
-import cats.effect.concurrent.Ref
+import cats.effect.{ Ref, Sync }
 import com.amazonaws.services.kinesis.producer.{ Attempt, UserRecordResult }
 import com.google.common.util.concurrent.{ ListenableFuture, SettableFuture }
 import fs2.aws.internal.KinesisProducerClient

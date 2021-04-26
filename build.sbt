@@ -28,7 +28,7 @@ ThisBuild / scalaVersion := scala213
 
 lazy val root = (project in file("."))
   .aggregate(
-    `fs2-aws`,
+    `fs2-aws-kinesis`,
     `fs2-aws-s3`,
     `fs2-aws-sqs`,
     `fs2-aws-testkit`,
@@ -67,14 +67,15 @@ lazy val `fs2-aws-core` = (project in file("fs2-aws-core"))
   .settings(scalacOptions ++= commonOptions(scalaVersion.value))
 
 lazy val `fs2-aws-ciris` = (project in file("fs2-aws-ciris"))
-  .dependsOn(`fs2-aws`)
   .settings(
     name := "fs2-aws-ciris",
     libraryDependencies ++= Seq(
-      "org.scalatest" %% "scalatest"               % V.ScalaTest % Test,
-      "org.mockito"   % "mockito-core"             % V.MockitoCore % Test,
-      "org.mockito"   %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
-      "is.cir"        %% "ciris"                   % "1.2.1"
+      "org.scalatest"           %% "scalatest"               % V.ScalaTest % Test,
+      "org.mockito"             % "mockito-core"             % V.MockitoCore % Test,
+      "org.mockito"             %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
+      "is.cir"                  %% "ciris"                   % "2.0.0-RC2",
+      "software.amazon.kinesis" % "amazon-kinesis-client"    % "2.3.4",
+      "org.typelevel"           %% "cats-effect"             % V.CE % Test
     ),
     coverageMinimum       := 40,
     coverageFailOnMinimum := true
@@ -110,7 +111,7 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
     `pure-kinesis-tagless`,
     `pure-dynamodb-tagless`,
     `pure-cloudwatch-tagless`,
-    `fs2-aws`,
+    `fs2-aws-kinesis`,
     `fs2-aws-s3`
   )
   .settings(
@@ -123,7 +124,7 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
       "ch.qos.logback" % "logback-core"             % "1.2.3",
       "org.slf4j"      % "jcl-over-slf4j"           % "1.7.30",
       "org.slf4j"      % "jul-to-slf4j"             % "1.7.30",
-      "org.typelevel"  %% "log4cats-slf4j"          % "2.0.1",
+      "org.typelevel"  %% "log4cats-slf4j"          % "2.1.0",
       "io.laserdisc"   %% "scanamo-circe"           % "1.0.8"
     )
   )
@@ -151,7 +152,7 @@ lazy val `fs2-aws-s3` = (project in file("fs2-aws-s3"))
   .settings(scalacOptions := commonOptions(scalaVersion.value))
   .dependsOn(`pure-s3-tagless`)
 
-lazy val `fs2-aws` = (project in file("fs2-aws"))
+lazy val `fs2-aws-kinesis` = (project in file("fs2-aws-kinesis"))
   .dependsOn(
     `fs2-aws-core`,
     `pure-cloudwatch-tagless`,
@@ -159,7 +160,7 @@ lazy val `fs2-aws` = (project in file("fs2-aws"))
     `pure-kinesis-tagless`
   )
   .settings(
-    name := "fs2-aws",
+    name := "fs2-aws-kinesis",
     libraryDependencies ++= Seq(
       "co.fs2"                  %% "fs2-core"                % V.Fs2,
       "co.fs2"                  %% "fs2-io"                  % V.Fs2,
@@ -169,7 +170,9 @@ lazy val `fs2-aws` = (project in file("fs2-aws"))
       "eu.timepit"              %% "refined"                 % V.Refined,
       "org.scalatest"           %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"             %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
-      "org.mockito"             % "mockito-core"             % V.MockitoCore % Test
+      "org.mockito"             % "mockito-core"             % V.MockitoCore % Test,
+      "ch.qos.logback"          % "logback-classic"          % "1.2.3" % Test,
+      "ch.qos.logback"          % "logback-core"             % "1.2.3" % Test
     ),
     coverageMinimum       := 40,
     coverageFailOnMinimum := true
@@ -226,7 +229,7 @@ lazy val `pure-sqs-tagless` = (project in file("pure-aws/pure-sqs-tagless"))
       "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
       "eu.timepit"             %% "refined"                 % V.Refined,
-      "org.typelevel"          %% "cats-effect"             % "2.5.0"
+      "org.typelevel"          %% "cats-effect"             % V.CE
     ),
     taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "sqs" / "tagless",
     taglessGenPackage := "io.laserdisc.pure.sqs.tagless",
@@ -250,7 +253,7 @@ lazy val `pure-s3-tagless` = (project in file("pure-aws/pure-s3-tagless"))
       "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
       "eu.timepit"             %% "refined"                 % V.Refined,
-      "org.typelevel"          %% "cats-effect"             % "2.5.0"
+      "org.typelevel"          %% "cats-effect"             % V.CE
     ),
     taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "s3" / "tagless",
     taglessGenPackage := "io.laserdisc.pure.s3.tagless",
@@ -274,7 +277,7 @@ lazy val `pure-sns-tagless` = (project in file("pure-aws/pure-sns-tagless"))
       "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
       "eu.timepit"             %% "refined"                 % V.Refined,
-      "org.typelevel"          %% "cats-effect"             % "2.5.0"
+      "org.typelevel"          %% "cats-effect"             % V.CE
     ),
     taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "sns" / "tagless",
     taglessGenPackage := "io.laserdisc.pure.sns.tagless",
@@ -298,7 +301,7 @@ lazy val `pure-kinesis-tagless` = (project in file("pure-aws/pure-kinesis-tagles
       "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
       "eu.timepit"             %% "refined"                 % V.Refined,
-      "org.typelevel"          %% "cats-effect"             % "2.5.0"
+      "org.typelevel"          %% "cats-effect"             % V.CE
     ),
     taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "kinesis" / "tagless",
     taglessGenPackage := "io.laserdisc.pure.kinesis.tagless",
@@ -322,7 +325,7 @@ lazy val `pure-dynamodb-tagless` = (project in file("pure-aws/pure-dynamodb-tagl
       "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
       "eu.timepit"             %% "refined"                 % V.Refined,
-      "org.typelevel"          %% "cats-effect"             % "2.5.0"
+      "org.typelevel"          %% "cats-effect"             % V.CE
     ),
     taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "dynamodb" / "tagless",
     taglessGenPackage := "io.laserdisc.pure.dynamodb.tagless",
@@ -346,7 +349,7 @@ lazy val `pure-cloudwatch-tagless` = (project in file("pure-aws/pure-cloudwatch-
       "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
       "eu.timepit"             %% "refined"                 % V.Refined,
-      "org.typelevel"          %% "cats-effect"             % "2.5.0"
+      "org.typelevel"          %% "cats-effect"             % V.CE
     ),
     taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "cloudwatch" / "tagless",
     taglessGenPackage := "io.laserdisc.pure.cloudwatch.tagless",
@@ -361,7 +364,7 @@ lazy val `pure-cloudwatch-tagless` = (project in file("pure-aws/pure-cloudwatch-
   .settings(scalacOptions ++= commonOptions(scalaVersion.value))
 
 lazy val `fs2-aws-testkit` = (project in file("fs2-aws-testkit"))
-  .dependsOn(`fs2-aws`)
+  .dependsOn(`fs2-aws-kinesis`)
   .settings(
     name := "fs2-aws-testkit",
     libraryDependencies ++= Seq(
@@ -378,7 +381,7 @@ lazy val `fs2-aws-testkit` = (project in file("fs2-aws-testkit"))
   .settings(scalacOptions ++= commonOptions(scalaVersion.value))
 
 lazy val `fs2-aws-benchmarks` = (project in file("fs2-aws-benchmarks"))
-  .dependsOn(`fs2-aws`)
+  .dependsOn(`fs2-aws-kinesis`)
   .dependsOn(`fs2-aws-testkit`)
   .settings(
     name := "fs2-aws-benchmarks",
