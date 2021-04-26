@@ -210,7 +210,7 @@ def stream(deferedListener: Deferred[IO, MessageListener]) =
               .toList
 
 //create the program for testing the stream
-import io.circe.syntax._
+import io.circe.fs2.aws.examples.syntax._
 import io.circe.generic.auto._
 val quote = Quote(...)
 val program : IO[List[(Quote, MessageListener)]] = for {

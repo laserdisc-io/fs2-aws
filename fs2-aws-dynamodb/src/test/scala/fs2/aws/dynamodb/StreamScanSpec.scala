@@ -1,6 +1,7 @@
 package fs2.aws.dynamodb
 
-import cats.effect.{ Blocker, ContextShift, IO, Resource, Timer }
+import cats.effect.unsafe.IORuntime
+import cats.effect.{ IO, Resource }
 import io.laserdisc.pure.dynamodb.tagless.{ DynamoDbAsyncClientOp, Interpreter => DDBInterpreter }
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
@@ -9,29 +10,15 @@ import org.scalatest.wordspec.AnyWordSpec
 import software.amazon.awssdk.auth.credentials.{ AwsBasicCredentials, StaticCredentialsProvider }
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
-import software.amazon.awssdk.services.dynamodb.model.{
-  AttributeDefinition,
-  AttributeValue,
-  BatchWriteItemRequest,
-  BillingMode,
-  CreateTableRequest,
-  DeleteTableRequest,
-  KeySchemaElement,
-  KeyType,
-  PutRequest,
-  ScalarAttributeType,
-  ScanRequest,
-  WriteRequest
-}
+import software.amazon.awssdk.services.dynamodb.model._
 
 import java.net.URI
 import scala.concurrent.ExecutionContext
 import scala.jdk.CollectionConverters._
 
 class StreamScanSpec extends AnyWordSpec with Matchers with ScalaFutures {
-  implicit val ec: ExecutionContext             = ExecutionContext.global
-  implicit val timer: Timer[IO]                 = IO.timer(ec)
-  implicit val ioContextShift: ContextShift[IO] = IO.contextShift(ec)
+  implicit val ec: ExecutionContext = ExecutionContext.global
+  implicit val runtime: IORuntime   = IORuntime.global
 
   implicit override val patienceConfig: PatienceConfig =
     PatienceConfig(timeout = scaled(Span(2, Minutes)), interval = scaled(Span(1, Second)))
@@ -72,14 +59,14 @@ class StreamScanSpec extends AnyWordSpec with Matchers with ScalaFutures {
   }
   def resourcesF: Resource[IO, (String, DynamoDbAsyncClientOp[IO])] =
     for {
-      blocker     <- Blocker[IO]
-      credentials = AwsBasicCredentials.create("accesskey", "secretkey")
-      port        = 4566
-      ddb <- DDBInterpreter[IO](blocker).DynamoDbAsyncClientOpResource(
+      ddb <- DDBInterpreter[IO].DynamoDbAsyncClientOpResource(
               DynamoDbAsyncClient
                 .builder()
-                .credentialsProvider(StaticCredentialsProvider.create(credentials))
-                .endpointOverride(URI.create(s"http://localhost:$port"))
+                .credentialsProvider(
+                  StaticCredentialsProvider
+                    .create(AwsBasicCredentials.create("accesskey", "secretkey"))
+                )
+                .endpointOverride(URI.create(s"http://localhost:4566"))
                 .region(Region.US_EAST_1)
             )
       tableName = "scan_test"

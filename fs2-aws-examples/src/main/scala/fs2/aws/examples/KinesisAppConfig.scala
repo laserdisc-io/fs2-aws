@@ -1,3 +1,6 @@
+package fs2.aws.examples
+
+import cats.implicits._
 import com.amazonaws.auth.{ AWSStaticCredentialsProvider, BasicAWSCredentials }
 import com.amazonaws.services.kinesis.producer.KinesisProducerConfiguration
 import fs2.aws.kinesis.{ KinesisConsumerSettings, Polling }
@@ -11,7 +14,6 @@ import software.amazon.awssdk.services.cloudwatch.{
 import software.amazon.awssdk.services.dynamodb.{ DynamoDbAsyncClient, DynamoDbAsyncClientBuilder }
 import software.amazon.awssdk.services.kinesis.{ KinesisAsyncClient, KinesisAsyncClientBuilder }
 import software.amazon.kinesis.common.InitialPositionInStream
-import cats.implicits._
 
 import java.net.URI
 import java.util.Date

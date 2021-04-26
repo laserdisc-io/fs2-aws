@@ -1,9 +1,8 @@
 package fs2.aws
 
-import cats.effect.Concurrent
-import cats.effect.concurrent.Ref
+import cats.effect.{ Concurrent, Ref }
 import cats.implicits._
-import fs2.concurrent.Queue
+import cats.effect.std.Queue
 import fs2.{ Pipe, Stream }
 
 package object core {
@@ -27,10 +26,10 @@ package object core {
   )(implicit F: Concurrent[F]): Pipe[F, A, (K, Stream[F, A])] = { in =>
     Stream.eval(Ref.of[F, Map[K, Queue[F, Option[A]]]](Map.empty)).flatMap { queueMap =>
       val cleanup = {
-        queueMap.get.flatMap(_.values.toList.traverse_(_.enqueue1(None)))
+        queueMap.get.flatMap(_.values.toList.traverse_(_.offer(None)))
       }
 
-      (in ++ Stream.eval_(cleanup))
+      (in ++ Stream.eval(cleanup).drain)
         .evalMap { elem =>
           (selector(elem), queueMap.get).mapN { (key, queues) =>
             queues
@@ -40,9 +39,9 @@ package object core {
                   newQ <- Queue.unbounded[F, Option[A]] // Create a new queue
                   _    <- queueMap.modify(queues => (queues + (key -> newQ), queues))
                   // Enqueue the element lifted into an Option to the new queue
-                  _ <- newQ.enqueue1(elem.some)
-                } yield (key -> newQ.dequeue.unNoneTerminate).some
-              }(_.enqueue1(elem.some) as None)
+                  _ <- newQ.offer(elem.some)
+                } yield (key -> Stream.fromQueueNoneTerminated(newQ)).some
+              }(_.offer(elem.some) as None)
           }.flatten
         }
         .unNone

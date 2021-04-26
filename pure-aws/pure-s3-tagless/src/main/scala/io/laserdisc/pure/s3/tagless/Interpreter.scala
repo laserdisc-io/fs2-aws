@@ -2,121 +2,26 @@ package io.laserdisc.pure.s3.tagless
 
 // Library imports
 import cats.data.Kleisli
-import cats.effect.{ Async, Blocker, ContextShift, Resource }
+import cats.effect.{ Async, Resource }
 import software.amazon.awssdk.services.s3.S3AsyncClientBuilder
-import software.amazon.awssdk.services.s3.model._
 
 import java.util.concurrent.CompletionException
 
 // Types referenced
 import software.amazon.awssdk.core.async.{ AsyncRequestBody, AsyncResponseTransformer }
 import software.amazon.awssdk.services.s3.S3AsyncClient
-import software.amazon.awssdk.services.s3.model.{
-  AbortMultipartUploadRequest,
-  CompleteMultipartUploadRequest,
-  CopyObjectRequest,
-  CreateBucketRequest,
-  CreateMultipartUploadRequest,
-  DeleteBucketAnalyticsConfigurationRequest,
-  DeleteBucketCorsRequest,
-  DeleteBucketEncryptionRequest,
-  DeleteBucketIntelligentTieringConfigurationRequest,
-  DeleteBucketInventoryConfigurationRequest,
-  DeleteBucketLifecycleRequest,
-  DeleteBucketMetricsConfigurationRequest,
-  DeleteBucketOwnershipControlsRequest,
-  DeleteBucketPolicyRequest,
-  DeleteBucketReplicationRequest,
-  DeleteBucketRequest,
-  DeleteBucketTaggingRequest,
-  DeleteBucketWebsiteRequest,
-  DeleteObjectRequest,
-  DeleteObjectTaggingRequest,
-  DeleteObjectsRequest,
-  DeletePublicAccessBlockRequest,
-  GetBucketAccelerateConfigurationRequest,
-  GetBucketAclRequest,
-  GetBucketAnalyticsConfigurationRequest,
-  GetBucketCorsRequest,
-  GetBucketEncryptionRequest,
-  GetBucketIntelligentTieringConfigurationRequest,
-  GetBucketInventoryConfigurationRequest,
-  GetBucketLifecycleConfigurationRequest,
-  GetBucketLocationRequest,
-  GetBucketLoggingRequest,
-  GetBucketMetricsConfigurationRequest,
-  GetBucketNotificationConfigurationRequest,
-  GetBucketOwnershipControlsRequest,
-  GetBucketPolicyRequest,
-  GetBucketPolicyStatusRequest,
-  GetBucketReplicationRequest,
-  GetBucketRequestPaymentRequest,
-  GetBucketTaggingRequest,
-  GetBucketVersioningRequest,
-  GetBucketWebsiteRequest,
-  GetObjectAclRequest,
-  GetObjectLegalHoldRequest,
-  GetObjectLockConfigurationRequest,
-  GetObjectRequest,
-  GetObjectRetentionRequest,
-  GetObjectTaggingRequest,
-  GetObjectTorrentRequest,
-  GetPublicAccessBlockRequest,
-  HeadBucketRequest,
-  HeadObjectRequest,
-  ListBucketAnalyticsConfigurationsRequest,
-  ListBucketIntelligentTieringConfigurationsRequest,
-  ListBucketInventoryConfigurationsRequest,
-  ListBucketMetricsConfigurationsRequest,
-  ListBucketsRequest,
-  ListMultipartUploadsRequest,
-  ListObjectVersionsRequest,
-  ListObjectsRequest,
-  ListObjectsV2Request,
-  ListPartsRequest,
-  PutBucketAccelerateConfigurationRequest,
-  PutBucketAclRequest,
-  PutBucketAnalyticsConfigurationRequest,
-  PutBucketCorsRequest,
-  PutBucketEncryptionRequest,
-  PutBucketIntelligentTieringConfigurationRequest,
-  PutBucketInventoryConfigurationRequest,
-  PutBucketLifecycleConfigurationRequest,
-  PutBucketLoggingRequest,
-  PutBucketMetricsConfigurationRequest,
-  PutBucketNotificationConfigurationRequest,
-  PutBucketOwnershipControlsRequest,
-  PutBucketPolicyRequest,
-  PutBucketReplicationRequest,
-  PutBucketRequestPaymentRequest,
-  PutBucketTaggingRequest,
-  PutBucketVersioningRequest,
-  PutBucketWebsiteRequest,
-  PutObjectAclRequest,
-  PutObjectLegalHoldRequest,
-  PutObjectLockConfigurationRequest,
-  PutObjectRequest,
-  PutObjectRetentionRequest,
-  PutObjectTaggingRequest,
-  PutPublicAccessBlockRequest,
-  RestoreObjectRequest,
-  UploadPartCopyRequest,
-  UploadPartRequest
-}
+import software.amazon.awssdk.services.s3.model._
 
 import java.nio.file.Path
 import java.util.concurrent.CompletableFuture
 
 object Interpreter {
 
-  def apply[M[_]](b: Blocker)(
-    implicit am: Async[M],
-    cs: ContextShift[M]
+  def apply[M[_]](
+    implicit am: Async[M]
   ): Interpreter[M] =
     new Interpreter[M] {
-      val asyncM        = am
-      val contextShiftM = cs
-      val blocker       = b
+      val asyncM = am
     }
 
 }
@@ -126,29 +31,14 @@ trait Interpreter[M[_]] { outer =>
 
   implicit val asyncM: Async[M]
 
-  // to support shifting blocking operations to another pool.
-  val contextShiftM: ContextShift[M]
-  val blocker: Blocker
-
   lazy val S3AsyncClientInterpreter: S3AsyncClientInterpreter = new S3AsyncClientInterpreter {}
   // Some methods are common to all interpreters and can be overridden to change behavior globally.
 
-  def primitive[J, A](f: J => A): Kleisli[M, J, A] = Kleisli { a =>
-    blocker.blockOn[M, A](try {
-      asyncM.delay(f(a))
-    } catch {
-      case scala.util.control.NonFatal(e) => asyncM.raiseError(e)
-    })(contextShiftM)
-  }
-  def primitive1[J, A](f: =>A): M[A] =
-    blocker.blockOn[M, A](try {
-      asyncM.delay(f)
-    } catch {
-      case scala.util.control.NonFatal(e) => asyncM.raiseError(e)
-    })(contextShiftM)
+  def primitive[J, A](f: J => A): Kleisli[M, J, A] = Kleisli(a => asyncM.blocking(f(a)))
+  def primitive1[J, A](f: =>A): M[A]               = asyncM.blocking(f)
 
   def eff[J, A](fut: J => CompletableFuture[A]): Kleisli[M, J, A] = Kleisli { a =>
-    asyncM.async { cb =>
+    asyncM.async_ { cb =>
       fut(a).handle[Unit] { (a, x) =>
         if (a == null)
           x match {
@@ -162,7 +52,7 @@ trait Interpreter[M[_]] { outer =>
     }
   }
   def eff1[J, A](fut: =>CompletableFuture[A]): M[A] =
-    asyncM.async { cb =>
+    asyncM.async_ { cb =>
       fut.handle[Unit] { (a, x) =>
         if (a == null)
           x match {
@@ -338,6 +228,10 @@ trait Interpreter[M[_]] { outer =>
     override def uploadPartCopy(a: UploadPartCopyRequest)              = eff(_.uploadPartCopy(a))
     override def utilities                                             = primitive(_.utilities)
     override def waiter                                                = primitive(_.waiter)
+    override def writeGetObjectResponse(a: WriteGetObjectResponseRequest, b: AsyncRequestBody) =
+      eff(_.writeGetObjectResponse(a, b))
+    override def writeGetObjectResponse(a: WriteGetObjectResponseRequest, b: Path) =
+      eff(_.writeGetObjectResponse(a, b))
     def lens[E](f: E => S3AsyncClient): S3AsyncClientOp[Kleisli[M, E, *]] =
       new S3AsyncClientOp[Kleisli[M, E, *]] {
         override def abortMultipartUpload(a: AbortMultipartUploadRequest) =
@@ -542,6 +436,10 @@ trait Interpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).uploadPartCopy(a)))
         override def utilities = Kleisli(e => primitive1(f(e).utilities))
         override def waiter    = Kleisli(e => primitive1(f(e).waiter))
+        override def writeGetObjectResponse(a: WriteGetObjectResponseRequest, b: AsyncRequestBody) =
+          Kleisli(e => eff1(f(e).writeGetObjectResponse(a, b)))
+        override def writeGetObjectResponse(a: WriteGetObjectResponseRequest, b: Path) =
+          Kleisli(e => eff1(f(e).writeGetObjectResponse(a, b)))
       }
   }
 
@@ -725,6 +623,10 @@ trait Interpreter[M[_]] { outer =>
     override def uploadPartCopy(a: UploadPartCopyRequest)  = eff1(client.uploadPartCopy(a))
     override def utilities                                 = primitive1(client.utilities)
     override def waiter                                    = primitive1(client.waiter)
+    override def writeGetObjectResponse(a: WriteGetObjectResponseRequest, b: AsyncRequestBody) =
+      eff1(client.writeGetObjectResponse(a, b))
+    override def writeGetObjectResponse(a: WriteGetObjectResponseRequest, b: Path) =
+      eff1(client.writeGetObjectResponse(a, b))
 
   }
 

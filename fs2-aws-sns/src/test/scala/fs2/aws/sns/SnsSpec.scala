@@ -1,6 +1,8 @@
 package fs2.aws.sns
 
-import cats.effect.{ Blocker, ContextShift, IO, Resource, Timer }
+import cats.effect.unsafe.IORuntime
+import cats.effect.{ IO, Resource }
+import cats.implicits._
 import fs2.aws.sns.sns.SNS
 import io.laserdisc.pure.sns.tagless.{ Interpreter, SnsAsyncClientOp }
 import io.laserdisc.pure.sqs.tagless
@@ -14,25 +16,23 @@ import software.amazon.awssdk.services.sns.SnsAsyncClient
 import software.amazon.awssdk.services.sns.model._
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model._
+
 import java.net.URI
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.DurationInt
 import scala.jdk.CollectionConverters._
 import scala.util.matching.Regex
-import cats.implicits._
 
 class SnsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
 
-  implicit val ec: ExecutionContext             = ExecutionContext.global
-  implicit val ioContextShift: ContextShift[IO] = IO.contextShift(ec)
-  implicit val ioTimer: Timer[IO]               = IO.timer(ec)
+  implicit val ec: ExecutionContext = ExecutionContext.global
+  implicit val runtime              = IORuntime.global
 
   val awsClientsResource: Resource[IO, (SnsAsyncClientOp[IO], SqsAsyncClientOp[IO])] =
     (mkSNSClient(4566), mkSQSClient(4566)).mapN { case (s1, s2) => s1 -> s2 }
   var topicArn: String = _
   var queueUrl: String = _
   val pattern: Regex   = new Regex("\"Message\": \"[0-9]\"")
-  val blocker          = Blocker.liftExecutionContext(ec)
 
   override def beforeAll(): Unit =
     awsClientsResource
@@ -126,7 +126,7 @@ class SnsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
   def mkSNSClient(snsPort: Int): Resource[IO, SnsAsyncClientOp[IO]] = {
     val credentials =
       AwsBasicCredentials.create("accesskey", "secretkey")
-    Interpreter[IO](blocker).SnsAsyncClientOpResource(
+    Interpreter[IO].SnsAsyncClientOpResource(
       SnsAsyncClient
         .builder()
         .credentialsProvider(StaticCredentialsProvider.create(credentials))
@@ -139,7 +139,7 @@ class SnsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
     val credentials =
       AwsBasicCredentials.create("accesskey", "secretkey")
     tagless
-      .Interpreter[IO](blocker)
+      .Interpreter[IO]
       .SqsAsyncClientOpResource(
         SqsAsyncClient
           .builder()

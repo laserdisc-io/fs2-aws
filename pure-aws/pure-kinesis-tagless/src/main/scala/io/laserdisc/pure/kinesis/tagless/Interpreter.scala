@@ -2,57 +2,24 @@ package io.laserdisc.pure.kinesis.tagless
 
 // Library imports
 import cats.data.Kleisli
-import cats.effect.{ Async, Blocker, ContextShift, Resource }
+import cats.effect.{ Async, Resource }
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClientBuilder
 
 import java.util.concurrent.CompletionException
 
 // Types referenced
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient
-import software.amazon.awssdk.services.kinesis.model.{
-  AddTagsToStreamRequest,
-  CreateStreamRequest,
-  DecreaseStreamRetentionPeriodRequest,
-  DeleteStreamRequest,
-  DeregisterStreamConsumerRequest,
-  DescribeLimitsRequest,
-  DescribeStreamConsumerRequest,
-  DescribeStreamRequest,
-  DescribeStreamSummaryRequest,
-  DisableEnhancedMonitoringRequest,
-  EnableEnhancedMonitoringRequest,
-  GetRecordsRequest,
-  GetShardIteratorRequest,
-  IncreaseStreamRetentionPeriodRequest,
-  ListShardsRequest,
-  ListStreamConsumersRequest,
-  ListStreamsRequest,
-  ListTagsForStreamRequest,
-  MergeShardsRequest,
-  PutRecordRequest,
-  PutRecordsRequest,
-  RegisterStreamConsumerRequest,
-  RemoveTagsFromStreamRequest,
-  SplitShardRequest,
-  StartStreamEncryptionRequest,
-  StopStreamEncryptionRequest,
-  SubscribeToShardRequest,
-  SubscribeToShardResponseHandler,
-  UpdateShardCountRequest
-}
+import software.amazon.awssdk.services.kinesis.model._
 
 import java.util.concurrent.CompletableFuture
 
 object Interpreter {
 
-  def apply[M[_]](b: Blocker)(
-    implicit am: Async[M],
-    cs: ContextShift[M]
+  def apply[M[_]](
+    implicit am: Async[M]
   ): Interpreter[M] =
     new Interpreter[M] {
-      val asyncM        = am
-      val contextShiftM = cs
-      val blocker       = b
+      val asyncM = am
     }
 
 }
@@ -62,30 +29,15 @@ trait Interpreter[M[_]] { outer =>
 
   implicit val asyncM: Async[M]
 
-  // to support shifting blocking operations to another pool.
-  val contextShiftM: ContextShift[M]
-  val blocker: Blocker
-
   lazy val KinesisAsyncClientInterpreter: KinesisAsyncClientInterpreter =
     new KinesisAsyncClientInterpreter {}
   // Some methods are common to all interpreters and can be overridden to change behavior globally.
 
-  def primitive[J, A](f: J => A): Kleisli[M, J, A] = Kleisli { a =>
-    blocker.blockOn[M, A](try {
-      asyncM.delay(f(a))
-    } catch {
-      case scala.util.control.NonFatal(e) => asyncM.raiseError(e)
-    })(contextShiftM)
-  }
-  def primitive1[J, A](f: =>A): M[A] =
-    blocker.blockOn[M, A](try {
-      asyncM.delay(f)
-    } catch {
-      case scala.util.control.NonFatal(e) => asyncM.raiseError(e)
-    })(contextShiftM)
+  def primitive[J, A](f: J => A): Kleisli[M, J, A] = Kleisli(a => asyncM.blocking(f(a)))
+  def primitive1[J, A](f: =>A): M[A]               = asyncM.blocking(f)
 
   def eff[J, A](fut: J => CompletableFuture[A]): Kleisli[M, J, A] = Kleisli { a =>
-    asyncM.async { cb =>
+    asyncM.async_ { cb =>
       fut(a).handle[Unit] { (a, x) =>
         if (a == null)
           x match {
@@ -99,7 +51,7 @@ trait Interpreter[M[_]] { outer =>
     }
   }
   def eff1[J, A](fut: =>CompletableFuture[A]): M[A] =
-    asyncM.async { cb =>
+    asyncM.async_ { cb =>
       fut.handle[Unit] { (a, x) =>
         if (a == null)
           x match {

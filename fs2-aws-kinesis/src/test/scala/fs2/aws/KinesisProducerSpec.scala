@@ -1,29 +1,28 @@
 package fs2
 package aws
 
-import java.nio.ByteBuffer
-
-import cats.effect.{ ContextShift, IO, Timer }
+import cats.effect.IO
+import cats.effect.unsafe.IORuntime
 import com.amazonaws.services.kinesis.producer.{ Attempt, UserRecordResult }
 import com.google.common.util.concurrent.SettableFuture
 import fs2.aws.kinesis.publisher._
 import fs2.aws.utils.KinesisStub
-import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.BeforeAndAfterEach
+import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
-import scala.jdk.CollectionConverters._
+import java.nio.ByteBuffer
 import scala.concurrent.ExecutionContext
+import scala.jdk.CollectionConverters._
 
 class KinesisProducerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach {
   override def beforeEach(): Unit =
     KinesisStub.clear()
 
   trait KinesisProducerTestContext {
-    implicit val ec: ExecutionContext             = ExecutionContext.global
-    implicit val ioContextShift: ContextShift[IO] = IO.contextShift(ec)
-    implicit val timer: Timer[IO]                 = IO.timer(ec)
-    val result                                    = new UserRecordResult(List[Attempt]().asJava, "seq #", "shard #", true)
+    implicit val ec: ExecutionContext = ExecutionContext.global
+    implicit val runtime: IORuntime   = IORuntime.global
+    val result                        = new UserRecordResult(List[Attempt]().asJava, "seq #", "shard #", true)
     val ops = IO {
       val future: SettableFuture[UserRecordResult] = SettableFuture.create()
       future.set(result)

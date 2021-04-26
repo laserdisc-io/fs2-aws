@@ -1,8 +1,8 @@
 package fs2.aws.dynamodb.parsers
 
 import java.util
-
 import cats.effect.IO
+import cats.effect.unsafe.IORuntime
 import com.amazonaws.services.dynamodbv2.model.{
   AttributeValue,
   OperationType,
@@ -17,6 +17,7 @@ import io.github.howardjohn.scanamo.CirceDynamoFormat._
 import org.scalatest.matchers.should.Matchers
 
 class DynamoEventParserSpec extends AnyWordSpec with Matchers {
+  implicit val runtime: IORuntime = IORuntime.global
   "Dynamo Event Parser" should {
     "parse insert event type" in {
       val sr = new StreamRecord()

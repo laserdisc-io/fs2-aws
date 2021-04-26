@@ -1,41 +1,6 @@
 package io.laserdisc.pure.sns.tagless
 
-import software.amazon.awssdk.services.sns.model.{
-  AddPermissionRequest,
-  CheckIfPhoneNumberIsOptedOutRequest,
-  ConfirmSubscriptionRequest,
-  CreatePlatformApplicationRequest,
-  CreatePlatformEndpointRequest,
-  CreateTopicRequest,
-  DeleteEndpointRequest,
-  DeletePlatformApplicationRequest,
-  DeleteTopicRequest,
-  GetEndpointAttributesRequest,
-  GetPlatformApplicationAttributesRequest,
-  GetSmsAttributesRequest,
-  GetSubscriptionAttributesRequest,
-  GetTopicAttributesRequest,
-  ListEndpointsByPlatformApplicationRequest,
-  ListPhoneNumbersOptedOutRequest,
-  ListPlatformApplicationsRequest,
-  ListSubscriptionsByTopicRequest,
-  ListSubscriptionsRequest,
-  ListTagsForResourceRequest,
-  ListTopicsRequest,
-  OptInPhoneNumberRequest,
-  PublishRequest,
-  RemovePermissionRequest,
-  SetEndpointAttributesRequest,
-  SetPlatformApplicationAttributesRequest,
-  SetSmsAttributesRequest,
-  SetSubscriptionAttributesRequest,
-  SetTopicAttributesRequest,
-  SubscribeRequest,
-  TagResourceRequest,
-  UnsubscribeRequest,
-  UntagResourceRequest,
-  _
-}
+import software.amazon.awssdk.services.sns.model._
 import software.amazon.awssdk.services.sns.paginators._
 
 trait SnsAsyncClientOp[F[_]] {

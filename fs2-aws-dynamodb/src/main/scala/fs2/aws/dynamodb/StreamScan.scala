@@ -1,18 +1,16 @@
 package fs2.aws.dynamodb
 
-import cats.effect.{ Async, ConcurrentEffect }
-import cats.effect.concurrent.Ref
+import cats.Functor
+import cats.effect.std.{ Dispatcher, Queue }
+import cats.effect.{ Async, Ref }
+import cats.implicits._
 import fs2.{ Chunk, Stream }
-import fs2.concurrent.Queue
 import io.laserdisc.pure.dynamodb.tagless.DynamoDbAsyncClientOp
 import org.reactivestreams.{ Subscriber, Subscription }
 import software.amazon.awssdk.services.dynamodb.model.{ AttributeValue, ScanRequest, ScanResponse }
-import cats.syntax.functor._
-import cats.syntax.option._
-import cats.syntax.flatMap._
-import scala.jdk.CollectionConverters._
 
 import java.util.{ Map => JMap }
+import scala.jdk.CollectionConverters._
 trait StreamScan[F[_]] {
 
   /** Scans Dynamodb into the FS2 stream
@@ -29,15 +27,16 @@ trait StreamScan[F[_]] {
 }
 
 object StreamScan {
-  def apply[F[_]: ConcurrentEffect](ddb: DynamoDbAsyncClientOp[F]): StreamScan[F] =
+  def apply[F[_]: Functor: Async](ddb: DynamoDbAsyncClientOp[F]): StreamScan[F] =
     new StreamScan[F]() {
       def scanDynamoDB(
         scanRequest: ScanRequest,
         pageSize: Int
       ): Stream[F, Chunk[JMap[String, AttributeValue]]] =
         for {
-          queue <- Stream.eval(Queue.bounded[F, Option[Chunk[JMap[String, AttributeValue]]]](1))
-          sub   <- Stream.eval(Ref[F].of[Option[Subscription]](None))
+          dispatcher <- Stream.resource(Dispatcher[F])
+          queue      <- Stream.eval(Queue.bounded[F, Option[Chunk[JMap[String, AttributeValue]]]](1))
+          sub        <- Stream.eval(Ref[F].of[Option[Subscription]](None))
           _ <- Stream.eval(
                 ddb
                   .scanPaginator(scanRequest)
@@ -48,30 +47,28 @@ object StreamScan {
                     publisher.subscribe(new Subscriber[ScanResponse] {
 
                       override def onSubscribe(s: Subscription): Unit =
-                        ConcurrentEffect[F]
-                          .toIO(sub.set(s.some) >> Async[F].delay(s.request(pageSize)))
-                          .unsafeRunSync()
+                        dispatcher
+                          .unsafeRunSync(sub.set(s.some) >> Async[F].delay(s.request(pageSize)))
 
                       override def onNext(t: ScanResponse): Unit =
-                        ConcurrentEffect[F]
-                          .toIO(
+                        dispatcher
+                          .unsafeRunSync(
                             for {
-                              _ <- queue.enqueue1(Chunk(t.items().asScala.toList: _*).some)
+                              _ <- queue.offer(Chunk(t.items().asScala.toList: _*).some)
                               s <- sub.get
                               _ <- Async[F].delay(s.map(_.request(pageSize)))
                             } yield ()
                           )
-                          .unsafeRunSync()
 
                       override def onError(t: Throwable): Unit =
-                        ConcurrentEffect[F].toIO(Async[F].raiseError(t)).unsafeRunSync()
+                        dispatcher.unsafeRunSync(Async[F].raiseError(t))
 
                       override def onComplete(): Unit =
-                        ConcurrentEffect[F].toIO(queue.enqueue1(None)).unsafeRunSync()
+                        dispatcher.unsafeRunSync(queue.offer(None))
                     })
                   )
               )
-          stream <- queue.dequeue.unNoneTerminate
+          stream <- Stream.fromQueueNoneTerminated(queue)
         } yield stream
 
     }

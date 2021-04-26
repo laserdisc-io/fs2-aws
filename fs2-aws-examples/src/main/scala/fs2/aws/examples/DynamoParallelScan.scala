@@ -1,8 +1,10 @@
+package fs2.aws.examples
+
 import cats.data.Kleisli
-import cats.effect.{ Blocker, ExitCode, IO, IOApp, Sync }
+import cats.effect.{ ExitCode, IO, IOApp, Sync }
 import cats.implicits._
-import fs2.{ Chunk, Pipe }
 import fs2.aws.dynamodb.StreamScan
+import fs2.{ Chunk, Pipe }
 import io.laserdisc.pure.dynamodb.tagless.{ DynamoDbAsyncClientOp, Interpreter }
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
@@ -81,13 +83,11 @@ case class DDBEnvironment[F[_]](
 object DynamoParallelScan extends IOApp {
   override def run(args: List[String]): IO[ExitCode] =
     (for {
-      b <- Blocker[IO]
-      ddb <- Interpreter[IO](b)
-              .DynamoDbAsyncClientOpResource(
-                DynamoDbAsyncClient
-                  .builder()
-                  .region(Region.US_EAST_1)
-              )
+      ddb <- Interpreter[IO].DynamoDbAsyncClientOpResource(
+              DynamoDbAsyncClient
+                .builder()
+                .region(Region.US_EAST_1)
+            )
     } yield DDBEnvironment[IO](
       new DDBReader[IO](StreamScan[IO](ddb)),
       new DDBWriter[IO](ddb),
