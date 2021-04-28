@@ -5,7 +5,6 @@ package kinesis
 import java.nio.ByteBuffer
 import java.time.Instant
 import java.util.concurrent.Semaphore
-
 import cats.effect.{ ContextShift, IO, Timer }
 import cats.implicits._
 import fs2.aws.kinesis.consumer.{ readFromKinesisStream, _ }
@@ -29,6 +28,9 @@ import scala.jdk.CollectionConverters._
 import org.mockito.ArgumentMatchers.any
 import eu.timepit.refined.auto._
 
+import scala.annotation.nowarn
+
+@nowarn
 class KinesisConsumerSpec
     extends AnyFlatSpec
     with Matchers

@@ -22,6 +22,7 @@ import eu.timepit.refined.auto._
 
 import java.util.UUID
 
+@deprecated("Use fs2.aws.kinesis.Kinesis instead", since = "3.1.1")
 object consumer {
   def mkDefaultKinesisClient(settings: KinesisConsumerSettings): KinesisAsyncClient = {
     val builder = KinesisAsyncClient
