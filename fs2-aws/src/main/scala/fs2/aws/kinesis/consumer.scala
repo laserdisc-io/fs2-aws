@@ -1,6 +1,6 @@
 package fs2.aws.kinesis
 
-import cats.effect.{ Blocker, ConcurrentEffect, ContextShift, IO, Sync, Timer }
+import cats.effect.{ Blocker, ConcurrentEffect, ContextShift, Sync, Timer }
 import cats.implicits._
 import fs2.aws.core
 import fs2.concurrent.Queue
@@ -222,7 +222,7 @@ object consumer {
       Stream.emit(
         schedulerFactory(() =>
           new ChunkedRecordProcessor(records =>
-            ConcurrentEffect[F].runAsync(queue.enqueue1(records))(_ => IO.unit).unsafeRunSync()
+            ConcurrentEffect[F].toIO(queue.enqueue1(records)).unsafeRunSync()
           )
         )
       )
