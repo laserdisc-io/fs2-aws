@@ -15,8 +15,10 @@ import software.amazon.kinesis.common.InitialPositionInStream
 
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
+import scala.annotation.nowarn
 import scala.concurrent.ExecutionContext
 
+@nowarn
 class LocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
 
   implicit val ec: ExecutionContext             = ExecutionContext.global

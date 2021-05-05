@@ -414,11 +414,12 @@ lazy val commonSettings = Seq(
       url("https://github.com/semenodm")
     )
   ),
-  licenses           ++= Seq(("MIT", url("http://opensource.org/licenses/MIT"))),
-  homepage           := Some(url("https://github.com/laserdisc-io/fs2-aws")),
-  crossScalaVersions := supportedScalaVersions,
-  scalaVersion       := scala213,
-  Test / fork        := true,
+  licenses                ++= Seq(("MIT", url("http://opensource.org/licenses/MIT"))),
+  homepage                := Some(url("https://github.com/laserdisc-io/fs2-aws")),
+  crossScalaVersions      := supportedScalaVersions,
+  scalaVersion            := scala213,
+  Compile / doc / sources := Nil,
+  Test / fork             := true,
   scalacOptions ++= Seq(
     "-encoding",
     "UTF-8",                         // source files are in UTF-8
