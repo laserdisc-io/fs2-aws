@@ -169,7 +169,11 @@ lazy val `fs2-aws` = (project in file("fs2-aws"))
       "eu.timepit"              %% "refined"                 % V.Refined,
       "org.scalatest"           %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"             %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
-      "org.mockito"             % "mockito-core"             % V.MockitoCore % Test
+      "org.mockito"             % "mockito-core"             % V.MockitoCore % Test,
+      "ch.qos.logback"          % "logback-classic"          % "1.2.3" % Test,
+      "ch.qos.logback"          % "logback-core"             % "1.2.3" % Test,
+      "org.slf4j"               % "jcl-over-slf4j"           % "1.7.30" % Test,
+      "org.slf4j"               % "jul-to-slf4j"             % "1.7.30" % Test
     ),
     coverageMinimum       := 40,
     coverageFailOnMinimum := true
