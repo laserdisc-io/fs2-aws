@@ -23,7 +23,7 @@ jobs:
       - name: "Starting up MinIO 🐳"
         run: docker-compose up -d
       - name: "list streams"
-        run: aws --endpoint-url=http://localhost:4566 kinesis list-streams
+        run: aws --endpoint-url=http://0.0.0.0:4566 kinesis list-streams
         env:
           AWS_ACCESS_KEY_ID: dummy
           AWS_SECRET_ACCESS_KEY: dummy
