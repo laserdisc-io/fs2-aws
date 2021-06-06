@@ -11,7 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: chrislennon/action-aws-cli@v1.1
       - name: Set up JDK
         uses: olafurpg/setup-scala@v10
       - name: Cache SBT
