@@ -20,7 +20,7 @@ import software.amazon.kinesis.retrieval.kpl.ExtendedSequenceNumber
 
 import java.nio.ByteBuffer
 import java.time.Instant
-import java.util.concurrent.{ CountDownLatch, Semaphore }
+import java.util.concurrent.{ CountDownLatch, Executors, Semaphore }
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
@@ -91,28 +91,28 @@ class NewKinesisConsumerSpec
 
   it should "not drop messages in case of back-pressure" in new WorkerContext with TestData {
     // Create and send 10 records (to match buffer size)
-    val res = (
-      stream.take(60).compile.toList,
-      IO.delay {
-        semaphore.acquire()
-        recordProcessor.initialize(initializationInput)
-        for (i <- 1 to 10) {
-          val record = mock(classOf[KinesisClientRecord])
-          when(record.sequenceNumber()).thenReturn(i.toString)
-          recordProcessor.processRecords(recordsInput.records(List(record)).build())
+    val res =
+      (stream.take(60).compile.toList, Blocker[IO].use { b =>
+        b.blockOn {
+          (IO.delay {
+            semaphore.acquire()
+            recordProcessor.initialize(initializationInput)
+            for (i <- 1 to 10) {
+              val record = mock(classOf[KinesisClientRecord])
+              when(record.sequenceNumber()).thenReturn(i.toString)
+              recordProcessor.processRecords(recordsInput.records(List(record)).build())
+            }
+          }, IO.delay {
+            semaphore.acquire()
+            recordProcessor.initialize(initializationInput)
+            for (i <- 1 to 50) {
+              val record = mock(classOf[KinesisClientRecord])
+              when(record.sequenceNumber()).thenReturn(i.toString)
+              recordProcessor.processRecords(recordsInput.records(List(record)).build())
+            }
+          }).parMapN { case (_, _) => () }
         }
-      },
-      // Send a batch that exceeds the internal buffer size
-      IO.delay {
-        semaphore.acquire()
-        recordProcessor.initialize(initializationInput)
-        for (i <- 1 to 50) {
-          val record = mock(classOf[KinesisClientRecord])
-          when(record.sequenceNumber()).thenReturn(i.toString)
-          recordProcessor.processRecords(recordsInput.records(List(record)).build())
-        }
-      }
-    ).parMapN { case (msgs, _, _) => msgs }.unsafeRunSync()
+      }).parMapN { case (msgs, _) => msgs }.unsafeRunSync()
 
     res should have size 60
   }
@@ -371,7 +371,13 @@ class NewKinesisConsumerSpec
     }
     val config =
       KinesisConsumerSettings("testStream", "testApp", Region.US_EAST_1, 10)
-    val k = Kinesis.create[IO](Blocker.liftExecutionContext(ec), builder)
+    val k =
+      Kinesis.create[IO](
+        Blocker.liftExecutionContext(
+          ExecutionContext.fromExecutorService(Executors.newCachedThreadPool())
+        ),
+        builder
+      )
     val stream: fs2.Stream[IO, CommittableRecord] =
       k.readFromKinesisStream(config)
         .map(i => if (errorStream) throw new Exception("boom") else i)
