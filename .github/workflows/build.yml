@@ -22,6 +22,8 @@ jobs:
           key: sbt-${{ hashFiles('**/build.sbt') }}
       - name: "Starting up MinIO 🐳"
         run: docker-compose up -d
+      - name: "list streams"
+        run: AWS_SECRET_ACCESS_KEY=dummy AWS_ACCESS_KEY_ID=dummy AWS_REGION=us-east-1 aws --endpoint-url=http://localhost:4566 kinesis list-streams
       - name: Run tests
         run: sbt +clean +test +doc
         env:
