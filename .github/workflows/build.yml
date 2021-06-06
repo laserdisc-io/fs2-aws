@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: chrislennon/action-aws-cli@v1.1
       - name: Set up JDK
         uses: olafurpg/setup-scala@v10
       - name: Cache SBT
@@ -23,7 +24,10 @@ jobs:
       - name: "Starting up MinIO 🐳"
         run: docker-compose up -d
       - name: "list streams"
-        run: AWS_SECRET_ACCESS_KEY=dummy AWS_ACCESS_KEY_ID=dummy AWS_REGION=us-east-1 aws --endpoint-url=http://localhost:4566 kinesis list-streams
+        run: aws --endpoint-url=http://localhost:4566 kinesis list-streams
+        env:
+          AWS_ACCESS_KEY_ID: dummy
+          AWS_SECRET_ACCESS_KEY: dummy
       - name: Run tests
         run: sbt +clean +test +doc
         env:
