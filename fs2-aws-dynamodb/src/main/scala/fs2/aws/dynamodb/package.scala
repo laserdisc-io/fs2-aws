@@ -53,6 +53,7 @@ package object dynamodb {
     *  @param streamName name of the Kinesis stream to consume from
     *  @return an infinite fs2 Stream that emits Kinesis Records
     */
+  @deprecated("Use fs2.aws.dynamodb.DynamoDB instead", since = "3.2.0")
   def readFromDynamDBStream[F[_]: ConcurrentEffect: ContextShift](
     appName: String,
     streamName: String
@@ -77,6 +78,7 @@ package object dynamodb {
     *  @param streamConfig configuration for the internal stream
     *  @return an infinite fs2 Stream that emits Kinesis Records
     */
+  @deprecated("Use fs2.aws.dynamodb.DynamoDB instead", since = "3.2.0")
   def readFromDynamoDBStream[F[_]: ConcurrentEffect: ContextShift](
     workerConfiguration: KinesisClientLibConfiguration,
     dynamoDBStreamsClient: AmazonDynamoDBStreams =
@@ -140,6 +142,8 @@ package object dynamodb {
     *  @param checkpointSettings configure maxBatchSize and maxBatchWait time before triggering a checkpoint
     *  @return a stream of Record types representing checkpointed messages
     */
+
+  @deprecated("Use fs2.aws.dynamodb.DynamoDB instead", since = "3.2.0")
   def checkpointRecords[F[_]: ConcurrentEffect: Timer](
     checkpointSettings: KinesisCheckpointSettings = KinesisCheckpointSettings.defaultInstance,
     parallelism: Int = 10
@@ -168,6 +172,8 @@ package object dynamodb {
     *  @param checkpointSettings configure maxBatchSize and maxBatchWait time before triggering a checkpoint
     *  @return a Sink that accepts a stream of CommittableRecords
     */
+
+  @deprecated("Use fs2.aws.dynamodb.DynamoDB instead", since = "3.2.0")
   def checkpointRecords_[F[_]](
     checkpointSettings: KinesisCheckpointSettings = KinesisCheckpointSettings.defaultInstance
   )(implicit F: ConcurrentEffect[F], timer: Timer[F]): Pipe[F, CommittableRecord, Unit] =

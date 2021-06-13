@@ -26,12 +26,14 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time._
 
+import scala.annotation.nowarn
 import scala.collection.immutable
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
 
 @Ignore
+@nowarn
 class DynamoDBConsumerSpec
     extends AnyFlatSpec
     with Matchers
