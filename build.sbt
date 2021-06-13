@@ -119,6 +119,7 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
     libraryDependencies ++= Seq(
       "org.mockito"    % "mockito-core"             % V.MockitoCore % Test,
       "org.mockito"    %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
+      "com.amazonaws"  % "aws-java-sdk-sts"         % "1.12.5",
       "ch.qos.logback" % "logback-classic"          % "1.2.3",
       "ch.qos.logback" % "logback-core"             % "1.2.3",
       "org.slf4j"      % "jcl-over-slf4j"           % "1.7.30",
