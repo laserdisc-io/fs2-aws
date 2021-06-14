@@ -17,7 +17,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 organization := "io.laserdisc"
 name         := "fs2-aws"
 
-lazy val scala212 = "2.12.13"
+lazy val scala212 = "2.12.14"
 lazy val scala213 = "2.13.6"
 
 lazy val supportedScalaVersions = List(scala212, scala213)
@@ -73,7 +73,7 @@ lazy val `fs2-aws-ciris` = (project in file("fs2-aws-ciris"))
       "org.scalatest"           %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"             % "mockito-core"             % V.MockitoCore % Test,
       "org.mockito"             %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
-      "is.cir"                  %% "ciris"                   % "2.0.0-RC3",
+      "is.cir"                  %% "ciris"                   % "2.0.1",
       "software.amazon.kinesis" % "amazon-kinesis-client"    % "2.3.4",
       "org.typelevel"           %% "cats-effect"             % V.CE % Test
     ),
