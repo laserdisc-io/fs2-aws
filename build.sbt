@@ -95,7 +95,7 @@ lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb"))
       "org.scalatest" %% "scalatest"                       % V.ScalaTest % Test,
       "org.mockito"   % "mockito-core"                     % V.MockitoCore % Test,
       "org.mockito"   %% "mockito-scala-scalatest"         % V.MockitoScalaTest % Test,
-      "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.5.2",
+      "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.5.3",
       "io.laserdisc"  %% "scanamo-circe"                   % "1.0.8"
     )
   )
@@ -164,7 +164,7 @@ lazy val `fs2-aws-kinesis` = (project in file("fs2-aws-kinesis"))
     libraryDependencies ++= Seq(
       "co.fs2"                  %% "fs2-core"                % V.Fs2,
       "co.fs2"                  %% "fs2-io"                  % V.Fs2,
-      "com.amazonaws"           % "amazon-kinesis-producer"  % "0.14.6",
+      "com.amazonaws"           % "amazon-kinesis-producer"  % "0.14.7",
       "software.amazon.kinesis" % "amazon-kinesis-client"    % "2.3.4",
       "software.amazon.awssdk"  % "sts"                      % V.AwsSdk,
       "eu.timepit"              %% "refined"                 % V.Refined,
