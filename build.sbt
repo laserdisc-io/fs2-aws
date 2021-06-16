@@ -17,7 +17,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 organization := "io.laserdisc"
 name         := "fs2-aws"
 
-lazy val scala212 = "2.12.13"
+lazy val scala212 = "2.12.14"
 lazy val scala213 = "2.13.6"
 
 lazy val supportedScalaVersions = List(scala212, scala213)
@@ -73,7 +73,7 @@ lazy val `fs2-aws-ciris` = (project in file("fs2-aws-ciris"))
       "org.scalatest"           %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"             % "mockito-core"             % V.MockitoCore % Test,
       "org.mockito"             %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
-      "is.cir"                  %% "ciris"                   % "2.0.0-RC3",
+      "is.cir"                  %% "ciris"                   % "2.0.1",
       "software.amazon.kinesis" % "amazon-kinesis-client"    % "2.3.4",
       "org.typelevel"           %% "cats-effect"             % V.CE % Test
     ),
@@ -95,7 +95,7 @@ lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb"))
       "org.scalatest" %% "scalatest"                       % V.ScalaTest % Test,
       "org.mockito"   % "mockito-core"                     % V.MockitoCore % Test,
       "org.mockito"   %% "mockito-scala-scalatest"         % V.MockitoScalaTest % Test,
-      "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.5.2",
+      "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.5.3",
       "io.laserdisc"  %% "scanamo-circe"                   % "1.0.8"
     )
   )
@@ -124,7 +124,7 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
       "ch.qos.logback" % "logback-core"             % "1.2.3",
       "org.slf4j"      % "jcl-over-slf4j"           % "1.7.30",
       "org.slf4j"      % "jul-to-slf4j"             % "1.7.30",
-      "org.typelevel"  %% "log4cats-slf4j"          % "2.1.0",
+      "org.typelevel"  %% "log4cats-slf4j"          % "2.1.1",
       "io.laserdisc"   %% "scanamo-circe"           % "1.0.8"
     )
   )
@@ -164,7 +164,7 @@ lazy val `fs2-aws-kinesis` = (project in file("fs2-aws-kinesis"))
     libraryDependencies ++= Seq(
       "co.fs2"                  %% "fs2-core"                % V.Fs2,
       "co.fs2"                  %% "fs2-io"                  % V.Fs2,
-      "com.amazonaws"           % "amazon-kinesis-producer"  % "0.14.6",
+      "com.amazonaws"           % "amazon-kinesis-producer"  % "0.14.7",
       "software.amazon.kinesis" % "amazon-kinesis-client"    % "2.3.4",
       "software.amazon.awssdk"  % "sts"                      % V.AwsSdk,
       "eu.timepit"              %% "refined"                 % V.Refined,
