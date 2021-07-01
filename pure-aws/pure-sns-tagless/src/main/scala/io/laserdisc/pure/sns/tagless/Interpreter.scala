@@ -76,10 +76,14 @@ trait Interpreter[M[_]] { outer =>
       eff(_.createPlatformApplication(a))
     override def createPlatformEndpoint(a: CreatePlatformEndpointRequest) =
       eff(_.createPlatformEndpoint(a))
+    override def createSMSSandboxPhoneNumber(a: CreateSmsSandboxPhoneNumberRequest) =
+      eff(_.createSMSSandboxPhoneNumber(a))
     override def createTopic(a: CreateTopicRequest)       = eff(_.createTopic(a))
     override def deleteEndpoint(a: DeleteEndpointRequest) = eff(_.deleteEndpoint(a))
     override def deletePlatformApplication(a: DeletePlatformApplicationRequest) =
       eff(_.deletePlatformApplication(a))
+    override def deleteSMSSandboxPhoneNumber(a: DeleteSmsSandboxPhoneNumberRequest) =
+      eff(_.deleteSMSSandboxPhoneNumber(a))
     override def deleteTopic(a: DeleteTopicRequest) = eff(_.deleteTopic(a))
     override def getEndpointAttributes(a: GetEndpointAttributesRequest) =
       eff(_.getEndpointAttributes(a))
@@ -87,6 +91,8 @@ trait Interpreter[M[_]] { outer =>
       eff(_.getPlatformApplicationAttributes(a))
     override def getSMSAttributes                             = eff(_.getSMSAttributes)
     override def getSMSAttributes(a: GetSmsAttributesRequest) = eff(_.getSMSAttributes(a))
+    override def getSMSSandboxAccountStatus(a: GetSmsSandboxAccountStatusRequest) =
+      eff(_.getSMSSandboxAccountStatus(a))
     override def getSubscriptionAttributes(a: GetSubscriptionAttributesRequest) =
       eff(_.getSubscriptionAttributes(a))
     override def getTopicAttributes(a: GetTopicAttributesRequest) = eff(_.getTopicAttributes(a))
@@ -94,7 +100,11 @@ trait Interpreter[M[_]] { outer =>
       eff(_.listEndpointsByPlatformApplication(a))
     override def listEndpointsByPlatformApplicationPaginator(
       a: ListEndpointsByPlatformApplicationRequest
-    )                                     = primitive(_.listEndpointsByPlatformApplicationPaginator(a))
+    ) = primitive(_.listEndpointsByPlatformApplicationPaginator(a))
+    override def listOriginationNumbers(a: ListOriginationNumbersRequest) =
+      eff(_.listOriginationNumbers(a))
+    override def listOriginationNumbersPaginator(a: ListOriginationNumbersRequest) =
+      primitive(_.listOriginationNumbersPaginator(a))
     override def listPhoneNumbersOptedOut = eff(_.listPhoneNumbersOptedOut)
     override def listPhoneNumbersOptedOut(a: ListPhoneNumbersOptedOutRequest) =
       eff(_.listPhoneNumbersOptedOut(a))
@@ -104,6 +114,10 @@ trait Interpreter[M[_]] { outer =>
     override def listPlatformApplicationsPaginator = primitive(_.listPlatformApplicationsPaginator)
     override def listPlatformApplicationsPaginator(a: ListPlatformApplicationsRequest) =
       primitive(_.listPlatformApplicationsPaginator(a))
+    override def listSMSSandboxPhoneNumbers(a: ListSmsSandboxPhoneNumbersRequest) =
+      eff(_.listSMSSandboxPhoneNumbers(a))
+    override def listSMSSandboxPhoneNumbersPaginator(a: ListSmsSandboxPhoneNumbersRequest) =
+      primitive(_.listSMSSandboxPhoneNumbersPaginator(a))
     override def listSubscriptions                              = eff(_.listSubscriptions)
     override def listSubscriptions(a: ListSubscriptionsRequest) = eff(_.listSubscriptions(a))
     override def listSubscriptionsByTopic(a: ListSubscriptionsByTopicRequest) =
@@ -134,6 +148,8 @@ trait Interpreter[M[_]] { outer =>
     override def tagResource(a: TagResourceRequest)               = eff(_.tagResource(a))
     override def unsubscribe(a: UnsubscribeRequest)               = eff(_.unsubscribe(a))
     override def untagResource(a: UntagResourceRequest)           = eff(_.untagResource(a))
+    override def verifySMSSandboxPhoneNumber(a: VerifySmsSandboxPhoneNumberRequest) =
+      eff(_.verifySMSSandboxPhoneNumber(a))
     def lens[E](f: E => SnsAsyncClient): SnsAsyncClientOp[Kleisli[M, E, *]] =
       new SnsAsyncClientOp[Kleisli[M, E, *]] {
         override def addPermission(a: AddPermissionRequest) =
@@ -147,11 +163,15 @@ trait Interpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).createPlatformApplication(a)))
         override def createPlatformEndpoint(a: CreatePlatformEndpointRequest) =
           Kleisli(e => eff1(f(e).createPlatformEndpoint(a)))
+        override def createSMSSandboxPhoneNumber(a: CreateSmsSandboxPhoneNumberRequest) =
+          Kleisli(e => eff1(f(e).createSMSSandboxPhoneNumber(a)))
         override def createTopic(a: CreateTopicRequest) = Kleisli(e => eff1(f(e).createTopic(a)))
         override def deleteEndpoint(a: DeleteEndpointRequest) =
           Kleisli(e => eff1(f(e).deleteEndpoint(a)))
         override def deletePlatformApplication(a: DeletePlatformApplicationRequest) =
           Kleisli(e => eff1(f(e).deletePlatformApplication(a)))
+        override def deleteSMSSandboxPhoneNumber(a: DeleteSmsSandboxPhoneNumberRequest) =
+          Kleisli(e => eff1(f(e).deleteSMSSandboxPhoneNumber(a)))
         override def deleteTopic(a: DeleteTopicRequest) = Kleisli(e => eff1(f(e).deleteTopic(a)))
         override def getEndpointAttributes(a: GetEndpointAttributesRequest) =
           Kleisli(e => eff1(f(e).getEndpointAttributes(a)))
@@ -160,6 +180,8 @@ trait Interpreter[M[_]] { outer =>
         override def getSMSAttributes = Kleisli(e => eff1(f(e).getSMSAttributes))
         override def getSMSAttributes(a: GetSmsAttributesRequest) =
           Kleisli(e => eff1(f(e).getSMSAttributes(a)))
+        override def getSMSSandboxAccountStatus(a: GetSmsSandboxAccountStatusRequest) =
+          Kleisli(e => eff1(f(e).getSMSSandboxAccountStatus(a)))
         override def getSubscriptionAttributes(a: GetSubscriptionAttributesRequest) =
           Kleisli(e => eff1(f(e).getSubscriptionAttributes(a)))
         override def getTopicAttributes(a: GetTopicAttributesRequest) =
@@ -169,7 +191,11 @@ trait Interpreter[M[_]] { outer =>
         ) = Kleisli(e => eff1(f(e).listEndpointsByPlatformApplication(a)))
         override def listEndpointsByPlatformApplicationPaginator(
           a: ListEndpointsByPlatformApplicationRequest
-        )                                     = Kleisli(e => primitive1(f(e).listEndpointsByPlatformApplicationPaginator(a)))
+        ) = Kleisli(e => primitive1(f(e).listEndpointsByPlatformApplicationPaginator(a)))
+        override def listOriginationNumbers(a: ListOriginationNumbersRequest) =
+          Kleisli(e => eff1(f(e).listOriginationNumbers(a)))
+        override def listOriginationNumbersPaginator(a: ListOriginationNumbersRequest) =
+          Kleisli(e => primitive1(f(e).listOriginationNumbersPaginator(a)))
         override def listPhoneNumbersOptedOut = Kleisli(e => eff1(f(e).listPhoneNumbersOptedOut))
         override def listPhoneNumbersOptedOut(a: ListPhoneNumbersOptedOutRequest) =
           Kleisli(e => eff1(f(e).listPhoneNumbersOptedOut(a)))
@@ -180,6 +206,10 @@ trait Interpreter[M[_]] { outer =>
           Kleisli(e => primitive1(f(e).listPlatformApplicationsPaginator))
         override def listPlatformApplicationsPaginator(a: ListPlatformApplicationsRequest) =
           Kleisli(e => primitive1(f(e).listPlatformApplicationsPaginator(a)))
+        override def listSMSSandboxPhoneNumbers(a: ListSmsSandboxPhoneNumbersRequest) =
+          Kleisli(e => eff1(f(e).listSMSSandboxPhoneNumbers(a)))
+        override def listSMSSandboxPhoneNumbersPaginator(a: ListSmsSandboxPhoneNumbersRequest) =
+          Kleisli(e => primitive1(f(e).listSMSSandboxPhoneNumbersPaginator(a)))
         override def listSubscriptions = Kleisli(e => eff1(f(e).listSubscriptions))
         override def listSubscriptions(a: ListSubscriptionsRequest) =
           Kleisli(e => eff1(f(e).listSubscriptions(a)))
@@ -219,6 +249,8 @@ trait Interpreter[M[_]] { outer =>
         override def unsubscribe(a: UnsubscribeRequest) = Kleisli(e => eff1(f(e).unsubscribe(a)))
         override def untagResource(a: UntagResourceRequest) =
           Kleisli(e => eff1(f(e).untagResource(a)))
+        override def verifySMSSandboxPhoneNumber(a: VerifySmsSandboxPhoneNumberRequest) =
+          Kleisli(e => eff1(f(e).verifySMSSandboxPhoneNumber(a)))
       }
   }
 
@@ -239,10 +271,14 @@ trait Interpreter[M[_]] { outer =>
       eff1(client.createPlatformApplication(a))
     override def createPlatformEndpoint(a: CreatePlatformEndpointRequest) =
       eff1(client.createPlatformEndpoint(a))
+    override def createSMSSandboxPhoneNumber(a: CreateSmsSandboxPhoneNumberRequest) =
+      eff1(client.createSMSSandboxPhoneNumber(a))
     override def createTopic(a: CreateTopicRequest)       = eff1(client.createTopic(a))
     override def deleteEndpoint(a: DeleteEndpointRequest) = eff1(client.deleteEndpoint(a))
     override def deletePlatformApplication(a: DeletePlatformApplicationRequest) =
       eff1(client.deletePlatformApplication(a))
+    override def deleteSMSSandboxPhoneNumber(a: DeleteSmsSandboxPhoneNumberRequest) =
+      eff1(client.deleteSMSSandboxPhoneNumber(a))
     override def deleteTopic(a: DeleteTopicRequest) = eff1(client.deleteTopic(a))
     override def getEndpointAttributes(a: GetEndpointAttributesRequest) =
       eff1(client.getEndpointAttributes(a))
@@ -250,6 +286,8 @@ trait Interpreter[M[_]] { outer =>
       eff1(client.getPlatformApplicationAttributes(a))
     override def getSMSAttributes                             = eff1(client.getSMSAttributes)
     override def getSMSAttributes(a: GetSmsAttributesRequest) = eff1(client.getSMSAttributes(a))
+    override def getSMSSandboxAccountStatus(a: GetSmsSandboxAccountStatusRequest) =
+      eff1(client.getSMSSandboxAccountStatus(a))
     override def getSubscriptionAttributes(a: GetSubscriptionAttributesRequest) =
       eff1(client.getSubscriptionAttributes(a))
     override def getTopicAttributes(a: GetTopicAttributesRequest) =
@@ -258,7 +296,11 @@ trait Interpreter[M[_]] { outer =>
       eff1(client.listEndpointsByPlatformApplication(a))
     override def listEndpointsByPlatformApplicationPaginator(
       a: ListEndpointsByPlatformApplicationRequest
-    )                                     = primitive1(client.listEndpointsByPlatformApplicationPaginator(a))
+    ) = primitive1(client.listEndpointsByPlatformApplicationPaginator(a))
+    override def listOriginationNumbers(a: ListOriginationNumbersRequest) =
+      eff1(client.listOriginationNumbers(a))
+    override def listOriginationNumbersPaginator(a: ListOriginationNumbersRequest) =
+      primitive1(client.listOriginationNumbersPaginator(a))
     override def listPhoneNumbersOptedOut = eff1(client.listPhoneNumbersOptedOut)
     override def listPhoneNumbersOptedOut(a: ListPhoneNumbersOptedOutRequest) =
       eff1(client.listPhoneNumbersOptedOut(a))
@@ -269,6 +311,10 @@ trait Interpreter[M[_]] { outer =>
       primitive1(client.listPlatformApplicationsPaginator)
     override def listPlatformApplicationsPaginator(a: ListPlatformApplicationsRequest) =
       primitive1(client.listPlatformApplicationsPaginator(a))
+    override def listSMSSandboxPhoneNumbers(a: ListSmsSandboxPhoneNumbersRequest) =
+      eff1(client.listSMSSandboxPhoneNumbers(a))
+    override def listSMSSandboxPhoneNumbersPaginator(a: ListSmsSandboxPhoneNumbersRequest) =
+      primitive1(client.listSMSSandboxPhoneNumbersPaginator(a))
     override def listSubscriptions                              = eff1(client.listSubscriptions)
     override def listSubscriptions(a: ListSubscriptionsRequest) = eff1(client.listSubscriptions(a))
     override def listSubscriptionsByTopic(a: ListSubscriptionsByTopicRequest) =
@@ -302,6 +348,8 @@ trait Interpreter[M[_]] { outer =>
     override def tagResource(a: TagResourceRequest)     = eff1(client.tagResource(a))
     override def unsubscribe(a: UnsubscribeRequest)     = eff1(client.unsubscribe(a))
     override def untagResource(a: UntagResourceRequest) = eff1(client.untagResource(a))
+    override def verifySMSSandboxPhoneNumber(a: VerifySmsSandboxPhoneNumberRequest) =
+      eff1(client.verifySMSSandboxPhoneNumber(a))
 
   }
 
