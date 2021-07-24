@@ -1,25 +1,66 @@
 package fs2.aws.examples
 
-import cats.effect.{ ExitCode, IO, IOApp }
-import fs2.aws.dynamodb
-import fs2.aws.dynamodb.parsers
+import cats.effect.{ ExitCode, IO, IOApp, Resource }
+import com.amazonaws.regions.Regions
+import com.amazonaws.services.cloudwatch.{ AmazonCloudWatch, AmazonCloudWatchClientBuilder }
+import com.amazonaws.services.dynamodbv2.{
+  AmazonDynamoDB,
+  AmazonDynamoDBClientBuilder,
+  AmazonDynamoDBStreams,
+  AmazonDynamoDBStreamsClientBuilder
+}
+import fs2.aws.dynamodb.{ parsers, DynamoDB }
 import io.circe.Json
-import org.typelevel.log4cats.SelfAwareStructuredLogger
-import org.typelevel.log4cats.slf4j.Slf4jLogger
 import io.github.howardjohn.scanamo.CirceDynamoFormat._
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 object DynamoDBStreamer extends IOApp {
   override def run(args: List[String]): IO[ExitCode] =
+    resources.use {
+      case (streams, ddb, watch) =>
+        for {
+          logger <- Slf4jLogger.fromName[IO]("example")
+
+          ddbStream = DynamoDB.create[IO](streams, ddb, watch)
+          _ <- ddbStream
+                .readFromDynamoDBStream(
+                  "app-name",
+                  "ddb-stream-arn"
+                )
+                .evalMap(cr => parsers.parseDynamoEvent[IO, Json](cr.record))
+                .evalTap(msg => logger.info(s"received $msg"))
+                .compile
+                .drain
+        } yield ExitCode.Success
+    }
+
+  def resources: Resource[IO, (AmazonDynamoDBStreams, AmazonDynamoDB, AmazonCloudWatch)] =
     for {
-      implicit0(logger: SelfAwareStructuredLogger[IO]) <- Slf4jLogger.fromName[IO]("example")
-      _ <- dynamodb
-            .readFromDynamDBStream[IO](
-              "dynamo_db_example",
-              "arn:aws:dynamodb:us-east-1:023006903388:table/nightly-sync-events-Production/stream/2020-01-27T22:49:13.204"
-            )
-            .evalMap(cr => parsers.parseDynamoEvent[IO, Json](cr.record))
-            .evalTap(msg => logger.info(s"received $msg"))
-            .compile
-            .drain
-    } yield ExitCode.Success
+      dynamoDBStreamsClient <- Resource.make(
+                                IO.delay(
+                                  AmazonDynamoDBStreamsClientBuilder
+                                    .standard()
+                                    .withRegion(Regions.US_EAST_1)
+                                    .build()
+                                )
+                              )(res => IO.delay(res.shutdown()))
+
+      dynamoDBClient <- Resource.make(
+                         IO.delay(
+                           AmazonDynamoDBClientBuilder
+                             .standard()
+                             .withRegion(Regions.US_EAST_1)
+                             .build()
+                         )
+                       )(res => IO.delay(res.shutdown()))
+      cloudWatchClient <- Resource.make(
+                           IO.delay(
+                             AmazonCloudWatchClientBuilder
+                               .standard()
+                               .withRegion(Regions.US_EAST_1)
+                               .build()
+                           )
+                         )(res => IO.delay(res.shutdown()))
+
+    } yield (dynamoDBStreamsClient, dynamoDBClient, cloudWatchClient)
 }
