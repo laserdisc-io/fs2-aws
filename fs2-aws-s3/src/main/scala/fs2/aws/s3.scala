@@ -63,7 +63,7 @@ object s3 {
       * }
       * }}}
       */
-    def create[F[_]: Async: Concurrent](s3: S3AsyncClientOp[F]): F[S3[F]] =
+    def create[F[_]: Async](s3: S3AsyncClientOp[F]): F[S3[F]] =
       new S3[F] {
 
         /**
