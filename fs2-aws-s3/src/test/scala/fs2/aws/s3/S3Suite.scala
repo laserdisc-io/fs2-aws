@@ -4,8 +4,9 @@ import java.net.URI
 import java.nio.file.Paths
 import software.amazon.awssdk.auth.credentials.{ AwsBasicCredentials, StaticCredentialsProvider }
 import software.amazon.awssdk.regions.Region
-import software.amazon.awssdk.services.s3.{ S3AsyncClient, S3AsyncClientBuilder, S3Client }
+import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException
+import cats.data.Kleisli
 import cats.effect._
 import cats.implicits._
 import eu.timepit.refined.auto._
@@ -129,4 +130,14 @@ class S3Suite extends IOSuite {
     }
   }
 
+  test("MapK can change the effect of the initial S3 instance") {
+    s3R.use { s3 =>
+      S3.create[IO](s3).map { s3 =>
+        assert(
+          S3.mapK(s3)(Kleisli.liftK[IO, String], Kleisli.applyK[IO, String]("string"))
+            .isInstanceOf[S3[Kleisli[IO, String, *]]]
+        )
+      }
+    }
+  }
 }
