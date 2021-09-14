@@ -131,11 +131,13 @@ class S3Suite extends IOSuite {
   }
 
   test("MapK can change the effect of the initial S3 instance") {
+    sealed trait Span[F[_]] //a span typeclass from your preferred tracing library
+    case object NoOpSpan extends Span[IO]
     s3R.use { s3 =>
       S3.create[IO](s3).map { s3 =>
         assert(
-          S3.mapK(s3)(Kleisli.liftK[IO, String], Kleisli.applyK[IO, String]("string"))
-            .isInstanceOf[S3[Kleisli[IO, String, *]]]
+          S3.mapK(s3)(Kleisli.liftK[IO, Span[IO]], Kleisli.applyK[IO, Span[IO]](NoOpSpan))
+            .isInstanceOf[S3[Kleisli[IO, Span[IO], *]]]
         )
       }
     }

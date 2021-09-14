@@ -118,14 +118,15 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
     name            := "fs2-aws-examples",
     coverageMinimum := 0,
     libraryDependencies ++= Seq(
-      "org.mockito"    % "mockito-core"             % V.MockitoCore % Test,
-      "org.mockito"    %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
-      "ch.qos.logback" % "logback-classic"          % "1.2.3",
-      "ch.qos.logback" % "logback-core"             % "1.2.3",
-      "org.slf4j"      % "jcl-over-slf4j"           % "1.7.31",
-      "org.slf4j"      % "jul-to-slf4j"             % "1.7.31",
-      "org.typelevel"  %% "log4cats-slf4j"          % "2.1.1",
-      "io.laserdisc"   %% "scanamo-circe"           % "1.0.8"
+      "org.mockito"      % "mockito-core"             % V.MockitoCore % Test,
+      "org.mockito"      %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
+      "ch.qos.logback"   % "logback-classic"          % "1.2.3",
+      "ch.qos.logback"   % "logback-core"             % "1.2.3",
+      "org.slf4j"        % "jcl-over-slf4j"           % "1.7.31",
+      "org.slf4j"        % "jul-to-slf4j"             % "1.7.31",
+      "org.typelevel"    %% "log4cats-slf4j"          % "2.1.1",
+      "io.laserdisc"     %% "scanamo-circe"           % "1.0.8",
+      "io.janstenpickle" %% "trace4cats-inject"         % "0.12.0"
     )
   )
   .settings(commonSettings)
