@@ -2,6 +2,7 @@ package fs2.aws
 
 import cats.effect._
 import cats.implicits._
+import cats.~>
 import eu.timepit.refined._
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
@@ -255,5 +256,37 @@ object s3 {
         }
 
       }.pure[F]
+
+    /**
+      * Translates effect type from F to G using the supplied FunctionKs.
+      */
+    def mapK[F[_], G[_]](s3: S3[F])(fToG: F ~> G, gToF: G ~> F): S3[G] =
+      new S3[G] {
+        override def delete(bucket: BucketName, key: FileKey): G[Unit] =
+          fToG(s3.delete(bucket, key))
+
+        override def uploadFile(bucket: BucketName, key: FileKey): Pipe[G, Byte, ETag] =
+          _.translate(gToF)
+            .through(s3.uploadFile(bucket, key))
+            .translate(fToG)
+
+        override def uploadFileMultipart(
+          bucket: BucketName,
+          key: FileKey,
+          partSize: PartSizeMB
+        ): Pipe[G, Byte, ETag] =
+          _.translate(gToF)
+            .through(s3.uploadFileMultipart(bucket, key, partSize))
+            .translate(fToG)
+
+        override def readFile(bucket: BucketName, key: FileKey): fs2.Stream[G, Byte] =
+          s3.readFile(bucket, key).translate(fToG)
+
+        override def readFileMultipart(
+          bucket: BucketName,
+          key: FileKey,
+          partSize: PartSizeMB
+        ): fs2.Stream[G, Byte] = s3.readFileMultipart(bucket, key, partSize).translate(fToG)
+      }
   }
 }
