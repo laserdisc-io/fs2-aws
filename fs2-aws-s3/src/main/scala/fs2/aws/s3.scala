@@ -27,6 +27,49 @@ object s3 {
   final case class BucketName(value: NonEmptyString)
   final case class FileKey(value: NonEmptyString)
 
+  object Configure {
+    trait MultipartUpload {
+      def createMultipartUpload(
+        b: CreateMultipartUploadRequest.Builder
+      ): CreateMultipartUploadRequest.Builder
+
+      def uploadPart(b: UploadPartRequest.Builder): UploadPartRequest.Builder
+
+      def completeMultipartUpload(
+        b: CompleteMultipartUploadRequest.Builder
+      ): CompleteMultipartUploadRequest.Builder
+
+      /**
+        * AbortMultipartUpload is called if any UploadPart or CompletingMultipartUpload fail.
+        * @param b
+        * @return
+        */
+      def abortMultipartUpload(
+        b: AbortMultipartUploadRequest.Builder
+      ): AbortMultipartUploadRequest.Builder
+    }
+
+    object MultipartUpload {
+      def identity: MultipartUpload = new MultipartUpload {
+
+        def createMultipartUpload(
+          b: CreateMultipartUploadRequest.Builder
+        ): CreateMultipartUploadRequest.Builder = b
+
+        def uploadPart(b: UploadPartRequest.Builder): UploadPartRequest.Builder = b
+
+        def completeMultipartUpload(
+          b: CompleteMultipartUploadRequest.Builder
+        ): CompleteMultipartUploadRequest.Builder = b
+
+        def abortMultipartUpload(
+          b: AbortMultipartUploadRequest.Builder
+        ): AbortMultipartUploadRequest.Builder = b
+      }
+    }
+
+  }
+
   /* A purely functional abstraction over the S3 API based on fs2.Stream */
   trait S3[F[_]] {
     def delete(bucket: BucketName, key: FileKey): F[Unit]
@@ -34,7 +77,8 @@ object s3 {
     def uploadFileMultipart(
       bucket: BucketName,
       key: FileKey,
-      partSize: PartSizeMB
+      partSize: PartSizeMB,
+      configure: Configure.MultipartUpload = Configure.MultipartUpload.identity
     ): Pipe[F, Byte, ETag]
     def readFile(bucket: BucketName, key: FileKey): fs2.Stream[F, Byte]
     def readFileMultipart(
@@ -112,13 +156,18 @@ object s3 {
         def uploadFileMultipart(
           bucket: BucketName,
           key: FileKey,
-          partSize: PartSizeMB
+          partSize: PartSizeMB,
+          cfg: Configure.MultipartUpload = Configure.MultipartUpload.identity
         ): Pipe[F, Byte, ETag] = {
           val chunkSizeBytes = partSize * 1048576
 
           def initiateMultipartUpload: F[UploadId] =
             s3.createMultipartUpload(
-                CreateMultipartUploadRequest.builder().bucket(bucket.value).key(key.value).build()
+                cfg
+                  .createMultipartUpload(
+                    CreateMultipartUploadRequest.builder().bucket(bucket.value).key(key.value)
+                  )
+                  .build()
               )
               .map(_.uploadId())
 
@@ -126,13 +175,16 @@ object s3 {
             _.evalMap {
               case (c, i) =>
                 s3.uploadPart(
-                    UploadPartRequest
-                      .builder()
-                      .bucket(bucket.value)
-                      .key(key.value)
-                      .uploadId(uploadId)
-                      .partNumber(i.toInt)
-                      .contentLength(c.size)
+                    cfg
+                      .uploadPart(
+                        UploadPartRequest
+                          .builder()
+                          .bucket(bucket.value)
+                          .key(key.value)
+                          .uploadId(uploadId)
+                          .partNumber(i.toInt)
+                          .contentLength(c.size)
+                      )
                       .build(),
                     AsyncRequestBody.fromBytes(c.toArray)
                   )
@@ -145,12 +197,15 @@ object s3 {
                 case (t, i) => CompletedPart.builder().partNumber(i).eTag(t).build()
               }.asJava
               s3.completeMultipartUpload(
-                  CompleteMultipartUploadRequest
-                    .builder()
-                    .bucket(bucket.value)
-                    .key(key.value)
-                    .uploadId(uploadId)
-                    .multipartUpload(CompletedMultipartUpload.builder().parts(parts).build())
+                  cfg
+                    .completeMultipartUpload(
+                      CompleteMultipartUploadRequest
+                        .builder()
+                        .bucket(bucket.value)
+                        .key(key.value)
+                        .uploadId(uploadId)
+                        .multipartUpload(CompletedMultipartUpload.builder().parts(parts).build())
+                    )
                     .build()
                 )
                 .map(_.eTag())
@@ -158,11 +213,14 @@ object s3 {
 
           def cancelUpload(uploadId: UploadId): F[Unit] =
             s3.abortMultipartUpload(
-                AbortMultipartUploadRequest
-                  .builder()
-                  .bucket(bucket.value)
-                  .key(key.value)
-                  .uploadId(uploadId)
+                cfg
+                  .abortMultipartUpload(
+                    AbortMultipartUploadRequest
+                      .builder()
+                      .bucket(bucket.value)
+                      .key(key.value)
+                      .uploadId(uploadId)
+                  )
                   .build()
               )
               .void
@@ -273,10 +331,11 @@ object s3 {
         override def uploadFileMultipart(
           bucket: BucketName,
           key: FileKey,
-          partSize: PartSizeMB
+          partSize: PartSizeMB,
+          cfg: Configure.MultipartUpload = Configure.MultipartUpload.identity
         ): Pipe[G, Byte, ETag] =
           _.translate(gToF)
-            .through(s3.uploadFileMultipart(bucket, key, partSize))
+            .through(s3.uploadFileMultipart(bucket, key, partSize, cfg))
             .translate(fToG)
 
         override def readFile(bucket: BucketName, key: FileKey): fs2.Stream[G, Byte] =
