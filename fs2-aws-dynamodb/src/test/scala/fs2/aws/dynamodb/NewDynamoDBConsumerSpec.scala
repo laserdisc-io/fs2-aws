@@ -317,7 +317,8 @@ class NewDynamoDBConsumerSpec
       .through(k.checkpointRecords(settings))
       .compile
       .toVector
-      .unsafeRunSync() should have message "you have no power here"
+      .unsafeToFuture()
+      .futureValue should have message "you have no power here"
 
     eventually(verify(checkpointer).checkpoint(input.record))
   }
@@ -347,7 +348,8 @@ class NewDynamoDBConsumerSpec
       .through(k.checkpointRecords(settings))
       .compile
       .toVector
-      .unsafeRunSync() should have size 100
+      .unsafeToFuture()
+      .futureValue should have size 100
   }
 
   abstract private class WorkerContext(errorStream: Boolean = false) {
