@@ -22,7 +22,7 @@ import com.amazonaws.services.kinesis.model.Record
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
-import org.scalatest.concurrent.Eventually
+import org.scalatest.concurrent.{ Eventually, ScalaFutures }
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time._
@@ -37,7 +37,8 @@ class NewDynamoDBConsumerSpec
     extends AnyFlatSpec
     with Matchers
     with BeforeAndAfterEach
-    with Eventually {
+    with Eventually
+    with ScalaFutures {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
   implicit val runtime: IORuntime   = IORuntime.global
@@ -89,7 +90,7 @@ class NewDynamoDBConsumerSpec
           recordProcessor.initialize(initializationInput)
           recordProcessor.processRecords(recordsInput)
         }
-      ).parMapN { case (_, _) => () }.unsafeRunSync()
+      ).parMapN { case (_, _) => () }.unsafeToFuture().futureValue
     }
 
     verify(mockScheduler, times(1)).shutdown()
