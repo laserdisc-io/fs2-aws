@@ -52,12 +52,12 @@ class NewDynamoDBConsumerSpec
     with TestData {
     val res = (
       stream.take(1).compile.toList,
-      IO.delay {
+      IO.blocking {
         semaphore.acquire()
         recordProcessor.initialize(initializationInput)
         recordProcessor.processRecords(recordsInput)
       }
-    ).parMapN { case (msgs, _) => msgs }.unsafeRunSync()
+    ).parMapN { case (msgs, _) => msgs }.unsafeToFuture().futureValue
 
     val commitableRecord: CommittableRecord = res.head
     commitableRecord.record.getData                        should be(record.getData)
@@ -70,12 +70,12 @@ class NewDynamoDBConsumerSpec
     with TestData {
     (
       stream.take(1).compile.toList,
-      IO.delay {
+      IO.blocking {
         semaphore.acquire()
         recordProcessor.initialize(initializationInput)
         recordProcessor.processRecords(recordsInput)
       }
-    ).parMapN { case (_, _) => () }.unsafeRunSync()
+    ).parMapN { case (_, _) => () }.unsafeToFuture().futureValue
 
     verify(mockScheduler, times(1)).shutdown()
   }
