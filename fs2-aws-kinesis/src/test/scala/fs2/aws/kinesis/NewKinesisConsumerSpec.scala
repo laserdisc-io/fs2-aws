@@ -7,7 +7,7 @@ import eu.timepit.refined.auto._
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
-import org.scalatest.concurrent.Eventually
+import org.scalatest.concurrent.{ Eventually, ScalaFutures }
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time._
@@ -30,7 +30,8 @@ class NewKinesisConsumerSpec
     extends AnyFlatSpec
     with Matchers
     with BeforeAndAfterEach
-    with Eventually {
+    with Eventually
+    with ScalaFutures {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
   implicit val runtime: IORuntime   = IORuntime.global
@@ -112,7 +113,7 @@ class NewKinesisConsumerSpec
           recordProcessor.processRecords(recordsInput.records(List(record)).build())
         }
       }
-    ).parMapN { case (msgs, _, _) => msgs }.unsafeRunSync()
+    ).parMapN { case (msgs, _, _) => msgs }.unsafeToFuture().futureValue
 
     res should have size 60
   }
