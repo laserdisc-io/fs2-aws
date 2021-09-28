@@ -108,6 +108,9 @@ trait Interpreter[M[_]] { outer =>
     override def listPhoneNumbersOptedOut = eff(_.listPhoneNumbersOptedOut)
     override def listPhoneNumbersOptedOut(a: ListPhoneNumbersOptedOutRequest) =
       eff(_.listPhoneNumbersOptedOut(a))
+    override def listPhoneNumbersOptedOutPaginator = primitive(_.listPhoneNumbersOptedOutPaginator)
+    override def listPhoneNumbersOptedOutPaginator(a: ListPhoneNumbersOptedOutRequest) =
+      primitive(_.listPhoneNumbersOptedOutPaginator(a))
     override def listPlatformApplications = eff(_.listPlatformApplications)
     override def listPlatformApplications(a: ListPlatformApplicationsRequest) =
       eff(_.listPlatformApplications(a))
@@ -199,6 +202,10 @@ trait Interpreter[M[_]] { outer =>
         override def listPhoneNumbersOptedOut = Kleisli(e => eff1(f(e).listPhoneNumbersOptedOut))
         override def listPhoneNumbersOptedOut(a: ListPhoneNumbersOptedOutRequest) =
           Kleisli(e => eff1(f(e).listPhoneNumbersOptedOut(a)))
+        override def listPhoneNumbersOptedOutPaginator =
+          Kleisli(e => primitive1(f(e).listPhoneNumbersOptedOutPaginator))
+        override def listPhoneNumbersOptedOutPaginator(a: ListPhoneNumbersOptedOutRequest) =
+          Kleisli(e => primitive1(f(e).listPhoneNumbersOptedOutPaginator(a)))
         override def listPlatformApplications = Kleisli(e => eff1(f(e).listPlatformApplications))
         override def listPlatformApplications(a: ListPlatformApplicationsRequest) =
           Kleisli(e => eff1(f(e).listPlatformApplications(a)))
@@ -304,6 +311,10 @@ trait Interpreter[M[_]] { outer =>
     override def listPhoneNumbersOptedOut = eff1(client.listPhoneNumbersOptedOut)
     override def listPhoneNumbersOptedOut(a: ListPhoneNumbersOptedOutRequest) =
       eff1(client.listPhoneNumbersOptedOut(a))
+    override def listPhoneNumbersOptedOutPaginator =
+      primitive1(client.listPhoneNumbersOptedOutPaginator)
+    override def listPhoneNumbersOptedOutPaginator(a: ListPhoneNumbersOptedOutRequest) =
+      primitive1(client.listPhoneNumbersOptedOutPaginator(a))
     override def listPlatformApplications = eff1(client.listPlatformApplications)
     override def listPlatformApplications(a: ListPlatformApplicationsRequest) =
       eff1(client.listPlatformApplications(a))
