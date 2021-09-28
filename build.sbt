@@ -73,7 +73,6 @@ lazy val `fs2-aws-ciris` = (project in file("fs2-aws-ciris"))
       "org.scalatest"           %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"             % "mockito-core"             % V.MockitoCore % Test,
       "org.mockito"             %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
-
       "is.cir"                  %% "ciris"                   % "2.1.1",
       "software.amazon.kinesis" % "amazon-kinesis-client"    % "2.3.6",
       "org.typelevel"           %% "cats-effect"             % V.CE % Test
@@ -439,7 +438,8 @@ lazy val commonSettings = Seq(
   ),
   addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1"),
   addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.10.3"),
-  libraryDependencies += "org.scala-lang.modules" %% "scala-collection-compat" % "2.5.0"
+  libraryDependencies += "org.scala-lang.modules" %% "scala-collection-compat" % "2.5.0",
+  javaOptions         ++= Seq("-Dscala.concurrent.context.numThreads=8")
 )
 
 addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
