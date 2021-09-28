@@ -148,7 +148,7 @@ class NewDynamoDBConsumerSpec
           recordProcessor2.processRecords(recordsInput.withRecords(List(record).asJava))
         }
       }
-    ).parMapN { case (msgs, _, _) => msgs }.unsafeRunSync()
+    ).parMapN { case (msgs, _, _) => msgs }.unsafeToFuture().futureValue
 
     // Should process all 10 messages
     res should have size 10
@@ -191,7 +191,7 @@ class NewDynamoDBConsumerSpec
             .withShutdownReason(ShutdownReason.TERMINATE)
         )
       }
-    ).parMapN { case (msgs, _) => msgs }.unsafeRunSync()
+    ).parMapN { case (msgs, _) => msgs }.unsafeToFuture().futureValue
 
     res should have size 5
   }
