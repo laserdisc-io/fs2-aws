@@ -99,7 +99,7 @@ class NewDynamoDBConsumerSpec
   it should "not drop messages in case of back-pressure" in new WorkerContext with TestData {
     // Create and send 10 records (to match buffer size)
     val res =
-      (stream.take(60).compile.toList, IO.delay {
+      (stream.take(60).compile.toList, IO.blocking {
         semaphore.acquire()
         recordProcessor.initialize(initializationInput)
         for (i <- 1 to 10) {
@@ -107,7 +107,7 @@ class NewDynamoDBConsumerSpec
           when(record.getSequenceNumber).thenReturn(i.toString)
           recordProcessor.processRecords(recordsInput.withRecords(List(record).asJava))
         }
-      }, IO.delay {
+      }, IO.blocking {
         semaphore.acquire()
         recordProcessor.initialize(initializationInput)
         for (i <- 1 to 50) {
@@ -115,7 +115,7 @@ class NewDynamoDBConsumerSpec
           when(record.getSequenceNumber).thenReturn(i.toString)
           recordProcessor.processRecords(recordsInput.withRecords(List(record).asJava))
         }
-      }).parMapN { case (msgs, _, _) => msgs }.unsafeRunSync()
+      }).parMapN { case (msgs, _, _) => msgs }.unsafeToFuture().futureValue
 
     res should have size 60
   }
