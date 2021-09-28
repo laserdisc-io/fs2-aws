@@ -54,6 +54,10 @@ trait SnsAsyncClientOp[F[_]] {
   def listPhoneNumbersOptedOut(
     a: ListPhoneNumbersOptedOutRequest
   ): F[ListPhoneNumbersOptedOutResponse]
+  def listPhoneNumbersOptedOutPaginator: F[ListPhoneNumbersOptedOutPublisher]
+  def listPhoneNumbersOptedOutPaginator(
+    a: ListPhoneNumbersOptedOutRequest
+  ): F[ListPhoneNumbersOptedOutPublisher]
   def listPlatformApplications: F[ListPlatformApplicationsResponse]
   def listPlatformApplications(
     a: ListPlatformApplicationsRequest
