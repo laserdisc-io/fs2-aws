@@ -45,12 +45,12 @@ class NewKinesisConsumerSpec
     with TestData {
     val res = (
       stream.take(1).compile.toList,
-      IO.delay {
+      IO.blocking {
         semaphore.acquire()
         recordProcessor.initialize(initializationInput)
         recordProcessor.processRecords(recordsInput.build())
       }
-    ).parMapN { case (msgs, _) => msgs }.unsafeRunSync()
+    ).parMapN { case (msgs, _) => msgs }.unsafeToFuture().futureValue
 
     val commitableRecord = res.head
     commitableRecord.record.data() should be(record.data())
@@ -64,12 +64,12 @@ class NewKinesisConsumerSpec
     with TestData {
     (
       stream.take(1).compile.toList,
-      IO.delay {
+      IO.blocking {
         semaphore.acquire()
         recordProcessor.initialize(initializationInput)
         recordProcessor.processRecords(recordsInput.build())
       }
-    ).parMapN { case (_, _) => () }.unsafeRunSync()
+    ).parMapN { case (_, _) => () }.unsafeToFuture().futureValue
 
     verify(mockScheduler, times(1)).shutdown()
   }
@@ -79,12 +79,12 @@ class NewKinesisConsumerSpec
     intercept[Exception] {
       (
         stream.take(1).compile.toList,
-        IO.delay {
+        IO.blocking {
           semaphore.acquire()
           recordProcessor.initialize(initializationInput)
           recordProcessor.processRecords(recordsInput.build())
         }
-      ).parMapN { case (_, _) => () }.unsafeRunSync()
+      ).parMapN { case (_, _) => () }.unsafeToFuture().futureValue
     }
 
     verify(mockScheduler, times(1)).shutdown()
@@ -123,7 +123,7 @@ class NewKinesisConsumerSpec
 
     val res = (
       stream.take(10).compile.toList,
-      IO.delay {
+      IO.blocking {
         semaphore.acquire()
         recordProcessor.initialize(initializationInput)
         for (i <- 1 to 5) {
@@ -132,7 +132,7 @@ class NewKinesisConsumerSpec
           recordProcessor.processRecords(recordsInput.records(List(record)).build())
         }
       },
-      IO.delay {
+      IO.blocking {
         semaphore.acquire()
         recordProcessor2.initialize(
           InitializationInput
@@ -148,7 +148,7 @@ class NewKinesisConsumerSpec
           recordProcessor2.processRecords(recordsInput.records(List(record)).build())
         }
       }
-    ).parMapN { case (msgs, _, _) => msgs }.unsafeRunSync()
+    ).parMapN { case (msgs, _, _) => msgs }.unsafeToFuture().futureValue
 
     // Should process all 10 messages
     res should have size 10
@@ -181,13 +181,13 @@ class NewKinesisConsumerSpec
             recordsInput.isAtShardEnd(i == 5).records(List(record)).build()
           )
         }
-      } >> IO.delay {
+      } >> IO.blocking {
         //Immediately publish end of shard event
         recordProcessor.shardEnded(
           ShardEndedInput.builder().checkpointer(checkpointer).build()
         )
       }
-    ).parMapN { case (msgs, _) => msgs }.unsafeRunSync()
+    ).parMapN { case (msgs, _) => msgs }.unsafeToFuture().futureValue
 
     res should have size 5
   }
