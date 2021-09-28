@@ -93,7 +93,7 @@ class NewKinesisConsumerSpec
     // Create and send 10 records (to match buffer size)
     val res = (
       stream.take(60).compile.toList,
-      IO.delay {
+      IO.blocking {
         semaphore.acquire()
         recordProcessor.initialize(initializationInput)
         for (i <- 1 to 10) {
@@ -103,7 +103,7 @@ class NewKinesisConsumerSpec
         }
       },
       // Send a batch that exceeds the internal buffer size
-      IO.delay {
+      IO.blocking {
         semaphore.acquire()
         recordProcessor.initialize(initializationInput)
         for (i <- 1 to 50) {
