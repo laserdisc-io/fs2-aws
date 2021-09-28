@@ -84,7 +84,7 @@ class NewDynamoDBConsumerSpec
     intercept[Exception] {
       (
         stream.take(1).compile.toList,
-        IO.delay {
+        IO.blocking {
           semaphore.acquire()
           recordProcessor.initialize(initializationInput)
           recordProcessor.processRecords(recordsInput)
