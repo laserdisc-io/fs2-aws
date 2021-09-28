@@ -388,7 +388,8 @@ class NewDynamoDBConsumerSpec
         .through(k.checkpointRecords(settings))
         .compile
         .toList
-        .unsafeRunSync()
+        .unsafeToFuture()
+        .futureValue
   }
 
   private trait TestData {
