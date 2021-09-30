@@ -85,9 +85,10 @@ object Kinesis {
           schedulerFactory(() =>
             new ChunkedRecordProcessor(records =>
               dispatcher.unsafeRunSync {
-                Async[F]
-                  .delay(println(s"offering ${records.map(_.record.sequenceNumber())}")) >> queue
-                  .offer(records)
+                queue
+                  .offer(records) >> Async[F].delay(
+                  println(s"offered ${records.map(_.record.sequenceNumber()).toList.mkString(" ")}")
+                )
               }
             )
           ).flatTap(s =>
