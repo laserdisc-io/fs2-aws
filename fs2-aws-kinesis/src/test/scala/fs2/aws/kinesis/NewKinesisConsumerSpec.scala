@@ -117,6 +117,7 @@ class NewKinesisConsumerSpec
           val record = mock(classOf[KinesisClientRecord])
           when(record.sequenceNumber()).thenReturn(i.toString)
           recordProcessor.processRecords(recordsInput.records(List(record)).build())
+          println(s"processed $i message #2")
         }
         println("completed ingestion #2")
       }
