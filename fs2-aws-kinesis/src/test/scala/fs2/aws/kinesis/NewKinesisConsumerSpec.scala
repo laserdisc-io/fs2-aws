@@ -95,7 +95,9 @@ class NewKinesisConsumerSpec
     val res = (
       stream.take(60).compile.toList,
       IO.blocking {
+        println("about to acquire lock for record processor #1")
         semaphore.acquire()
+        println("acquired lock for record processor #1")
         recordProcessor.initialize(initializationInput)
         for (i <- 1 to 10) {
           val record = mock(classOf[KinesisClientRecord])
@@ -105,7 +107,9 @@ class NewKinesisConsumerSpec
       },
       // Send a batch that exceeds the internal buffer size
       IO.blocking {
+        println("about to acquire lock for record processor #2")
         semaphore.acquire()
+        println("acquired lock for record processor #2")
         recordProcessor.initialize(initializationInput)
         for (i <- 1 to 50) {
           val record = mock(classOf[KinesisClientRecord])
