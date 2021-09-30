@@ -104,6 +104,7 @@ class NewKinesisConsumerSpec
           when(record.sequenceNumber()).thenReturn(i.toString)
           recordProcessor.processRecords(recordsInput.records(List(record)).build())
         }
+        println("completed ingestion #1")
       },
       // Send a batch that exceeds the internal buffer size
       IO.blocking {
@@ -116,6 +117,7 @@ class NewKinesisConsumerSpec
           when(record.sequenceNumber()).thenReturn(i.toString)
           recordProcessor.processRecords(recordsInput.records(List(record)).build())
         }
+        println("completed ingestion #2")
       }
     ).parMapN { case (msgs, _, _) => msgs }.unsafeToFuture().futureValue
 
