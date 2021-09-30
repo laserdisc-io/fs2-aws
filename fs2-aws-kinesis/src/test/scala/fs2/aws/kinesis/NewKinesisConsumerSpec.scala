@@ -44,7 +44,7 @@ class NewKinesisConsumerSpec
   "KinesisWorker source" should "successfully read data from the Kinesis stream" in new WorkerContext
     with TestData {
     val res = (
-      stream.take(1).compile.toList,
+      stream.take(1).compile.toList.flatMap(l => IO.blocking(latch.countDown()) >> IO.pure(l)),
       IO.blocking {
         semaphore.acquire()
         recordProcessor.initialize(initializationInput)
@@ -63,7 +63,7 @@ class NewKinesisConsumerSpec
   it should "Shutdown the worker if the stream is drained and has not failed" in new WorkerContext
     with TestData {
     (
-      stream.take(1).compile.toList,
+      stream.take(1).compile.toList.flatMap(l => IO.blocking(latch.countDown()) >> IO.pure(l)),
       IO.blocking {
         semaphore.acquire()
         recordProcessor.initialize(initializationInput)
@@ -78,7 +78,7 @@ class NewKinesisConsumerSpec
     with TestData {
     intercept[Exception] {
       (
-        stream.take(1).compile.toList,
+        stream.take(1).compile.toList.flatMap(l => IO.blocking(latch.countDown()) >> IO.pure(l)),
         IO.blocking {
           semaphore.acquire()
           recordProcessor.initialize(initializationInput)
@@ -130,7 +130,7 @@ class NewKinesisConsumerSpec
     with TestData {
 
     val res = (
-      stream.take(10).compile.toList,
+      stream.take(10).compile.toList.flatMap(l => IO.blocking(latch.countDown()) >> IO.pure(l)),
       IO.blocking {
         semaphore.acquire()
         recordProcessor.initialize(initializationInput)
@@ -178,7 +178,8 @@ class NewKinesisConsumerSpec
           )
         )
         .compile
-        .toList,
+        .toList
+        .flatMap(l => IO.blocking(latch.countDown()) >> IO.pure(l)),
       IO.blocking {
         semaphore.acquire()
         recordProcessor.initialize(initializationInput)
