@@ -100,7 +100,7 @@ object Kinesis {
       // Expose the elements by dequeuing the internal buffer
       for {
         dispatcher      <- Stream.resource(Dispatcher[F])
-        buffer          <- Stream.eval(Queue.bounded[F, Chunk[CommittableRecord]](streamConfig.bufferSize))
+        buffer          <- Stream.eval(Queue.unbounded[F, Chunk[CommittableRecord]])
         interruptSignal <- Stream.eval(SignallingRef[F, Boolean](false))
         _               <- instantiateScheduler(dispatcher, buffer, interruptSignal)
         stream          <- Stream.fromQueueUnterminated(buffer).interruptWhen(interruptSignal)
