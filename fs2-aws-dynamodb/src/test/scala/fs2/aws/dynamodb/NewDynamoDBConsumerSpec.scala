@@ -125,8 +125,10 @@ class NewDynamoDBConsumerSpec
 
     val res = (
       stream.take(10).compile.toList,
-      IO.delay {
+      IO.blocking {
+        println("about to acquire lock for record processor #1")
         semaphore.acquire()
+        println("acquired lock for record processor #1")
         recordProcessor.initialize(initializationInput)
         for (i <- 1 to 5) {
           val record: Record = mock(classOf[RecordAdapter])
@@ -134,8 +136,10 @@ class NewDynamoDBConsumerSpec
           recordProcessor.processRecords(recordsInput.withRecords(List(record).asJava))
         }
       },
-      IO.delay {
+      IO.blocking {
+        println("about to acquire lock for record processor #2")
         semaphore.acquire()
+        println("acquired lock for record processor #2")
         recordProcessor2.initialize(
           new InitializationInput()
             .withShardId("shard2")
@@ -317,8 +321,7 @@ class NewDynamoDBConsumerSpec
       .through(k.checkpointRecords(settings))
       .compile
       .toVector
-      .unsafeToFuture()
-      .futureValue should have message "you have no power here"
+      .unsafeRunSync() should have message "you have no power here"
 
     eventually(verify(checkpointer).checkpoint(input.record))
   }
