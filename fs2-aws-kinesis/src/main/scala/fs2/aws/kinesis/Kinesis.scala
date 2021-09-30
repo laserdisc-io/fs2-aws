@@ -109,7 +109,7 @@ object Kinesis {
         buffer          <- Stream.eval(Queue.unbounded[F, Chunk[CommittableRecord]])
         interruptSignal <- Stream.eval(SignallingRef[F, Boolean](false))
         _               <- instantiateScheduler(dispatcher, buffer, interruptSignal)
-        stream          <- Stream.fromQueueUnterminated(buffer).interruptWhen(interruptSignal)
+        stream          <- Stream.fromQueueUnterminated(buffer) //.interruptWhen(interruptSignal)
       } yield stream
     }
     def checkpointRecords(
