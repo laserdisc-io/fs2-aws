@@ -93,7 +93,7 @@ class NewKinesisConsumerSpec
   it should "not drop messages in case of back-pressure" in new WorkerContext with TestData {
     // Create and send 10 records (to match buffer size)
     val res = (
-      stream.take(60).compile.toList,
+      stream.take(60).compile.toList.flatMap(l => IO.blocking(latch.countDown()) >> IO.pure(l)),
       IO.blocking {
         println("about to acquire lock for record processor #1")
         semaphore.acquire()
@@ -382,7 +382,7 @@ class NewKinesisConsumerSpec
     val stream: fs2.Stream[IO, CommittableRecord] =
       k.readFromKinesisStream(config)
         .map(i => if (errorStream) throw new Exception("boom") else i)
-        .onFinalize(IO.delay(latch.countDown()))
+//        .onFinalize(IO.delay(latch.countDown()))
     val settings =
       KinesisCheckpointSettings(maxBatchSize = Int.MaxValue, maxBatchWait = 500.millis)
         .getOrElse(throw new Error())
