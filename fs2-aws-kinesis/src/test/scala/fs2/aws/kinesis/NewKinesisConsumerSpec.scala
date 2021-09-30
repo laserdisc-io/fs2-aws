@@ -112,6 +112,7 @@ class NewKinesisConsumerSpec
         semaphore.acquire()
         println("acquired lock for record processor #2")
         recordProcessor.initialize(initializationInput)
+        println("Initialized #2")
         for (i <- 1 to 50) {
           val record = mock(classOf[KinesisClientRecord])
           when(record.sequenceNumber()).thenReturn(i.toString)
