@@ -17,6 +17,7 @@ import software.amazon.kinesis.retrieval.KinesisClientRecord
 import software.amazon.kinesis.retrieval.polling.PollingConfig
 
 import java.util.UUID
+import scala.concurrent.duration.DurationInt
 
 trait Kinesis[F[_]] {
 
@@ -95,7 +96,9 @@ object Kinesis {
               )
             })
           ).flatTap(s =>
-            Concurrent[F].start(Async[F].blocking(s.run()).flatTap(_ => signal.set(true)))
+            Concurrent[F].start(
+              Async[F].blocking(s.run()).flatTap(_ => Async[F].sleep(5 seconds) >> signal.set(true))
+            )
           )
         }(s => Async[F].blocking(s.shutdown()))
 
