@@ -83,14 +83,17 @@ object Kinesis {
       ): fs2.Stream[F, Scheduler] =
         Stream.bracket {
           schedulerFactory(() =>
-            new ChunkedRecordProcessor(records =>
+            new ChunkedRecordProcessor(records => {
               dispatcher.unsafeRunSync {
                 queue
                   .offer(records) >> Async[F].delay(
                   println(s"offered ${records.map(_.record.sequenceNumber()).toList.mkString(" ")}")
                 )
               }
-            )
+              println(
+                s"offered_done ${records.map(_.record.sequenceNumber()).toList.mkString(" ")}"
+              )
+            })
           ).flatTap(s =>
             Concurrent[F].start(Async[F].blocking(s.run()).flatTap(_ => signal.set(true)))
           )
