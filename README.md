@@ -201,9 +201,9 @@ fs2.aws
 Testing
 ```scala
 //create stream for testing
-def stream(deferedListener: Deferred[IO, MessageListener]) =
+def stream(deferredListener: Deferred[IO, MessageListener]) =
             aws.testkit
-              .sqsStream[IO, Quote](deferedListener)
+              .sqsStream[IO, Quote](deferredListener)
               .through(...)
               .take(2)
               .compile
