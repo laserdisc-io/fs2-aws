@@ -163,7 +163,7 @@ readFromKinesisStream[IO]("appName", "streamName")
 ```
 
 ### Publishing records to Kinesis with KPL
-A Pipe and Sink allow for writing a stream of tuple2 (paritionKey, ByteBuffer) to a Kinesis stream.
+A Pipe and Sink allow for writing a stream of tuple2 (partitionKey, ByteBuffer) to a Kinesis stream.
 
 Example:
 ```scala
