@@ -39,12 +39,12 @@ class NewKinesisConsumerSpec
   implicit def sList2jList[A](sList: List[A]): java.util.List[A] = sList.asJava
 
   implicit override val patienceConfig: PatienceConfig =
-    PatienceConfig(timeout = scaled(Span(5, Seconds)), interval = scaled(Span(500, Millis)))
+    PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
 
   "KinesisWorker source" should "successfully read data from the Kinesis stream" in new WorkerContext
     with TestData {
     val res = (
-      stream.take(1).compile.toList.flatMap(l => IO.blocking(latch.countDown()) >> IO.pure(l)),
+      stream.take(1).compile.toList,
       IO.blocking {
         semaphore.acquire()
         recordProcessor.initialize(initializationInput)
@@ -93,7 +93,7 @@ class NewKinesisConsumerSpec
   it should "not drop messages in case of back-pressure" in new WorkerContext with TestData {
     // Create and send 10 records (to match buffer size)
     val res = (
-      stream.take(60).compile.toList.flatMap(l => IO.blocking(latch.countDown()) >> IO.pure(l)),
+      stream.take(60).compile.toList,
       IO.blocking {
         println("about to acquire lock for record processor #1")
         semaphore.acquire()
@@ -130,7 +130,7 @@ class NewKinesisConsumerSpec
     with TestData {
 
     val res = (
-      stream.take(10).compile.toList.flatMap(l => IO.blocking(latch.countDown()) >> IO.pure(l)),
+      stream.take(10).compile.toList,
       IO.blocking {
         semaphore.acquire()
         recordProcessor.initialize(initializationInput)
@@ -368,6 +368,9 @@ class NewKinesisConsumerSpec
     val chunkedRecordProcessor                              = new ChunkedRecordProcessor(_ => ())
 
     doAnswer(_ => latch.await()).when(mockScheduler).run()
+//    doThrow(new RuntimeException("boom"))
+//      .when(mockScheduler)
+//      .run()
 
     val builder = { x: ShardRecordProcessorFactory =>
       recordProcessorFactory = x
@@ -382,8 +385,9 @@ class NewKinesisConsumerSpec
     val k = Kinesis.create[IO](builder)
     val stream: fs2.Stream[IO, CommittableRecord] =
       k.readFromKinesisStream(config)
+        .evalTap(_ => IO.sleep(100 millis))
         .map(i => if (errorStream) throw new Exception("boom") else i)
-//        .onFinalize(IO.delay(latch.countDown()))
+        .onFinalize(IO.delay(latch.countDown()))
     val settings =
       KinesisCheckpointSettings(maxBatchSize = Int.MaxValue, maxBatchWait = 500.millis)
         .getOrElse(throw new Error())
