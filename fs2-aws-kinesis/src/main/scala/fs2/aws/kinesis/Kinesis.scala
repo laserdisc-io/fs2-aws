@@ -4,6 +4,7 @@ import cats.effect.std.{ Dispatcher, Queue }
 import cats.effect.{ Async, Concurrent, Sync }
 import cats.implicits._
 import fs2.aws.core
+import fs2.concurrent.SignallingRef
 import fs2.{ Chunk, Pipe, Stream }
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
@@ -76,7 +77,8 @@ object Kinesis {
       // Initialize a KCL scheduler which appends to the internal stream queue on message receipt
       def instantiateScheduler(
         dispatcher: Dispatcher[F],
-        queue: Queue[F, Chunk[CommittableRecord]]
+        queue: Queue[F, Chunk[CommittableRecord]],
+        signal: SignallingRef[F, Boolean]
       ): fs2.Stream[F, Scheduler] =
         Stream.bracket {
           schedulerFactory(() =>
@@ -91,16 +93,24 @@ object Kinesis {
                 s"offered_done ${records.map(_.record.sequenceNumber()).toList.mkString(" ")}"
               )
             })
-          ).flatTap(s => Concurrent[F].start(Async[F].blocking(s.run())))
+          ).flatTap(s =>
+            Concurrent[F].start(
+              Async[F]
+                .blocking(s.run())
+                .handleErrorWith(e => Async[F].delay(e.printStackTrace()))
+                .flatTap(_ => signal.set(true))
+            )
+          )
         }(s => Async[F].blocking(s.shutdown()))
 
       // Instantiate a new bounded queue and concurrently run the queue populator
       // Expose the elements by dequeuing the internal buffer
       for {
-        dispatcher <- Stream.resource(Dispatcher[F])
-        buffer     <- Stream.eval(Queue.unbounded[F, Chunk[CommittableRecord]])
-        _          <- instantiateScheduler(dispatcher, buffer)
-        stream     <- Stream.fromQueueUnterminated(buffer) //.interruptWhen(interruptSignal)
+        dispatcher      <- Stream.resource(Dispatcher[F])
+        buffer          <- Stream.eval(Queue.unbounded[F, Chunk[CommittableRecord]])
+        interruptSignal <- Stream.eval(SignallingRef[F, Boolean](false))
+        _               <- instantiateScheduler(dispatcher, buffer, interruptSignal)
+        stream          <- Stream.fromQueueUnterminated(buffer).interruptWhen(interruptSignal)
       } yield stream
     }
     def checkpointRecords(
