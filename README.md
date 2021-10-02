@@ -135,7 +135,7 @@ There are a number of other stream constructors available where you can provide 
 #### Testing
 TODO: Implement better test consumer
 
-For now, you can stubbed CommitableRecord and create a fs2.Stream to emit these records:
+For now, you can stub CommitableRecord and create a fs2.Stream to emit these records:
 ```scala
 val record = new Record()
   .withApproximateArrivalTimestamp(new Date())
