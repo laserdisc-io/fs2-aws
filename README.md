@@ -135,7 +135,7 @@ There are a number of other stream constructors available where you can provide 
 #### Testing
 TODO: Implement better test consumer
 
-For now, you can stubbed CommitableRecord and create a fs2.Stream to emit these records:
+For now, you can stub CommitableRecord and create a fs2.Stream to emit these records:
 ```scala
 val record = new Record()
   .withApproximateArrivalTimestamp(new Date())
@@ -154,7 +154,7 @@ val testRecord = CommittableRecord(
 ```
 
 #### Checkpointing records
-Records must be checkpointed in Kinesis to keep track of which messages each consumer has received. Checkpointing a record in the KCL will automatically checkpoint all records upto that record. To checkpoint records, a Pipe and Sink are available. To help distinguish whether a record has been checkpointed or not, a CommittableRecord class exists to denote a record that hasn't been checkpointed, while the base Record class denotes a commited record.
+Records must be checkpointed in Kinesis to keep track of which messages each consumer has received. Checkpointing a record in the KCL will automatically checkpoint all records upto that record. To checkpoint records, a Pipe and Sink are available. To help distinguish whether a record has been checkpointed or not, a CommittableRecord class exists to denote a record that hasn't been checkpointed, while the base Record class denotes a committed record.
 
 ```scala
 readFromKinesisStream[IO]("appName", "streamName")
@@ -163,7 +163,7 @@ readFromKinesisStream[IO]("appName", "streamName")
 ```
 
 ### Publishing records to Kinesis with KPL
-A Pipe and Sink allow for writing a stream of tuple2 (paritionKey, ByteBuffer) to a Kinesis stream.
+A Pipe and Sink allow for writing a stream of tuple2 (partitionKey, ByteBuffer) to a Kinesis stream.
 
 Example:
 ```scala
@@ -201,9 +201,9 @@ fs2.aws
 Testing
 ```scala
 //create stream for testing
-def stream(deferedListener: Deferred[IO, MessageListener]) =
+def stream(deferredListener: Deferred[IO, MessageListener]) =
             aws.testkit
-              .sqsStream[IO, Quote](deferedListener)
+              .sqsStream[IO, Quote](deferredListener)
               .through(...)
               .take(2)
               .compile
