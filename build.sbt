@@ -18,7 +18,7 @@ organization := "io.laserdisc"
 name         := "fs2-aws"
 
 lazy val scala212 = "2.12.15"
-lazy val scala213 = "2.13.6"
+lazy val scala213 = "2.13.7"
 
 lazy val supportedScalaVersions = List(scala212, scala213)
 
@@ -74,7 +74,7 @@ lazy val `fs2-aws-ciris` = (project in file("fs2-aws-ciris"))
       "org.mockito"             % "mockito-core"             % V.MockitoCore % Test,
       "org.mockito"             %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
       "is.cir"                  %% "ciris"                   % "2.1.1",
-      "software.amazon.kinesis" % "amazon-kinesis-client"    % "2.3.6",
+      "software.amazon.kinesis" % "amazon-kinesis-client"    % "2.3.8",
       "org.typelevel"           %% "cats-effect"             % V.CE % Test
     ),
     coverageMinimum       := 40,
@@ -166,7 +166,7 @@ lazy val `fs2-aws-kinesis` = (project in file("fs2-aws-kinesis"))
       "co.fs2"                  %% "fs2-core"                % V.Fs2,
       "co.fs2"                  %% "fs2-io"                  % V.Fs2,
       "com.amazonaws"           % "amazon-kinesis-producer"  % "0.14.10",
-      "software.amazon.kinesis" % "amazon-kinesis-client"    % "2.3.6",
+      "software.amazon.kinesis" % "amazon-kinesis-client"    % "2.3.8",
       "software.amazon.awssdk"  % "sts"                      % V.AwsSdk,
       "eu.timepit"              %% "refined"                 % V.Refined,
       "org.scalatest"           %% "scalatest"               % V.ScalaTest % Test,
@@ -438,7 +438,7 @@ lazy val commonSettings = Seq(
   ),
   addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1"),
   addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.10.3"),
-  libraryDependencies += "org.scala-lang.modules" %% "scala-collection-compat" % "2.5.0"
+  libraryDependencies += "org.scala-lang.modules" %% "scala-collection-compat" % "2.6.0"
 )
 
 addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
