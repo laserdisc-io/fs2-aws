@@ -18,7 +18,7 @@ organization := "io.laserdisc"
 name         := "fs2-aws"
 
 lazy val scala212 = "2.12.15"
-lazy val scala213 = "2.13.6"
+lazy val scala213 = "2.13.7"
 
 lazy val supportedScalaVersions = List(scala212, scala213)
 
@@ -438,7 +438,7 @@ lazy val commonSettings = Seq(
   ),
   addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1"),
   addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.10.3"),
-  libraryDependencies += "org.scala-lang.modules" %% "scala-collection-compat" % "2.5.0"
+  libraryDependencies += "org.scala-lang.modules" %% "scala-collection-compat" % "2.6.0"
 )
 
 addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
