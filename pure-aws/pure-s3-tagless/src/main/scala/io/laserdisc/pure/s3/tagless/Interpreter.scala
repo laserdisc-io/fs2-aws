@@ -4,13 +4,13 @@ package io.laserdisc.pure.s3.tagless
 import cats.data.Kleisli
 import cats.effect.{ Async, Resource }
 import software.amazon.awssdk.services.s3.S3AsyncClientBuilder
+import software.amazon.awssdk.services.s3.model._
 
 import java.util.concurrent.CompletionException
 
 // Types referenced
 import software.amazon.awssdk.core.async.{ AsyncRequestBody, AsyncResponseTransformer }
 import software.amazon.awssdk.services.s3.S3AsyncClient
-import software.amazon.awssdk.services.s3.model._
 
 import java.nio.file.Path
 import java.util.concurrent.CompletableFuture

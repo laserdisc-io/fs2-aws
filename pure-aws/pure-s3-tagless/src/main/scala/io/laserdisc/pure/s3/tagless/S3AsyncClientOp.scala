@@ -3,12 +3,7 @@ package io.laserdisc.pure.s3.tagless
 import software.amazon.awssdk.core.async.{ AsyncRequestBody, AsyncResponseTransformer }
 import software.amazon.awssdk.services.s3.S3Utilities
 import software.amazon.awssdk.services.s3.model._
-import software.amazon.awssdk.services.s3.paginators.{
-  ListMultipartUploadsPublisher,
-  ListObjectVersionsPublisher,
-  ListObjectsV2Publisher,
-  ListPartsPublisher
-}
+import software.amazon.awssdk.services.s3.paginators._
 import software.amazon.awssdk.services.s3.waiters.S3AsyncWaiter
 
 import java.nio.file.Path
