@@ -9,6 +9,7 @@ import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3AsyncClient
 
 import java.net.URI
+import fs2.text
 
 object S3Example extends IOApp {
   val credentials = AwsBasicCredentials.create("accesskey", "secretkey")
@@ -27,7 +28,7 @@ object S3Example extends IOApp {
 
   def program(s3: S3[IO]): IO[Unit] =
     s3.readFile(BucketName("test"), FileKey("foo"))
-      .through(fs2.text.utf8Decode)
+      .through(text.utf8.decode)
       .through(fs2.text.lines)
       .evalMap(line => IO(println(line)))
       .compile
