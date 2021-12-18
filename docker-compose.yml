@@ -3,8 +3,8 @@ services:
   minio:
     image: minio/minio
     network_mode: host
-    ports:
-      - "9000:9000"
+#    ports:
+#      - "9000:9000"
     environment:
       - "MINIO_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE"
       - "MINIO_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
@@ -25,8 +25,8 @@ services:
   localstack:
     image: localstack/localstack:0.12.11
     network_mode: host
-    ports:
-      - 4566:4566
+#    ports:
+#      - 4566:4566
     environment:
       - "AWS_ACCESS_KEY_ID=dummy"
       - "AWS_SECRET_ACCESS_KEY=dummy"
