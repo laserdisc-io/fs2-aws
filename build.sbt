@@ -6,7 +6,6 @@ import TaglessGen.{
   taglessGenSettings
 }
 import sbt.Keys.scalaSource
-import scoverage.ScoverageKeys.coverageMinimum
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.sns.SnsAsyncClient
@@ -60,8 +59,8 @@ lazy val `fs2-aws-core` = (project in file("fs2-aws-core"))
       "org.mockito"   %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
       "org.scalatest" %% "scalatest"               % V.ScalaTest % Test
     ),
-    coverageMinimum       := 40,
-    coverageFailOnMinimum := true
+    coverageMinimumStmtTotal := 40,
+    coverageFailOnMinimum    := true
   )
   .settings(commonSettings)
   .settings(scalacOptions ++= commonOptions(scalaVersion.value))
@@ -73,12 +72,12 @@ lazy val `fs2-aws-ciris` = (project in file("fs2-aws-ciris"))
       "org.scalatest"           %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"             % "mockito-core"             % V.MockitoCore % Test,
       "org.mockito"             %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
-      "is.cir"                  %% "ciris"                   % "2.1.1",
-      "software.amazon.kinesis" % "amazon-kinesis-client"    % "2.3.8",
-      "org.typelevel"           %% "cats-effect"             % V.CE % Test
+      "is.cir"                  %% "ciris"                   % "2.3.1",
+      "software.amazon.kinesis" % "amazon-kinesis-client"    % "2.3.9",
+      "org.typelevel"           %% "cats-effect"             % V.CE
     ),
-    coverageMinimum       := 40,
-    coverageFailOnMinimum := true
+    coverageMinimumStmtTotal := 40,
+    coverageFailOnMinimum    := true
   )
   .settings(commonSettings)
   .settings(scalacOptions ++= commonOptions(scalaVersion.value))
@@ -86,9 +85,9 @@ lazy val `fs2-aws-ciris` = (project in file("fs2-aws-ciris"))
 lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb"))
   .dependsOn(`fs2-aws-core`, `pure-dynamodb-tagless`)
   .settings(
-    name                  := "fs2-aws-dynamodb",
-    coverageMinimum       := 40,
-    coverageFailOnMinimum := true,
+    name                     := "fs2-aws-dynamodb",
+    coverageMinimumStmtTotal := 40,
+    coverageFailOnMinimum    := true,
     libraryDependencies ++= Seq(
       "co.fs2"        %% "fs2-core"                        % V.Fs2,
       "co.fs2"        %% "fs2-io"                          % V.Fs2,
@@ -96,7 +95,7 @@ lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb"))
       "org.mockito"   % "mockito-core"                     % V.MockitoCore % Test,
       "org.mockito"   %% "mockito-scala-scalatest"         % V.MockitoScalaTest % Test,
       "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.5.3",
-      "io.laserdisc"  %% "scanamo-circe"                   % "1.0.8"
+      "io.laserdisc"  %% "scanamo-circe"                   % "2.1.0"
     )
   )
   .settings(commonSettings)
@@ -115,17 +114,17 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
     `fs2-aws-s3`
   )
   .settings(
-    name            := "fs2-aws-examples",
-    coverageMinimum := 0,
+    name                     := "fs2-aws-examples",
+    coverageMinimumStmtTotal := 0,
     libraryDependencies ++= Seq(
       "org.mockito"      % "mockito-core"             % V.MockitoCore % Test,
       "org.mockito"      %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
-      "ch.qos.logback"   % "logback-classic"          % "1.2.6",
-      "ch.qos.logback"   % "logback-core"             % "1.2.6",
+      "ch.qos.logback"   % "logback-classic"          % "1.2.8",
+      "ch.qos.logback"   % "logback-core"             % "1.2.8",
       "org.slf4j"        % "jcl-over-slf4j"           % "1.7.32",
       "org.slf4j"        % "jul-to-slf4j"             % "1.7.32",
       "org.typelevel"    %% "log4cats-slf4j"          % "2.1.1",
-      "io.laserdisc"     %% "scanamo-circe"           % "1.0.8",
+      "io.laserdisc"     %% "scanamo-circe"           % "2.1.0",
       "io.janstenpickle" %% "trace4cats-inject"       % "0.12.0"
     )
   )
@@ -145,9 +144,9 @@ lazy val `fs2-aws-s3` = (project in file("fs2-aws-s3"))
       "software.amazon.awssdk" % "s3"        % V.AwsSdk,
       "org.scalameta"          %% "munit"    % V.Munit % Test
     ),
-    testFrameworks        += new TestFramework("munit.Framework"),
-    coverageMinimum       := 0,
-    coverageFailOnMinimum := true
+    testFrameworks           += new TestFramework("munit.Framework"),
+    coverageMinimumStmtTotal := 0,
+    coverageFailOnMinimum    := true
   )
   .settings(commonSettings)
   .settings(scalacOptions := commonOptions(scalaVersion.value))
@@ -166,17 +165,17 @@ lazy val `fs2-aws-kinesis` = (project in file("fs2-aws-kinesis"))
       "co.fs2"                  %% "fs2-core"                % V.Fs2,
       "co.fs2"                  %% "fs2-io"                  % V.Fs2,
       "com.amazonaws"           % "amazon-kinesis-producer"  % "0.14.10",
-      "software.amazon.kinesis" % "amazon-kinesis-client"    % "2.3.8",
+      "software.amazon.kinesis" % "amazon-kinesis-client"    % "2.3.9",
       "software.amazon.awssdk"  % "sts"                      % V.AwsSdk,
       "eu.timepit"              %% "refined"                 % V.Refined,
       "org.scalatest"           %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"             %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
       "org.mockito"             % "mockito-core"             % V.MockitoCore % Test,
-      "ch.qos.logback"          % "logback-classic"          % "1.2.6" % Test,
-      "ch.qos.logback"          % "logback-core"             % "1.2.6" % Test
+      "ch.qos.logback"          % "logback-classic"          % "1.2.8" % Test,
+      "ch.qos.logback"          % "logback-core"             % "1.2.8" % Test
     ),
-    coverageMinimum       := 40,
-    coverageFailOnMinimum := true
+    coverageMinimumStmtTotal := 40,
+    coverageFailOnMinimum    := true
   )
   .settings(commonSettings)
   .settings(scalacOptions ++= commonOptions(scalaVersion.value))
@@ -193,8 +192,8 @@ lazy val `fs2-aws-sqs` = (project in file("fs2-aws-sqs"))
       "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
       "eu.timepit"             %% "refined"                 % V.Refined
     ),
-    coverageMinimum       := 55.80,
-    coverageFailOnMinimum := true
+    coverageMinimumStmtTotal := 55.80,
+    coverageFailOnMinimum    := true
   )
   .settings(commonSettings)
   .settings(scalacOptions ++= commonOptions(scalaVersion.value))
@@ -211,10 +210,11 @@ lazy val `fs2-aws-sns` = (project in file("fs2-aws-sns"))
       "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
       "software.amazon.awssdk" % "sqs"                      % V.AwsSdk % Test,
-      "eu.timepit"             %% "refined"                 % V.Refined
+      "eu.timepit"             %% "refined"                 % V.Refined,
+      "org.typelevel"          %% "cats-effect"             % V.CE
     ),
-    coverageMinimum       := 55.80,
-    coverageFailOnMinimum := true
+    coverageMinimumStmtTotal := 55.80,
+    coverageFailOnMinimum    := true
   )
   .settings(commonSettings)
   .settings(scalacOptions ++= commonOptions(scalaVersion.value))
@@ -253,7 +253,6 @@ lazy val `pure-s3-tagless` = (project in file("pure-aws/pure-s3-tagless"))
       "org.mockito"            % "mockito-core"             % V.MockitoCore % Test,
       "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
-      "eu.timepit"             %% "refined"                 % V.Refined,
       "org.typelevel"          %% "cats-effect"             % V.CE
     ),
     taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "s3" / "tagless",
