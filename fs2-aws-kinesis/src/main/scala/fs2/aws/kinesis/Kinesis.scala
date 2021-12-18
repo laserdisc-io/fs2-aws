@@ -3,6 +3,7 @@ package fs2.aws.kinesis
 import cats.effect.std.{ Dispatcher, Queue }
 import cats.effect.{ Async, Concurrent, Sync }
 import cats.implicits._
+import eu.timepit.refined.auto._
 import fs2.aws.core
 import fs2.concurrent.SignallingRef
 import fs2.{ Chunk, Pipe, Stream }
@@ -78,24 +79,11 @@ object Kinesis {
       ): fs2.Stream[F, Scheduler] =
         Stream.bracket {
           schedulerFactory(() =>
-            new ChunkedRecordProcessor(records => {
-              dispatcher.unsafeRunSync {
-                queue
-                  .offer(records) >> Async[F].delay(
-                  println(s"offered ${records.map(_.record.sequenceNumber()).toList.mkString(" ")}")
-                )
-              }
-              println(
-                s"offered_done ${records.map(_.record.sequenceNumber()).toList.mkString(" ")}"
-              )
-            })
-          ).flatTap(s =>
-            Concurrent[F].start(
-              Async[F]
-                .blocking(s.run())
-                .handleErrorWith(e => Async[F].delay(e.printStackTrace()))
-                .flatTap(_ => signal.set(true))
+            new ChunkedRecordProcessor(records =>
+              dispatcher.unsafeRunSync(queue.offer(records) >> Async[F].delay())
             )
+          ).flatTap(s =>
+            Concurrent[F].start(Async[F].blocking(s.run()).flatTap(_ => signal.set(true)))
           )
         }(s => Async[F].blocking(s.shutdown()))
 
@@ -103,7 +91,7 @@ object Kinesis {
       // Expose the elements by dequeuing the internal buffer
       for {
         dispatcher      <- Stream.resource(Dispatcher[F])
-        buffer          <- Stream.eval(Queue.unbounded[F, Chunk[CommittableRecord]])
+        buffer          <- Stream.eval(Queue.bounded[F, Chunk[CommittableRecord]](streamConfig.bufferSize))
         interruptSignal <- Stream.eval(SignallingRef[F, Boolean](false))
         _               <- instantiateScheduler(dispatcher, buffer, interruptSignal)
         stream          <- Stream.fromQueueUnterminated(buffer).interruptWhen(interruptSignal)
