@@ -22,7 +22,6 @@ trait Kinesis[F[_]] {
   /** Initialize a worker and start streaming records from a Kinesis stream
     * On stream finish (due to error or other), worker will be shutdown
     *
-    * @tparam F effect type of the fs2 stream
     * @param appName    name of the Kinesis application. Used by KCL when resharding
     * @param streamName name of the Kinesis stream to consume from
     * @return an infinite fs2 Stream that emits Kinesis Records
@@ -33,7 +32,6 @@ trait Kinesis[F[_]] {
   /** Initialize a worker and start streaming records from a Kinesis stream
     * On stream finish (due to error or other), worker will be shutdown
     *
-    * @tparam F effect type of the fs2 stream
     * @param consumerConfig configuration parameters for the KCL
     * @return an infinite fs2 Stream that emits Kinesis Records
     */
@@ -43,7 +41,6 @@ trait Kinesis[F[_]] {
   /** Initialize a worker and start streaming records from a Kinesis stream
     * On stream finish (due to error or other), worker will be shutdown
     *
-    * @tparam F effect type of the fs2 stream
     * @param consumerConfig configuration parameters for the KCL
     * @return an infinite fs2 Stream that emits Kinesis Records Chunks
     */
@@ -56,7 +53,6 @@ trait Kinesis[F[_]] {
     * After accumulating maxBatchSize or reaching maxBatchWait for a respective shard, the latest record is checkpointed
     * By design, all records prior to the checkpointed record are also checkpointed in Kinesis
     *
-    * @tparam F effect type of the fs2 stream
     * @param checkpointSettings configure maxBatchSize and maxBatchWait time before triggering a checkpoint
     * @return a stream of Record types representing checkpointed messages
     */
