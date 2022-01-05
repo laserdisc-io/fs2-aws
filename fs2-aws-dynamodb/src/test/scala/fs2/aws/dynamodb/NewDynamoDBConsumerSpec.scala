@@ -22,13 +22,13 @@ import com.amazonaws.services.kinesis.model.Record
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
-import org.scalatest.concurrent.Eventually
+import org.scalatest.concurrent.{ Eventually, ScalaFutures }
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time._
 
 import java.util.Date
-import java.util.concurrent.{ CountDownLatch, Phaser, Semaphore }
+import java.util.concurrent.{ CountDownLatch, Phaser }
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
@@ -37,7 +37,8 @@ class NewDynamoDBConsumerSpec
     extends AnyFlatSpec
     with Matchers
     with BeforeAndAfterEach
-    with Eventually {
+    with Eventually
+    with ScalaFutures {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
   implicit val runtime: IORuntime   = IORuntime.global
@@ -51,12 +52,12 @@ class NewDynamoDBConsumerSpec
     with TestData {
     val res = (
       stream.take(1).compile.toList,
-      IO.delay {
-        semaphore.acquire()
+      IO.blocking {
+        shard1Guard.await()
         recordProcessor.initialize(initializationInput)
         recordProcessor.processRecords(recordsInput)
       }
-    ).parMapN { case (msgs, _) => msgs }.unsafeRunSync()
+    ).parMapN { case (msgs, _) => msgs }.unsafeToFuture().futureValue
 
     val commitableRecord: CommittableRecord = res.head
     commitableRecord.record.getData                        should be(record.getData)
@@ -69,12 +70,12 @@ class NewDynamoDBConsumerSpec
     with TestData {
     (
       stream.take(1).compile.toList,
-      IO.delay {
-        semaphore.acquire()
+      IO.blocking {
+        shard1Guard.await()
         recordProcessor.initialize(initializationInput)
         recordProcessor.processRecords(recordsInput)
       }
-    ).parMapN { case (_, _) => () }.unsafeRunSync()
+    ).parMapN { case (_, _) => () }.unsafeToFuture().futureValue
 
     verify(mockScheduler, times(1)).shutdown()
   }
@@ -84,12 +85,12 @@ class NewDynamoDBConsumerSpec
     intercept[Exception] {
       (
         stream.take(1).compile.toList,
-        IO.delay {
-          semaphore.acquire()
+        IO.blocking {
+          shard1Guard.await()
           recordProcessor.initialize(initializationInput)
           recordProcessor.processRecords(recordsInput)
         }
-      ).parMapN { case (_, _) => () }.unsafeRunSync()
+      ).parMapN { case (_, _) => () }.unsafeToFuture().futureValue
     }
 
     verify(mockScheduler, times(1)).shutdown()
@@ -98,23 +99,23 @@ class NewDynamoDBConsumerSpec
   it should "not drop messages in case of back-pressure" in new WorkerContext with TestData {
     // Create and send 10 records (to match buffer size)
     val res =
-      (stream.take(60).compile.toList, IO.delay {
-        semaphore.acquire()
+      (stream.take(60).compile.toList, IO.blocking {
+        shard1Guard.await()
         recordProcessor.initialize(initializationInput)
         for (i <- 1 to 10) {
           val record: Record = mock(classOf[RecordAdapter])
           when(record.getSequenceNumber).thenReturn(i.toString)
           recordProcessor.processRecords(recordsInput.withRecords(List(record).asJava))
         }
-      }, IO.delay {
-        semaphore.acquire()
+      }, IO.blocking {
+        shard1Guard.await()
         recordProcessor.initialize(initializationInput)
         for (i <- 1 to 50) {
           val record: Record = mock(classOf[RecordAdapter])
           when(record.getSequenceNumber).thenReturn(i.toString)
           recordProcessor.processRecords(recordsInput.withRecords(List(record).asJava))
         }
-      }).parMapN { case (msgs, _, _) => msgs }.unsafeRunSync()
+      }).parMapN { case (msgs, _, _) => msgs }.unsafeToFuture().futureValue
 
     res should have size 60
   }
@@ -124,8 +125,10 @@ class NewDynamoDBConsumerSpec
 
     val res = (
       stream.take(10).compile.toList,
-      IO.delay {
-        semaphore.acquire()
+      IO.blocking {
+        println("about to acquire lock for record processor #1")
+        shard1Guard.await()
+        println("acquired lock for record processor #1")
         recordProcessor.initialize(initializationInput)
         for (i <- 1 to 5) {
           val record: Record = mock(classOf[RecordAdapter])
@@ -133,8 +136,10 @@ class NewDynamoDBConsumerSpec
           recordProcessor.processRecords(recordsInput.withRecords(List(record).asJava))
         }
       },
-      IO.delay {
-        semaphore.acquire()
+      IO.blocking {
+        println("about to acquire lock for record processor #2")
+        shard2Guard.await()
+        println("acquired lock for record processor #2")
         recordProcessor2.initialize(
           new InitializationInput()
             .withShardId("shard2")
@@ -147,7 +152,7 @@ class NewDynamoDBConsumerSpec
           recordProcessor2.processRecords(recordsInput.withRecords(List(record).asJava))
         }
       }
-    ).parMapN { case (msgs, _, _) => msgs }.unsafeRunSync()
+    ).parMapN { case (msgs, _, _) => msgs }.unsafeToFuture().futureValue
 
     // Should process all 10 messages
     res should have size 10
@@ -171,7 +176,7 @@ class NewDynamoDBConsumerSpec
         .compile
         .toList,
       IO.blocking {
-        semaphore.acquire()
+        shard1Guard.await()
         recordProcessor.initialize(initializationInput)
         (1 to nRecords).foreach { i =>
           val record: Record = mock(classOf[RecordAdapter])
@@ -190,7 +195,7 @@ class NewDynamoDBConsumerSpec
             .withShutdownReason(ShutdownReason.TERMINATE)
         )
       }
-    ).parMapN { case (msgs, _) => msgs }.unsafeRunSync()
+    ).parMapN { case (msgs, _) => msgs }.unsafeToFuture().futureValue
 
     res should have size 5
   }
@@ -346,12 +351,14 @@ class NewDynamoDBConsumerSpec
       .through(k.checkpointRecords(settings))
       .compile
       .toVector
-      .unsafeRunSync() should have size 100
+      .unsafeToFuture()
+      .futureValue should have size 100
   }
 
   abstract private class WorkerContext(errorStream: Boolean = false) {
 
-    val semaphore                       = new Semaphore(0)
+    val shard1Guard                     = new CountDownLatch(1)
+    val shard2Guard                     = new CountDownLatch(1)
     val latch                           = new CountDownLatch(1)
     protected val mockScheduler: Worker = mock(classOf[Worker])
 
@@ -364,9 +371,9 @@ class NewDynamoDBConsumerSpec
     val builder = { x: IRecordProcessorFactory =>
       recordProcessorFactory = x
       recordProcessor = x.createProcessor()
-      semaphore.release()
+      shard1Guard.countDown()
       recordProcessor2 = x.createProcessor()
-      semaphore.release()
+      shard2Guard.countDown()
       mockScheduler.pure[IO]
     }
 
@@ -387,7 +394,8 @@ class NewDynamoDBConsumerSpec
         .through(k.checkpointRecords(settings))
         .compile
         .toList
-        .unsafeRunSync()
+        .unsafeToFuture()
+        .futureValue
   }
 
   private trait TestData {
