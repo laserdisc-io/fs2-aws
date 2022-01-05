@@ -49,6 +49,7 @@ trait KinesisAsyncClientOp[F[_]] {
   def stopStreamEncryption(a: StopStreamEncryptionRequest): F[StopStreamEncryptionResponse]
   def subscribeToShard(a: SubscribeToShardRequest, b: SubscribeToShardResponseHandler): F[Void]
   def updateShardCount(a: UpdateShardCountRequest): F[UpdateShardCountResponse]
+  def updateStreamMode(a: UpdateStreamModeRequest): F[UpdateStreamModeResponse]
   def waiter: F[KinesisAsyncWaiter]
 
 }

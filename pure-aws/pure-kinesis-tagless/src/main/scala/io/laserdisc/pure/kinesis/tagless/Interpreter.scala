@@ -115,6 +115,7 @@ trait Interpreter[M[_]] { outer =>
     override def subscribeToShard(a: SubscribeToShardRequest, b: SubscribeToShardResponseHandler) =
       eff(_.subscribeToShard(a, b))
     override def updateShardCount(a: UpdateShardCountRequest) = eff(_.updateShardCount(a))
+    override def updateStreamMode(a: UpdateStreamModeRequest) = eff(_.updateStreamMode(a))
     override def waiter                                       = primitive(_.waiter)
     def lens[E](f: E => KinesisAsyncClient): KinesisAsyncClientOp[Kleisli[M, E, *]] =
       new KinesisAsyncClientOp[Kleisli[M, E, *]] {
@@ -173,6 +174,8 @@ trait Interpreter[M[_]] { outer =>
         ) = Kleisli(e => eff1(f(e).subscribeToShard(a, b)))
         override def updateShardCount(a: UpdateShardCountRequest) =
           Kleisli(e => eff1(f(e).updateShardCount(a)))
+        override def updateStreamMode(a: UpdateStreamModeRequest) =
+          Kleisli(e => eff1(f(e).updateStreamMode(a)))
         override def waiter = Kleisli(e => primitive1(f(e).waiter))
       }
   }
@@ -232,6 +235,7 @@ trait Interpreter[M[_]] { outer =>
     override def subscribeToShard(a: SubscribeToShardRequest, b: SubscribeToShardResponseHandler) =
       eff1(client.subscribeToShard(a, b))
     override def updateShardCount(a: UpdateShardCountRequest) = eff1(client.updateShardCount(a))
+    override def updateStreamMode(a: UpdateStreamModeRequest) = eff1(client.updateStreamMode(a))
     override def waiter                                       = primitive1(client.waiter)
 
   }
