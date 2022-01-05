@@ -7,7 +7,7 @@ import eu.timepit.refined.auto._
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
-import org.scalatest.concurrent.Eventually
+import org.scalatest.concurrent.{ Eventually, ScalaFutures }
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time._
@@ -30,7 +30,8 @@ class NewKinesisConsumerSpec
     extends AnyFlatSpec
     with Matchers
     with BeforeAndAfterEach
-    with Eventually {
+    with Eventually
+    with ScalaFutures {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
   implicit val runtime: IORuntime   = IORuntime.global
@@ -38,18 +39,18 @@ class NewKinesisConsumerSpec
   implicit def sList2jList[A](sList: List[A]): java.util.List[A] = sList.asJava
 
   implicit override val patienceConfig: PatienceConfig =
-    PatienceConfig(timeout = scaled(Span(2, Seconds)), interval = scaled(Span(5, Millis)))
+    PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
 
   "KinesisWorker source" should "successfully read data from the Kinesis stream" in new WorkerContext
     with TestData {
     val res = (
       stream.take(1).compile.toList,
-      IO.delay {
-        semaphore.acquire()
+      IO.blocking {
+        shard1Guard.await()
         recordProcessor.initialize(initializationInput)
         recordProcessor.processRecords(recordsInput.build())
       }
-    ).parMapN { case (msgs, _) => msgs }.unsafeRunSync()
+    ).parMapN { case (msgs, _) => msgs }.unsafeToFuture().futureValue
 
     val commitableRecord = res.head
     commitableRecord.record.data() should be(record.data())
@@ -62,13 +63,13 @@ class NewKinesisConsumerSpec
   it should "Shutdown the worker if the stream is drained and has not failed" in new WorkerContext
     with TestData {
     (
-      stream.take(1).compile.toList,
-      IO.delay {
-        semaphore.acquire()
+      stream.take(1).compile.toList.flatMap(l => IO.blocking(latch.countDown()) >> IO.pure(l)),
+      IO.blocking {
+        shard1Guard.await()
         recordProcessor.initialize(initializationInput)
         recordProcessor.processRecords(recordsInput.build())
       }
-    ).parMapN { case (_, _) => () }.unsafeRunSync()
+    ).parMapN { case (_, _) => () }.unsafeToFuture().futureValue
 
     verify(mockScheduler, times(1)).shutdown()
   }
@@ -77,13 +78,13 @@ class NewKinesisConsumerSpec
     with TestData {
     intercept[Exception] {
       (
-        stream.take(1).compile.toList,
-        IO.delay {
-          semaphore.acquire()
+        stream.take(1).compile.toList.flatMap(l => IO.blocking(latch.countDown()) >> IO.pure(l)),
+        IO.blocking {
+          shard1Guard.await()
           recordProcessor.initialize(initializationInput)
           recordProcessor.processRecords(recordsInput.build())
         }
-      ).parMapN { case (_, _) => () }.unsafeRunSync()
+      ).parMapN { case (_, _) => () }.unsafeToFuture().futureValue
     }
 
     verify(mockScheduler, times(1)).shutdown()
@@ -93,26 +94,34 @@ class NewKinesisConsumerSpec
     // Create and send 10 records (to match buffer size)
     val res = (
       stream.take(60).compile.toList,
-      IO.delay {
-        semaphore.acquire()
+      IO.blocking {
+        println("about to acquire lock for record processor #1")
+        shard1Guard.await()
+        println("acquired lock for record processor #1")
         recordProcessor.initialize(initializationInput)
         for (i <- 1 to 10) {
           val record = mock(classOf[KinesisClientRecord])
           when(record.sequenceNumber()).thenReturn(i.toString)
           recordProcessor.processRecords(recordsInput.records(List(record)).build())
         }
+        println("completed ingestion #1")
       },
       // Send a batch that exceeds the internal buffer size
-      IO.delay {
-        semaphore.acquire()
+      IO.blocking {
+        println("about to acquire lock for record processor #2")
+        shard1Guard.await()
+        println("acquired lock for record processor #2")
         recordProcessor.initialize(initializationInput)
+        println("Initialized #2")
         for (i <- 1 to 50) {
           val record = mock(classOf[KinesisClientRecord])
           when(record.sequenceNumber()).thenReturn(i.toString)
           recordProcessor.processRecords(recordsInput.records(List(record)).build())
+          println(s"processed $i message #2")
         }
+        println("completed ingestion #2")
       }
-    ).parMapN { case (msgs, _, _) => msgs }.unsafeRunSync()
+    ).parMapN { case (msgs, _, _) => msgs }.unsafeToFuture().futureValue
 
     res should have size 60
   }
@@ -122,8 +131,8 @@ class NewKinesisConsumerSpec
 
     val res = (
       stream.take(10).compile.toList,
-      IO.delay {
-        semaphore.acquire()
+      IO.blocking {
+        shard1Guard.await()
         recordProcessor.initialize(initializationInput)
         for (i <- 1 to 5) {
           val record = mock(classOf[KinesisClientRecord])
@@ -131,8 +140,8 @@ class NewKinesisConsumerSpec
           recordProcessor.processRecords(recordsInput.records(List(record)).build())
         }
       },
-      IO.delay {
-        semaphore.acquire()
+      IO.blocking {
+        shard2Guard.await()
         recordProcessor2.initialize(
           InitializationInput
             .builder()
@@ -147,7 +156,7 @@ class NewKinesisConsumerSpec
           recordProcessor2.processRecords(recordsInput.records(List(record)).build())
         }
       }
-    ).parMapN { case (msgs, _, _) => msgs }.unsafeRunSync()
+    ).parMapN { case (msgs, _, _) => msgs }.unsafeToFuture().futureValue
 
     // Should process all 10 messages
     res should have size 10
@@ -169,9 +178,10 @@ class NewKinesisConsumerSpec
           )
         )
         .compile
-        .toList,
+        .toList
+        .flatMap(l => IO.blocking(latch.countDown()) >> IO.pure(l)),
       IO.blocking {
-        semaphore.acquire()
+        shard1Guard.await()
         recordProcessor.initialize(initializationInput)
         (1 to nRecords).foreach { i =>
           val record = mock(classOf[KinesisClientRecord])
@@ -180,13 +190,13 @@ class NewKinesisConsumerSpec
             recordsInput.isAtShardEnd(i == 5).records(List(record)).build()
           )
         }
-      } >> IO.delay {
+      } >> IO.blocking {
         //Immediately publish end of shard event
         recordProcessor.shardEnded(
           ShardEndedInput.builder().checkpointer(checkpointer).build()
         )
       }
-    ).parMapN { case (msgs, _) => msgs }.unsafeRunSync()
+    ).parMapN { case (msgs, _) => msgs }.unsafeToFuture().futureValue
 
     res should have size 5
   }
@@ -348,7 +358,8 @@ class NewKinesisConsumerSpec
 
   abstract private class WorkerContext(errorStream: Boolean = false) {
 
-    val semaphore                          = new Semaphore(0)
+    val shard1Guard                        = new CountDownLatch(1)
+    val shard2Guard                        = new CountDownLatch(1)
     val latch                              = new CountDownLatch(1)
     protected val mockScheduler: Scheduler = mock(classOf[Scheduler])
 
@@ -358,13 +369,16 @@ class NewKinesisConsumerSpec
     val chunkedRecordProcessor                              = new ChunkedRecordProcessor(_ => ())
 
     doAnswer(_ => latch.await()).when(mockScheduler).run()
+//    doThrow(new RuntimeException("boom"))
+//      .when(mockScheduler)
+//      .run()
 
     val builder = { x: ShardRecordProcessorFactory =>
       recordProcessorFactory = x
       recordProcessor = x.shardRecordProcessor()
-      semaphore.release()
+      shard1Guard.countDown()
       recordProcessor2 = x.shardRecordProcessor()
-      semaphore.release()
+      shard2Guard.countDown()
       mockScheduler.pure[IO]
     }
     val config =
@@ -372,6 +386,7 @@ class NewKinesisConsumerSpec
     val k = Kinesis.create[IO](builder)
     val stream: fs2.Stream[IO, CommittableRecord] =
       k.readFromKinesisStream(config)
+        .evalTap(_ => IO.sleep(100 millis))
         .map(i => if (errorStream) throw new Exception("boom") else i)
         .onFinalize(IO.delay(latch.countDown()))
     val settings =

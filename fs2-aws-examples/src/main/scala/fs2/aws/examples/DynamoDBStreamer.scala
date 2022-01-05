@@ -11,7 +11,7 @@ import com.amazonaws.services.dynamodbv2.{
 }
 import fs2.aws.dynamodb.{ parsers, DynamoDB }
 import io.circe.Json
-import io.github.howardjohn.scanamo.CirceDynamoFormat._
+import io.laserdisc.scanamo.circe.CirceDynamoFormat._
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 object DynamoDBStreamer extends IOApp {
