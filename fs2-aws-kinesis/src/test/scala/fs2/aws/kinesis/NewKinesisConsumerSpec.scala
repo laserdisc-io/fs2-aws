@@ -46,7 +46,7 @@ class NewKinesisConsumerSpec
     val res = (
       stream.take(1).compile.toList,
       IO.blocking {
-        semaphore.acquire()
+        shard1Guard.await()
         recordProcessor.initialize(initializationInput)
         recordProcessor.processRecords(recordsInput.build())
       }
@@ -65,7 +65,7 @@ class NewKinesisConsumerSpec
     (
       stream.take(1).compile.toList.flatMap(l => IO.blocking(latch.countDown()) >> IO.pure(l)),
       IO.blocking {
-        semaphore.acquire()
+        shard1Guard.await()
         recordProcessor.initialize(initializationInput)
         recordProcessor.processRecords(recordsInput.build())
       }
@@ -80,7 +80,7 @@ class NewKinesisConsumerSpec
       (
         stream.take(1).compile.toList.flatMap(l => IO.blocking(latch.countDown()) >> IO.pure(l)),
         IO.blocking {
-          semaphore.acquire()
+          shard1Guard.await()
           recordProcessor.initialize(initializationInput)
           recordProcessor.processRecords(recordsInput.build())
         }
@@ -96,7 +96,7 @@ class NewKinesisConsumerSpec
       stream.take(60).compile.toList,
       IO.blocking {
         println("about to acquire lock for record processor #1")
-        semaphore.acquire()
+        shard1Guard.await()
         println("acquired lock for record processor #1")
         recordProcessor.initialize(initializationInput)
         for (i <- 1 to 10) {
@@ -109,7 +109,7 @@ class NewKinesisConsumerSpec
       // Send a batch that exceeds the internal buffer size
       IO.blocking {
         println("about to acquire lock for record processor #2")
-        semaphore.acquire()
+        shard1Guard.await()
         println("acquired lock for record processor #2")
         recordProcessor.initialize(initializationInput)
         println("Initialized #2")
@@ -132,7 +132,7 @@ class NewKinesisConsumerSpec
     val res = (
       stream.take(10).compile.toList,
       IO.blocking {
-        semaphore.acquire()
+        shard1Guard.await()
         recordProcessor.initialize(initializationInput)
         for (i <- 1 to 5) {
           val record = mock(classOf[KinesisClientRecord])
@@ -141,7 +141,7 @@ class NewKinesisConsumerSpec
         }
       },
       IO.blocking {
-        semaphore.acquire()
+        shard2Guard.await()
         recordProcessor2.initialize(
           InitializationInput
             .builder()
@@ -181,7 +181,7 @@ class NewKinesisConsumerSpec
         .toList
         .flatMap(l => IO.blocking(latch.countDown()) >> IO.pure(l)),
       IO.blocking {
-        semaphore.acquire()
+        shard1Guard.await()
         recordProcessor.initialize(initializationInput)
         (1 to nRecords).foreach { i =>
           val record = mock(classOf[KinesisClientRecord])
@@ -358,7 +358,8 @@ class NewKinesisConsumerSpec
 
   abstract private class WorkerContext(errorStream: Boolean = false) {
 
-    val semaphore                          = new Semaphore(0)
+    val shard1Guard                        = new CountDownLatch(1)
+    val shard2Guard                        = new CountDownLatch(1)
     val latch                              = new CountDownLatch(1)
     protected val mockScheduler: Scheduler = mock(classOf[Scheduler])
 
@@ -375,9 +376,9 @@ class NewKinesisConsumerSpec
     val builder = { x: ShardRecordProcessorFactory =>
       recordProcessorFactory = x
       recordProcessor = x.shardRecordProcessor()
-      semaphore.release()
+      shard1Guard.countDown()
       recordProcessor2 = x.shardRecordProcessor()
-      semaphore.release()
+      shard2Guard.countDown()
       mockScheduler.pure[IO]
     }
     val config =

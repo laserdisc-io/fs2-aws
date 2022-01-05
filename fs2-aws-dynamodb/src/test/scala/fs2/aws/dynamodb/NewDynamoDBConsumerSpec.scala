@@ -28,7 +28,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.time._
 
 import java.util.Date
-import java.util.concurrent.{ CountDownLatch, Phaser, Semaphore }
+import java.util.concurrent.{ CountDownLatch, Phaser }
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
@@ -53,7 +53,7 @@ class NewDynamoDBConsumerSpec
     val res = (
       stream.take(1).compile.toList,
       IO.blocking {
-        semaphore.acquire()
+        shard1Guard.await()
         recordProcessor.initialize(initializationInput)
         recordProcessor.processRecords(recordsInput)
       }
@@ -71,7 +71,7 @@ class NewDynamoDBConsumerSpec
     (
       stream.take(1).compile.toList,
       IO.blocking {
-        semaphore.acquire()
+        shard1Guard.await()
         recordProcessor.initialize(initializationInput)
         recordProcessor.processRecords(recordsInput)
       }
@@ -86,7 +86,7 @@ class NewDynamoDBConsumerSpec
       (
         stream.take(1).compile.toList,
         IO.blocking {
-          semaphore.acquire()
+          shard1Guard.await()
           recordProcessor.initialize(initializationInput)
           recordProcessor.processRecords(recordsInput)
         }
@@ -100,7 +100,7 @@ class NewDynamoDBConsumerSpec
     // Create and send 10 records (to match buffer size)
     val res =
       (stream.take(60).compile.toList, IO.blocking {
-        semaphore.acquire()
+        shard1Guard.await()
         recordProcessor.initialize(initializationInput)
         for (i <- 1 to 10) {
           val record: Record = mock(classOf[RecordAdapter])
@@ -108,7 +108,7 @@ class NewDynamoDBConsumerSpec
           recordProcessor.processRecords(recordsInput.withRecords(List(record).asJava))
         }
       }, IO.blocking {
-        semaphore.acquire()
+        shard1Guard.await()
         recordProcessor.initialize(initializationInput)
         for (i <- 1 to 50) {
           val record: Record = mock(classOf[RecordAdapter])
@@ -127,7 +127,7 @@ class NewDynamoDBConsumerSpec
       stream.take(10).compile.toList,
       IO.blocking {
         println("about to acquire lock for record processor #1")
-        semaphore.acquire()
+        shard1Guard.await()
         println("acquired lock for record processor #1")
         recordProcessor.initialize(initializationInput)
         for (i <- 1 to 5) {
@@ -138,7 +138,7 @@ class NewDynamoDBConsumerSpec
       },
       IO.blocking {
         println("about to acquire lock for record processor #2")
-        semaphore.acquire()
+        shard2Guard.await()
         println("acquired lock for record processor #2")
         recordProcessor2.initialize(
           new InitializationInput()
@@ -176,7 +176,7 @@ class NewDynamoDBConsumerSpec
         .compile
         .toList,
       IO.blocking {
-        semaphore.acquire()
+        shard1Guard.await()
         recordProcessor.initialize(initializationInput)
         (1 to nRecords).foreach { i =>
           val record: Record = mock(classOf[RecordAdapter])
@@ -357,7 +357,8 @@ class NewDynamoDBConsumerSpec
 
   abstract private class WorkerContext(errorStream: Boolean = false) {
 
-    val semaphore                       = new Semaphore(0)
+    val shard1Guard                     = new CountDownLatch(1)
+    val shard2Guard                     = new CountDownLatch(1)
     val latch                           = new CountDownLatch(1)
     protected val mockScheduler: Worker = mock(classOf[Worker])
 
@@ -370,9 +371,9 @@ class NewDynamoDBConsumerSpec
     val builder = { x: IRecordProcessorFactory =>
       recordProcessorFactory = x
       recordProcessor = x.createProcessor()
-      semaphore.release()
+      shard1Guard.countDown()
       recordProcessor2 = x.createProcessor()
-      semaphore.release()
+      shard2Guard.countDown()
       mockScheduler.pure[IO]
     }
 
