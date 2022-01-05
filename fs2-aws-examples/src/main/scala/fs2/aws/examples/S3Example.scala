@@ -27,7 +27,7 @@ object S3Example extends IOApp {
 
   def program(s3: S3[IO]): IO[Unit] =
     s3.readFile(BucketName("test"), FileKey("foo"))
-      .through(fs2.text.utf8Decode)
+      .through(fs2.text.utf8.decode)
       .through(fs2.text.lines)
       .evalMap(line => IO(println(line)))
       .compile
