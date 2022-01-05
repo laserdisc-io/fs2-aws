@@ -13,6 +13,7 @@ import eu.timepit.refined.auto._
 import fs2.aws.s3._
 import fs2.io.file.Files
 import io.laserdisc.pure.s3.tagless.{ Interpreter, S3AsyncClientOp }
+import fs2.text
 
 class S3Suite extends IOSuite {
 
@@ -46,7 +47,7 @@ class S3Suite extends IOSuite {
 
         val read =
           s3.readFile(bucket, fileKey)
-            .through(fs2.text.utf8Decode)
+            .through(text.utf8.decode)
             .through(fs2.text.lines)
             .compile
             .toVector
@@ -77,7 +78,7 @@ class S3Suite extends IOSuite {
 
         val read =
           s3.readFile(bucket, fileKeyMix)
-            .through(fs2.text.utf8Decode)
+            .through(text.utf8.decode)
             .through(fs2.text.lines)
             .compile
             .toVector
@@ -115,7 +116,7 @@ class S3Suite extends IOSuite {
 
         val read =
           s3.readFileMultipart(bucket, fileKeyMultipart, 5)
-            .through(fs2.text.utf8Decode)
+            .through(text.utf8.decode)
             .through(fs2.text.lines)
             .compile
             .toVector
