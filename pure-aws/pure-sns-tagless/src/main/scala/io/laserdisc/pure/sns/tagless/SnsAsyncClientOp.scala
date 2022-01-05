@@ -89,6 +89,7 @@ trait SnsAsyncClientOp[F[_]] {
   def listTopicsPaginator(a: ListTopicsRequest): F[ListTopicsPublisher]
   def optInPhoneNumber(a: OptInPhoneNumberRequest): F[OptInPhoneNumberResponse]
   def publish(a: PublishRequest): F[PublishResponse]
+  def publishBatch(a: PublishBatchRequest): F[PublishBatchResponse]
   def removePermission(a: RemovePermissionRequest): F[RemovePermissionResponse]
   def serviceName: F[String]
   def setEndpointAttributes(a: SetEndpointAttributesRequest): F[SetEndpointAttributesResponse]

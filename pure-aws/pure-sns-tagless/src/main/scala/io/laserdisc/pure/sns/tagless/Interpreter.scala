@@ -137,6 +137,7 @@ trait Interpreter[M[_]] { outer =>
     override def listTopicsPaginator(a: ListTopicsRequest)          = primitive(_.listTopicsPaginator(a))
     override def optInPhoneNumber(a: OptInPhoneNumberRequest)       = eff(_.optInPhoneNumber(a))
     override def publish(a: PublishRequest)                         = eff(_.publish(a))
+    override def publishBatch(a: PublishBatchRequest)               = eff(_.publishBatch(a))
     override def removePermission(a: RemovePermissionRequest)       = eff(_.removePermission(a))
     override def serviceName                                        = primitive(_.serviceName)
     override def setEndpointAttributes(a: SetEndpointAttributesRequest) =
@@ -237,7 +238,8 @@ trait Interpreter[M[_]] { outer =>
           Kleisli(e => primitive1(f(e).listTopicsPaginator(a)))
         override def optInPhoneNumber(a: OptInPhoneNumberRequest) =
           Kleisli(e => eff1(f(e).optInPhoneNumber(a)))
-        override def publish(a: PublishRequest) = Kleisli(e => eff1(f(e).publish(a)))
+        override def publish(a: PublishRequest)           = Kleisli(e => eff1(f(e).publish(a)))
+        override def publishBatch(a: PublishBatchRequest) = Kleisli(e => eff1(f(e).publishBatch(a)))
         override def removePermission(a: RemovePermissionRequest) =
           Kleisli(e => eff1(f(e).removePermission(a)))
         override def serviceName = Kleisli(e => primitive1(f(e).serviceName))
@@ -344,6 +346,7 @@ trait Interpreter[M[_]] { outer =>
       primitive1(client.listTopicsPaginator(a))
     override def optInPhoneNumber(a: OptInPhoneNumberRequest) = eff1(client.optInPhoneNumber(a))
     override def publish(a: PublishRequest)                   = eff1(client.publish(a))
+    override def publishBatch(a: PublishBatchRequest)         = eff1(client.publishBatch(a))
     override def removePermission(a: RemovePermissionRequest) = eff1(client.removePermission(a))
     override def serviceName                                  = primitive1(client.serviceName)
     override def setEndpointAttributes(a: SetEndpointAttributesRequest) =
