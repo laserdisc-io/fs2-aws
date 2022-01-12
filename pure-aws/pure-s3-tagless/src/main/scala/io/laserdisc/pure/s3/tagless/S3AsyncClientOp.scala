@@ -3,12 +3,7 @@ package io.laserdisc.pure.s3.tagless
 import software.amazon.awssdk.core.async.{ AsyncRequestBody, AsyncResponseTransformer }
 import software.amazon.awssdk.services.s3.S3Utilities
 import software.amazon.awssdk.services.s3.model._
-import software.amazon.awssdk.services.s3.paginators.{
-  ListMultipartUploadsPublisher,
-  ListObjectVersionsPublisher,
-  ListObjectsV2Publisher,
-  ListPartsPublisher
-}
+import software.amazon.awssdk.services.s3.paginators._
 import software.amazon.awssdk.services.s3.waiters.S3AsyncWaiter
 
 import java.nio.file.Path
@@ -174,6 +169,10 @@ trait S3AsyncClientOp[F[_]] {
   def putObjectTagging(a: PutObjectTaggingRequest): F[PutObjectTaggingResponse]
   def putPublicAccessBlock(a: PutPublicAccessBlockRequest): F[PutPublicAccessBlockResponse]
   def restoreObject(a: RestoreObjectRequest): F[RestoreObjectResponse]
+  def selectObjectContent(
+    a: SelectObjectContentRequest,
+    b: SelectObjectContentResponseHandler
+  ): F[Void]
   def serviceName: F[String]
   def uploadPart(a: UploadPartRequest, b: AsyncRequestBody): F[UploadPartResponse]
   def uploadPart(a: UploadPartRequest, b: Path): F[UploadPartResponse]
