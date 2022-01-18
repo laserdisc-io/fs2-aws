@@ -17,7 +17,7 @@ organization := "io.laserdisc"
 name         := "fs2-aws"
 
 lazy val scala212 = "2.12.15"
-lazy val scala213 = "2.13.7"
+lazy val scala213 = "2.13.8"
 
 lazy val supportedScalaVersions = List(scala212, scala213)
 
@@ -72,7 +72,7 @@ lazy val `fs2-aws-ciris` = (project in file("fs2-aws-ciris"))
       "org.scalatest"           %% "scalatest"               % V.ScalaTest % Test,
       "org.mockito"             % "mockito-core"             % V.MockitoCore % Test,
       "org.mockito"             %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
-      "is.cir"                  %% "ciris"                   % "2.3.1",
+      "is.cir"                  %% "ciris"                   % "2.3.2",
       "software.amazon.kinesis" % "amazon-kinesis-client"    % "2.3.10",
       "org.typelevel"           %% "cats-effect"             % V.CE % Test
     ),
