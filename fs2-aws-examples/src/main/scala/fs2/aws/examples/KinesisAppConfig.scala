@@ -64,7 +64,6 @@ object syntax {
       kinesisAppConfig.streamName,
       kinesisAppConfig.appName,
       initialPositionInStream = InitialPositionInStream.TRIM_HORIZON.asLeft[Date],
-      endpoint = Some(s"http://${kinesisAppConfig.awsHost}:${kinesisAppConfig.awsPort}"),
       retrievalMode = Polling
     )
 
