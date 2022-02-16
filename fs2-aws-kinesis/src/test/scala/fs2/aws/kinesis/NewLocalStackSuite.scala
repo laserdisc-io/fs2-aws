@@ -54,7 +54,6 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
     streamName,
     "test-app",
     initialPositionInStream = Left(InitialPositionInStream.TRIM_HORIZON),
-    endpoint = Some("http://localhost:4566"),
     retrievalMode = Polling
   )
 
@@ -131,7 +130,6 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
       sn,
       "test-app",
       initialPositionInStream = Left(InitialPositionInStream.TRIM_HORIZON),
-      endpoint = Some("http://localhost:4566"),
       retrievalMode = Polling
     )
     val resource = for {

@@ -6,7 +6,6 @@ import fs2.aws.internal.Exceptions._
 import software.amazon.awssdk.regions.Region
 import software.amazon.kinesis.common.InitialPositionInStream
 
-import java.net.URI
 import java.util.Date
 import scala.concurrent.duration._
 import eu.timepit.refined.auto._
@@ -16,21 +15,15 @@ import eu.timepit.refined.auto._
   *  @param streamName name of the Kinesis stream to read from
   *  @param appName name of the application which the KCL daemon should assume
   *  @param region AWS region in which the Kinesis stream resides. Defaults to US-EAST-1
-  *  @param maxConcurrency max size of the KinesisAsyncClient HTTP thread pool. Defaults to Int.MaxValue.
   *  @param bufferSize size of the internal buffer used when reading messages from Kinesis
-  *  @param stsAssumeRole If present, the configured client will be setup for AWS cross-account access using the provided tokens
-  *  @param endpoint endpoint for the clients that are created. Default to None (i.e. AWS) but can be overridden (e.g. to localhost)
   *  @param retrievalMode FanOut (push) or Polling (pull). Defaults to FanOut (the new default in KCL 2.x).
   */
 class KinesisConsumerSettings private (
   val streamName: String,
   val appName: String,
   val region: Region,
-  val maxConcurrency: Int Refined Positive,
   val bufferSize: Int Refined Positive,
-  val stsAssumeRole: Option[STSAssumeRoleSettings],
   val initialPositionInStream: Either[InitialPositionInStream, Date],
-  val endpoint: Option[URI],
   val retrievalMode: RetrievalMode
 )
 
@@ -39,24 +32,18 @@ object KinesisConsumerSettings {
     streamName: String,
     appName: String,
     region: Region = Region.US_EAST_1,
-    maxConcurrency: Int Refined Positive = 100,
     bufferSize: Int Refined Positive = 10,
-    stsAssumeRole: Option[STSAssumeRoleSettings] = None,
     initialPositionInStream: Either[InitialPositionInStream, Date] = Left(
       InitialPositionInStream.LATEST
     ),
-    endpoint: Option[String] = None,
     retrievalMode: RetrievalMode = FanOut
   ): KinesisConsumerSettings =
     new KinesisConsumerSettings(
       streamName,
       appName,
       region,
-      maxConcurrency,
       bufferSize,
-      stsAssumeRole,
       initialPositionInStream,
-      endpoint.map(URI.create),
       retrievalMode
     )
 }
