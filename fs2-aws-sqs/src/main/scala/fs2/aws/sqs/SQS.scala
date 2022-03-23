@@ -22,23 +22,14 @@ object SQS {
   type MsgBody = String
 
   def create[F[_]: Async](
-      sqsConfig: SqsConfig,
+      sqsConfig: SqsConfig.Interface,
       sqs: SqsAsyncClientOp[F]
   ): F[SQS[F]] =
     new SQS[F] {
       override def sqsStream: fs2.Stream[F, Message] =
         fs2.Stream
           .awakeEvery[F](sqsConfig.pollRate)
-          .evalMap(_ =>
-            sqs
-              .receiveMessage(
-                ReceiveMessageRequest
-                  .builder()
-                  .queueUrl(sqsConfig.queueUrl)
-                  .maxNumberOfMessages(sqsConfig.fetchMessageCount)
-                  .build()
-              )
-          )
+          .evalMap(_ => sqs.receiveMessage(sqsConfig.receiveMessageRequest))
           .flatMap(response => fs2.Stream.emits(response.messages().asScala))
 
       override def deleteMessagePipe: Pipe[F, Message, DeleteMessageResponse] =
