@@ -1,9 +1,9 @@
 package fs2.aws
 
-import cats.effect.{ Concurrent, Ref }
+import cats.effect.{Concurrent, Ref}
 import cats.implicits.*
 import cats.effect.std.Queue
-import fs2.{ Pipe, Stream }
+import fs2.{Pipe, Stream}
 
 package object core {
 
@@ -22,12 +22,11 @@ package object core {
     *  @return a FS2 pipe producing a new sub-stream of elements grouped by the selector
     */
   def groupBy[F[_], A, K](
-    selector: A => F[K]
+      selector: A => F[K]
   )(implicit F: Concurrent[F]): Pipe[F, A, (K, Stream[F, A])] = { in =>
     Stream.eval(Ref.of[F, Map[K, Queue[F, Option[A]]]](Map.empty)).flatMap { queueMap =>
-      val cleanup = {
+      val cleanup =
         queueMap.get.flatMap(_.values.toList.traverse_(_.offer(None)))
-      }
 
       (in ++ Stream.exec(cleanup))
         .evalMap { elem =>
@@ -37,7 +36,7 @@ package object core {
               .fold {
                 for {
                   newQ <- Queue.unbounded[F, Option[A]] // Create a new queue
-                  _    <- queueMap.modify(queues => (queues + (key -> newQ), queues))
+                  _ <- queueMap.modify(queues => (queues + (key -> newQ), queues))
                   // Enqueue the element lifted into an Option to the new queue
                   _ <- newQ.offer(elem.some)
                 } yield (key -> Stream.fromQueueNoneTerminated(newQ, 100)).some

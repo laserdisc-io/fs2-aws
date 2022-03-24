@@ -4,7 +4,7 @@ import cats.effect.*
 import cats.implicits.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.numeric.PosInt
-import software.amazon.awssdk.services.sns.model.{ PublishRequest, PublishResponse }
+import software.amazon.awssdk.services.sns.model.{PublishRequest, PublishResponse}
 import fs2.Pipe
 import io.laserdisc.pure.sns.tagless.SnsAsyncClientOp
 
@@ -20,8 +20,8 @@ object sns {
   object SNS {
 
     def create[F[_]: Concurrent: Async](
-      sns: SnsAsyncClientOp[F],
-      settings: SnsSettings = SnsSettings()
+        sns: SnsAsyncClientOp[F],
+        settings: SnsSettings = SnsSettings()
     ): F[SNS[F]] =
       new SNS[F] {
         override def publish(topicArn: String): Pipe[F, MsgBody, PublishResponse] =

@@ -40,7 +40,8 @@ class NewKinesisConsumerSpec
   implicit override val patienceConfig: PatienceConfig =
     PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
 
-  "KinesisWorker source" should "successfully read data from the Kinesis stream" in new WorkerContext with TestData {
+  "KinesisWorker source" should "successfully read data from the Kinesis stream" in new WorkerContext
+    with TestData {
 
     val res = (
       stream.take(1).compile.toList,
@@ -59,7 +60,8 @@ class NewKinesisConsumerSpec
     commitableRecord.millisBehindLatest shouldBe recordsInput.build().millisBehindLatest()
   }
 
-  it should "Shutdown the worker if the stream is drained and has not failed" in new WorkerContext with TestData {
+  it should "Shutdown the worker if the stream is drained and has not failed" in new WorkerContext
+    with TestData {
     (
       stream.take(1).compile.toList.flatMap(l => IO.blocking(latch.countDown()) >> IO.pure(l)),
       IO.blocking {
@@ -72,7 +74,8 @@ class NewKinesisConsumerSpec
     verify(mockScheduler, times(1)).shutdown()
   }
 
-  it should "shutdown the worker if the stream terminates" in new WorkerContext(errorStream = true) with TestData {
+  it should "shutdown the worker if the stream terminates" in new WorkerContext(errorStream = true)
+    with TestData {
     intercept[Exception] {
       (
         stream.take(1).compile.toList.flatMap(l => IO.blocking(latch.countDown()) >> IO.pure(l)),
@@ -125,7 +128,7 @@ class NewKinesisConsumerSpec
   }
 
   it should "not drop messages in case of back-pressure with multiple shard workers" in new WorkerContext
-  with TestData {
+    with TestData {
 
     val res = (
       stream.take(10).compile.toList,
@@ -160,13 +163,14 @@ class NewKinesisConsumerSpec
     res should have size 10
   }
 
-  it should "delay the end of shard checkpoint until all messages are drained" in new WorkerContext with TestData {
+  it should "delay the end of shard checkpoint until all messages are drained" in new WorkerContext
+    with TestData {
     val nRecords = 5
 
     val res: Seq[KinesisClientRecord] = (
       stream
         .take(nRecords.toLong)
-        //emulate message processing latency to reproduce the situation when End of Shard arrives BEFORE
+        // emulate message processing latency to reproduce the situation when End of Shard arrives BEFORE
         // all in-flight records are done
         .parEvalMap(3)(msg => IO.sleep(200 millis) >> IO.pure(msg))
         .through(
@@ -189,7 +193,7 @@ class NewKinesisConsumerSpec
           )
         }
       } >> IO.blocking {
-        //Immediately publish end of shard event
+        // Immediately publish end of shard event
         recordProcessor.shardEnded(
           ShardEndedInput.builder().checkpointer(checkpointer).build()
         )
@@ -202,7 +206,7 @@ class NewKinesisConsumerSpec
   "KinesisWorker checkpoint pipe" should "checkpoint batch of records with same sequence number" in new WorkerContext() {
     val lastRecordSemaphore = new Semaphore(1)
 
-    val input = (1 to 3) map { i =>
+    val input = (1 to 3).map { i =>
       val record = mock(classOf[KinesisClientRecord])
       when(record.sequenceNumber()).thenReturn("1")
       when(record.subSequenceNumber()).thenReturn(i.toLong)
@@ -230,7 +234,7 @@ class NewKinesisConsumerSpec
 
     val lastRecordSemaphore = new Semaphore(1)
 
-    val input = (1L to 6L) map { i =>
+    val input = (1L to 6L).map { i =>
       if (i <= 3) {
         val record = mock(classOf[KinesisClientRecord])
         when(record.sequenceNumber()).thenReturn(i.toString)
@@ -274,7 +278,7 @@ class NewKinesisConsumerSpec
       ShardEndedInput.builder().checkpointer(checkpointerShard1).build()
     )
 
-    val input = (1 to 3) map { i =>
+    val input = (1 to 3).map { i =>
       val record = mock(classOf[KinesisClientRecord])
       when(record.sequenceNumber()).thenReturn("1")
       when(record.subSequenceNumber()).thenReturn(i.toLong)
@@ -316,12 +320,12 @@ class NewKinesisConsumerSpec
     when(checkpointer.checkpoint(record.sequenceNumber, record.subSequenceNumber))
       .thenThrow(failure)
 
-    the[RuntimeException] thrownBy fs2.Stream
+    (the[RuntimeException] thrownBy fs2.Stream
       .emits(Seq(input))
       .through(k.checkpointRecords(settings))
       .compile
       .toVector
-      .unsafeRunSync() should have message "you have no power here"
+      .unsafeRunSync() should have).message("you have no power here")
 
     eventually(
       verify(checkpointer)
@@ -336,17 +340,16 @@ class NewKinesisConsumerSpec
     val record = mock(classOf[KinesisClientRecord])
     when(record.sequenceNumber()).thenReturn("1")
 
-    val input = (1L to 100L).map(
-      idx =>
-        new CommittableRecord(
-          s"shard-1",
-          mock(classOf[ExtendedSequenceNumber]),
-          idx,
-          record,
-          chunkedRecordProcessor,
-          checkpointer,
-          lastRecordSemaphore
-        )
+    val input = (1L to 100L).map(idx =>
+      new CommittableRecord(
+        s"shard-1",
+        mock(classOf[ExtendedSequenceNumber]),
+        idx,
+        record,
+        chunkedRecordProcessor,
+        checkpointer,
+        lastRecordSemaphore
+      )
     )
 
     fs2.Stream
@@ -425,13 +428,12 @@ class NewKinesisConsumerSpec
       null
     }.when(checkpointer).checkpoint(any[String], any[Long])
 
-    val initializationInput = {
+    val initializationInput =
       InitializationInput
         .builder()
         .shardId("shardId")
         .extendedSequenceNumber(ExtendedSequenceNumber.AT_TIMESTAMP)
         .build()
-    }
 
     val record: KinesisClientRecord =
       KinesisClientRecord

@@ -22,8 +22,8 @@ object SQS {
   type MsgBody = String
 
   def create[F[_]: Async](
-    sqsConfig: SqsConfig,
-    sqs: SqsAsyncClientOp[F]
+      sqsConfig: SqsConfig,
+      sqs: SqsAsyncClientOp[F]
   ): F[SQS[F]] =
     new SQS[F] {
       override def sqsStream: fs2.Stream[F, Message] =

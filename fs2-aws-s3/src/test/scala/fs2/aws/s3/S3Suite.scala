@@ -92,8 +92,8 @@ class S3Suite extends IOSuite {
         val delete =
           s3.delete(bucket, fileKeyMix)
         val readNonExisting =
-          read.handleError {
-            case _: NoSuchKeyException => assert(true)
+          read.handleError { case _: NoSuchKeyException =>
+            assert(true)
           }
         upload >> read >> delete >> readNonExisting
       }

@@ -7,7 +7,10 @@ import fs2.aws.kinesis.{KinesisConsumerSettings, Polling}
 import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import software.amazon.awssdk.awscore.client.builder.AwsClientBuilder
 import software.amazon.awssdk.regions.Region
-import software.amazon.awssdk.services.cloudwatch.{CloudWatchAsyncClient, CloudWatchAsyncClientBuilder}
+import software.amazon.awssdk.services.cloudwatch.{
+  CloudWatchAsyncClient,
+  CloudWatchAsyncClientBuilder
+}
 import software.amazon.awssdk.services.dynamodb.{DynamoDbAsyncClient, DynamoDbAsyncClientBuilder}
 import software.amazon.awssdk.services.kinesis.{KinesisAsyncClient, KinesisAsyncClientBuilder}
 import software.amazon.kinesis.common.InitialPositionInStream
@@ -16,13 +19,13 @@ import java.net.URI
 import java.util.Date
 
 case class KinesisAppConfig(
-  awsHost: String,
-  awsPort: Long,
-  awsRegion: Region,
-  awsKeyId: String,
-  awsKey: String,
-  streamName: String,
-  appName: String
+    awsHost: String,
+    awsPort: Long,
+    awsRegion: Region,
+    awsKeyId: String,
+    awsKey: String,
+    streamName: String,
+    appName: String
 )
 
 object KinesisAppConfig {
@@ -45,7 +48,7 @@ object syntax {
       AwsBasicCredentials.create(kinesisAppConfig.awsKeyId, kinesisAppConfig.awsKey)
     )
     private def overwriteStuff[B <: AwsClientBuilder[B, C], C](
-      awsClientBuilder: AwsClientBuilder[B, C]
+        awsClientBuilder: AwsClientBuilder[B, C]
     ) =
       awsClientBuilder
         .credentialsProvider(cp)

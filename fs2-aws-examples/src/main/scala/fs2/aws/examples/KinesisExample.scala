@@ -6,12 +6,12 @@ import com.amazonaws.services.kinesis.producer.KinesisProducerConfiguration
 import fs2.Stream
 import fs2.aws.internal.KinesisProducerClientImpl
 import fs2.aws.kinesis.publisher.writeToKinesis
-import fs2.aws.kinesis.{ Kinesis, KinesisConsumerSettings }
+import fs2.aws.kinesis.{Kinesis, KinesisConsumerSettings}
 import io.laserdisc.pure.kinesis.tagless.KinesisAsyncClientOp
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClientBuilder
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClientBuilder
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClientBuilder
-import software.amazon.awssdk.services.kinesis.model.{ CreateStreamRequest, DeleteStreamRequest }
+import software.amazon.awssdk.services.kinesis.model.{CreateStreamRequest, DeleteStreamRequest}
 import fs2.aws.examples.syntax.*
 import cats.implicits.*
 import io.laserdisc.pure.cloudwatch.tagless.Interpreter as CloudwatchInterpreter
@@ -36,23 +36,23 @@ object KinesisExample extends IOApp {
     )
   }
   private def kAlgebraResource[F[_]: Async: Concurrent](
-    kac: KinesisAsyncClientBuilder,
-    dac: DynamoDbAsyncClientBuilder,
-    cac: CloudWatchAsyncClientBuilder,
-    streamName: String
+      kac: KinesisAsyncClientBuilder,
+      dac: DynamoDbAsyncClientBuilder,
+      cac: CloudWatchAsyncClientBuilder,
+      streamName: String
   ) =
     for {
-      k                  <- KinesisInterpreter[F].KinesisAsyncClientResource(kac)
-      d                  <- DynamoDbInterpreter[F].DynamoDbAsyncClientResource(dac)
-      c                  <- CloudwatchInterpreter[F].CloudWatchAsyncClientResource(cac)
+      k <- KinesisInterpreter[F].KinesisAsyncClientResource(kac)
+      d <- DynamoDbInterpreter[F].DynamoDbAsyncClientResource(dac)
+      c <- CloudwatchInterpreter[F].CloudWatchAsyncClientResource(cac)
       kinesisInterpreter = KinesisInterpreter[F].create(k)
-      _                  <- disposableStream(kinesisInterpreter, streamName)
+      _ <- disposableStream(kinesisInterpreter, streamName)
     } yield Kinesis.create[F](k, d, c)
 
   def program[F[_]: Async: Concurrent: Temporal: NonEmptyParallel](
-    kinesis: Kinesis[F],
-    consumerSettings: KinesisConsumerSettings,
-    producerConfiguration: KinesisProducerConfiguration
+      kinesis: Kinesis[F],
+      consumerSettings: KinesisConsumerSettings,
+      producerConfiguration: KinesisProducerConfiguration
   ): F[Unit] =
     (
       Stream
@@ -77,8 +77,8 @@ object KinesisExample extends IOApp {
     ).parMapN { case (_, _) => () }
 
   private def disposableStream[F[_]: Sync](
-    interpreter: KinesisAsyncClientOp[F],
-    streamName: String
+      interpreter: KinesisAsyncClientOp[F],
+      streamName: String
   ) =
     Resource.make(
       interpreter.createStream(

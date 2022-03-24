@@ -10,11 +10,11 @@ trait KinesisAsyncClientOp[F[_]] {
   def close: F[Unit]
   def createStream(a: CreateStreamRequest): F[CreateStreamResponse]
   def decreaseStreamRetentionPeriod(
-    a: DecreaseStreamRetentionPeriodRequest
+      a: DecreaseStreamRetentionPeriodRequest
   ): F[DecreaseStreamRetentionPeriodResponse]
   def deleteStream(a: DeleteStreamRequest): F[DeleteStreamResponse]
   def deregisterStreamConsumer(
-    a: DeregisterStreamConsumerRequest
+      a: DeregisterStreamConsumerRequest
   ): F[DeregisterStreamConsumerResponse]
   def describeLimits: F[DescribeLimitsResponse]
   def describeLimits(a: DescribeLimitsRequest): F[DescribeLimitsResponse]
@@ -22,15 +22,15 @@ trait KinesisAsyncClientOp[F[_]] {
   def describeStreamConsumer(a: DescribeStreamConsumerRequest): F[DescribeStreamConsumerResponse]
   def describeStreamSummary(a: DescribeStreamSummaryRequest): F[DescribeStreamSummaryResponse]
   def disableEnhancedMonitoring(
-    a: DisableEnhancedMonitoringRequest
+      a: DisableEnhancedMonitoringRequest
   ): F[DisableEnhancedMonitoringResponse]
   def enableEnhancedMonitoring(
-    a: EnableEnhancedMonitoringRequest
+      a: EnableEnhancedMonitoringRequest
   ): F[EnableEnhancedMonitoringResponse]
   def getRecords(a: GetRecordsRequest): F[GetRecordsResponse]
   def getShardIterator(a: GetShardIteratorRequest): F[GetShardIteratorResponse]
   def increaseStreamRetentionPeriod(
-    a: IncreaseStreamRetentionPeriodRequest
+      a: IncreaseStreamRetentionPeriodRequest
   ): F[IncreaseStreamRetentionPeriodResponse]
   def listShards(a: ListShardsRequest): F[ListShardsResponse]
   def listStreamConsumers(a: ListStreamConsumersRequest): F[ListStreamConsumersResponse]

@@ -17,13 +17,13 @@ import scala.jdk.CollectionConverters.*
   *  @param cb callback function to run on record receive, passing the new CommittableRecord
   */
 class RecordProcessor(
-  cb: CommittableRecord => Unit
+    cb: CommittableRecord => Unit
 ) extends v2.IRecordProcessor {
-  private var shardId: String                                  = _
-  private var extendedSequenceNumber: ExtendedSequenceNumber   = _
+  private var shardId: String = _
+  private var extendedSequenceNumber: ExtendedSequenceNumber = _
   var latestCheckpointer: Option[IRecordProcessorCheckpointer] = None
-  var shutdown: Option[ShutdownReason]                         = None
-  private[aws] val inFlightRecordsPhaser                       = new Phaser(1)
+  var shutdown: Option[ShutdownReason] = None
+  private[aws] val inFlightRecordsPhaser = new Phaser(1)
 
   def isShutdown = shutdown.isDefined
 

@@ -36,31 +36,29 @@ class SnsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
 
   override def beforeAll(): Unit =
     awsClientsResource
-      .use {
-        case (sns, sqs) =>
-          for {
-            topic <- sns
-              .createTopic(CreateTopicRequest.builder().name("topic").build())
-              .map(_.topicArn())
+      .use { case (sns, sqs) =>
+        for {
+          topic <- sns
+            .createTopic(CreateTopicRequest.builder().name("topic").build())
+            .map(_.topicArn())
 
-            queueUrlV <- sqs
-              .createQueue(CreateQueueRequest.builder().queueName("names").build())
-              .map(_.queueUrl())
-          } yield {
-            topicArn = topic
-            queueUrl = queueUrlV
-          }
+          queueUrlV <- sqs
+            .createQueue(CreateQueueRequest.builder().queueName("names").build())
+            .map(_.queueUrl())
+        } yield {
+          topicArn = topic
+          queueUrl = queueUrlV
+        }
       }
       .unsafeRunSync()
 
   override def afterAll(): Unit =
     awsClientsResource
-      .use {
-        case (sns, sqs) =>
-          for {
-            _ <- sns.deleteTopic(DeleteTopicRequest.builder().topicArn(topicArn).build())
-            _ <- sqs.deleteQueue(DeleteQueueRequest.builder().queueUrl(queueUrl).build())
-          } yield {}
+      .use { case (sns, sqs) =>
+        for {
+          _ <- sns.deleteTopic(DeleteTopicRequest.builder().topicArn(topicArn).build())
+          _ <- sqs.deleteQueue(DeleteQueueRequest.builder().queueUrl(queueUrl).build())
+        } yield {}
       }
       .unsafeRunSync()
 
@@ -68,54 +66,51 @@ class SnsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
     "publish messages" in {
       val messages =
         awsClientsResource
-          .use {
-            case (sns, sqs) =>
-              (for {
-                sns_ <- fs2.Stream.eval(SNS.create[IO](sns))
-                sqsArn <- fs2.Stream.eval(
+          .use { case (sns, sqs) =>
+            (for {
+              sns_ <- fs2.Stream.eval(SNS.create[IO](sns))
+              sqsArn <- fs2.Stream.eval(
+                sqs
+                  .getQueueAttributes(
+                    GetQueueAttributesRequest
+                      .builder()
+                      .queueUrl(queueUrl)
+                      .attributeNames(QueueAttributeName.QUEUE_ARN)
+                      .build()
+                  )
+              )
+
+              _ <- fs2.Stream.eval(
+                sns.subscribe(
+                  SubscribeRequest
+                    .builder()
+                    .protocol("sqs")
+                    .endpoint(sqsArn.attributes().get(QueueAttributeName.QUEUE_ARN))
+                    .topicArn(topicArn)
+                    .build()
+                )
+              )
+              _ <- fs2
+                .Stream("1", "2", "3", "4", "5")
+                .covary[IO]
+                .through(sns_.publish(topicArn))
+
+              sqsMessages <- fs2.Stream
+                .eval(
                   sqs
-                    .getQueueAttributes(
-                      GetQueueAttributesRequest
+                    .receiveMessage(
+                      ReceiveMessageRequest
                         .builder()
                         .queueUrl(queueUrl)
-                        .attributeNames(QueueAttributeName.QUEUE_ARN)
                         .build()
                     )
                 )
-
-                _ <- fs2.Stream.eval(
-                  sns.subscribe(
-                    SubscribeRequest
-                      .builder()
-                      .protocol("sqs")
-                      .endpoint(sqsArn.attributes().get(QueueAttributeName.QUEUE_ARN))
-                      .topicArn(topicArn)
-                      .build()
-                  )
-                )
-                _ <- fs2
-                  .Stream("1", "2", "3", "4", "5")
-                  .covary[IO]
-                  .through(sns_.publish(topicArn))
-
-                sqsMessages <- fs2.Stream
-                  .eval(
-                    sqs
-                      .receiveMessage(
-                        ReceiveMessageRequest
-                          .builder()
-                          .queueUrl(queueUrl)
-                          .build()
-                      )
-                  )
-                  .delayBy(3.seconds)
-              } yield {
-                sqsMessages
-                  .messages()
-                  .asScala
-                  .map(x => pattern.findAllIn(x.body()).mkString(","))
-                  .map(x => new Regex("\\d").findAllIn(x).mkString(","))
-              }).take(5).compile.toList
+                .delayBy(3.seconds)
+            } yield sqsMessages
+              .messages()
+              .asScala
+              .map(x => pattern.findAllIn(x.body()).mkString(","))
+              .map(x => new Regex("\\d").findAllIn(x).mkString(","))).take(5).compile.toList
           }
           .unsafeRunSync()
 

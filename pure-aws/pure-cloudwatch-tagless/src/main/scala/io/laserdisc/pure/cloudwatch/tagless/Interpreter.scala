@@ -2,7 +2,7 @@ package io.laserdisc.pure.cloudwatch.tagless
 
 // Library imports
 import cats.data.Kleisli
-import cats.effect.{ Async, Resource }
+import cats.effect.{Async, Resource}
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClientBuilder
 
 import java.util.concurrent.CompletionException
@@ -15,8 +15,8 @@ import java.util.concurrent.CompletableFuture
 
 object Interpreter {
 
-  def apply[M[_]](
-    implicit am: Async[M]
+  def apply[M[_]](implicit
+      am: Async[M]
   ): Interpreter[M] =
     new Interpreter[M] {
       val asyncM = am
@@ -34,7 +34,7 @@ trait Interpreter[M[_]] { outer =>
   // Some methods are common to all interpreters and can be overridden to change behavior globally.
 
   def primitive[J, A](f: J => A): Kleisli[M, J, A] = Kleisli(a => asyncM.blocking(f(a)))
-  def primitive1[J, A](f: =>A): M[A]               = asyncM.blocking(f)
+  def primitive1[J, A](f: => A): M[A] = asyncM.blocking(f)
 
   def eff[J, A](fut: J => CompletableFuture[A]): Kleisli[M, J, A] = Kleisli { a =>
     asyncM.async_ { cb =>
@@ -51,7 +51,7 @@ trait Interpreter[M[_]] { outer =>
     }
   }
 
-  def eff1[J, A](fut: =>CompletableFuture[A]): M[A] =
+  def eff1[J, A](fut: => CompletableFuture[A]): M[A] =
     asyncM.async_ { cb =>
       fut.handle[Unit] { (a, x) =>
         if (a == null)
@@ -70,20 +70,20 @@ trait Interpreter[M[_]] { outer =>
       extends CloudWatchAsyncClientOp[Kleisli[M, CloudWatchAsyncClient, *]] {
 
     // domain-specific operations are implemented in terms of `primitive`
-    override def close                                = primitive(_.close)
+    override def close = primitive(_.close)
     override def deleteAlarms(a: DeleteAlarmsRequest) = eff(_.deleteAlarms(a))
     override def deleteAnomalyDetector(a: DeleteAnomalyDetectorRequest) =
       eff(_.deleteAnomalyDetector(a))
-    override def deleteDashboards(a: DeleteDashboardsRequest)     = eff(_.deleteDashboards(a))
+    override def deleteDashboards(a: DeleteDashboardsRequest) = eff(_.deleteDashboards(a))
     override def deleteInsightRules(a: DeleteInsightRulesRequest) = eff(_.deleteInsightRules(a))
     override def deleteMetricStream(a: DeleteMetricStreamRequest) = eff(_.deleteMetricStream(a))
-    override def describeAlarmHistory                             = eff(_.describeAlarmHistory)
+    override def describeAlarmHistory = eff(_.describeAlarmHistory)
     override def describeAlarmHistory(a: DescribeAlarmHistoryRequest) =
       eff(_.describeAlarmHistory(a))
     override def describeAlarmHistoryPaginator = primitive(_.describeAlarmHistoryPaginator)
     override def describeAlarmHistoryPaginator(a: DescribeAlarmHistoryRequest) =
       primitive(_.describeAlarmHistoryPaginator(a))
-    override def describeAlarms                           = eff(_.describeAlarms)
+    override def describeAlarms = eff(_.describeAlarms)
     override def describeAlarms(a: DescribeAlarmsRequest) = eff(_.describeAlarms(a))
     override def describeAlarmsForMetric(a: DescribeAlarmsForMetricRequest) =
       eff(_.describeAlarmsForMetric(a))
@@ -98,49 +98,49 @@ trait Interpreter[M[_]] { outer =>
       primitive(_.describeInsightRulesPaginator(a))
     override def disableAlarmActions(a: DisableAlarmActionsRequest) = eff(_.disableAlarmActions(a))
     override def disableInsightRules(a: DisableInsightRulesRequest) = eff(_.disableInsightRules(a))
-    override def enableAlarmActions(a: EnableAlarmActionsRequest)   = eff(_.enableAlarmActions(a))
-    override def enableInsightRules(a: EnableInsightRulesRequest)   = eff(_.enableInsightRules(a))
-    override def getDashboard(a: GetDashboardRequest)               = eff(_.getDashboard(a))
+    override def enableAlarmActions(a: EnableAlarmActionsRequest) = eff(_.enableAlarmActions(a))
+    override def enableInsightRules(a: EnableInsightRulesRequest) = eff(_.enableInsightRules(a))
+    override def getDashboard(a: GetDashboardRequest) = eff(_.getDashboard(a))
     override def getInsightRuleReport(a: GetInsightRuleReportRequest) =
       eff(_.getInsightRuleReport(a))
     override def getMetricData(a: GetMetricDataRequest) = eff(_.getMetricData(a))
     override def getMetricDataPaginator(a: GetMetricDataRequest) =
       primitive(_.getMetricDataPaginator(a))
     override def getMetricStatistics(a: GetMetricStatisticsRequest) = eff(_.getMetricStatistics(a))
-    override def getMetricStream(a: GetMetricStreamRequest)         = eff(_.getMetricStream(a))
+    override def getMetricStream(a: GetMetricStreamRequest) = eff(_.getMetricStream(a))
     override def getMetricWidgetImage(a: GetMetricWidgetImageRequest) =
       eff(_.getMetricWidgetImage(a))
-    override def listDashboards                           = eff(_.listDashboards)
+    override def listDashboards = eff(_.listDashboards)
     override def listDashboards(a: ListDashboardsRequest) = eff(_.listDashboards(a))
-    override def listDashboardsPaginator                  = primitive(_.listDashboardsPaginator)
+    override def listDashboardsPaginator = primitive(_.listDashboardsPaginator)
     override def listDashboardsPaginator(a: ListDashboardsRequest) =
       primitive(_.listDashboardsPaginator(a))
     override def listMetricStreams(a: ListMetricStreamsRequest) = eff(_.listMetricStreams(a))
     override def listMetricStreamsPaginator(a: ListMetricStreamsRequest) =
       primitive(_.listMetricStreamsPaginator(a))
-    override def listMetrics                                        = eff(_.listMetrics)
-    override def listMetrics(a: ListMetricsRequest)                 = eff(_.listMetrics(a))
-    override def listMetricsPaginator                               = primitive(_.listMetricsPaginator)
-    override def listMetricsPaginator(a: ListMetricsRequest)        = primitive(_.listMetricsPaginator(a))
+    override def listMetrics = eff(_.listMetrics)
+    override def listMetrics(a: ListMetricsRequest) = eff(_.listMetrics(a))
+    override def listMetricsPaginator = primitive(_.listMetricsPaginator)
+    override def listMetricsPaginator(a: ListMetricsRequest) = primitive(_.listMetricsPaginator(a))
     override def listTagsForResource(a: ListTagsForResourceRequest) = eff(_.listTagsForResource(a))
-    override def putAnomalyDetector(a: PutAnomalyDetectorRequest)   = eff(_.putAnomalyDetector(a))
-    override def putCompositeAlarm(a: PutCompositeAlarmRequest)     = eff(_.putCompositeAlarm(a))
-    override def putDashboard(a: PutDashboardRequest)               = eff(_.putDashboard(a))
-    override def putInsightRule(a: PutInsightRuleRequest)           = eff(_.putInsightRule(a))
-    override def putMetricAlarm(a: PutMetricAlarmRequest)           = eff(_.putMetricAlarm(a))
-    override def putMetricData(a: PutMetricDataRequest)             = eff(_.putMetricData(a))
-    override def putMetricStream(a: PutMetricStreamRequest)         = eff(_.putMetricStream(a))
-    override def serviceName                                        = primitive(_.serviceName)
-    override def setAlarmState(a: SetAlarmStateRequest)             = eff(_.setAlarmState(a))
-    override def startMetricStreams(a: StartMetricStreamsRequest)   = eff(_.startMetricStreams(a))
-    override def stopMetricStreams(a: StopMetricStreamsRequest)     = eff(_.stopMetricStreams(a))
-    override def tagResource(a: TagResourceRequest)                 = eff(_.tagResource(a))
-    override def untagResource(a: UntagResourceRequest)             = eff(_.untagResource(a))
-    override def waiter                                             = primitive(_.waiter)
+    override def putAnomalyDetector(a: PutAnomalyDetectorRequest) = eff(_.putAnomalyDetector(a))
+    override def putCompositeAlarm(a: PutCompositeAlarmRequest) = eff(_.putCompositeAlarm(a))
+    override def putDashboard(a: PutDashboardRequest) = eff(_.putDashboard(a))
+    override def putInsightRule(a: PutInsightRuleRequest) = eff(_.putInsightRule(a))
+    override def putMetricAlarm(a: PutMetricAlarmRequest) = eff(_.putMetricAlarm(a))
+    override def putMetricData(a: PutMetricDataRequest) = eff(_.putMetricData(a))
+    override def putMetricStream(a: PutMetricStreamRequest) = eff(_.putMetricStream(a))
+    override def serviceName = primitive(_.serviceName)
+    override def setAlarmState(a: SetAlarmStateRequest) = eff(_.setAlarmState(a))
+    override def startMetricStreams(a: StartMetricStreamsRequest) = eff(_.startMetricStreams(a))
+    override def stopMetricStreams(a: StopMetricStreamsRequest) = eff(_.stopMetricStreams(a))
+    override def tagResource(a: TagResourceRequest) = eff(_.tagResource(a))
+    override def untagResource(a: UntagResourceRequest) = eff(_.untagResource(a))
+    override def waiter = primitive(_.waiter)
 
     def lens[E](f: E => CloudWatchAsyncClient): CloudWatchAsyncClientOp[Kleisli[M, E, *]] =
       new CloudWatchAsyncClientOp[Kleisli[M, E, *]] {
-        override def close                                = Kleisli(e => primitive1(f(e).close))
+        override def close = Kleisli(e => primitive1(f(e).close))
         override def deleteAlarms(a: DeleteAlarmsRequest) = Kleisli(e => eff1(f(e).deleteAlarms(a)))
         override def deleteAnomalyDetector(a: DeleteAnomalyDetectorRequest) =
           Kleisli(e => eff1(f(e).deleteAnomalyDetector(a)))
@@ -204,9 +204,9 @@ trait Interpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).listMetricStreams(a)))
         override def listMetricStreamsPaginator(a: ListMetricStreamsRequest) =
           Kleisli(e => primitive1(f(e).listMetricStreamsPaginator(a)))
-        override def listMetrics                        = Kleisli(e => eff1(f(e).listMetrics))
+        override def listMetrics = Kleisli(e => eff1(f(e).listMetrics))
         override def listMetrics(a: ListMetricsRequest) = Kleisli(e => eff1(f(e).listMetrics(a)))
-        override def listMetricsPaginator               = Kleisli(e => primitive1(f(e).listMetricsPaginator))
+        override def listMetricsPaginator = Kleisli(e => primitive1(f(e).listMetricsPaginator))
         override def listMetricsPaginator(a: ListMetricsRequest) =
           Kleisli(e => primitive1(f(e).listMetricsPaginator(a)))
         override def listTagsForResource(a: ListTagsForResourceRequest) =
@@ -239,7 +239,7 @@ trait Interpreter[M[_]] { outer =>
   }
 
   def CloudWatchAsyncClientResource(
-    builder: CloudWatchAsyncClientBuilder
+      builder: CloudWatchAsyncClientBuilder
   ): Resource[M, CloudWatchAsyncClient] =
     Resource.fromAutoCloseable(asyncM.delay(builder.build()))
 
@@ -250,7 +250,7 @@ trait Interpreter[M[_]] { outer =>
     new CloudWatchAsyncClientOp[M] {
 
       // domain-specific operations are implemented in terms of `primitive`
-      override def close                                = primitive1(client.close)
+      override def close = primitive1(client.close)
       override def deleteAlarms(a: DeleteAlarmsRequest) = eff1(client.deleteAlarms(a))
       override def deleteAnomalyDetector(a: DeleteAnomalyDetectorRequest) =
         eff1(client.deleteAnomalyDetector(a))
@@ -265,7 +265,7 @@ trait Interpreter[M[_]] { outer =>
       override def describeAlarmHistoryPaginator = primitive1(client.describeAlarmHistoryPaginator)
       override def describeAlarmHistoryPaginator(a: DescribeAlarmHistoryRequest) =
         primitive1(client.describeAlarmHistoryPaginator(a))
-      override def describeAlarms                           = eff1(client.describeAlarms)
+      override def describeAlarms = eff1(client.describeAlarms)
       override def describeAlarms(a: DescribeAlarmsRequest) = eff1(client.describeAlarms(a))
       override def describeAlarmsForMetric(a: DescribeAlarmsForMetricRequest) =
         eff1(client.describeAlarmsForMetric(a))
@@ -297,18 +297,18 @@ trait Interpreter[M[_]] { outer =>
       override def getMetricStream(a: GetMetricStreamRequest) = eff1(client.getMetricStream(a))
       override def getMetricWidgetImage(a: GetMetricWidgetImageRequest) =
         eff1(client.getMetricWidgetImage(a))
-      override def listDashboards                           = eff1(client.listDashboards)
+      override def listDashboards = eff1(client.listDashboards)
       override def listDashboards(a: ListDashboardsRequest) = eff1(client.listDashboards(a))
-      override def listDashboardsPaginator                  = primitive1(client.listDashboardsPaginator)
+      override def listDashboardsPaginator = primitive1(client.listDashboardsPaginator)
       override def listDashboardsPaginator(a: ListDashboardsRequest) =
         primitive1(client.listDashboardsPaginator(a))
       override def listMetricStreams(a: ListMetricStreamsRequest) =
         eff1(client.listMetricStreams(a))
       override def listMetricStreamsPaginator(a: ListMetricStreamsRequest) =
         primitive1(client.listMetricStreamsPaginator(a))
-      override def listMetrics                        = eff1(client.listMetrics)
+      override def listMetrics = eff1(client.listMetrics)
       override def listMetrics(a: ListMetricsRequest) = eff1(client.listMetrics(a))
-      override def listMetricsPaginator               = primitive1(client.listMetricsPaginator)
+      override def listMetricsPaginator = primitive1(client.listMetricsPaginator)
       override def listMetricsPaginator(a: ListMetricsRequest) =
         primitive1(client.listMetricsPaginator(a))
       override def listTagsForResource(a: ListTagsForResourceRequest) =
@@ -317,20 +317,20 @@ trait Interpreter[M[_]] { outer =>
         eff1(client.putAnomalyDetector(a))
       override def putCompositeAlarm(a: PutCompositeAlarmRequest) =
         eff1(client.putCompositeAlarm(a))
-      override def putDashboard(a: PutDashboardRequest)       = eff1(client.putDashboard(a))
-      override def putInsightRule(a: PutInsightRuleRequest)   = eff1(client.putInsightRule(a))
-      override def putMetricAlarm(a: PutMetricAlarmRequest)   = eff1(client.putMetricAlarm(a))
-      override def putMetricData(a: PutMetricDataRequest)     = eff1(client.putMetricData(a))
+      override def putDashboard(a: PutDashboardRequest) = eff1(client.putDashboard(a))
+      override def putInsightRule(a: PutInsightRuleRequest) = eff1(client.putInsightRule(a))
+      override def putMetricAlarm(a: PutMetricAlarmRequest) = eff1(client.putMetricAlarm(a))
+      override def putMetricData(a: PutMetricDataRequest) = eff1(client.putMetricData(a))
       override def putMetricStream(a: PutMetricStreamRequest) = eff1(client.putMetricStream(a))
-      override def serviceName                                = primitive1(client.serviceName)
-      override def setAlarmState(a: SetAlarmStateRequest)     = eff1(client.setAlarmState(a))
+      override def serviceName = primitive1(client.serviceName)
+      override def setAlarmState(a: SetAlarmStateRequest) = eff1(client.setAlarmState(a))
       override def startMetricStreams(a: StartMetricStreamsRequest) =
         eff1(client.startMetricStreams(a))
       override def stopMetricStreams(a: StopMetricStreamsRequest) =
         eff1(client.stopMetricStreams(a))
-      override def tagResource(a: TagResourceRequest)     = eff1(client.tagResource(a))
+      override def tagResource(a: TagResourceRequest) = eff1(client.tagResource(a))
       override def untagResource(a: UntagResourceRequest) = eff1(client.untagResource(a))
-      override def waiter                                 = primitive1(client.waiter)
+      override def waiter = primitive1(client.waiter)
 
     }
 

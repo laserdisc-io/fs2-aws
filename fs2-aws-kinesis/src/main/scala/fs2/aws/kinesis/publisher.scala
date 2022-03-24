@@ -2,37 +2,34 @@ package fs2.aws.kinesis
 
 import java.nio.ByteBuffer
 
-import cats.effect.{ Async, Sync }
+import cats.effect.{Async, Sync}
 import com.amazonaws.services.kinesis.producer.UserRecordResult
-import com.google.common.util.concurrent.{ FutureCallback, Futures, ListenableFuture }
+import com.google.common.util.concurrent.{FutureCallback, Futures, ListenableFuture}
 import fs2.aws.internal.*
-import fs2.{ Pipe, Stream }
+import fs2.{Pipe, Stream}
 import cats.implicits.*
 
 import scala.concurrent.ExecutionContext
 
-/**
-  * fs2 Streams for publishing data to AWS Kinesis streams
+/** fs2 Streams for publishing data to AWS Kinesis streams
   */
 object publisher {
 
   def write[F[_]: Sync](
-    streamName: String,
-    producer: KinesisProducerClient[F]
+      streamName: String,
+      producer: KinesisProducerClient[F]
   ): Pipe[F, (String, ByteBuffer), ListenableFuture[UserRecordResult]] =
-    _.flatMap {
-      case (partitionKey, byteArray) =>
-        Stream.eval(producer.putData(streamName, partitionKey, byteArray))
+    _.flatMap { case (partitionKey, byteArray) =>
+      Stream.eval(producer.putData(streamName, partitionKey, byteArray))
     }
 
   def writeObjectAndBypass[F[_]: Sync, I](
-    streamName: String,
-    producer: KinesisProducerClient[F],
-    encoder: I => ByteBuffer
+      streamName: String,
+      producer: KinesisProducerClient[F],
+      encoder: I => ByteBuffer
   ): Pipe[F, (String, I), (I, ListenableFuture[UserRecordResult])] =
-    _.evalMap {
-      case (partitionKey, entity) =>
-        producer.putData(streamName, partitionKey, encoder(entity)).map(entity -> _)
+    _.evalMap { case (partitionKey, entity) =>
+      producer.putData(streamName, partitionKey, encoder(entity)).map(entity -> _)
     }
 
   // Register the returned future, returning the UserRecordResult
@@ -46,9 +43,9 @@ object publisher {
     * @return a Pipe that accepts a tuple consisting of the partition key string and a ByteBuffer of data  and returns UserRecordResults
     */
   def writeToKinesis[F[_]: Async](
-    streamName: String,
-    parallelism: Int = 10,
-    producer: KinesisProducerClient[F] = new KinesisProducerClientImpl[F]
+      streamName: String,
+      parallelism: Int = 10,
+      producer: KinesisProducerClient[F] = new KinesisProducerClientImpl[F]
   )(implicit ec: ExecutionContext): Pipe[F, (String, ByteBuffer), UserRecordResult] = {
 
     // Evaluate the operation of invoking the Kinesis client
@@ -82,9 +79,9 @@ object publisher {
     *         for it to publish next message
     */
   def writeAndForgetToKinesis[F[_]: Sync](
-    streamName: String,
-    parallelism: Int = 10,
-    producer: KinesisProducerClient[F] = new KinesisProducerClientImpl[F]
+      streamName: String,
+      parallelism: Int = 10,
+      producer: KinesisProducerClient[F] = new KinesisProducerClientImpl[F]
   ): Pipe[F, (String, ByteBuffer), Unit] =
     _.through(write(streamName, producer)).void
 
@@ -99,18 +96,17 @@ object publisher {
     * @return a Pipe that accepts a tuple consisting of the partition key string and a ByteBuffer of data  and returns UserRecordResults
     */
   def writeObjectToKinesis[F[_]: Async, I](
-    streamName: String,
-    parallelism: Int = 10,
-    producer: KinesisProducerClient[F] = new KinesisProducerClientImpl[F]
-  )(
-    implicit ec: ExecutionContext,
-    encoder: I => ByteBuffer
+      streamName: String,
+      parallelism: Int = 10,
+      producer: KinesisProducerClient[F] = new KinesisProducerClientImpl[F]
+  )(implicit
+      ec: ExecutionContext,
+      encoder: I => ByteBuffer
   ): Pipe[F, (String, I), (I, UserRecordResult)] =
-    _.flatMap {
-      case (key, i) =>
-        Stream((key, encoder(i)))
-          .through(writeToKinesis(streamName, parallelism, producer))
-          .map(i -> _)
+    _.flatMap { case (key, i) =>
+      Stream((key, encoder(i)))
+        .through(writeToKinesis(streamName, parallelism, producer))
+        .map(i -> _)
     }
 
   /** Writes the (partitionKey, payload) to a Kinesis stream via a Pipe
@@ -124,11 +120,11 @@ object publisher {
     * @return a Pipe that accepts a tuple consisting of the partition key string and an entity and returns original entity
     */
   def writeAndForgetObjectToKinesis[F[_]: Sync, I](
-    streamName: String,
-    parallelism: Int = 10,
-    producer: KinesisProducerClient[F] = new KinesisProducerClientImpl[F]
-  )(
-    implicit encoder: I => ByteBuffer
+      streamName: String,
+      parallelism: Int = 10,
+      producer: KinesisProducerClient[F] = new KinesisProducerClientImpl[F]
+  )(implicit
+      encoder: I => ByteBuffer
   ): Pipe[F, (String, I), I] =
     _.through(writeObjectAndBypass(streamName, producer, encoder)).map { case (evt, _) => evt }
 
@@ -141,9 +137,9 @@ object publisher {
     * @return a Sink that accepts a stream of bytes
     */
   def writeToKinesis_[F[_]: Async](
-    streamName: String,
-    parallelism: Int = 10,
-    producer: KinesisProducerClient[F] = new KinesisProducerClientImpl[F]
+      streamName: String,
+      parallelism: Int = 10,
+      producer: KinesisProducerClient[F] = new KinesisProducerClientImpl[F]
   )(implicit ec: ExecutionContext): Pipe[F, (String, ByteBuffer), Unit] =
     _.through(writeToKinesis(streamName, parallelism, producer)).void
 }

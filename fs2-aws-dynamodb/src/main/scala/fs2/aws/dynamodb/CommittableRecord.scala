@@ -17,13 +17,13 @@ import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorC
   *  @param checkpointer reference to the checkpointer used to commit this record
   */
 case class CommittableRecord(
-  shardId: String,
-  recordProcessorStartingSequenceNumber: ExtendedSequenceNumber,
-  millisBehindLatest: Long,
-  record: RecordAdapter,
-  recordProcessor: RecordProcessor,
-  checkpointer: IRecordProcessorCheckpointer,
-  inFlightRecordsPhaser: Phaser
+    shardId: String,
+    recordProcessorStartingSequenceNumber: ExtendedSequenceNumber,
+    millisBehindLatest: Long,
+    record: RecordAdapter,
+    recordProcessor: RecordProcessor,
+    checkpointer: IRecordProcessorCheckpointer,
+    inFlightRecordsPhaser: Phaser
 ) {
   val sequenceNumber: String = record.getSequenceNumber
 

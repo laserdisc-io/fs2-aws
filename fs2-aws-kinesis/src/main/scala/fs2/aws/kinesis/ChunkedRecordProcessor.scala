@@ -22,10 +22,10 @@ import scala.jdk.CollectionConverters.*
   */
 private[aws] class ChunkedRecordProcessor(cb: Chunk[CommittableRecord] => Unit)
     extends ShardRecordProcessor {
-  private[kinesis] var shardId: String                                = _
+  private[kinesis] var shardId: String = _
   private[kinesis] var extendedSequenceNumber: ExtendedSequenceNumber = _
-  private[kinesis] var isShutdown: Boolean                            = false
-  private[aws] val lastRecordSemaphore                                = new Semaphore(1)
+  private[kinesis] var isShutdown: Boolean = false
+  private[aws] val lastRecordSemaphore = new Semaphore(1)
 
   override def initialize(initializationInput: InitializationInput): Unit = {
     shardId = initializationInput.shardId()
@@ -69,6 +69,6 @@ private[aws] class ChunkedRecordProcessor(cb: Chunk[CommittableRecord] => Unit)
           case _            => Nil
         }
       else batch
-    cb(Chunk(chunk *))
+    cb(Chunk(chunk*))
   }
 }

@@ -1,4 +1,10 @@
-import TaglessGen.{taglessAwsService, taglessGenClasses, taglessGenDir, taglessGenPackage, taglessGenSettings}
+import TaglessGen.{
+  taglessAwsService,
+  taglessGenClasses,
+  taglessGenDir,
+  taglessGenPackage,
+  taglessGenSettings
+}
 import sbt.Keys.scalaSource
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
 import software.amazon.awssdk.services.s3.S3AsyncClient
@@ -460,22 +466,21 @@ lazy val commonSettings = Def.settings(
   //  addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
   libraryDependencies += "org.scala-lang.modules" %% "scala-collection-compat" % "2.6.0",
   libraryDependencies ++= Seq(
-    compilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full),
+    compilerPlugin(("org.typelevel" %% "kind-projector" % "0.13.2").cross(CrossVersion.full)),
     compilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1")
   ).filterNot(_ => scalaVersion.value.startsWith("3.")),
   Seq(Compile, Test).map { config =>
     (config / unmanagedSourceDirectories) ++= {
-      (config / unmanagedSourceDirectories).value.flatMap {
-        dir: File =>
-          if (dir.getName != "scala") Seq(dir)
-          else
-            CrossVersion.partialVersion(scalaVersion.value) match {
-              case Some((2, 12)) => Seq(file(dir.getPath + "-3.0-"))
-              case Some((2, 13)) => Seq(file(dir.getPath + "-3.0-"))
-              case Some((0, _))  => Seq(file(dir.getPath + "-3.0+"))
-              case Some((3, _))  => Seq(file(dir.getPath + "-3.0+"))
-              case other         => sys.error(s"unmanagedSourceDirectories for scalaVersion $other not set")
-            }
+      (config / unmanagedSourceDirectories).value.flatMap { dir: File =>
+        if (dir.getName != "scala") Seq(dir)
+        else
+          CrossVersion.partialVersion(scalaVersion.value) match {
+            case Some((2, 12)) => Seq(file(dir.getPath + "-3.0-"))
+            case Some((2, 13)) => Seq(file(dir.getPath + "-3.0-"))
+            case Some((0, _))  => Seq(file(dir.getPath + "-3.0+"))
+            case Some((3, _))  => Seq(file(dir.getPath + "-3.0+"))
+            case other => sys.error(s"unmanagedSourceDirectories for scalaVersion $other not set")
+          }
       }
     }
   }

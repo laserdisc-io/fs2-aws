@@ -5,10 +5,10 @@ import cats.implicits._
 import cats.~>
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
-import fs2.aws.s3.models.{ ETag, PartSizeMB }
-import fs2.{ Chunk, Pipe, Pull }
+import fs2.aws.s3.models.{ETag, PartSizeMB}
+import fs2.{Chunk, Pipe, Pull}
 import io.laserdisc.pure.s3.tagless.S3AsyncClientOp
-import software.amazon.awssdk.core.async.{ AsyncRequestBody, AsyncResponseTransformer }
+import software.amazon.awssdk.core.async.{AsyncRequestBody, AsyncResponseTransformer}
 import software.amazon.awssdk.services.s3.model._
 
 import java.nio.ByteBuffer
@@ -25,26 +25,25 @@ package object s3 {
     def uploadFile(bucket: BucketName, key: FileKey): Pipe[F, Byte, ETag]
 
     def uploadFileMultipart(
-      bucket: BucketName,
-      key: FileKey,
-      partSize: PartSizeMB
+        bucket: BucketName,
+        key: FileKey,
+        partSize: PartSizeMB
     ): Pipe[F, Byte, ETag]
     def readFile(bucket: BucketName, key: FileKey): fs2.Stream[F, Byte]
 
     def readFileMultipart(
-      bucket: BucketName,
-      key: FileKey,
-      partSize: PartSizeMB
+        bucket: BucketName,
+        key: FileKey,
+        partSize: PartSizeMB
     ): fs2.Stream[F, Byte]
   }
 
   object S3 {
     type PartETag = String
-    type PartId   = Int
+    type PartId = Int
     type UploadId = String
 
-    /**
-      * It creates an instance of the purely functional S3 API.
+    /** It creates an instance of the purely functional S3 API.
       *
       * Example:
       *
@@ -61,40 +60,34 @@ package object s3 {
     def create[F[_]: Async](s3: S3AsyncClientOp[F]): F[S3[F]] =
       new S3[F] {
 
-        /**
-          * Deletes a file in a single request.
+        /** Deletes a file in a single request.
           */
         def delete(bucket: BucketName, key: FileKey): F[Unit] =
           s3.deleteObject(
-              DeleteObjectRequest
-                .builder()
-                .bucket(bucket.value)
-                .key(key.value)
-                .build()
-            )
-            .void
+            DeleteObjectRequest
+              .builder()
+              .bucket(bucket.value)
+              .key(key.value)
+              .build()
+          ).void
 
-        /**
-          * Uploads a file in a single request. Suitable for small files.
+        /** Uploads a file in a single request. Suitable for small files.
           *
           * For big files, consider using [[uploadFileMultipart]] instead.
           */
         def uploadFile(bucket: BucketName, key: FileKey): Pipe[F, Byte, ETag] =
-          in => {
+          in =>
             fs2.Stream.eval {
               in.compile.toVector.flatMap { vs =>
                 val bs = ByteBuffer.wrap(vs.toArray)
                 s3.putObject(
-                    PutObjectRequest.builder().bucket(bucket.value).key(key.value).build(),
-                    AsyncRequestBody.fromByteBuffer(bs)
-                  )
-                  .map(_.eTag())
+                  PutObjectRequest.builder().bucket(bucket.value).key(key.value).build(),
+                  AsyncRequestBody.fromByteBuffer(bs)
+                ).map(_.eTag())
               }
             }
-          }
 
-        /**
-          * Uploads a file in multiple parts of the specified @partSize per request. Suitable for big files.
+        /** Uploads a file in multiple parts of the specified @partSize per request. Suitable for big files.
           *
           * It does so in constant memory. So at a given time, only the number of bytes indicated by @partSize
           * will be loaded in memory.
@@ -104,64 +97,59 @@ package object s3 {
           * @partSize the part size indicated in MBs. It must be at least 5, as required by AWS.
           */
         def uploadFileMultipart(
-          bucket: BucketName,
-          key: FileKey,
-          partSize: PartSizeMB
+            bucket: BucketName,
+            key: FileKey,
+            partSize: PartSizeMB
         ): Pipe[F, Byte, ETag] = {
           val chunkSizeBytes = partSize * 1048576
 
           def initiateMultipartUpload: F[UploadId] =
             s3.createMultipartUpload(
-                CreateMultipartUploadRequest.builder().bucket(bucket.value).key(key.value).build()
-              )
-              .map(_.uploadId())
+              CreateMultipartUploadRequest.builder().bucket(bucket.value).key(key.value).build()
+            ).map(_.uploadId())
 
           def uploadPart(uploadId: UploadId): Pipe[F, (Chunk[Byte], Long), (PartETag, PartId)] =
-            _.evalMap {
-              case (c, i) =>
-                s3.uploadPart(
-                    UploadPartRequest
-                      .builder()
-                      .bucket(bucket.value)
-                      .key(key.value)
-                      .uploadId(uploadId)
-                      .partNumber(i.toInt)
-                      .contentLength(c.size.toLong)
-                      .build(),
-                    AsyncRequestBody.fromBytes(c.toArray)
-                  )
-                  .map(_.eTag() -> i.toInt)
-            }
-
-          def completeUpload(uploadId: UploadId): Pipe[F, List[(PartETag, PartId)], ETag] =
-            _.evalMap { tags =>
-              val parts = tags.map {
-                case (t, i) => CompletedPart.builder().partNumber(i).eTag(t).build()
-              }.asJava
-              s3.completeMultipartUpload(
-                  CompleteMultipartUploadRequest
-                    .builder()
-                    .bucket(bucket.value)
-                    .key(key.value)
-                    .uploadId(uploadId)
-                    .multipartUpload(CompletedMultipartUpload.builder().parts(parts).build())
-                    .build()
-                )
-                .map(_.eTag())
-            }
-
-          def cancelUpload(uploadId: UploadId): F[Unit] =
-            s3.abortMultipartUpload(
-                AbortMultipartUploadRequest
+            _.evalMap { case (c, i) =>
+              s3.uploadPart(
+                UploadPartRequest
                   .builder()
                   .bucket(bucket.value)
                   .key(key.value)
                   .uploadId(uploadId)
-                  .build()
-              )
-              .void
+                  .partNumber(i.toInt)
+                  .contentLength(c.size.toLong)
+                  .build(),
+                AsyncRequestBody.fromBytes(c.toArray)
+              ).map(_.eTag() -> i.toInt)
+            }
 
-          in => {
+          def completeUpload(uploadId: UploadId): Pipe[F, List[(PartETag, PartId)], ETag] =
+            _.evalMap { tags =>
+              val parts = tags.map { case (t, i) =>
+                CompletedPart.builder().partNumber(i).eTag(t).build()
+              }.asJava
+              s3.completeMultipartUpload(
+                CompleteMultipartUploadRequest
+                  .builder()
+                  .bucket(bucket.value)
+                  .key(key.value)
+                  .uploadId(uploadId)
+                  .multipartUpload(CompletedMultipartUpload.builder().parts(parts).build())
+                  .build()
+              ).map(_.eTag())
+            }
+
+          def cancelUpload(uploadId: UploadId): F[Unit] =
+            s3.abortMultipartUpload(
+              AbortMultipartUploadRequest
+                .builder()
+                .bucket(bucket.value)
+                .key(key.value)
+                .uploadId(uploadId)
+                .build()
+            ).void
+
+          in =>
             fs2.Stream
               .eval(initiateMultipartUpload)
               .flatMap { uploadId =>
@@ -174,11 +162,9 @@ package object s3 {
                     fs2.Stream.eval(cancelUpload(uploadId) >> Sync[F].raiseError[ETag](ex))
                   )
               }
-          }
         }
 
-        /**
-          * Reads a file in a single request. Suitable for small files.
+        /** Reads a file in a single request. Suitable for small files.
           *
           * For big files, consider using [[readFileMultipart]] instead.
           */
@@ -196,8 +182,7 @@ package object s3 {
             )
             .flatMap(r => fs2.Stream.chunk(Chunk(r.asByteArray: _*)))
 
-        /**
-          * Reads a file in multiple parts of the specifed @partSize per request. Suitable for big files.
+        /** Reads a file in multiple parts of the specifed @partSize per request. Suitable for big files.
           *
           * It does so in constant memory. So at a given time, only the number of bytes indicated by @partSize
           * will be loaded in memory.
@@ -205,9 +190,9 @@ package object s3 {
           * For small files, consider using [[readFile]] instead.
           */
         def readFileMultipart(
-          bucket: BucketName,
-          key: FileKey,
-          partSize: PartSizeMB
+            bucket: BucketName,
+            key: FileKey,
+            partSize: PartSizeMB
         ): fs2.Stream[F, Byte] = {
           val chunkSizeBytes = partSize * 1000000
 
@@ -231,7 +216,7 @@ package object s3 {
                 case Some(resp) =>
                   Pull.eval {
                     Async[F].blocking {
-                      val bs  = resp.asByteArray()
+                      val bs = resp.asByteArray()
                       val len = bs.length
                       if (len < 0) None else Some(Chunk(bs: _*))
                     }
@@ -251,8 +236,7 @@ package object s3 {
 
       }.pure[F]
 
-    /**
-      * Translates effect type from F to G using the supplied FunctionKs.
+    /** Translates effect type from F to G using the supplied FunctionKs.
       */
     def mapK[F[_], G[_]](s3: S3[F])(fToG: F ~> G, gToF: G ~> F): S3[G] =
       new S3[G] {
@@ -265,9 +249,9 @@ package object s3 {
             .translate(fToG)
 
         override def uploadFileMultipart(
-          bucket: BucketName,
-          key: FileKey,
-          partSize: PartSizeMB
+            bucket: BucketName,
+            key: FileKey,
+            partSize: PartSizeMB
         ): Pipe[G, Byte, ETag] =
           _.translate(gToF)
             .through(s3.uploadFileMultipart(bucket, key, partSize))
@@ -277,9 +261,9 @@ package object s3 {
           s3.readFile(bucket, key).translate(fToG)
 
         override def readFileMultipart(
-          bucket: BucketName,
-          key: FileKey,
-          partSize: PartSizeMB
+            bucket: BucketName,
+            key: FileKey,
+            partSize: PartSizeMB
         ): fs2.Stream[G, Byte] = s3.readFileMultipart(bucket, key, partSize).translate(fToG)
       }
   }

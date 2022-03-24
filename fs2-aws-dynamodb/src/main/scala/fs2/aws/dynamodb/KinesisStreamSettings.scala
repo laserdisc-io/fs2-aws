@@ -7,8 +7,8 @@ import scala.concurrent.duration.*
   *  @param bufferSize size of the internal buffer used when reading messages from Kinesis
   */
 class KinesisStreamSettings private (
-  val bufferSize: Int,
-  val terminateGracePeriod: FiniteDuration
+    val bufferSize: Int,
+    val terminateGracePeriod: FiniteDuration
 )
 
 /** Settings for configuring the Kinesis checkpointer pipe
@@ -17,16 +17,16 @@ class KinesisStreamSettings private (
   *  @param maxBatchWait the maximum amount of time to wait before checkpointing the cluster of records
   */
 class KinesisCheckpointSettings private (
-  val maxBatchSize: Int,
-  val maxBatchWait: FiniteDuration
+    val maxBatchSize: Int,
+    val maxBatchWait: FiniteDuration
 )
 
 object KinesisStreamSettings {
   val defaultInstance: KinesisStreamSettings = new KinesisStreamSettings(10, 10.seconds)
 
   def apply(
-    bufferSize: Int,
-    terminateGracePeriod: FiniteDuration
+      bufferSize: Int,
+      terminateGracePeriod: FiniteDuration
   ): Either[Throwable, KinesisStreamSettings] =
     (bufferSize, terminateGracePeriod) match {
       case (bs, _) if bs < 1 => Left(new RuntimeException("Must be greater than 0"))
@@ -38,8 +38,8 @@ object KinesisCheckpointSettings {
   val defaultInstance = new KinesisCheckpointSettings(1000, 10.seconds)
 
   def apply(
-    maxBatchSize: Int,
-    maxBatchWait: FiniteDuration
+      maxBatchSize: Int,
+      maxBatchWait: FiniteDuration
   ): Either[Throwable, KinesisCheckpointSettings] =
     (maxBatchSize, maxBatchWait) match {
       case (s, _) if s <= 0 =>

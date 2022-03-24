@@ -7,9 +7,17 @@ import com.amazonaws.services.dynamodbv2.model
 import com.amazonaws.services.dynamodbv2.model.{AttributeValue, StreamRecord}
 import com.amazonaws.services.dynamodbv2.streamsadapter.model.RecordAdapter
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer
-import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.{IRecordProcessor, IRecordProcessorFactory}
+import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.{
+  IRecordProcessor,
+  IRecordProcessorFactory
+}
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{ShutdownReason, Worker}
-import com.amazonaws.services.kinesis.clientlibrary.types.{ExtendedSequenceNumber, InitializationInput, ProcessRecordsInput, ShutdownInput}
+import com.amazonaws.services.kinesis.clientlibrary.types.{
+  ExtendedSequenceNumber,
+  InitializationInput,
+  ProcessRecordsInput,
+  ShutdownInput
+}
 import com.amazonaws.services.kinesis.model.Record
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.*
@@ -40,7 +48,8 @@ class NewDynamoDBConsumerSpec
   implicit override val patienceConfig: PatienceConfig =
     PatienceConfig(timeout = scaled(Span(2, Seconds)), interval = scaled(Span(5, Millis)))
 
-  "DynamoDB source" should "successfully read data from the DynamoDB stream" in new WorkerContext with TestData {
+  "DynamoDB source" should "successfully read data from the DynamoDB stream" in new WorkerContext
+    with TestData {
 
     val res = (
       stream.take(1).compile.toList,
@@ -58,7 +67,8 @@ class NewDynamoDBConsumerSpec
     commitableRecord.millisBehindLatest shouldBe recordsInput.getMillisBehindLatest
   }
 
-  it should "Shutdown the worker if the stream is drained and has not failed" in new WorkerContext with TestData {
+  it should "Shutdown the worker if the stream is drained and has not failed" in new WorkerContext
+    with TestData {
     (
       stream.take(1).compile.toList,
       IO.blocking {
@@ -71,7 +81,8 @@ class NewDynamoDBConsumerSpec
     verify(mockScheduler, times(1)).shutdown()
   }
 
-  it should "Shutdown the worker if the stream terminates" in new WorkerContext(errorStream = true) with TestData {
+  it should "Shutdown the worker if the stream terminates" in new WorkerContext(errorStream = true)
+    with TestData {
     intercept[Exception] {
       (
         stream.take(1).compile.toList,
@@ -90,29 +101,33 @@ class NewDynamoDBConsumerSpec
 
     // Create and send 10 records (to match buffer size)
     val res =
-      (stream.take(60).compile.toList, IO.blocking {
-        shard1Guard.await()
-        recordProcessor.initialize(initializationInput)
-        for (i <- 1 to 10) {
-          val record: Record = mock(classOf[RecordAdapter])
-          when(record.getSequenceNumber).thenReturn(i.toString)
-          recordProcessor.processRecords(recordsInput.withRecords(List(record).asJava))
+      (
+        stream.take(60).compile.toList,
+        IO.blocking {
+          shard1Guard.await()
+          recordProcessor.initialize(initializationInput)
+          for (i <- 1 to 10) {
+            val record: Record = mock(classOf[RecordAdapter])
+            when(record.getSequenceNumber).thenReturn(i.toString)
+            recordProcessor.processRecords(recordsInput.withRecords(List(record).asJava))
+          }
+        },
+        IO.blocking {
+          shard1Guard.await()
+          recordProcessor.initialize(initializationInput)
+          for (i <- 1 to 50) {
+            val record: Record = mock(classOf[RecordAdapter])
+            when(record.getSequenceNumber).thenReturn(i.toString)
+            recordProcessor.processRecords(recordsInput.withRecords(List(record).asJava))
+          }
         }
-      }, IO.blocking {
-        shard1Guard.await()
-        recordProcessor.initialize(initializationInput)
-        for (i <- 1 to 50) {
-          val record: Record = mock(classOf[RecordAdapter])
-          when(record.getSequenceNumber).thenReturn(i.toString)
-          recordProcessor.processRecords(recordsInput.withRecords(List(record).asJava))
-        }
-      }).parMapN { case (msgs, _, _) => msgs }.unsafeToFuture().futureValue
+      ).parMapN { case (msgs, _, _) => msgs }.unsafeToFuture().futureValue
 
     res should have size 60
   }
 
   it should "not drop messages in case of back-pressure with multiple shard workers" in new WorkerContext
-  with TestData {
+    with TestData {
 
     val res = (
       stream.take(10).compile.toList,
@@ -149,13 +164,14 @@ class NewDynamoDBConsumerSpec
     res should have size 10
   }
 
-  it should "delay the end of shard checkpoint until all messages are drained" in new WorkerContext with TestData {
+  it should "delay the end of shard checkpoint until all messages are drained" in new WorkerContext
+    with TestData {
     val nRecords = 5L
 
     val res: Seq[Record] = (
       stream
         .take(nRecords)
-        //emulate message processing latency to reproduce the situation when End of Shard arrives BEFORE
+        // emulate message processing latency to reproduce the situation when End of Shard arrives BEFORE
         // all in-flight records are done
         .parEvalMap(3)(msg => IO.sleep(200 millis) >> IO.pure(msg))
         .through(
@@ -179,7 +195,7 @@ class NewDynamoDBConsumerSpec
           recordProcessor.processRecords(ri)
         }
       } >> IO.delay {
-        //Immediately publish end of shard event
+        // Immediately publish end of shard event
         recordProcessor.shutdown(
           new ShutdownInput()
             .withCheckpointer(checkpointer)
@@ -194,7 +210,7 @@ class NewDynamoDBConsumerSpec
   "KinesisWorker checkpoint pipe" should "checkpoint batch of records with same sequence number" in new WorkerContext() {
     val inFlightRecordsPhaser = new Phaser(1)
 
-    val input = (1 to 3) map { i =>
+    val input = (1 to 3).map { i =>
       val record = mock(classOf[RecordAdapter])
       when(record.getSequenceNumber).thenReturn(i.toString)
       new CommittableRecord(
@@ -219,7 +235,7 @@ class NewDynamoDBConsumerSpec
     val checkpointerShard2 = mock(classOf[IRecordProcessorCheckpointer])
     val inFlightRecordsPhaser = new Phaser(1)
 
-    val input = (1L to 6L) map { i =>
+    val input = (1L to 6L).map { i =>
       if (i <= 3) {
         val record = mock(classOf[RecordAdapter])
         when(record.getSequenceNumber).thenReturn(i.toString)
@@ -269,7 +285,7 @@ class NewDynamoDBConsumerSpec
         .withCheckpointer(checkpointerShard1)
     )
 
-    val input = (1 to 3) map { i =>
+    val input = (1 to 3).map { i =>
       val record = mock(classOf[RecordAdapter])
       when(record.getSequenceNumber).thenReturn("1")
       new CommittableRecord(
@@ -308,12 +324,12 @@ class NewDynamoDBConsumerSpec
     val failure = new RuntimeException("you have no power here")
     when(checkpointer.checkpoint(record)).thenThrow(failure)
 
-    the[RuntimeException] thrownBy fs2.Stream
+    (the[RuntimeException] thrownBy fs2.Stream
       .emits(Seq(input))
       .through(k.checkpointRecords(settings))
       .compile
       .toVector
-      .unsafeRunSync() should have message "you have no power here"
+      .unsafeRunSync() should have).message("you have no power here")
 
     eventually(verify(checkpointer).checkpoint(input.record))
   }
@@ -326,17 +342,16 @@ class NewDynamoDBConsumerSpec
     val record = mock(classOf[RecordAdapter])
     when(record.getSequenceNumber).thenReturn("1")
 
-    val input = (1L to 100L).map(
-      idx =>
-        new CommittableRecord(
-          s"shard-1",
-          mock(classOf[ExtendedSequenceNumber]),
-          idx,
-          record,
-          rp,
-          checkpointer,
-          inFlightRecordsPhaser
-        )
+    val input = (1L to 100L).map(idx =>
+      new CommittableRecord(
+        s"shard-1",
+        mock(classOf[ExtendedSequenceNumber]),
+        idx,
+        record,
+        rp,
+        checkpointer,
+        inFlightRecordsPhaser
+      )
     )
 
     fs2.Stream
@@ -410,11 +425,10 @@ class NewDynamoDBConsumerSpec
       null
     }.when(checkpointer).checkpoint(any[String], any[Long])
 
-    val initializationInput: InitializationInput = {
+    val initializationInput: InitializationInput =
       new InitializationInput()
         .withShardId("shardId")
         .withExtendedSequenceNumber(ExtendedSequenceNumber.AT_TIMESTAMP)
-    }
 
     val record: Record =
       new RecordAdapter(
