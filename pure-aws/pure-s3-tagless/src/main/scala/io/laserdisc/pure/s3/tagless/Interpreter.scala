@@ -10,7 +10,7 @@ import java.util.concurrent.CompletionException
 // Types referenced
 import software.amazon.awssdk.core.async.{ AsyncRequestBody, AsyncResponseTransformer }
 import software.amazon.awssdk.services.s3.S3AsyncClient
-import software.amazon.awssdk.services.s3.model._
+import software.amazon.awssdk.services.s3.model.*
 
 import java.nio.file.Path
 import java.util.concurrent.CompletableFuture
@@ -51,6 +51,7 @@ trait Interpreter[M[_]] { outer =>
       ()
     }
   }
+
   def eff1[J, A](fut: =>CompletableFuture[A]): M[A] =
     asyncM.async_ { cb =>
       fut.handle[Unit] { (a, x) =>
@@ -86,7 +87,8 @@ trait Interpreter[M[_]] { outer =>
       eff(_.deleteBucketEncryption(a))
     override def deleteBucketIntelligentTieringConfiguration(
       a: DeleteBucketIntelligentTieringConfigurationRequest
-    ) = eff(_.deleteBucketIntelligentTieringConfiguration(a))
+    ) =
+      eff(_.deleteBucketIntelligentTieringConfiguration(a))
     override def deleteBucketInventoryConfiguration(a: DeleteBucketInventoryConfigurationRequest) =
       eff(_.deleteBucketInventoryConfiguration(a))
     override def deleteBucketLifecycle(a: DeleteBucketLifecycleRequest) =
@@ -114,7 +116,8 @@ trait Interpreter[M[_]] { outer =>
     override def getBucketEncryption(a: GetBucketEncryptionRequest) = eff(_.getBucketEncryption(a))
     override def getBucketIntelligentTieringConfiguration(
       a: GetBucketIntelligentTieringConfigurationRequest
-    ) = eff(_.getBucketIntelligentTieringConfiguration(a))
+    ) =
+      eff(_.getBucketIntelligentTieringConfiguration(a))
     override def getBucketInventoryConfiguration(a: GetBucketInventoryConfigurationRequest) =
       eff(_.getBucketInventoryConfiguration(a))
     override def getBucketLifecycleConfiguration(a: GetBucketLifecycleConfigurationRequest) =
@@ -140,10 +143,12 @@ trait Interpreter[M[_]] { outer =>
     override def getObject[ReturnT](
       a: GetObjectRequest,
       b: AsyncResponseTransformer[GetObjectResponse, ReturnT]
-    )                                                             = eff(_.getObject(a, b))
-    override def getObject(a: GetObjectRequest, b: Path)          = eff(_.getObject(a, b))
-    override def getObjectAcl(a: GetObjectAclRequest)             = eff(_.getObjectAcl(a))
-    override def getObjectLegalHold(a: GetObjectLegalHoldRequest) = eff(_.getObjectLegalHold(a))
+    ) =
+      eff(_.getObject(a, b))
+    override def getObject(a: GetObjectRequest, b: Path)            = eff(_.getObject(a, b))
+    override def getObjectAcl(a: GetObjectAclRequest)               = eff(_.getObjectAcl(a))
+    override def getObjectAttributes(a: GetObjectAttributesRequest) = eff(_.getObjectAttributes(a))
+    override def getObjectLegalHold(a: GetObjectLegalHoldRequest)   = eff(_.getObjectLegalHold(a))
     override def getObjectLockConfiguration(a: GetObjectLockConfigurationRequest) =
       eff(_.getObjectLockConfiguration(a))
     override def getObjectRetention(a: GetObjectRetentionRequest) = eff(_.getObjectRetention(a))
@@ -162,7 +167,8 @@ trait Interpreter[M[_]] { outer =>
       eff(_.listBucketAnalyticsConfigurations(a))
     override def listBucketIntelligentTieringConfigurations(
       a: ListBucketIntelligentTieringConfigurationsRequest
-    ) = eff(_.listBucketIntelligentTieringConfigurations(a))
+    ) =
+      eff(_.listBucketIntelligentTieringConfigurations(a))
     override def listBucketInventoryConfigurations(a: ListBucketInventoryConfigurationsRequest) =
       eff(_.listBucketInventoryConfigurations(a))
     override def listBucketMetricsConfigurations(a: ListBucketMetricsConfigurationsRequest) =
@@ -191,7 +197,8 @@ trait Interpreter[M[_]] { outer =>
     override def putBucketEncryption(a: PutBucketEncryptionRequest) = eff(_.putBucketEncryption(a))
     override def putBucketIntelligentTieringConfiguration(
       a: PutBucketIntelligentTieringConfigurationRequest
-    ) = eff(_.putBucketIntelligentTieringConfiguration(a))
+    ) =
+      eff(_.putBucketIntelligentTieringConfiguration(a))
     override def putBucketInventoryConfiguration(a: PutBucketInventoryConfigurationRequest) =
       eff(_.putBucketInventoryConfiguration(a))
     override def putBucketLifecycleConfiguration(a: PutBucketLifecycleConfigurationRequest) =
@@ -225,7 +232,8 @@ trait Interpreter[M[_]] { outer =>
     override def selectObjectContent(
       a: SelectObjectContentRequest,
       b: SelectObjectContentResponseHandler
-    )                                                                  = eff(_.selectObjectContent(a, b))
+    ) =
+      eff(_.selectObjectContent(a, b))
     override def serviceName                                           = primitive(_.serviceName)
     override def uploadPart(a: UploadPartRequest, b: AsyncRequestBody) = eff(_.uploadPart(a, b))
     override def uploadPart(a: UploadPartRequest, b: Path)             = eff(_.uploadPart(a, b))
@@ -236,6 +244,7 @@ trait Interpreter[M[_]] { outer =>
       eff(_.writeGetObjectResponse(a, b))
     override def writeGetObjectResponse(a: WriteGetObjectResponseRequest, b: Path) =
       eff(_.writeGetObjectResponse(a, b))
+
     def lens[E](f: E => S3AsyncClient): S3AsyncClientOp[Kleisli[M, E, *]] =
       new S3AsyncClientOp[Kleisli[M, E, *]] {
         override def abortMultipartUpload(a: AbortMultipartUploadRequest) =
@@ -250,7 +259,8 @@ trait Interpreter[M[_]] { outer =>
         override def deleteBucket(a: DeleteBucketRequest) = Kleisli(e => eff1(f(e).deleteBucket(a)))
         override def deleteBucketAnalyticsConfiguration(
           a: DeleteBucketAnalyticsConfigurationRequest
-        ) = Kleisli(e => eff1(f(e).deleteBucketAnalyticsConfiguration(a)))
+        ) =
+          Kleisli(e => eff1(f(e).deleteBucketAnalyticsConfiguration(a)))
         override def deleteBucketCors(a: DeleteBucketCorsRequest) =
           Kleisli(e => eff1(f(e).deleteBucketCors(a)))
         override def deleteBucketEncryption(a: DeleteBucketEncryptionRequest) =
@@ -260,7 +270,8 @@ trait Interpreter[M[_]] { outer =>
         ) = Kleisli(e => eff1(f(e).deleteBucketIntelligentTieringConfiguration(a)))
         override def deleteBucketInventoryConfiguration(
           a: DeleteBucketInventoryConfigurationRequest
-        ) = Kleisli(e => eff1(f(e).deleteBucketInventoryConfiguration(a)))
+        ) =
+          Kleisli(e => eff1(f(e).deleteBucketInventoryConfiguration(a)))
         override def deleteBucketLifecycle(a: DeleteBucketLifecycleRequest) =
           Kleisli(e => eff1(f(e).deleteBucketLifecycle(a)))
         override def deleteBucketMetricsConfiguration(a: DeleteBucketMetricsConfigurationRequest) =
@@ -293,7 +304,8 @@ trait Interpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).getBucketEncryption(a)))
         override def getBucketIntelligentTieringConfiguration(
           a: GetBucketIntelligentTieringConfigurationRequest
-        ) = Kleisli(e => eff1(f(e).getBucketIntelligentTieringConfiguration(a)))
+        ) =
+          Kleisli(e => eff1(f(e).getBucketIntelligentTieringConfiguration(a)))
         override def getBucketInventoryConfiguration(a: GetBucketInventoryConfigurationRequest) =
           Kleisli(e => eff1(f(e).getBucketInventoryConfiguration(a)))
         override def getBucketLifecycleConfiguration(a: GetBucketLifecycleConfigurationRequest) =
@@ -306,7 +318,8 @@ trait Interpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).getBucketMetricsConfiguration(a)))
         override def getBucketNotificationConfiguration(
           a: GetBucketNotificationConfigurationRequest
-        ) = Kleisli(e => eff1(f(e).getBucketNotificationConfiguration(a)))
+        ) =
+          Kleisli(e => eff1(f(e).getBucketNotificationConfiguration(a)))
         override def getBucketOwnershipControls(a: GetBucketOwnershipControlsRequest) =
           Kleisli(e => eff1(f(e).getBucketOwnershipControls(a)))
         override def getBucketPolicy(a: GetBucketPolicyRequest) =
@@ -326,10 +339,13 @@ trait Interpreter[M[_]] { outer =>
         override def getObject[ReturnT](
           a: GetObjectRequest,
           b: AsyncResponseTransformer[GetObjectResponse, ReturnT]
-        ) = Kleisli(e => eff1(f(e).getObject(a, b)))
+        ) =
+          Kleisli(e => eff1(f(e).getObject(a, b)))
         override def getObject(a: GetObjectRequest, b: Path) =
           Kleisli(e => eff1(f(e).getObject(a, b)))
         override def getObjectAcl(a: GetObjectAclRequest) = Kleisli(e => eff1(f(e).getObjectAcl(a)))
+        override def getObjectAttributes(a: GetObjectAttributesRequest) =
+          Kleisli(e => eff1(f(e).getObjectAttributes(a)))
         override def getObjectLegalHold(a: GetObjectLegalHoldRequest) =
           Kleisli(e => eff1(f(e).getObjectLegalHold(a)))
         override def getObjectLockConfiguration(a: GetObjectLockConfigurationRequest) =
@@ -350,13 +366,16 @@ trait Interpreter[M[_]] { outer =>
         override def headObject(a: HeadObjectRequest) = Kleisli(e => eff1(f(e).headObject(a)))
         override def listBucketAnalyticsConfigurations(
           a: ListBucketAnalyticsConfigurationsRequest
-        ) = Kleisli(e => eff1(f(e).listBucketAnalyticsConfigurations(a)))
+        ) =
+          Kleisli(e => eff1(f(e).listBucketAnalyticsConfigurations(a)))
         override def listBucketIntelligentTieringConfigurations(
           a: ListBucketIntelligentTieringConfigurationsRequest
-        ) = Kleisli(e => eff1(f(e).listBucketIntelligentTieringConfigurations(a)))
+        ) =
+          Kleisli(e => eff1(f(e).listBucketIntelligentTieringConfigurations(a)))
         override def listBucketInventoryConfigurations(
           a: ListBucketInventoryConfigurationsRequest
-        ) = Kleisli(e => eff1(f(e).listBucketInventoryConfigurations(a)))
+        ) =
+          Kleisli(e => eff1(f(e).listBucketInventoryConfigurations(a)))
         override def listBucketMetricsConfigurations(a: ListBucketMetricsConfigurationsRequest) =
           Kleisli(e => eff1(f(e).listBucketMetricsConfigurations(a)))
         override def listBuckets                        = Kleisli(e => eff1(f(e).listBuckets))
@@ -388,7 +407,8 @@ trait Interpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).putBucketEncryption(a)))
         override def putBucketIntelligentTieringConfiguration(
           a: PutBucketIntelligentTieringConfigurationRequest
-        ) = Kleisli(e => eff1(f(e).putBucketIntelligentTieringConfiguration(a)))
+        ) =
+          Kleisli(e => eff1(f(e).putBucketIntelligentTieringConfiguration(a)))
         override def putBucketInventoryConfiguration(a: PutBucketInventoryConfigurationRequest) =
           Kleisli(e => eff1(f(e).putBucketInventoryConfiguration(a)))
         override def putBucketLifecycleConfiguration(a: PutBucketLifecycleConfigurationRequest) =
@@ -399,7 +419,8 @@ trait Interpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).putBucketMetricsConfiguration(a)))
         override def putBucketNotificationConfiguration(
           a: PutBucketNotificationConfigurationRequest
-        ) = Kleisli(e => eff1(f(e).putBucketNotificationConfiguration(a)))
+        ) =
+          Kleisli(e => eff1(f(e).putBucketNotificationConfiguration(a)))
         override def putBucketOwnershipControls(a: PutBucketOwnershipControlsRequest) =
           Kleisli(e => eff1(f(e).putBucketOwnershipControls(a)))
         override def putBucketPolicy(a: PutBucketPolicyRequest) =
@@ -434,7 +455,8 @@ trait Interpreter[M[_]] { outer =>
         override def selectObjectContent(
           a: SelectObjectContentRequest,
           b: SelectObjectContentResponseHandler
-        )                        = Kleisli(e => eff1(f(e).selectObjectContent(a, b)))
+        ) =
+          Kleisli(e => eff1(f(e).selectObjectContent(a, b)))
         override def serviceName = Kleisli(e => primitive1(f(e).serviceName))
         override def uploadPart(a: UploadPartRequest, b: AsyncRequestBody) =
           Kleisli(e => eff1(f(e).uploadPart(a, b)))
@@ -455,6 +477,7 @@ trait Interpreter[M[_]] { outer =>
     Resource.fromAutoCloseable(asyncM.delay(builder.build()))
   def S3AsyncClientOpResource(builder: S3AsyncClientBuilder) =
     S3AsyncClientResource(builder).map(create)
+
   def create(client: S3AsyncClient): S3AsyncClientOp[M] = new S3AsyncClientOp[M] {
 
     // domain-specific operations are implemented in terms of `primitive`
@@ -475,7 +498,8 @@ trait Interpreter[M[_]] { outer =>
       eff1(client.deleteBucketEncryption(a))
     override def deleteBucketIntelligentTieringConfiguration(
       a: DeleteBucketIntelligentTieringConfigurationRequest
-    ) = eff1(client.deleteBucketIntelligentTieringConfiguration(a))
+    ) =
+      eff1(client.deleteBucketIntelligentTieringConfiguration(a))
     override def deleteBucketInventoryConfiguration(a: DeleteBucketInventoryConfigurationRequest) =
       eff1(client.deleteBucketInventoryConfiguration(a))
     override def deleteBucketLifecycle(a: DeleteBucketLifecycleRequest) =
@@ -508,7 +532,8 @@ trait Interpreter[M[_]] { outer =>
       eff1(client.getBucketEncryption(a))
     override def getBucketIntelligentTieringConfiguration(
       a: GetBucketIntelligentTieringConfigurationRequest
-    ) = eff1(client.getBucketIntelligentTieringConfiguration(a))
+    ) =
+      eff1(client.getBucketIntelligentTieringConfiguration(a))
     override def getBucketInventoryConfiguration(a: GetBucketInventoryConfigurationRequest) =
       eff1(client.getBucketInventoryConfiguration(a))
     override def getBucketLifecycleConfiguration(a: GetBucketLifecycleConfigurationRequest) =
@@ -535,9 +560,12 @@ trait Interpreter[M[_]] { outer =>
     override def getObject[ReturnT](
       a: GetObjectRequest,
       b: AsyncResponseTransformer[GetObjectResponse, ReturnT]
-    )                                                    = eff1(client.getObject(a, b))
+    ) =
+      eff1(client.getObject(a, b))
     override def getObject(a: GetObjectRequest, b: Path) = eff1(client.getObject(a, b))
     override def getObjectAcl(a: GetObjectAclRequest)    = eff1(client.getObjectAcl(a))
+    override def getObjectAttributes(a: GetObjectAttributesRequest) =
+      eff1(client.getObjectAttributes(a))
     override def getObjectLegalHold(a: GetObjectLegalHoldRequest) =
       eff1(client.getObjectLegalHold(a))
     override def getObjectLockConfiguration(a: GetObjectLockConfigurationRequest) =
@@ -559,7 +587,8 @@ trait Interpreter[M[_]] { outer =>
       eff1(client.listBucketAnalyticsConfigurations(a))
     override def listBucketIntelligentTieringConfigurations(
       a: ListBucketIntelligentTieringConfigurationsRequest
-    ) = eff1(client.listBucketIntelligentTieringConfigurations(a))
+    ) =
+      eff1(client.listBucketIntelligentTieringConfigurations(a))
     override def listBucketInventoryConfigurations(a: ListBucketInventoryConfigurationsRequest) =
       eff1(client.listBucketInventoryConfigurations(a))
     override def listBucketMetricsConfigurations(a: ListBucketMetricsConfigurationsRequest) =
@@ -590,7 +619,8 @@ trait Interpreter[M[_]] { outer =>
       eff1(client.putBucketEncryption(a))
     override def putBucketIntelligentTieringConfiguration(
       a: PutBucketIntelligentTieringConfigurationRequest
-    ) = eff1(client.putBucketIntelligentTieringConfiguration(a))
+    ) =
+      eff1(client.putBucketIntelligentTieringConfiguration(a))
     override def putBucketInventoryConfiguration(a: PutBucketInventoryConfigurationRequest) =
       eff1(client.putBucketInventoryConfiguration(a))
     override def putBucketLifecycleConfiguration(a: PutBucketLifecycleConfigurationRequest) =
@@ -627,7 +657,8 @@ trait Interpreter[M[_]] { outer =>
     override def selectObjectContent(
       a: SelectObjectContentRequest,
       b: SelectObjectContentResponseHandler
-    )                        = eff1(client.selectObjectContent(a, b))
+    ) =
+      eff1(client.selectObjectContent(a, b))
     override def serviceName = primitive1(client.serviceName)
     override def uploadPart(a: UploadPartRequest, b: AsyncRequestBody) =
       eff1(client.uploadPart(a, b))

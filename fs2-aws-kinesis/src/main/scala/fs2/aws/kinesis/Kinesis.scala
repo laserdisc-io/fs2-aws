@@ -2,8 +2,8 @@ package fs2.aws.kinesis
 
 import cats.effect.std.{ Dispatcher, Queue }
 import cats.effect.{ Async, Concurrent, Sync }
-import cats.implicits._
-import eu.timepit.refined.auto._
+import cats.implicits.*
+import eu.timepit.refined.auto.*
 import fs2.aws.core
 import fs2.concurrent.SignallingRef
 import fs2.{ Chunk, Pipe, Stream }
@@ -81,8 +81,8 @@ object Kinesis {
           schedulerFactory(() =>
             new ChunkedRecordProcessor(records => dispatcher.unsafeRunSync(queue.offer(records)))
           ).flatTap(s =>
-            Concurrent[F].start(Async[F].blocking(s.run()).flatTap(_ => signal.set(true)))
-          )
+              Concurrent[F].start(Async[F].blocking(s.run()).flatTap(_ => signal.set(true)))
+            )
         }(s => Async[F].blocking(s.shutdown()))
 
       // Instantiate a new bounded queue and concurrently run the queue populator
@@ -95,6 +95,7 @@ object Kinesis {
         stream          <- Stream.fromQueueUnterminated(buffer).interruptWhen(interruptSignal)
       } yield stream
     }
+
     def checkpointRecords(
       checkpointSettings: KinesisCheckpointSettings // = KinesisCheckpointSettings.defaultInstance
     ): Pipe[F, CommittableRecord, KinesisClientRecord] = {
@@ -113,6 +114,7 @@ object Kinesis {
       }.parJoinUnbounded
     }
   }
+
   def create[F[_]: Async: Concurrent](
     schedulerFactory: ShardRecordProcessorFactory => F[Scheduler]
   ): Kinesis[F] = new GenericKinesis[F] {

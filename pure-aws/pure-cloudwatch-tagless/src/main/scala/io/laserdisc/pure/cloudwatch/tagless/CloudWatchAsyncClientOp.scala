@@ -1,7 +1,7 @@
 package io.laserdisc.pure.cloudwatch.tagless
 
-import software.amazon.awssdk.services.cloudwatch.model._
-import software.amazon.awssdk.services.cloudwatch.paginators._
+import software.amazon.awssdk.services.cloudwatch.model.*
+import software.amazon.awssdk.services.cloudwatch.paginators.*
 import software.amazon.awssdk.services.cloudwatch.waiters.CloudWatchAsyncWaiter
 
 trait CloudWatchAsyncClientOp[F[_]] {

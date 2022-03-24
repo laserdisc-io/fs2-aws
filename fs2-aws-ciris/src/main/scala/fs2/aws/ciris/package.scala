@@ -2,7 +2,7 @@ package fs2.aws
 
 import java.util.Date
 
-import cats.implicits._
+import cats.implicits.*
 import _root_.ciris.ConfigDecoder
 import software.amazon.kinesis.common.InitialPositionInStream
 

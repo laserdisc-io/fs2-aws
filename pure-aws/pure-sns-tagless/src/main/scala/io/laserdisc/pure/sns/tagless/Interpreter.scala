@@ -9,7 +9,7 @@ import java.util.concurrent.CompletionException
 
 // Types referenced
 import software.amazon.awssdk.services.sns.SnsAsyncClient
-import software.amazon.awssdk.services.sns.model._
+import software.amazon.awssdk.services.sns.model.*
 
 import java.util.concurrent.CompletableFuture
 
@@ -49,6 +49,7 @@ trait Interpreter[M[_]] { outer =>
       ()
     }
   }
+
   def eff1[J, A](fut: =>CompletableFuture[A]): M[A] =
     asyncM.async_ { cb =>
       fut.handle[Unit] { (a, x) =>
@@ -100,7 +101,8 @@ trait Interpreter[M[_]] { outer =>
       eff(_.listEndpointsByPlatformApplication(a))
     override def listEndpointsByPlatformApplicationPaginator(
       a: ListEndpointsByPlatformApplicationRequest
-    ) = primitive(_.listEndpointsByPlatformApplicationPaginator(a))
+    ) =
+      primitive(_.listEndpointsByPlatformApplicationPaginator(a))
     override def listOriginationNumbers(a: ListOriginationNumbersRequest) =
       eff(_.listOriginationNumbers(a))
     override def listOriginationNumbersPaginator(a: ListOriginationNumbersRequest) =
@@ -154,6 +156,7 @@ trait Interpreter[M[_]] { outer =>
     override def untagResource(a: UntagResourceRequest)           = eff(_.untagResource(a))
     override def verifySMSSandboxPhoneNumber(a: VerifySmsSandboxPhoneNumberRequest) =
       eff(_.verifySMSSandboxPhoneNumber(a))
+
     def lens[E](f: E => SnsAsyncClient): SnsAsyncClientOp[Kleisli[M, E, *]] =
       new SnsAsyncClientOp[Kleisli[M, E, *]] {
         override def addPermission(a: AddPermissionRequest) =
@@ -192,10 +195,12 @@ trait Interpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).getTopicAttributes(a)))
         override def listEndpointsByPlatformApplication(
           a: ListEndpointsByPlatformApplicationRequest
-        ) = Kleisli(e => eff1(f(e).listEndpointsByPlatformApplication(a)))
+        ) =
+          Kleisli(e => eff1(f(e).listEndpointsByPlatformApplication(a)))
         override def listEndpointsByPlatformApplicationPaginator(
           a: ListEndpointsByPlatformApplicationRequest
-        ) = Kleisli(e => primitive1(f(e).listEndpointsByPlatformApplicationPaginator(a)))
+        ) =
+          Kleisli(e => primitive1(f(e).listEndpointsByPlatformApplicationPaginator(a)))
         override def listOriginationNumbers(a: ListOriginationNumbersRequest) =
           Kleisli(e => eff1(f(e).listOriginationNumbers(a)))
         override def listOriginationNumbersPaginator(a: ListOriginationNumbersRequest) =
@@ -267,6 +272,7 @@ trait Interpreter[M[_]] { outer =>
     Resource.fromAutoCloseable(asyncM.delay(builder.build()))
   def SnsAsyncClientOpResource(builder: SnsAsyncClientBuilder) =
     SnsAsyncClientResource(builder).map(create)
+
   def create(client: SnsAsyncClient): SnsAsyncClientOp[M] = new SnsAsyncClientOp[M] {
 
     // domain-specific operations are implemented in terms of `primitive`
@@ -305,7 +311,8 @@ trait Interpreter[M[_]] { outer =>
       eff1(client.listEndpointsByPlatformApplication(a))
     override def listEndpointsByPlatformApplicationPaginator(
       a: ListEndpointsByPlatformApplicationRequest
-    ) = primitive1(client.listEndpointsByPlatformApplicationPaginator(a))
+    ) =
+      primitive1(client.listEndpointsByPlatformApplicationPaginator(a))
     override def listOriginationNumbers(a: ListOriginationNumbersRequest) =
       eff1(client.listOriginationNumbers(a))
     override def listOriginationNumbersPaginator(a: ListOriginationNumbersRequest) =

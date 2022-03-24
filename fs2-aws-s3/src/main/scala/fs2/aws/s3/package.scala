@@ -3,13 +3,9 @@ package fs2.aws
 import cats.effect._
 import cats.implicits._
 import cats.~>
-import eu.timepit.refined._
-import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
-import eu.timepit.refined.boolean.Or
-import eu.timepit.refined.generic.Equal
-import eu.timepit.refined.numeric.Greater
 import eu.timepit.refined.types.string.NonEmptyString
+import fs2.aws.s3.models.{ ETag, PartSizeMB }
 import fs2.{ Chunk, Pipe, Pull }
 import io.laserdisc.pure.s3.tagless.S3AsyncClientOp
 import software.amazon.awssdk.core.async.{ AsyncRequestBody, AsyncResponseTransformer }
@@ -18,11 +14,7 @@ import software.amazon.awssdk.services.s3.model._
 import java.nio.ByteBuffer
 import scala.jdk.CollectionConverters._
 
-object s3 {
-  // Each part must be at least 5 MB in size
-  // https://sdk.amazonaws.com/java/api/latest/software/amazon/awssdk/services/s3/S3Client.html#uploadPart-software.amazon.awssdk.services.s3.model.UploadPartRequest-software.amazon.awssdk.core.sync.RequestBody-
-  type PartSizeMB = Int Refined (Greater[W.`5`.T] Or Equal[W.`5`.T])
-  type ETag       = String
+package object s3 {
 
   final case class BucketName(value: NonEmptyString)
   final case class FileKey(value: NonEmptyString)
@@ -31,12 +23,14 @@ object s3 {
   trait S3[F[_]] {
     def delete(bucket: BucketName, key: FileKey): F[Unit]
     def uploadFile(bucket: BucketName, key: FileKey): Pipe[F, Byte, ETag]
+
     def uploadFileMultipart(
       bucket: BucketName,
       key: FileKey,
       partSize: PartSizeMB
     ): Pipe[F, Byte, ETag]
     def readFile(bucket: BucketName, key: FileKey): fs2.Stream[F, Byte]
+
     def readFileMultipart(
       bucket: BucketName,
       key: FileKey,
@@ -55,9 +49,9 @@ object s3 {
       * Example:
       *
       * {{{
-      * S3.create[IO](client, blocker).flatMap { s3 =>
+      * S3.create[IO](client, blocker).flatMap { package =>
       *   streamOfBytes
-      *     .through(s3.uploadFileMultipart(BucketName("foo"), FileKey("bar"), partSize = 5))
+      *     .through(package.uploadFileMultipart(BucketName("foo"), FileKey("bar"), partSize = 5))
       *     .evalMap(t => IO(println(s"eTag: $t")))
       *     .compile
       *     .drain
@@ -132,7 +126,7 @@ object s3 {
                       .key(key.value)
                       .uploadId(uploadId)
                       .partNumber(i.toInt)
-                      .contentLength(c.size)
+                      .contentLength(c.size.toLong)
                       .build(),
                     AsyncRequestBody.fromBytes(c.toArray)
                   )
@@ -215,7 +209,7 @@ object s3 {
           key: FileKey,
           partSize: PartSizeMB
         ): fs2.Stream[F, Byte] = {
-          val chunkSizeBytes = partSize.value * 1000000
+          val chunkSizeBytes = partSize * 1000000
 
           // Range must be in the form "bytes=0-500" -> https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.35
           def go(offset: Long): Pull[F, Byte, Unit] =

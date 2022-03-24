@@ -1,7 +1,7 @@
 package io.laserdisc.pure.sns.tagless
 
-import software.amazon.awssdk.services.sns.model._
-import software.amazon.awssdk.services.sns.paginators._
+import software.amazon.awssdk.services.sns.model.*
+import software.amazon.awssdk.services.sns.paginators.*
 
 trait SnsAsyncClientOp[F[_]] {
   // SnsAsyncClient
@@ -28,6 +28,7 @@ trait SnsAsyncClientOp[F[_]] {
   ): F[DeleteSmsSandboxPhoneNumberResponse]
   def deleteTopic(a: DeleteTopicRequest): F[DeleteTopicResponse]
   def getEndpointAttributes(a: GetEndpointAttributesRequest): F[GetEndpointAttributesResponse]
+
   def getPlatformApplicationAttributes(
     a: GetPlatformApplicationAttributesRequest
   ): F[GetPlatformApplicationAttributesResponse]
@@ -40,9 +41,11 @@ trait SnsAsyncClientOp[F[_]] {
     a: GetSubscriptionAttributesRequest
   ): F[GetSubscriptionAttributesResponse]
   def getTopicAttributes(a: GetTopicAttributesRequest): F[GetTopicAttributesResponse]
+
   def listEndpointsByPlatformApplication(
     a: ListEndpointsByPlatformApplicationRequest
   ): F[ListEndpointsByPlatformApplicationResponse]
+
   def listEndpointsByPlatformApplicationPaginator(
     a: ListEndpointsByPlatformApplicationRequest
   ): F[ListEndpointsByPlatformApplicationPublisher]
@@ -93,6 +96,7 @@ trait SnsAsyncClientOp[F[_]] {
   def removePermission(a: RemovePermissionRequest): F[RemovePermissionResponse]
   def serviceName: F[String]
   def setEndpointAttributes(a: SetEndpointAttributesRequest): F[SetEndpointAttributesResponse]
+
   def setPlatformApplicationAttributes(
     a: SetPlatformApplicationAttributesRequest
   ): F[SetPlatformApplicationAttributesResponse]

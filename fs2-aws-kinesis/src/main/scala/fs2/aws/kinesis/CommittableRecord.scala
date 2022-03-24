@@ -46,7 +46,7 @@ object CommittableRecord {
     Ordering[(String, Long)].on(cr =>
       (cr.sequenceNumber, cr.record match {
         case ur: KinesisClientRecord => ur.subSequenceNumber()
-        case _                       => 0
+        case null                    => 0
       })
     )
 }

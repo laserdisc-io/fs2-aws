@@ -1,6 +1,6 @@
 package io.laserdisc.pure.kinesis.tagless
 
-import software.amazon.awssdk.services.kinesis.model._
+import software.amazon.awssdk.services.kinesis.model.*
 import software.amazon.awssdk.services.kinesis.paginators.ListStreamConsumersPublisher
 import software.amazon.awssdk.services.kinesis.waiters.KinesisAsyncWaiter
 

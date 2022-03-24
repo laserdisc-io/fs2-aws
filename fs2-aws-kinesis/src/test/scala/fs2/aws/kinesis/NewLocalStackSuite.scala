@@ -7,9 +7,9 @@ import com.amazonaws.services.kinesis.producer.KinesisProducerConfiguration
 import fs2.Stream
 import fs2.aws.internal.KinesisProducerClientImpl
 import fs2.aws.kinesis.publisher.writeToKinesis
-import io.laserdisc.pure.cloudwatch.tagless.{ Interpreter => CloudwatchInterpreter }
-import io.laserdisc.pure.dynamodb.tagless.{ Interpreter => DynamoDbInterpreter }
-import io.laserdisc.pure.kinesis.tagless.{ Interpreter => KinesisInterpreter }
+import io.laserdisc.pure.cloudwatch.tagless.Interpreter as CloudwatchInterpreter
+import io.laserdisc.pure.dynamodb.tagless.Interpreter as DynamoDbInterpreter
+import io.laserdisc.pure.kinesis.tagless.Interpreter as KinesisInterpreter
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -108,7 +108,7 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
                 .drain
           record <- kAlgebra
                      .readFromKinesisStream(consumerConfig)
-                     .take(data.length)
+                     .take(data.length.toLong)
                      .compile
                      .toList
         } yield record
@@ -185,7 +185,7 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
                 .drain
           record <- kStreamInterpreter
                      .readFromKinesisStream(consumerConfig)
-                     .take(data.length * 2)
+                     .take(data.length.toLong * 2L)
                      .compile
                      .toList
 

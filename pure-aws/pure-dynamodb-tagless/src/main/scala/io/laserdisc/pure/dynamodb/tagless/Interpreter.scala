@@ -9,7 +9,7 @@ import java.util.concurrent.CompletionException
 
 // Types referenced
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
-import software.amazon.awssdk.services.dynamodb.model._
+import software.amazon.awssdk.services.dynamodb.model.*
 
 import java.util.concurrent.CompletableFuture
 
@@ -50,6 +50,7 @@ trait Interpreter[M[_]] { outer =>
       ()
     }
   }
+
   def eff1[J, A](fut: =>CompletableFuture[A]): M[A] =
     asyncM.async_ { cb =>
       fut.handle[Unit] { (a, x) =>
@@ -95,7 +96,8 @@ trait Interpreter[M[_]] { outer =>
       eff(_.describeGlobalTableSettings(a))
     override def describeKinesisStreamingDestination(
       a: DescribeKinesisStreamingDestinationRequest
-    )                                                     = eff(_.describeKinesisStreamingDestination(a))
+    ) =
+      eff(_.describeKinesisStreamingDestination(a))
     override def describeLimits                           = eff(_.describeLimits)
     override def describeLimits(a: DescribeLimitsRequest) = eff(_.describeLimits(a))
     override def describeTable(a: DescribeTableRequest)   = eff(_.describeTable(a))
@@ -153,6 +155,7 @@ trait Interpreter[M[_]] { outer =>
       eff(_.updateTableReplicaAutoScaling(a))
     override def updateTimeToLive(a: UpdateTimeToLiveRequest) = eff(_.updateTimeToLive(a))
     override def waiter                                       = primitive(_.waiter)
+
     def lens[E](f: E => DynamoDbAsyncClient): DynamoDbAsyncClientOp[Kleisli[M, E, *]] =
       new DynamoDbAsyncClientOp[Kleisli[M, E, *]] {
         override def batchExecuteStatement(a: BatchExecuteStatementRequest) =
@@ -187,7 +190,8 @@ trait Interpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).describeGlobalTableSettings(a)))
         override def describeKinesisStreamingDestination(
           a: DescribeKinesisStreamingDestinationRequest
-        )                           = Kleisli(e => eff1(f(e).describeKinesisStreamingDestination(a)))
+        ) =
+          Kleisli(e => eff1(f(e).describeKinesisStreamingDestination(a)))
         override def describeLimits = Kleisli(e => eff1(f(e).describeLimits))
         override def describeLimits(a: DescribeLimitsRequest) =
           Kleisli(e => eff1(f(e).describeLimits(a)))
@@ -199,10 +203,12 @@ trait Interpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).describeTimeToLive(a)))
         override def disableKinesisStreamingDestination(
           a: DisableKinesisStreamingDestinationRequest
-        ) = Kleisli(e => eff1(f(e).disableKinesisStreamingDestination(a)))
+        ) =
+          Kleisli(e => eff1(f(e).disableKinesisStreamingDestination(a)))
         override def enableKinesisStreamingDestination(
           a: EnableKinesisStreamingDestinationRequest
-        ) = Kleisli(e => eff1(f(e).enableKinesisStreamingDestination(a)))
+        ) =
+          Kleisli(e => eff1(f(e).enableKinesisStreamingDestination(a)))
         override def executeStatement(a: ExecuteStatementRequest) =
           Kleisli(e => eff1(f(e).executeStatement(a)))
         override def executeTransaction(a: ExecuteTransactionRequest) =
@@ -267,9 +273,12 @@ trait Interpreter[M[_]] { outer =>
 
   def DynamoDbAsyncClientResource(
     builder: DynamoDbAsyncClientBuilder
-  ): Resource[M, DynamoDbAsyncClient] = Resource.fromAutoCloseable(asyncM.delay(builder.build()))
+  ): Resource[M, DynamoDbAsyncClient] =
+    Resource.fromAutoCloseable(asyncM.delay(builder.build()))
+
   def DynamoDbAsyncClientOpResource(builder: DynamoDbAsyncClientBuilder) =
     DynamoDbAsyncClientResource(builder).map(create)
+
   def create(client: DynamoDbAsyncClient): DynamoDbAsyncClientOp[M] = new DynamoDbAsyncClientOp[M] {
 
     // domain-specific operations are implemented in terms of `primitive`
@@ -300,7 +309,8 @@ trait Interpreter[M[_]] { outer =>
       eff1(client.describeGlobalTableSettings(a))
     override def describeKinesisStreamingDestination(
       a: DescribeKinesisStreamingDestinationRequest
-    )                                                     = eff1(client.describeKinesisStreamingDestination(a))
+    ) =
+      eff1(client.describeKinesisStreamingDestination(a))
     override def describeLimits                           = eff1(client.describeLimits)
     override def describeLimits(a: DescribeLimitsRequest) = eff1(client.describeLimits(a))
     override def describeTable(a: DescribeTableRequest)   = eff1(client.describeTable(a))

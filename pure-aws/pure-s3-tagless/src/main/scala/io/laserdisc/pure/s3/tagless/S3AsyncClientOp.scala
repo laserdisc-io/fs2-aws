@@ -2,8 +2,8 @@ package io.laserdisc.pure.s3.tagless
 
 import software.amazon.awssdk.core.async.{ AsyncRequestBody, AsyncResponseTransformer }
 import software.amazon.awssdk.services.s3.S3Utilities
-import software.amazon.awssdk.services.s3.model._
-import software.amazon.awssdk.services.s3.paginators._
+import software.amazon.awssdk.services.s3.model.*
+import software.amazon.awssdk.services.s3.paginators.*
 import software.amazon.awssdk.services.s3.waiters.S3AsyncWaiter
 
 import java.nio.file.Path
@@ -17,18 +17,22 @@ trait S3AsyncClientOp[F[_]] {
   def createBucket(a: CreateBucketRequest): F[CreateBucketResponse]
   def createMultipartUpload(a: CreateMultipartUploadRequest): F[CreateMultipartUploadResponse]
   def deleteBucket(a: DeleteBucketRequest): F[DeleteBucketResponse]
+
   def deleteBucketAnalyticsConfiguration(
     a: DeleteBucketAnalyticsConfigurationRequest
   ): F[DeleteBucketAnalyticsConfigurationResponse]
   def deleteBucketCors(a: DeleteBucketCorsRequest): F[DeleteBucketCorsResponse]
   def deleteBucketEncryption(a: DeleteBucketEncryptionRequest): F[DeleteBucketEncryptionResponse]
+
   def deleteBucketIntelligentTieringConfiguration(
     a: DeleteBucketIntelligentTieringConfigurationRequest
   ): F[DeleteBucketIntelligentTieringConfigurationResponse]
+
   def deleteBucketInventoryConfiguration(
     a: DeleteBucketInventoryConfigurationRequest
   ): F[DeleteBucketInventoryConfigurationResponse]
   def deleteBucketLifecycle(a: DeleteBucketLifecycleRequest): F[DeleteBucketLifecycleResponse]
+
   def deleteBucketMetricsConfiguration(
     a: DeleteBucketMetricsConfigurationRequest
   ): F[DeleteBucketMetricsConfigurationResponse]
@@ -43,21 +47,26 @@ trait S3AsyncClientOp[F[_]] {
   def deleteObjectTagging(a: DeleteObjectTaggingRequest): F[DeleteObjectTaggingResponse]
   def deleteObjects(a: DeleteObjectsRequest): F[DeleteObjectsResponse]
   def deletePublicAccessBlock(a: DeletePublicAccessBlockRequest): F[DeletePublicAccessBlockResponse]
+
   def getBucketAccelerateConfiguration(
     a: GetBucketAccelerateConfigurationRequest
   ): F[GetBucketAccelerateConfigurationResponse]
   def getBucketAcl(a: GetBucketAclRequest): F[GetBucketAclResponse]
+
   def getBucketAnalyticsConfiguration(
     a: GetBucketAnalyticsConfigurationRequest
   ): F[GetBucketAnalyticsConfigurationResponse]
   def getBucketCors(a: GetBucketCorsRequest): F[GetBucketCorsResponse]
   def getBucketEncryption(a: GetBucketEncryptionRequest): F[GetBucketEncryptionResponse]
+
   def getBucketIntelligentTieringConfiguration(
     a: GetBucketIntelligentTieringConfigurationRequest
   ): F[GetBucketIntelligentTieringConfigurationResponse]
+
   def getBucketInventoryConfiguration(
     a: GetBucketInventoryConfigurationRequest
   ): F[GetBucketInventoryConfigurationResponse]
+
   def getBucketLifecycleConfiguration(
     a: GetBucketLifecycleConfigurationRequest
   ): F[GetBucketLifecycleConfigurationResponse]
@@ -66,6 +75,7 @@ trait S3AsyncClientOp[F[_]] {
   def getBucketMetricsConfiguration(
     a: GetBucketMetricsConfigurationRequest
   ): F[GetBucketMetricsConfigurationResponse]
+
   def getBucketNotificationConfiguration(
     a: GetBucketNotificationConfigurationRequest
   ): F[GetBucketNotificationConfigurationResponse]
@@ -85,12 +95,14 @@ trait S3AsyncClientOp[F[_]] {
   ): F[ReturnT]
   def getObject(a: GetObjectRequest, b: Path): F[GetObjectResponse]
   def getObjectAcl(a: GetObjectAclRequest): F[GetObjectAclResponse]
+  def getObjectAttributes(a: GetObjectAttributesRequest): F[GetObjectAttributesResponse]
   def getObjectLegalHold(a: GetObjectLegalHoldRequest): F[GetObjectLegalHoldResponse]
   def getObjectLockConfiguration(
     a: GetObjectLockConfigurationRequest
   ): F[GetObjectLockConfigurationResponse]
   def getObjectRetention(a: GetObjectRetentionRequest): F[GetObjectRetentionResponse]
   def getObjectTagging(a: GetObjectTaggingRequest): F[GetObjectTaggingResponse]
+
   def getObjectTorrent[ReturnT](
     a: GetObjectTorrentRequest,
     b: AsyncResponseTransformer[GetObjectTorrentResponse, ReturnT]
@@ -99,15 +111,19 @@ trait S3AsyncClientOp[F[_]] {
   def getPublicAccessBlock(a: GetPublicAccessBlockRequest): F[GetPublicAccessBlockResponse]
   def headBucket(a: HeadBucketRequest): F[HeadBucketResponse]
   def headObject(a: HeadObjectRequest): F[HeadObjectResponse]
+
   def listBucketAnalyticsConfigurations(
     a: ListBucketAnalyticsConfigurationsRequest
   ): F[ListBucketAnalyticsConfigurationsResponse]
+
   def listBucketIntelligentTieringConfigurations(
     a: ListBucketIntelligentTieringConfigurationsRequest
   ): F[ListBucketIntelligentTieringConfigurationsResponse]
+
   def listBucketInventoryConfigurations(
     a: ListBucketInventoryConfigurationsRequest
   ): F[ListBucketInventoryConfigurationsResponse]
+
   def listBucketMetricsConfigurations(
     a: ListBucketMetricsConfigurationsRequest
   ): F[ListBucketMetricsConfigurationsResponse]
@@ -124,21 +140,26 @@ trait S3AsyncClientOp[F[_]] {
   def listObjectsV2Paginator(a: ListObjectsV2Request): F[ListObjectsV2Publisher]
   def listParts(a: ListPartsRequest): F[ListPartsResponse]
   def listPartsPaginator(a: ListPartsRequest): F[ListPartsPublisher]
+
   def putBucketAccelerateConfiguration(
     a: PutBucketAccelerateConfigurationRequest
   ): F[PutBucketAccelerateConfigurationResponse]
   def putBucketAcl(a: PutBucketAclRequest): F[PutBucketAclResponse]
+
   def putBucketAnalyticsConfiguration(
     a: PutBucketAnalyticsConfigurationRequest
   ): F[PutBucketAnalyticsConfigurationResponse]
   def putBucketCors(a: PutBucketCorsRequest): F[PutBucketCorsResponse]
   def putBucketEncryption(a: PutBucketEncryptionRequest): F[PutBucketEncryptionResponse]
+
   def putBucketIntelligentTieringConfiguration(
     a: PutBucketIntelligentTieringConfigurationRequest
   ): F[PutBucketIntelligentTieringConfigurationResponse]
+
   def putBucketInventoryConfiguration(
     a: PutBucketInventoryConfigurationRequest
   ): F[PutBucketInventoryConfigurationResponse]
+
   def putBucketLifecycleConfiguration(
     a: PutBucketLifecycleConfigurationRequest
   ): F[PutBucketLifecycleConfigurationResponse]
@@ -146,6 +167,7 @@ trait S3AsyncClientOp[F[_]] {
   def putBucketMetricsConfiguration(
     a: PutBucketMetricsConfigurationRequest
   ): F[PutBucketMetricsConfigurationResponse]
+
   def putBucketNotificationConfiguration(
     a: PutBucketNotificationConfigurationRequest
   ): F[PutBucketNotificationConfigurationResponse]

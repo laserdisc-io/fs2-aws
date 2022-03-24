@@ -1,6 +1,6 @@
 package fs2.aws.dynamodb
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 /** Settings for configuring the Kinesis consumer stream
   *

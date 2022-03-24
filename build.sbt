@@ -1,10 +1,4 @@
-import TaglessGen.{
-  taglessAwsService,
-  taglessGenClasses,
-  taglessGenDir,
-  taglessGenPackage,
-  taglessGenSettings
-}
+import TaglessGen.{taglessAwsService, taglessGenClasses, taglessGenDir, taglessGenPackage, taglessGenSettings}
 import sbt.Keys.scalaSource
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
 import software.amazon.awssdk.services.s3.S3AsyncClient
@@ -14,16 +8,17 @@ import software.amazon.awssdk.services.kinesis.KinesisAsyncClient
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 
 organization := "io.laserdisc"
-name         := "fs2-aws"
+name := "fs2-aws"
 
 lazy val scala212 = "2.12.15"
 lazy val scala213 = "2.13.8"
+lazy val scala3 = "3.1.1"
 
-lazy val supportedScalaVersions = List(scala212, scala213)
+lazy val supportedScalaVersions = List(scala212, scala213, scala3)
 
-ThisBuild / crossScalaVersions := supportedScalaVersions
+//ThisBuild / crossScalaVersions := supportedScalaVersions
 
-ThisBuild / scalaVersion := scala213
+ThisBuild / scalaVersion := scala3
 
 lazy val root = (project in file("."))
   .aggregate(
@@ -45,7 +40,7 @@ lazy val root = (project in file("."))
     `pure-kinesis-tagless`
   )
   .settings(
-    publishArtifact    := false,
+    publishArtifact := false,
     crossScalaVersions := Nil
   )
 
@@ -53,14 +48,13 @@ lazy val `fs2-aws-core` = (project in file("fs2-aws-core"))
   .settings(
     name := "fs2-aws-core",
     libraryDependencies ++= Seq(
-      "co.fs2"        %% "fs2-core"                % V.Fs2,
-      "co.fs2"        %% "fs2-io"                  % V.Fs2,
-      "org.mockito"   % "mockito-core"             % V.MockitoCore % Test,
-      "org.mockito"   %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
-      "org.scalatest" %% "scalatest"               % V.ScalaTest % Test
+      "co.fs2" %% "fs2-core" % V.Fs2,
+      "co.fs2" %% "fs2-io" % V.Fs2,
+      "org.mockito" % "mockito-core" % V.MockitoCore % Test,
+      "org.scalatest" %% "scalatest" % V.ScalaTest % Test
     ),
     coverageMinimumStmtTotal := 40,
-    coverageFailOnMinimum    := true
+    coverageFailOnMinimum := true
   )
   .settings(commonSettings)
   .settings(scalacOptions ++= commonOptions(scalaVersion.value))
@@ -69,15 +63,14 @@ lazy val `fs2-aws-ciris` = (project in file("fs2-aws-ciris"))
   .settings(
     name := "fs2-aws-ciris",
     libraryDependencies ++= Seq(
-      "org.scalatest"           %% "scalatest"               % V.ScalaTest % Test,
-      "org.mockito"             % "mockito-core"             % V.MockitoCore % Test,
-      "org.mockito"             %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
-      "is.cir"                  %% "ciris"                   % "2.3.2",
-      "software.amazon.kinesis" % "amazon-kinesis-client"    % "2.3.10",
-      "org.typelevel"           %% "cats-effect"             % V.CE % Test
+      "org.scalatest" %% "scalatest" % V.ScalaTest % Test,
+      "org.mockito" % "mockito-core" % V.MockitoCore % Test,
+      "is.cir" %% "ciris" % "2.3.2",
+      "software.amazon.kinesis" % "amazon-kinesis-client" % "2.3.10",
+      "org.typelevel" %% "cats-effect" % V.CE % Test
     ),
     coverageMinimumStmtTotal := 40,
-    coverageFailOnMinimum    := true
+    coverageFailOnMinimum := true
   )
   .settings(commonSettings)
   .settings(scalacOptions ++= commonOptions(scalaVersion.value))
@@ -85,18 +78,18 @@ lazy val `fs2-aws-ciris` = (project in file("fs2-aws-ciris"))
 lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb"))
   .dependsOn(`fs2-aws-core`, `pure-dynamodb-tagless`)
   .settings(
-    name                     := "fs2-aws-dynamodb",
+    name := "fs2-aws-dynamodb",
     coverageMinimumStmtTotal := 40,
-    coverageFailOnMinimum    := true,
+    coverageFailOnMinimum := true,
     libraryDependencies ++= Seq(
-      "co.fs2"        %% "fs2-core"                        % V.Fs2,
-      "co.fs2"        %% "fs2-io"                          % V.Fs2,
-      "org.scalatest" %% "scalatest"                       % V.ScalaTest % Test,
-      "org.mockito"   % "mockito-core"                     % V.MockitoCore % Test,
-      "org.mockito"   %% "mockito-scala-scalatest"         % V.MockitoScalaTest % Test,
-      "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.5.3",
-      "io.laserdisc"  %% "scanamo-circe"                   % "1.0.8"
-    )
+      "co.fs2" %% "fs2-core" % V.Fs2,
+      "co.fs2" %% "fs2-io" % V.Fs2,
+      "org.scalatest" %% "scalatest" % V.ScalaTest % Test,
+      "org.mockito" % "mockito-core" % V.MockitoCore % Test,
+      "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.5.3"
+    ),
+    libraryDependencies ++= Seq("io.laserdisc" %% "scanamo-circe" % "1.0.8")
+      .filterNot(_ => scalaVersion.value.startsWith("3."))
   )
   .settings(commonSettings)
   .settings(scalacOptions ++= commonOptions(scalaVersion.value))
@@ -114,19 +107,19 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
     `fs2-aws-s3`
   )
   .settings(
-    name                     := "fs2-aws-examples",
+    name := "fs2-aws-examples",
     coverageMinimumStmtTotal := 0,
     libraryDependencies ++= Seq(
-      "org.mockito"      % "mockito-core"             % V.MockitoCore % Test,
-      "org.mockito"      %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
-      "ch.qos.logback"   % "logback-classic"          % "1.2.10",
-      "ch.qos.logback"   % "logback-core"             % "1.2.10",
-      "org.slf4j"        % "jcl-over-slf4j"           % "1.7.36",
-      "org.slf4j"        % "jul-to-slf4j"             % "1.7.36",
-      "org.typelevel"    %% "log4cats-slf4j"          % "2.2.0",
-      "io.laserdisc"     %% "scanamo-circe"           % "2.1.0",
-      "io.janstenpickle" %% "trace4cats-inject"       % "0.12.0"
-    )
+      "ch.qos.logback" % "logback-classic" % "1.2.10",
+      "ch.qos.logback" % "logback-core" % "1.2.10",
+      "org.slf4j" % "jcl-over-slf4j" % "1.7.36",
+      "org.slf4j" % "jul-to-slf4j" % "1.7.36",
+      "org.typelevel" %% "log4cats-slf4j" % "2.2.0",
+      "io.janstenpickle" %% "trace4cats-inject" % "0.12.0"
+    ),
+    libraryDependencies ++= Seq(
+      "io.laserdisc" %% "scanamo-circe" % "2.1.0"
+    ).filterNot(_ => scalaVersion.value.startsWith("3."))
   )
   .settings(commonSettings)
   .settings(scalacOptions ++= commonOptions(scalaVersion.value))
@@ -138,15 +131,15 @@ lazy val `fs2-aws-s3` = (project in file("fs2-aws-s3"))
   .settings(
     name := "fs2-aws-s3",
     libraryDependencies ++= Seq(
-      "co.fs2"                 %% "fs2-core" % V.Fs2,
-      "co.fs2"                 %% "fs2-io"   % V.Fs2,
-      "eu.timepit"             %% "refined"  % V.Refined,
-      "software.amazon.awssdk" % "s3"        % V.AwsSdk,
-      "org.scalameta"          %% "munit"    % V.Munit % Test
+      "co.fs2" %% "fs2-core" % V.Fs2,
+      "co.fs2" %% "fs2-io" % V.Fs2,
+      "eu.timepit" %% "refined" % V.Refined,
+      "software.amazon.awssdk" % "s3" % V.AwsSdk,
+      "org.scalameta" %% "munit" % V.Munit % Test
     ),
-    testFrameworks           += new TestFramework("munit.Framework"),
+    testFrameworks += new TestFramework("munit.Framework"),
     coverageMinimumStmtTotal := 0,
-    coverageFailOnMinimum    := true
+    coverageFailOnMinimum := true
   )
   .settings(commonSettings)
   .settings(scalacOptions := commonOptions(scalaVersion.value))
@@ -162,20 +155,19 @@ lazy val `fs2-aws-kinesis` = (project in file("fs2-aws-kinesis"))
   .settings(
     name := "fs2-aws-kinesis",
     libraryDependencies ++= Seq(
-      "co.fs2"                  %% "fs2-core"                % V.Fs2,
-      "co.fs2"                  %% "fs2-io"                  % V.Fs2,
-      "com.amazonaws"           % "amazon-kinesis-producer"  % "0.14.10",
-      "software.amazon.kinesis" % "amazon-kinesis-client"    % "2.3.10",
-      "software.amazon.awssdk"  % "sts"                      % V.AwsSdk,
-      "eu.timepit"              %% "refined"                 % V.Refined,
-      "org.scalatest"           %% "scalatest"               % V.ScalaTest % Test,
-      "org.mockito"             %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
-      "org.mockito"             % "mockito-core"             % V.MockitoCore % Test,
-      "ch.qos.logback"          % "logback-classic"          % "1.2.10" % Test,
-      "ch.qos.logback"          % "logback-core"             % "1.2.10" % Test
+      "co.fs2" %% "fs2-core" % V.Fs2,
+      "co.fs2" %% "fs2-io" % V.Fs2,
+      "com.amazonaws" % "amazon-kinesis-producer" % "0.14.10",
+      "software.amazon.kinesis" % "amazon-kinesis-client" % "2.3.10",
+      "software.amazon.awssdk" % "sts" % V.AwsSdk,
+      "eu.timepit" %% "refined" % V.Refined,
+      "org.scalatest" %% "scalatest" % V.ScalaTest % Test,
+      "org.mockito" % "mockito-core" % V.MockitoCore % Test,
+      "ch.qos.logback" % "logback-classic" % "1.2.10" % Test,
+      "ch.qos.logback" % "logback-core" % "1.2.10" % Test
     ),
     coverageMinimumStmtTotal := 40,
-    coverageFailOnMinimum    := true
+    coverageFailOnMinimum := true
   )
   .settings(commonSettings)
   .settings(scalacOptions ++= commonOptions(scalaVersion.value))
@@ -184,16 +176,15 @@ lazy val `fs2-aws-sqs` = (project in file("fs2-aws-sqs"))
   .settings(
     name := "fs2-aws-sqs",
     libraryDependencies ++= Seq(
-      "co.fs2"                 %% "fs2-core"                % V.Fs2,
-      "co.fs2"                 %% "fs2-io"                  % V.Fs2,
-      "software.amazon.awssdk" % "sqs"                      % V.AwsSdk,
-      "org.mockito"            % "mockito-core"             % V.MockitoCore % Test,
-      "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
-      "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
-      "eu.timepit"             %% "refined"                 % V.Refined
+      "co.fs2" %% "fs2-core" % V.Fs2,
+      "co.fs2" %% "fs2-io" % V.Fs2,
+      "software.amazon.awssdk" % "sqs" % V.AwsSdk,
+      "org.mockito" % "mockito-core" % V.MockitoCore % Test,
+      "org.scalatest" %% "scalatest" % V.ScalaTest % Test,
+      "eu.timepit" %% "refined" % V.Refined
     ),
     coverageMinimumStmtTotal := 55.80,
-    coverageFailOnMinimum    := true
+    coverageFailOnMinimum := true
   )
   .settings(commonSettings)
   .settings(scalacOptions ++= commonOptions(scalaVersion.value))
@@ -203,18 +194,17 @@ lazy val `fs2-aws-sns` = (project in file("fs2-aws-sns"))
   .settings(
     name := "fs2-aws-sns",
     libraryDependencies ++= Seq(
-      "co.fs2"                 %% "fs2-core"                % V.Fs2,
-      "co.fs2"                 %% "fs2-io"                  % V.Fs2,
-      "software.amazon.awssdk" % "sns"                      % V.AwsSdk,
-      "org.mockito"            % "mockito-core"             % V.MockitoCore % Test,
-      "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
-      "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
-      "software.amazon.awssdk" % "sqs"                      % V.AwsSdk % Test,
-      "eu.timepit"             %% "refined"                 % V.Refined,
-      "org.typelevel"          %% "cats-effect"             % V.CE
+      "co.fs2" %% "fs2-core" % V.Fs2,
+      "co.fs2" %% "fs2-io" % V.Fs2,
+      "software.amazon.awssdk" % "sns" % V.AwsSdk,
+      "org.mockito" % "mockito-core" % V.MockitoCore % Test,
+      "org.scalatest" %% "scalatest" % V.ScalaTest % Test,
+      "software.amazon.awssdk" % "sqs" % V.AwsSdk % Test,
+      "eu.timepit" %% "refined" % V.Refined,
+      "org.typelevel" %% "cats-effect" % V.CE
     ),
     coverageMinimumStmtTotal := 55.80,
-    coverageFailOnMinimum    := true
+    coverageFailOnMinimum := true
   )
   .settings(commonSettings)
   .settings(scalacOptions ++= commonOptions(scalaVersion.value))
@@ -225,14 +215,13 @@ lazy val `pure-sqs-tagless` = (project in file("pure-aws/pure-sqs-tagless"))
   .settings(
     name := "pure-sqs-tagless",
     libraryDependencies ++= Seq(
-      "software.amazon.awssdk" % "sqs"                      % V.AwsSdk,
-      "org.mockito"            % "mockito-core"             % V.MockitoCore % Test,
-      "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
-      "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
-      "eu.timepit"             %% "refined"                 % V.Refined,
-      "org.typelevel"          %% "cats-effect"             % V.CE
+      "software.amazon.awssdk" % "sqs" % V.AwsSdk,
+      "org.mockito" % "mockito-core" % V.MockitoCore % Test,
+      "org.scalatest" %% "scalatest" % V.ScalaTest % Test,
+      "eu.timepit" %% "refined" % V.Refined,
+      "org.typelevel" %% "cats-effect" % V.CE
     ),
-    taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "sqs" / "tagless",
+    taglessGenDir := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "sqs" / "tagless",
     taglessGenPackage := "io.laserdisc.pure.sqs.tagless",
     taglessAwsService := "sqs",
     taglessGenClasses := {
@@ -249,13 +238,12 @@ lazy val `pure-s3-tagless` = (project in file("pure-aws/pure-s3-tagless"))
   .settings(
     name := "pure-s3-tagless",
     libraryDependencies ++= Seq(
-      "software.amazon.awssdk" % "s3"                       % V.AwsSdk,
-      "org.mockito"            % "mockito-core"             % V.MockitoCore % Test,
-      "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
-      "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
-      "org.typelevel"          %% "cats-effect"             % V.CE
+      "software.amazon.awssdk" % "s3" % V.AwsSdk,
+      "org.mockito" % "mockito-core" % V.MockitoCore % Test,
+      "org.scalatest" %% "scalatest" % V.ScalaTest % Test,
+      "org.typelevel" %% "cats-effect" % V.CE
     ),
-    taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "s3" / "tagless",
+    taglessGenDir := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "s3" / "tagless",
     taglessGenPackage := "io.laserdisc.pure.s3.tagless",
     taglessAwsService := "s3",
     taglessGenClasses := {
@@ -272,14 +260,13 @@ lazy val `pure-sns-tagless` = (project in file("pure-aws/pure-sns-tagless"))
   .settings(
     name := "pure-sns-tagless",
     libraryDependencies ++= Seq(
-      "software.amazon.awssdk" % "sns"                      % V.AwsSdk,
-      "org.mockito"            % "mockito-core"             % V.MockitoCore % Test,
-      "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
-      "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
-      "eu.timepit"             %% "refined"                 % V.Refined,
-      "org.typelevel"          %% "cats-effect"             % V.CE
+      "software.amazon.awssdk" % "sns" % V.AwsSdk,
+      "org.mockito" % "mockito-core" % V.MockitoCore % Test,
+      "org.scalatest" %% "scalatest" % V.ScalaTest % Test,
+      "eu.timepit" %% "refined" % V.Refined,
+      "org.typelevel" %% "cats-effect" % V.CE
     ),
-    taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "sns" / "tagless",
+    taglessGenDir := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "sns" / "tagless",
     taglessGenPackage := "io.laserdisc.pure.sns.tagless",
     taglessAwsService := "sns",
     taglessGenClasses := {
@@ -296,14 +283,13 @@ lazy val `pure-kinesis-tagless` = (project in file("pure-aws/pure-kinesis-tagles
   .settings(
     name := "pure-kinesis-tagless",
     libraryDependencies ++= Seq(
-      "software.amazon.awssdk" % "kinesis"                  % V.AwsSdk,
-      "org.mockito"            % "mockito-core"             % V.MockitoCore % Test,
-      "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
-      "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
-      "eu.timepit"             %% "refined"                 % V.Refined,
-      "org.typelevel"          %% "cats-effect"             % V.CE
+      "software.amazon.awssdk" % "kinesis" % V.AwsSdk,
+      "org.mockito" % "mockito-core" % V.MockitoCore % Test,
+      "org.scalatest" %% "scalatest" % V.ScalaTest % Test,
+      "eu.timepit" %% "refined" % V.Refined,
+      "org.typelevel" %% "cats-effect" % V.CE
     ),
-    taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "kinesis" / "tagless",
+    taglessGenDir := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "kinesis" / "tagless",
     taglessGenPackage := "io.laserdisc.pure.kinesis.tagless",
     taglessAwsService := "kinesis",
     taglessGenClasses := {
@@ -320,14 +306,13 @@ lazy val `pure-dynamodb-tagless` = (project in file("pure-aws/pure-dynamodb-tagl
   .settings(
     name := "pure-dynamodb-tagless",
     libraryDependencies ++= Seq(
-      "software.amazon.awssdk" % "dynamodb"                 % V.AwsSdk,
-      "org.mockito"            % "mockito-core"             % V.MockitoCore % Test,
-      "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
-      "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
-      "eu.timepit"             %% "refined"                 % V.Refined,
-      "org.typelevel"          %% "cats-effect"             % V.CE
+      "software.amazon.awssdk" % "dynamodb" % V.AwsSdk,
+      "org.mockito" % "mockito-core" % V.MockitoCore % Test,
+      "org.scalatest" %% "scalatest" % V.ScalaTest % Test,
+      "eu.timepit" %% "refined" % V.Refined,
+      "org.typelevel" %% "cats-effect" % V.CE
     ),
-    taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "dynamodb" / "tagless",
+    taglessGenDir := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "dynamodb" / "tagless",
     taglessGenPackage := "io.laserdisc.pure.dynamodb.tagless",
     taglessAwsService := "dynamodb",
     taglessGenClasses := {
@@ -344,14 +329,13 @@ lazy val `pure-cloudwatch-tagless` = (project in file("pure-aws/pure-cloudwatch-
   .settings(
     name := "pure-cloudwatch-tagless",
     libraryDependencies ++= Seq(
-      "software.amazon.awssdk" % "cloudwatch"               % V.AwsSdk,
-      "org.mockito"            % "mockito-core"             % V.MockitoCore % Test,
-      "org.scalatest"          %% "scalatest"               % V.ScalaTest % Test,
-      "org.mockito"            %% "mockito-scala-scalatest" % V.MockitoScalaTest % Test,
-      "eu.timepit"             %% "refined"                 % V.Refined,
-      "org.typelevel"          %% "cats-effect"             % V.CE
+      "software.amazon.awssdk" % "cloudwatch" % V.AwsSdk,
+      "org.mockito" % "mockito-core" % V.MockitoCore % Test,
+      "org.scalatest" %% "scalatest" % V.ScalaTest % Test,
+      "eu.timepit" %% "refined" % V.Refined,
+      "org.typelevel" %% "cats-effect" % V.CE
     ),
-    taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "cloudwatch" / "tagless",
+    taglessGenDir := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "cloudwatch" / "tagless",
     taglessGenPackage := "io.laserdisc.pure.cloudwatch.tagless",
     taglessAwsService := "cloudwatch",
     taglessGenClasses := {
@@ -368,13 +352,11 @@ lazy val `fs2-aws-testkit` = (project in file("fs2-aws-testkit"))
   .settings(
     name := "fs2-aws-testkit",
     libraryDependencies ++= Seq(
-      "io.circe"      %% "circe-core"              % V.Circe,
-      "io.circe"      %% "circe-generic"           % V.Circe,
-      "io.circe"      %% "circe-generic-extras"    % V.Circe,
-      "io.circe"      %% "circe-parser"            % V.Circe,
-      "org.scalatest" %% "scalatest"               % V.ScalaTest,
-      "org.mockito"   % "mockito-core"             % V.MockitoCore,
-      "org.mockito"   %% "mockito-scala-scalatest" % V.MockitoScalaTest
+      "io.circe" %% "circe-core" % V.Circe,
+      "io.circe" %% "circe-generic" % V.Circe,
+      "io.circe" %% "circe-parser" % V.Circe,
+      "org.scalatest" %% "scalatest" % V.ScalaTest,
+      "org.mockito" % "mockito-core" % V.MockitoCore
     )
   )
   .settings(commonSettings)
@@ -387,15 +369,14 @@ lazy val `fs2-aws-benchmarks` = (project in file("fs2-aws-benchmarks"))
     name := "fs2-aws-benchmarks",
     libraryDependencies ++= Seq(
       "ch.qos.logback" % "logback-classic" % "1.2.10",
-      "ch.qos.logback" % "logback-core"    % "1.2.10",
-      "org.slf4j"      % "jcl-over-slf4j"  % "1.7.36",
-      "org.slf4j"      % "jul-to-slf4j"    % "1.7.36"
+      "ch.qos.logback" % "logback-core" % "1.2.10",
+      "org.slf4j" % "jcl-over-slf4j" % "1.7.36",
+      "org.slf4j" % "jul-to-slf4j" % "1.7.36"
     ),
     publishArtifact := false
   )
   .enablePlugins(JmhPlugin)
 
-addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
 addCommandAlias("format", ";scalafmt;test:scalafmt;scalafmtSbt")
 addCommandAlias("checkFormat", ";scalafmtCheck;test:scalafmtCheck;scalafmtSbtCheck")
 addCommandAlias("build", ";checkFormat;clean;+test;coverage")
@@ -407,7 +388,7 @@ def commonOptions(scalaVersion: String) =
     case _ => Seq.empty
   }
 
-lazy val commonSettings = Seq(
+lazy val commonSettings = Def.settings(
   organization := "io.laserdisc",
   developers := List(
     Developer(
@@ -417,28 +398,85 @@ lazy val commonSettings = Seq(
       url("https://github.com/semenodm")
     )
   ),
-  licenses           ++= Seq(("MIT", url("http://opensource.org/licenses/MIT"))),
-  homepage           := Some(url("https://github.com/laserdisc-io/fs2-aws")),
-  crossScalaVersions := supportedScalaVersions,
-  scalaVersion       := scala213,
-  Test / fork        := true,
+  licenses ++= Seq(("MIT", url("http://opensource.org/licenses/MIT"))),
+  homepage := Some(url("https://github.com/laserdisc-io/fs2-aws")),
+//  crossScalaVersions := supportedScalaVersions,
+  scalaVersion := scala3,
+  Test / fork := true,
   scalacOptions ++= Seq(
+    "-deprecation",
     "-encoding",
-    "UTF-8",                         // source files are in UTF-8
-    "-deprecation",                  // warn about use of deprecated APIs
-    "-unchecked",                    // warn about unchecked type parameters
-    "-feature",                      // warn about misused language features
-    "-language:higherKinds",         // allow higher kinded types without `import scala.language.higherKinds`
-    "-language:implicitConversions", // allow use of implicit conversions
-    "-language:postfixOps",
-    "-Xlint",             // enable handy linter warnings
-    "-Xfatal-warnings",   // turn compiler warnings into errors
-    "-Ywarn-macros:after" // allows the compiler to resolve implicit imports being flagged as unused
+    "UTF-8",
+    "-feature",
+    "-language:existentials,experimental.macros,higherKinds,implicitConversions,postfixOps",
+    "-unchecked",
+    "-Xfatal-warnings"
   ),
-  addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1"),
-  addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.10.3"),
-  libraryDependencies += "org.scala-lang.modules" %% "scala-collection-compat" % "2.6.0"
-//  javaOptions         ++= Seq("-Dscala.concurrent.context.numThreads=8")
+  scalacOptions ++= {
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, minor)) if minor >= 12 =>
+        Seq(
+          "-Xlint:-unused,_",
+          "-Ywarn-numeric-widen",
+          "-Ywarn-value-discard",
+          "-Ywarn-unused:implicits",
+          "-Ywarn-unused:imports"
+        )
+      case _ => Seq.empty
+    }
+  },
+  scalacOptions ++= {
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, minor)) if minor >= 13 =>
+        Seq("-Xlint:-byname-implicit")
+      case _ => Seq.empty
+    }
+  },
+  scalacOptions ++= {
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, 12 | 13)) =>
+        Seq(
+          "-Xsource:3",
+          "-P:kind-projector:underscore-placeholders",
+          "-Xlint", // enable handy linter warnings
+          "-Ywarn-macros:after" // allows the compiler to resolve implicit imports being flagged as unused
+        )
+      case _ => Seq.empty
+    }
+  },
+  scalacOptions ++= {
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((3, _)) =>
+        Seq(
+          "-Ykind-projector:underscores",
+          "-source:future",
+          "-language:adhocExtensions",
+          "-Wconf:msg=`= _` has been deprecated; use `= uninitialized` instead.:s"
+        )
+      case _ => Seq.empty
+    }
+  },
+  Test / scalacOptions += "-Wconf:msg=is not declared `infix`:s,msg=is declared 'open':s",
+  //  addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
+  libraryDependencies += "org.scala-lang.modules" %% "scala-collection-compat" % "2.6.0",
+  libraryDependencies ++= Seq(
+    compilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full),
+    compilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1")
+  ).filterNot(_ => scalaVersion.value.startsWith("3.")),
+  Seq(Compile, Test).map { config =>
+    (config / unmanagedSourceDirectories) ++= {
+      (config / unmanagedSourceDirectories).value.flatMap {
+        dir: File =>
+          if (dir.getName != "scala") Seq(dir)
+          else
+            CrossVersion.partialVersion(scalaVersion.value) match {
+              case Some((2, 12)) => Seq(file(dir.getPath + "-3.0-"))
+              case Some((2, 13)) => Seq(file(dir.getPath + "-3.0-"))
+              case Some((0, _))  => Seq(file(dir.getPath + "-3.0+"))
+              case Some((3, _))  => Seq(file(dir.getPath + "-3.0+"))
+              case other         => sys.error(s"unmanagedSourceDirectories for scalaVersion $other not set")
+            }
+      }
+    }
+  }
 )
-
-addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")

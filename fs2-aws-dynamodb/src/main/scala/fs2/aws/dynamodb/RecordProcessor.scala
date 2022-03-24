@@ -3,11 +3,11 @@ package fs2.aws.dynamodb
 import java.util.concurrent.Phaser
 
 import com.amazonaws.services.dynamodbv2.streamsadapter.model.RecordAdapter
-import com.amazonaws.services.kinesis.clientlibrary.interfaces._
+import com.amazonaws.services.kinesis.clientlibrary.interfaces.*
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.ShutdownReason
-import com.amazonaws.services.kinesis.clientlibrary.types._
+import com.amazonaws.services.kinesis.clientlibrary.types.*
 
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 /** Concrete implementation of the AWS RecordProcessor interface.
   * Wraps incoming records into CommitableRecord types to allow for downstream

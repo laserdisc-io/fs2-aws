@@ -5,11 +5,11 @@ import cats.effect.{ Ref, Sync }
 import com.amazonaws.services.kinesis.producer.{ Attempt, UserRecordResult }
 import com.google.common.util.concurrent.{ ListenableFuture, SettableFuture }
 import fs2.aws.internal.KinesisProducerClient
-import cats.implicits._
+import cats.implicits.*
 import io.circe.Decoder
 import io.circe.jawn.CirceSupportParser
 
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 case class TestKinesisProducerClient[F[_], T](state: Ref[F, List[T]])(
   implicit decoder: Decoder[T]

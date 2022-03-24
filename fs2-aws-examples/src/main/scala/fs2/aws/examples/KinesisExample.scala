@@ -1,7 +1,7 @@
 package fs2.aws.examples
 
 import cats.NonEmptyParallel
-import cats.effect._
+import cats.effect.*
 import com.amazonaws.services.kinesis.producer.KinesisProducerConfiguration
 import fs2.Stream
 import fs2.aws.internal.KinesisProducerClientImpl
@@ -12,11 +12,11 @@ import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClientBuilder
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClientBuilder
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClientBuilder
 import software.amazon.awssdk.services.kinesis.model.{ CreateStreamRequest, DeleteStreamRequest }
-import fs2.aws.examples.syntax._
-import cats.implicits._
-import io.laserdisc.pure.cloudwatch.tagless.{ Interpreter => CloudwatchInterpreter }
-import io.laserdisc.pure.dynamodb.tagless.{ Interpreter => DynamoDbInterpreter }
-import io.laserdisc.pure.kinesis.tagless.{ Interpreter => KinesisInterpreter }
+import fs2.aws.examples.syntax.*
+import cats.implicits.*
+import io.laserdisc.pure.cloudwatch.tagless.Interpreter as CloudwatchInterpreter
+import io.laserdisc.pure.dynamodb.tagless.Interpreter as DynamoDbInterpreter
+import io.laserdisc.pure.kinesis.tagless.Interpreter as KinesisInterpreter
 import scala.concurrent.ExecutionContext.Implicits.global
 
 import java.nio.ByteBuffer

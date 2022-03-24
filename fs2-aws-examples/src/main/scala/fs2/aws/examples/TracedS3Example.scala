@@ -1,21 +1,24 @@
 package fs2.aws.examples
 
 import cats.data.Kleisli
-import cats.effect._
-import eu.timepit.refined.auto._
-import fs2.aws.s3.{ BucketName, FileKey, S3 }
+import cats.effect.*
+import eu.timepit.refined.auto.*
+import eu.timepit.refined.types.string.NonEmptyString
+import fs2.aws.s3.{BucketName, FileKey, S3}
+import fs2.text
 import io.janstenpickle.trace4cats.Span
 import io.janstenpickle.trace4cats.inject.Trace
-import io.laserdisc.pure.s3.tagless.{ S3AsyncClientOp, Interpreter => S3Interpreter }
-import software.amazon.awssdk.auth.credentials.{ AwsBasicCredentials, StaticCredentialsProvider }
+import io.laserdisc.pure.s3.tagless.{S3AsyncClientOp, Interpreter as S3Interpreter}
+import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3AsyncClient
 
 import java.net.URI
 
 object TracedS3Example extends IOApp {
-  val credentials = AwsBasicCredentials.create("accesskey", "secretkey")
-  val port        = 4566
+  val credentials = AwsBasicCredentials
+    .create("AKIAIOSFODNN7EXAMPLE", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
+  val port        = 9000
   override def run(args: List[String]): IO[ExitCode] =
     s3StreamResource.use(s3 => S3.create(s3).flatMap(program).as(ExitCode.Success))
 
@@ -30,7 +33,10 @@ object TracedS3Example extends IOApp {
 
   def tracedS3Read[F[_]: Sync: Trace](s3: S3[F]): F[Unit] =
     Trace[F].span("read_s3_file") {
-      s3.readFile(BucketName("test"), FileKey("foo")).compile.drain
+      s3.readFile(BucketName(NonEmptyString.unsafeFrom("resources")), FileKey(NonEmptyString.unsafeFrom("jsontest.json")))
+        .through(text.utf8.decode)
+        .through(fs2.text.lines)
+        .evalTap( l => Sync[F].delay(println(l))).compile.drain
     }
 
   def program(s3: S3[IO]): IO[Unit] = {

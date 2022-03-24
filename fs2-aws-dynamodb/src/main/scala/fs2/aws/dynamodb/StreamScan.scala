@@ -3,14 +3,14 @@ package fs2.aws.dynamodb
 import cats.Functor
 import cats.effect.std.{ Dispatcher, Queue }
 import cats.effect.{ Async, Ref }
-import cats.implicits._
+import cats.implicits.*
 import fs2.{ Chunk, Stream }
 import io.laserdisc.pure.dynamodb.tagless.DynamoDbAsyncClientOp
 import org.reactivestreams.{ Subscriber, Subscription }
 import software.amazon.awssdk.services.dynamodb.model.{ AttributeValue, ScanRequest, ScanResponse }
 
-import java.util.{ Map => JMap }
-import scala.jdk.CollectionConverters._
+import java.util.{ Map as JMap }
+import scala.jdk.CollectionConverters.*
 trait StreamScan[F[_]] {
 
   /** Scans Dynamodb into the FS2 stream
@@ -48,15 +48,17 @@ object StreamScan {
 
                       override def onSubscribe(s: Subscription): Unit =
                         dispatcher
-                          .unsafeRunSync(sub.set(s.some) >> Async[F].delay(s.request(pageSize)))
+                          .unsafeRunSync(
+                            sub.set(s.some) >> Async[F].delay(s.request(pageSize.toLong))
+                          )
 
                       override def onNext(t: ScanResponse): Unit =
                         dispatcher
                           .unsafeRunSync(
                             for {
-                              _ <- queue.offer(Chunk(t.items().asScala.toList: _*).some)
+                              _ <- queue.offer(Chunk(t.items().asScala.toList*).some)
                               s <- sub.get
-                              _ <- Async[F].delay(s.map(_.request(pageSize)))
+                              _ <- Async[F].delay(s.map(_.request(pageSize.toLong)))
                             } yield ()
                           )
 

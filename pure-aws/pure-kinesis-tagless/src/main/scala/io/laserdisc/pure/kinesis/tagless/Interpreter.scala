@@ -9,7 +9,7 @@ import java.util.concurrent.CompletionException
 
 // Types referenced
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient
-import software.amazon.awssdk.services.kinesis.model._
+import software.amazon.awssdk.services.kinesis.model.*
 
 import java.util.concurrent.CompletableFuture
 
@@ -50,6 +50,7 @@ trait Interpreter[M[_]] { outer =>
       ()
     }
   }
+
   def eff1[J, A](fut: =>CompletableFuture[A]): M[A] =
     asyncM.async_ { cb =>
       fut.handle[Unit] { (a, x) =>
@@ -117,6 +118,7 @@ trait Interpreter[M[_]] { outer =>
     override def updateShardCount(a: UpdateShardCountRequest) = eff(_.updateShardCount(a))
     override def updateStreamMode(a: UpdateStreamModeRequest) = eff(_.updateStreamMode(a))
     override def waiter                                       = primitive(_.waiter)
+
     def lens[E](f: E => KinesisAsyncClient): KinesisAsyncClientOp[Kleisli[M, E, *]] =
       new KinesisAsyncClientOp[Kleisli[M, E, *]] {
         override def addTagsToStream(a: AddTagsToStreamRequest) =
@@ -171,7 +173,8 @@ trait Interpreter[M[_]] { outer =>
         override def subscribeToShard(
           a: SubscribeToShardRequest,
           b: SubscribeToShardResponseHandler
-        ) = Kleisli(e => eff1(f(e).subscribeToShard(a, b)))
+        ) =
+          Kleisli(e => eff1(f(e).subscribeToShard(a, b)))
         override def updateShardCount(a: UpdateShardCountRequest) =
           Kleisli(e => eff1(f(e).updateShardCount(a)))
         override def updateStreamMode(a: UpdateStreamModeRequest) =
@@ -182,9 +185,11 @@ trait Interpreter[M[_]] { outer =>
 
   def KinesisAsyncClientResource(
     builder: KinesisAsyncClientBuilder
-  ): Resource[M, KinesisAsyncClient] = Resource.fromAutoCloseable(asyncM.delay(builder.build()))
+  ): Resource[M, KinesisAsyncClient] =
+    Resource.fromAutoCloseable(asyncM.delay(builder.build()))
   def KinesisAsyncClientOpResource(builder: KinesisAsyncClientBuilder) =
     KinesisAsyncClientResource(builder).map(create)
+
   def create(client: KinesisAsyncClient): KinesisAsyncClientOp[M] = new KinesisAsyncClientOp[M] {
 
     // domain-specific operations are implemented in terms of `primitive`

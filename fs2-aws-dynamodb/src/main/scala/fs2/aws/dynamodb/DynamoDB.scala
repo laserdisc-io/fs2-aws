@@ -2,9 +2,9 @@ package fs2.aws.dynamodb
 
 import cats.effect.std.{ Dispatcher, Queue }
 import cats.effect.{ Async, Concurrent, Sync }
-import cats.syntax.applicative._
-import cats.syntax.flatMap._
-import cats.syntax.functor._
+import cats.syntax.applicative.*
+import cats.syntax.flatMap.*
+import cats.syntax.functor.*
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch
 import com.amazonaws.services.dynamodbv2.streamsadapter.{
@@ -78,8 +78,8 @@ object DynamoDB {
           schedulerFactory(() =>
             new RecordProcessor(records => dispatcher.unsafeRunSync(queue.offer(records)))
           ).flatTap(s =>
-            Concurrent[F].start(Async[F].blocking(s.run()).flatTap(_ => signal.set(true)))
-          )
+              Concurrent[F].start(Async[F].blocking(s.run()).flatTap(_ => signal.set(true)))
+            )
         }(s => Async[F].blocking(s.shutdown()))
 
       // Instantiate a new bounded queue and concurrently run the queue populator
@@ -92,6 +92,7 @@ object DynamoDB {
         stream          <- Stream.fromQueueUnterminated(buffer).interruptWhen(interruptSignal)
       } yield stream
     }
+
     def checkpointRecords(
       checkpointSettings: KinesisCheckpointSettings // = KinesisCheckpointSettings.defaultInstance
     ): Pipe[F, CommittableRecord, Record] = {
@@ -110,6 +111,7 @@ object DynamoDB {
       }.parJoinUnbounded
     }
   }
+
   def create[F[_]: Async](
     schedulerFactory: IRecordProcessorFactory => F[Worker]
   ): DynamoDB[F] = new GenericKinesis[F] {
@@ -135,7 +137,7 @@ object DynamoDB {
       dynamoDBStreamsClient: AmazonDynamoDBStreams,
       dynamoDBClient: AmazonDynamoDB,
       cloudWatchClient: AmazonCloudWatch
-    ): IRecordProcessorFactory => F[Worker] = { recordProcessorFactory: IRecordProcessorFactory =>
+    ): IRecordProcessorFactory => F[Worker] = { (recordProcessorFactory: IRecordProcessorFactory) =>
       val adapterClient = new AmazonDynamoDBStreamsAdapterClient(dynamoDBStreamsClient)
       StreamsWorkerFactory
         .createDynamoDbStreamsWorker(

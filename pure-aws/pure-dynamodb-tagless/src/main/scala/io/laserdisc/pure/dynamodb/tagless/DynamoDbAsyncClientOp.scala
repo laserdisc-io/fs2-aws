@@ -1,7 +1,7 @@
 package io.laserdisc.pure.dynamodb.tagless
 
-import software.amazon.awssdk.services.dynamodb.model._
-import software.amazon.awssdk.services.dynamodb.paginators._
+import software.amazon.awssdk.services.dynamodb.model.*
+import software.amazon.awssdk.services.dynamodb.paginators.*
 import software.amazon.awssdk.services.dynamodb.waiters.DynamoDbAsyncWaiter
 
 trait DynamoDbAsyncClientOp[F[_]] {
@@ -31,19 +31,23 @@ trait DynamoDbAsyncClientOp[F[_]] {
   def describeGlobalTableSettings(
     a: DescribeGlobalTableSettingsRequest
   ): F[DescribeGlobalTableSettingsResponse]
+
   def describeKinesisStreamingDestination(
     a: DescribeKinesisStreamingDestinationRequest
   ): F[DescribeKinesisStreamingDestinationResponse]
   def describeLimits: F[DescribeLimitsResponse]
   def describeLimits(a: DescribeLimitsRequest): F[DescribeLimitsResponse]
   def describeTable(a: DescribeTableRequest): F[DescribeTableResponse]
+
   def describeTableReplicaAutoScaling(
     a: DescribeTableReplicaAutoScalingRequest
   ): F[DescribeTableReplicaAutoScalingResponse]
   def describeTimeToLive(a: DescribeTimeToLiveRequest): F[DescribeTimeToLiveResponse]
+
   def disableKinesisStreamingDestination(
     a: DisableKinesisStreamingDestinationRequest
   ): F[DisableKinesisStreamingDestinationResponse]
+
   def enableKinesisStreamingDestination(
     a: EnableKinesisStreamingDestinationRequest
   ): F[EnableKinesisStreamingDestinationResponse]

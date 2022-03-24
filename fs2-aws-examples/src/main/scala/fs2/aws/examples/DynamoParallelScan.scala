@@ -2,16 +2,16 @@ package fs2.aws.examples
 
 import cats.data.Kleisli
 import cats.effect.{ ExitCode, IO, IOApp, Sync }
-import cats.implicits._
+import cats.implicits.*
 import fs2.aws.dynamodb.StreamScan
 import fs2.{ Chunk, Pipe }
 import io.laserdisc.pure.dynamodb.tagless.{ DynamoDbAsyncClientOp, Interpreter }
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
-import software.amazon.awssdk.services.dynamodb.model._
+import software.amazon.awssdk.services.dynamodb.model.*
 
-import java.util.{ Map => JMap }
-import scala.jdk.CollectionConverters._
+import java.util.{ Map as JMap }
+import scala.jdk.CollectionConverters.*
 
 /**
   * Following program demonstrates parallel scan and subsequent write to DDB table. This is efficient way to copy one DDB table to another

@@ -1,10 +1,11 @@
 package fs2.aws.examples
 
-import cats.effect.{ ExitCode, IO, IOApp, Resource }
-import eu.timepit.refined.auto._
-import fs2.aws.s3.{ BucketName, FileKey, S3 }
-import io.laserdisc.pure.s3.tagless.{ S3AsyncClientOp, Interpreter => S3Interpreter }
-import software.amazon.awssdk.auth.credentials.{ AwsBasicCredentials, StaticCredentialsProvider }
+import cats.effect.{ExitCode, IO, IOApp, Resource}
+import eu.timepit.refined.auto.*
+import eu.timepit.refined.types.string.NonEmptyString
+import fs2.aws.s3.{BucketName, FileKey, S3}
+import io.laserdisc.pure.s3.tagless.{S3AsyncClientOp, Interpreter as S3Interpreter}
+import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3AsyncClient
 
@@ -26,7 +27,7 @@ object S3Example extends IOApp {
     )
 
   def program(s3: S3[IO]): IO[Unit] =
-    s3.readFile(BucketName("test"), FileKey("foo"))
+    s3.readFile(BucketName(NonEmptyString.unsafeFrom( "test")), FileKey(NonEmptyString.unsafeFrom("foo")))
       .through(fs2.text.utf8.decode)
       .through(fs2.text.lines)
       .evalMap(line => IO(println(line)))

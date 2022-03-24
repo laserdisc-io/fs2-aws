@@ -1,8 +1,8 @@
-package fs2.aws
+package fs2.aws.s3
 
-import cats.effect._
+import cats.effect.*
 import cats.effect.unsafe.IORuntime
-import munit._
+import munit.*
 
 trait IOSuite extends FunSuite {
 
@@ -10,7 +10,7 @@ trait IOSuite extends FunSuite {
 
   override def munitValueTransforms: List[ValueTransform] =
     super.munitValueTransforms :+ new ValueTransform("IO", {
-      case ioa: IO[_] => IO.defer(ioa).unsafeToFuture
+      case ioa: IO[_] => IO.defer(ioa).unsafeToFuture()
     })
 
 }

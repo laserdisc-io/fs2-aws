@@ -9,7 +9,7 @@ import java.util.concurrent.CompletionException
 
 // Types referenced
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
-import software.amazon.awssdk.services.cloudwatch.model._
+import software.amazon.awssdk.services.cloudwatch.model.*
 
 import java.util.concurrent.CompletableFuture
 
@@ -50,6 +50,7 @@ trait Interpreter[M[_]] { outer =>
       ()
     }
   }
+
   def eff1[J, A](fut: =>CompletableFuture[A]): M[A] =
     asyncM.async_ { cb =>
       fut.handle[Unit] { (a, x) =>
@@ -136,6 +137,7 @@ trait Interpreter[M[_]] { outer =>
     override def tagResource(a: TagResourceRequest)                 = eff(_.tagResource(a))
     override def untagResource(a: UntagResourceRequest)             = eff(_.untagResource(a))
     override def waiter                                             = primitive(_.waiter)
+
     def lens[E](f: E => CloudWatchAsyncClient): CloudWatchAsyncClientOp[Kleisli[M, E, *]] =
       new CloudWatchAsyncClientOp[Kleisli[M, E, *]] {
         override def close                                = Kleisli(e => primitive1(f(e).close))
@@ -238,9 +240,12 @@ trait Interpreter[M[_]] { outer =>
 
   def CloudWatchAsyncClientResource(
     builder: CloudWatchAsyncClientBuilder
-  ): Resource[M, CloudWatchAsyncClient] = Resource.fromAutoCloseable(asyncM.delay(builder.build()))
+  ): Resource[M, CloudWatchAsyncClient] =
+    Resource.fromAutoCloseable(asyncM.delay(builder.build()))
+
   def CloudWatchAsyncClientOpResource(builder: CloudWatchAsyncClientBuilder) =
     CloudWatchAsyncClientResource(builder).map(create)
+
   def create(client: CloudWatchAsyncClient): CloudWatchAsyncClientOp[M] =
     new CloudWatchAsyncClientOp[M] {
 

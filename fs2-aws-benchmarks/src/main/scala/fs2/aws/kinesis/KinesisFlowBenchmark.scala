@@ -2,10 +2,11 @@ package fs2.aws.kinesis
 
 import cats.effect.unsafe.IORuntime
 import cats.effect.{ IO, Sync }
-import cats.effect.implicits._
-import cats.syntax.parallel._
+import cats.effect.implicits.*
+import cats.syntax.parallel.*
 import fs2.aws.testkit.SchedulerFactoryTestContext
-import org.mockito.MockitoSugar.mock
+import org.mockito.Mockito
+import org.mockito.Mockito.mock
 import org.openjdk.jmh.annotations.{ Benchmark, Scope, State }
 import software.amazon.awssdk.services.kinesis.model
 import software.amazon.kinesis.lifecycle.events.{ InitializationInput, ProcessRecordsInput }
@@ -16,7 +17,8 @@ import software.amazon.kinesis.retrieval.kpl.ExtendedSequenceNumber
 import java.nio.ByteBuffer
 import java.time.Instant
 import scala.concurrent.ExecutionContext
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
+
 object KinesisFlowBenchmark {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
@@ -24,6 +26,7 @@ object KinesisFlowBenchmark {
 
   @State(Scope.Thread)
   class ThreadState {
+
     val records = (0 to 50000).map(seq =>
       KinesisClientRecord
         .builder()
@@ -37,6 +40,7 @@ object KinesisFlowBenchmark {
   }
 
   class KinesisFlowBenchmark {
+
     @Benchmark
     def KinesisStream(state: ThreadState): Unit =
       (for {
@@ -68,7 +72,11 @@ object KinesisFlowBenchmark {
                         p.processRecords(
                           ProcessRecordsInput
                             .builder()
-                            .checkpointer(mock[RecordProcessorCheckpointer])
+                            .checkpointer(
+                              mock(
+                                classOf[RecordProcessorCheckpointer]
+                              )
+                            )
                             .records(state.records.asJava)
                             .build()
                         )

@@ -2,7 +2,7 @@ package fs2.aws.dynamodb
 
 import cats.effect.unsafe.IORuntime
 import cats.effect.{ IO, Resource }
-import io.laserdisc.pure.dynamodb.tagless.{ DynamoDbAsyncClientOp, Interpreter => DDBInterpreter }
+import io.laserdisc.pure.dynamodb.tagless.{ DynamoDbAsyncClientOp, Interpreter as DDBInterpreter }
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{ Minutes, Second, Span }
@@ -10,11 +10,11 @@ import org.scalatest.wordspec.AnyWordSpec
 import software.amazon.awssdk.auth.credentials.{ AwsBasicCredentials, StaticCredentialsProvider }
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
-import software.amazon.awssdk.services.dynamodb.model._
+import software.amazon.awssdk.services.dynamodb.model.*
 
 import java.net.URI
 import scala.concurrent.ExecutionContext
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 class StreamScanSpec extends AnyWordSpec with Matchers with ScalaFutures {
   implicit val ec: ExecutionContext = ExecutionContext.global

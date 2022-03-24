@@ -9,8 +9,7 @@ import java.util.concurrent.CompletionException
 
 // Types referenced
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
-import software.amazon.awssdk.services.sqs.model._
-
+import software.amazon.awssdk.services.sqs.model.*
 import java.util.concurrent.CompletableFuture
 
 object Interpreter {
@@ -49,6 +48,7 @@ trait Interpreter[M[_]] { outer =>
       ()
     }
   }
+
   def eff1[J, A](fut: =>CompletableFuture[A]): M[A] =
     asyncM.async_ { cb =>
       fut.handle[Unit] { (a, x) =>
@@ -97,6 +97,7 @@ trait Interpreter[M[_]] { outer =>
     override def setQueueAttributes(a: SetQueueAttributesRequest) = eff(_.setQueueAttributes(a))
     override def tagQueue(a: TagQueueRequest)                     = eff(_.tagQueue(a))
     override def untagQueue(a: UntagQueueRequest)                 = eff(_.untagQueue(a))
+
     def lens[E](f: E => SqsAsyncClient): SqsAsyncClientOp[Kleisli[M, E, *]] =
       new SqsAsyncClientOp[Kleisli[M, E, *]] {
         override def addPermission(a: AddPermissionRequest) =
@@ -146,6 +147,7 @@ trait Interpreter[M[_]] { outer =>
     Resource.fromAutoCloseable(asyncM.delay(builder.build()))
   def SqsAsyncClientOpResource(builder: SqsAsyncClientBuilder) =
     SqsAsyncClientResource(builder).map(create)
+
   def create(client: SqsAsyncClient): SqsAsyncClientOp[M] = new SqsAsyncClientOp[M] {
 
     // domain-specific operations are implemented in terms of `primitive`

@@ -1,11 +1,11 @@
 package fs2.aws.examples
 
 import cats.data.Kleisli
-import cats.effect._
-import cats.syntax.flatMap._
-import cats.syntax.functor._
-import io.laserdisc.pure.sns.tagless.{ SnsAsyncClientOp, Interpreter => SNSInterpreter }
-import io.laserdisc.pure.sqs.tagless.{ SqsAsyncClientOp, Interpreter => SQSInterpreter }
+import cats.effect.*
+import cats.syntax.flatMap.*
+import cats.syntax.functor.*
+import io.laserdisc.pure.sns.tagless.{ SnsAsyncClientOp, Interpreter as SNSInterpreter }
+import io.laserdisc.pure.sqs.tagless.{ SqsAsyncClientOp, Interpreter as SQSInterpreter }
 import software.amazon.awssdk.auth.credentials.{ AwsBasicCredentials, StaticCredentialsProvider }
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.sns.SnsAsyncClient
@@ -16,11 +16,11 @@ import software.amazon.awssdk.services.sns.model.{
   SubscribeRequest
 }
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
-import software.amazon.awssdk.services.sqs.model._
+import software.amazon.awssdk.services.sqs.model.*
 
 import java.net.URI
 import scala.concurrent.duration.DurationInt
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 case class Environment(sqs: SqsAsyncClient, sns: SnsAsyncClient)
 object PureAWSKleisli extends IOApp {

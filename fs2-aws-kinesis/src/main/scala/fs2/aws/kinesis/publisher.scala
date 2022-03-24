@@ -5,9 +5,9 @@ import java.nio.ByteBuffer
 import cats.effect.{ Async, Sync }
 import com.amazonaws.services.kinesis.producer.UserRecordResult
 import com.google.common.util.concurrent.{ FutureCallback, Futures, ListenableFuture }
-import fs2.aws.internal._
+import fs2.aws.internal.*
 import fs2.{ Pipe, Stream }
-import cats.implicits._
+import cats.implicits.*
 
 import scala.concurrent.ExecutionContext
 

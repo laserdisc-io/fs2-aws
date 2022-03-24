@@ -1,6 +1,6 @@
 package io.laserdisc.pure.sqs.tagless
 
-import software.amazon.awssdk.services.sqs.model._
+import software.amazon.awssdk.services.sqs.model.*
 import software.amazon.awssdk.services.sqs.paginators.{
   ListDeadLetterSourceQueuesPublisher,
   ListQueuesPublisher

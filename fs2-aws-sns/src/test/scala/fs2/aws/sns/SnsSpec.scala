@@ -1,38 +1,38 @@
 package fs2.aws.sns
 
 import cats.effect.unsafe.IORuntime
-import cats.effect.{ IO, Resource }
-import cats.implicits._
+import cats.effect.{IO, Resource}
+import cats.implicits.*
 import fs2.aws.sns.sns.SNS
-import io.laserdisc.pure.sns.tagless.{ Interpreter, SnsAsyncClientOp }
+import io.laserdisc.pure.sns.tagless.{Interpreter, SnsAsyncClientOp}
 import io.laserdisc.pure.sqs.tagless
 import io.laserdisc.pure.sqs.tagless.SqsAsyncClientOp
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import software.amazon.awssdk.auth.credentials.{ AwsBasicCredentials, StaticCredentialsProvider }
+import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.sns.SnsAsyncClient
-import software.amazon.awssdk.services.sns.model._
+import software.amazon.awssdk.services.sns.model.*
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
-import software.amazon.awssdk.services.sqs.model._
+import software.amazon.awssdk.services.sqs.model.*
 
 import java.net.URI
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.DurationInt
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 import scala.util.matching.Regex
 
 class SnsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
-  implicit val runtime              = IORuntime.global
+  implicit val runtime: IORuntime = IORuntime.global
 
   val awsClientsResource: Resource[IO, (SnsAsyncClientOp[IO], SqsAsyncClientOp[IO])] =
     (mkSNSClient(4566), mkSQSClient(4566)).mapN { case (s1, s2) => s1 -> s2 }
   var topicArn: String = _
   var queueUrl: String = _
-  val pattern: Regex   = new Regex("\"Message\": \"[0-9]\"")
+  val pattern: Regex = new Regex("\"Message\": \"[0-9]\"")
 
   override def beforeAll(): Unit =
     awsClientsResource
@@ -40,12 +40,12 @@ class SnsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
         case (sns, sqs) =>
           for {
             topic <- sns
-                      .createTopic(CreateTopicRequest.builder().name("topic").build())
-                      .map(_.topicArn())
+              .createTopic(CreateTopicRequest.builder().name("topic").build())
+              .map(_.topicArn())
 
             queueUrlV <- sqs
-                          .createQueue(CreateQueueRequest.builder().queueName("names").build())
-                          .map(_.queueUrl())
+              .createQueue(CreateQueueRequest.builder().queueName("names").build())
+              .map(_.queueUrl())
           } yield {
             topicArn = topic
             queueUrl = queueUrlV
@@ -73,42 +73,42 @@ class SnsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
               (for {
                 sns_ <- fs2.Stream.eval(SNS.create[IO](sns))
                 sqsArn <- fs2.Stream.eval(
-                           sqs
-                             .getQueueAttributes(
-                               GetQueueAttributesRequest
-                                 .builder()
-                                 .queueUrl(queueUrl)
-                                 .attributeNames(QueueAttributeName.QUEUE_ARN)
-                                 .build()
-                             )
-                         )
+                  sqs
+                    .getQueueAttributes(
+                      GetQueueAttributesRequest
+                        .builder()
+                        .queueUrl(queueUrl)
+                        .attributeNames(QueueAttributeName.QUEUE_ARN)
+                        .build()
+                    )
+                )
 
                 _ <- fs2.Stream.eval(
-                      sns.subscribe(
-                        SubscribeRequest
-                          .builder()
-                          .protocol("sqs")
-                          .endpoint(sqsArn.attributes().get(QueueAttributeName.QUEUE_ARN))
-                          .topicArn(topicArn)
-                          .build()
-                      )
-                    )
+                  sns.subscribe(
+                    SubscribeRequest
+                      .builder()
+                      .protocol("sqs")
+                      .endpoint(sqsArn.attributes().get(QueueAttributeName.QUEUE_ARN))
+                      .topicArn(topicArn)
+                      .build()
+                  )
+                )
                 _ <- fs2
-                      .Stream("1", "2", "3", "4", "5")
-                      .covary[IO]
-                      .through(sns_.publish(topicArn))
+                  .Stream("1", "2", "3", "4", "5")
+                  .covary[IO]
+                  .through(sns_.publish(topicArn))
 
                 sqsMessages <- fs2.Stream
-                                .eval(
-                                  sqs
-                                    .receiveMessage(
-                                      ReceiveMessageRequest
-                                        .builder()
-                                        .queueUrl(queueUrl)
-                                        .build()
-                                    )
-                                )
-                                .delayBy(3.seconds)
+                  .eval(
+                    sqs
+                      .receiveMessage(
+                        ReceiveMessageRequest
+                          .builder()
+                          .queueUrl(queueUrl)
+                          .build()
+                      )
+                  )
+                  .delayBy(3.seconds)
               } yield {
                 sqsMessages
                   .messages()
@@ -119,7 +119,7 @@ class SnsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
           }
           .unsafeRunSync()
 
-      messages.flatten should contain theSameElementsAs (List("1", "2", "3", "4", "5"))
+      messages.flatten should contain theSameElementsAs List("1", "2", "3", "4", "5")
     }
   }
 

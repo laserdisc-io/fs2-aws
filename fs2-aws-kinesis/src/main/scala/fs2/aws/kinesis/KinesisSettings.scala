@@ -1,14 +1,13 @@
 package fs2.aws.kinesis
 
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.numeric.Positive
-import fs2.aws.internal.Exceptions._
+import eu.timepit.refined.auto.*
+import eu.timepit.refined.types.numeric.*
+import fs2.aws.internal.Exceptions.*
 import software.amazon.awssdk.regions.Region
 import software.amazon.kinesis.common.InitialPositionInStream
 
 import java.util.Date
-import scala.concurrent.duration._
-import eu.timepit.refined.auto._
+import scala.concurrent.duration.*
 
 /** Settings for configuring the Kinesis consumer
   *
@@ -22,17 +21,18 @@ class KinesisConsumerSettings private (
   val streamName: String,
   val appName: String,
   val region: Region,
-  val bufferSize: Int Refined Positive,
+  val bufferSize: PosInt,
   val initialPositionInStream: Either[InitialPositionInStream, Date],
   val retrievalMode: RetrievalMode
 )
 
 object KinesisConsumerSettings {
+
   def apply(
     streamName: String,
     appName: String,
     region: Region = Region.US_EAST_1,
-    bufferSize: Int Refined Positive = 10,
+    bufferSize: PosInt = PosInt.unsafeFrom(10),
     initialPositionInStream: Either[InitialPositionInStream, Date] = Left(
       InitialPositionInStream.LATEST
     ),
@@ -71,6 +71,7 @@ class STSAssumeRoleSettings private (
 )
 
 object STSAssumeRoleSettings {
+
   def apply(
     roleArn: String,
     roleSessionName: String,
