@@ -2,16 +2,16 @@ package fs2.aws.dynamodb
 
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
-import cats.implicits._
+import cats.implicits.*
 import com.amazonaws.services.dynamodbv2.model
-import com.amazonaws.services.dynamodbv2.model.{ AttributeValue, StreamRecord }
+import com.amazonaws.services.dynamodbv2.model.{AttributeValue, StreamRecord}
 import com.amazonaws.services.dynamodbv2.streamsadapter.model.RecordAdapter
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.{
   IRecordProcessor,
   IRecordProcessorFactory
 }
-import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{ ShutdownReason, Worker }
+import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{ShutdownReason, Worker}
 import com.amazonaws.services.kinesis.clientlibrary.types.{
   ExtendedSequenceNumber,
   InitializationInput,
@@ -20,18 +20,18 @@ import com.amazonaws.services.kinesis.clientlibrary.types.{
 }
 import com.amazonaws.services.kinesis.model.Record
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito._
+import org.mockito.Mockito.*
 import org.scalatest.BeforeAndAfterEach
-import org.scalatest.concurrent.{ Eventually, ScalaFutures }
+import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.time._
+import org.scalatest.time.*
 
 import java.util.Date
-import java.util.concurrent.{ CountDownLatch, Phaser }
+import java.util.concurrent.{CountDownLatch, Phaser}
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration._
-import scala.jdk.CollectionConverters._
+import scala.concurrent.duration.*
+import scala.jdk.CollectionConverters.*
 
 class NewDynamoDBConsumerSpec
     extends AnyFlatSpec
@@ -41,7 +41,7 @@ class NewDynamoDBConsumerSpec
     with ScalaFutures {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
-  implicit val runtime: IORuntime   = IORuntime.global
+  implicit val runtime: IORuntime = IORuntime.global
 
   implicit def sList2jList[A](sList: List[A]): java.util.List[A] = sList.asJava
 
@@ -50,6 +50,7 @@ class NewDynamoDBConsumerSpec
 
   "DynamoDB source" should "successfully read data from the DynamoDB stream" in new WorkerContext
     with TestData {
+
     val res = (
       stream.take(1).compile.toList,
       IO.blocking {
@@ -60,10 +61,10 @@ class NewDynamoDBConsumerSpec
     ).parMapN { case (msgs, _) => msgs }.unsafeToFuture().futureValue
 
     val commitableRecord: CommittableRecord = res.head
-    commitableRecord.record.getData                        should be(record.getData)
+    commitableRecord.record.getData should be(record.getData)
     commitableRecord.recordProcessorStartingSequenceNumber shouldBe initializationInput.getExtendedSequenceNumber
-    commitableRecord.shardId                               shouldBe initializationInput.getShardId
-    commitableRecord.millisBehindLatest                    shouldBe recordsInput.getMillisBehindLatest
+    commitableRecord.shardId shouldBe initializationInput.getShardId
+    commitableRecord.millisBehindLatest shouldBe recordsInput.getMillisBehindLatest
   }
 
   it should "Shutdown the worker if the stream is drained and has not failed" in new WorkerContext
@@ -97,25 +98,30 @@ class NewDynamoDBConsumerSpec
   }
 
   it should "not drop messages in case of back-pressure" in new WorkerContext with TestData {
+
     // Create and send 10 records (to match buffer size)
     val res =
-      (stream.take(60).compile.toList, IO.blocking {
-        shard1Guard.await()
-        recordProcessor.initialize(initializationInput)
-        for (i <- 1 to 10) {
-          val record: Record = mock(classOf[RecordAdapter])
-          when(record.getSequenceNumber).thenReturn(i.toString)
-          recordProcessor.processRecords(recordsInput.withRecords(List(record).asJava))
+      (
+        stream.take(60).compile.toList,
+        IO.blocking {
+          shard1Guard.await()
+          recordProcessor.initialize(initializationInput)
+          for (i <- 1 to 10) {
+            val record: Record = mock(classOf[RecordAdapter])
+            when(record.getSequenceNumber).thenReturn(i.toString)
+            recordProcessor.processRecords(recordsInput.withRecords(List(record).asJava))
+          }
+        },
+        IO.blocking {
+          shard1Guard.await()
+          recordProcessor.initialize(initializationInput)
+          for (i <- 1 to 50) {
+            val record: Record = mock(classOf[RecordAdapter])
+            when(record.getSequenceNumber).thenReturn(i.toString)
+            recordProcessor.processRecords(recordsInput.withRecords(List(record).asJava))
+          }
         }
-      }, IO.blocking {
-        shard1Guard.await()
-        recordProcessor.initialize(initializationInput)
-        for (i <- 1 to 50) {
-          val record: Record = mock(classOf[RecordAdapter])
-          when(record.getSequenceNumber).thenReturn(i.toString)
-          recordProcessor.processRecords(recordsInput.withRecords(List(record).asJava))
-        }
-      }).parMapN { case (msgs, _, _) => msgs }.unsafeToFuture().futureValue
+      ).parMapN { case (msgs, _, _) => msgs }.unsafeToFuture().futureValue
 
     res should have size 60
   }
@@ -160,11 +166,12 @@ class NewDynamoDBConsumerSpec
 
   it should "delay the end of shard checkpoint until all messages are drained" in new WorkerContext
     with TestData {
-    val nRecords = 5
+    val nRecords = 5L
+
     val res: Seq[Record] = (
       stream
         .take(nRecords)
-        //emulate message processing latency to reproduce the situation when End of Shard arrives BEFORE
+        // emulate message processing latency to reproduce the situation when End of Shard arrives BEFORE
         // all in-flight records are done
         .parEvalMap(3)(msg => IO.sleep(200 millis) >> IO.pure(msg))
         .through(
@@ -178,7 +185,7 @@ class NewDynamoDBConsumerSpec
       IO.blocking {
         shard1Guard.await()
         recordProcessor.initialize(initializationInput)
-        (1 to nRecords).foreach { i =>
+        (1L to nRecords).foreach { i =>
           val record: Record = mock(classOf[RecordAdapter])
           when(record.getSequenceNumber).thenReturn(i.toString)
           val ri = new ProcessRecordsInput()
@@ -188,7 +195,7 @@ class NewDynamoDBConsumerSpec
           recordProcessor.processRecords(ri)
         }
       } >> IO.delay {
-        //Immediately publish end of shard event
+        // Immediately publish end of shard event
         recordProcessor.shutdown(
           new ShutdownInput()
             .withCheckpointer(checkpointer)
@@ -202,7 +209,8 @@ class NewDynamoDBConsumerSpec
 
   "KinesisWorker checkpoint pipe" should "checkpoint batch of records with same sequence number" in new WorkerContext() {
     val inFlightRecordsPhaser = new Phaser(1)
-    val input = (1 to 3) map { i =>
+
+    val input = (1 to 3).map { i =>
       val record = mock(classOf[RecordAdapter])
       when(record.getSequenceNumber).thenReturn(i.toString)
       new CommittableRecord(
@@ -224,10 +232,10 @@ class NewDynamoDBConsumerSpec
   }
 
   it should "checkpoint batch of records of different shards" in new WorkerContext() {
-    val checkpointerShard2    = mock(classOf[IRecordProcessorCheckpointer])
+    val checkpointerShard2 = mock(classOf[IRecordProcessorCheckpointer])
     val inFlightRecordsPhaser = new Phaser(1)
 
-    val input = (1 to 6) map { i =>
+    val input = (1L to 6L).map { i =>
       if (i <= 3) {
         val record = mock(classOf[RecordAdapter])
         when(record.getSequenceNumber).thenReturn(i.toString)
@@ -277,7 +285,7 @@ class NewDynamoDBConsumerSpec
         .withCheckpointer(checkpointerShard1)
     )
 
-    val input = (1 to 3) map { i =>
+    val input = (1 to 3).map { i =>
       val record = mock(classOf[RecordAdapter])
       when(record.getSequenceNumber).thenReturn("1")
       new CommittableRecord(
@@ -297,10 +305,10 @@ class NewDynamoDBConsumerSpec
   }
 
   it should "fail with Exception if checkpoint action fails" in new WorkerContext() {
-    val checkpointer          = mock(classOf[IRecordProcessorCheckpointer])
+    val checkpointer = mock(classOf[IRecordProcessorCheckpointer])
     val inFlightRecordsPhaser = new Phaser(1)
-    val record                = mock(classOf[RecordAdapter])
-    val rp                    = new RecordProcessor(_ => ())
+    val record = mock(classOf[RecordAdapter])
+    val rp = new RecordProcessor(_ => ())
     when(record.getSequenceNumber).thenReturn("1")
 
     val input = new CommittableRecord(
@@ -316,25 +324,25 @@ class NewDynamoDBConsumerSpec
     val failure = new RuntimeException("you have no power here")
     when(checkpointer.checkpoint(record)).thenThrow(failure)
 
-    the[RuntimeException] thrownBy fs2.Stream
+    (the[RuntimeException] thrownBy fs2.Stream
       .emits(Seq(input))
       .through(k.checkpointRecords(settings))
       .compile
       .toVector
-      .unsafeRunSync() should have message "you have no power here"
+      .unsafeRunSync() should have).message("you have no power here")
 
     eventually(verify(checkpointer).checkpoint(input.record))
   }
 
   it should "bypass all items when checkpoint" in new WorkerContext() {
-    val checkpointer          = mock(classOf[IRecordProcessorCheckpointer])
+    val checkpointer = mock(classOf[IRecordProcessorCheckpointer])
     val inFlightRecordsPhaser = new Phaser(1)
-    val rp                    = new RecordProcessor(_ => ())
+    val rp = new RecordProcessor(_ => ())
 
     val record = mock(classOf[RecordAdapter])
     when(record.getSequenceNumber).thenReturn("1")
 
-    val input = (1 to 100).map(idx =>
+    val input = (1L to 100L).map(idx =>
       new CommittableRecord(
         s"shard-1",
         mock(classOf[ExtendedSequenceNumber]),
@@ -357,18 +365,18 @@ class NewDynamoDBConsumerSpec
 
   abstract private class WorkerContext(errorStream: Boolean = false) {
 
-    val shard1Guard                     = new CountDownLatch(1)
-    val shard2Guard                     = new CountDownLatch(1)
-    val latch                           = new CountDownLatch(1)
+    val shard1Guard = new CountDownLatch(1)
+    val shard2Guard = new CountDownLatch(1)
+    val latch = new CountDownLatch(1)
     protected val mockScheduler: Worker = mock(classOf[Worker])
 
     var recordProcessorFactory: IRecordProcessorFactory = _
-    var recordProcessor: IRecordProcessor               = _
-    var recordProcessor2: IRecordProcessor              = _
+    var recordProcessor: IRecordProcessor = _
+    var recordProcessor2: IRecordProcessor = _
 
     doAnswer(_ => latch.await()).when(mockScheduler).run()
 
-    val builder = { x: IRecordProcessorFactory =>
+    val builder = { (x: IRecordProcessorFactory) =>
       recordProcessorFactory = x
       recordProcessor = x.createProcessor()
       shard1Guard.countDown()
@@ -378,10 +386,12 @@ class NewDynamoDBConsumerSpec
     }
 
     val k = DynamoDB.create[IO](builder)
+
     val stream: fs2.Stream[IO, CommittableRecord] =
       k.readFromDynamoDBStream("testStream", "testApp")
         .map(i => if (errorStream) throw new Exception("boom") else i)
         .onFinalize(IO.delay(latch.countDown()))
+
     val settings =
       KinesisCheckpointSettings(maxBatchSize = Int.MaxValue, maxBatchWait = 500.millis)
         .getOrElse(throw new Error())
@@ -415,11 +425,10 @@ class NewDynamoDBConsumerSpec
       null
     }.when(checkpointer).checkpoint(any[String], any[Long])
 
-    val initializationInput: InitializationInput = {
+    val initializationInput: InitializationInput =
       new InitializationInput()
         .withShardId("shardId")
         .withExtendedSequenceNumber(ExtendedSequenceNumber.AT_TIMESTAMP)
-    }
 
     val record: Record =
       new RecordAdapter(

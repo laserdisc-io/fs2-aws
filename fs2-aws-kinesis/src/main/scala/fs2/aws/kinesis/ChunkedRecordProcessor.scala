@@ -1,15 +1,17 @@
 package fs2
+
 package aws
+
 package kinesis
 
 import java.util.concurrent.Semaphore
 
 import fs2.Chunk
-import software.amazon.kinesis.lifecycle.events._
+import software.amazon.kinesis.lifecycle.events.*
 import software.amazon.kinesis.processor.ShardRecordProcessor
 import software.amazon.kinesis.retrieval.kpl.ExtendedSequenceNumber
 
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 /** Concrete implementation of the AWS RecordProcessor interface.
   * Wraps incoming records into CommitableRecord types to allow for downstream
@@ -20,10 +22,10 @@ import scala.jdk.CollectionConverters._
   */
 private[aws] class ChunkedRecordProcessor(cb: Chunk[CommittableRecord] => Unit)
     extends ShardRecordProcessor {
-  private[kinesis] var shardId: String                                = _
+  private[kinesis] var shardId: String = _
   private[kinesis] var extendedSequenceNumber: ExtendedSequenceNumber = _
-  private[kinesis] var isShutdown: Boolean                            = false
-  private[aws] val lastRecordSemaphore                                = new Semaphore(1)
+  private[kinesis] var isShutdown: Boolean = false
+  private[aws] val lastRecordSemaphore = new Semaphore(1)
 
   override def initialize(initializationInput: InitializationInput): Unit = {
     shardId = initializationInput.shardId()
@@ -67,6 +69,6 @@ private[aws] class ChunkedRecordProcessor(cb: Chunk[CommittableRecord] => Unit)
           case _            => Nil
         }
       else batch
-    cb(Chunk(chunk: _*))
+    cb(Chunk(chunk*))
   }
 }
