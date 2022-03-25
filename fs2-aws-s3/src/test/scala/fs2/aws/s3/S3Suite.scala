@@ -5,18 +5,17 @@ import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCrede
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException
-import cats.data.Kleisli
 import cats.effect.*
 import cats.implicits.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.string.NonEmptyString
-import eu.timepit.refined.types.numeric.*
-import fs2.aws.s3.models.PartSizeMB
+import fs2.aws.s3.models.Models.{BucketName, FileKey, PartSizeMB}
 import fs2.io.file.{Files, Flags, Path}
 import io.laserdisc.pure.s3.tagless.{Interpreter, S3AsyncClientOp}
 import fs2.text
+import munit.CatsEffectSuite
 
-class S3Suite extends IOSuite {
+class S3Suite extends CatsEffectSuite {
 
   val credentials: AwsBasicCredentials =
     AwsBasicCredentials
@@ -92,8 +91,9 @@ class S3Suite extends IOSuite {
         val delete =
           s3.delete(bucket, fileKeyMix)
         val readNonExisting =
-          read.handleError { case _: NoSuchKeyException =>
-            assert(true)
+          read.handleError {
+            case _: NoSuchKeyException => assert(true)
+            case _                     => assert(false)
           }
         upload >> read >> delete >> readNonExisting
       }
