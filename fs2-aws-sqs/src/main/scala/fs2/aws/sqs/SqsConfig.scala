@@ -8,7 +8,7 @@ case class SqsConfig(
     override val queueUrl: String,
     override val pollRate: FiniteDuration = 3.seconds,
     override val fetchMessageCount: Int = 100,
-    override val messageAttributeNames: List[String] = Nil
+    override val messageAttributeNames: Option[List[String]] = None
 ) extends SqsConfig.Interface
 
 object SqsConfig {
@@ -16,7 +16,7 @@ object SqsConfig {
     def queueUrl: String
     def pollRate: FiniteDuration
     def fetchMessageCount: Int
-    def messageAttributeNames: List[String]
+    def messageAttributeNames: Option[List[String]]
 
     def receiveMessageRequest: ReceiveMessageRequest = buildReceiveRequest.build()
 
@@ -25,10 +25,8 @@ object SqsConfig {
         .builder()
         .queueUrl(queueUrl)
         .maxNumberOfMessages(fetchMessageCount)
-      Option(messageAttributeNames)
-        .filter(_.nonEmpty)
-        .map(_.asJava)
-        .fold(blder)(blder.messageAttributeNames(_))
+
+      messageAttributeNames.fold(blder)(names => blder.messageAttributeNames(names.asJava))
     }
   }
 }
