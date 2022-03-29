@@ -1,7 +1,7 @@
 package io.laserdisc.pure.dynamodb.tagless
 
-import software.amazon.awssdk.services.dynamodb.model._
-import software.amazon.awssdk.services.dynamodb.paginators._
+import software.amazon.awssdk.services.dynamodb.model.*
+import software.amazon.awssdk.services.dynamodb.paginators.*
 import software.amazon.awssdk.services.dynamodb.waiters.DynamoDbAsyncWaiter
 
 trait DynamoDbAsyncClientOp[F[_]] {
@@ -19,45 +19,49 @@ trait DynamoDbAsyncClientOp[F[_]] {
   def deleteTable(a: DeleteTableRequest): F[DeleteTableResponse]
   def describeBackup(a: DescribeBackupRequest): F[DescribeBackupResponse]
   def describeContinuousBackups(
-    a: DescribeContinuousBackupsRequest
+      a: DescribeContinuousBackupsRequest
   ): F[DescribeContinuousBackupsResponse]
   def describeContributorInsights(
-    a: DescribeContributorInsightsRequest
+      a: DescribeContributorInsightsRequest
   ): F[DescribeContributorInsightsResponse]
   def describeEndpoints: F[DescribeEndpointsResponse]
   def describeEndpoints(a: DescribeEndpointsRequest): F[DescribeEndpointsResponse]
   def describeExport(a: DescribeExportRequest): F[DescribeExportResponse]
   def describeGlobalTable(a: DescribeGlobalTableRequest): F[DescribeGlobalTableResponse]
   def describeGlobalTableSettings(
-    a: DescribeGlobalTableSettingsRequest
+      a: DescribeGlobalTableSettingsRequest
   ): F[DescribeGlobalTableSettingsResponse]
+
   def describeKinesisStreamingDestination(
-    a: DescribeKinesisStreamingDestinationRequest
+      a: DescribeKinesisStreamingDestinationRequest
   ): F[DescribeKinesisStreamingDestinationResponse]
   def describeLimits: F[DescribeLimitsResponse]
   def describeLimits(a: DescribeLimitsRequest): F[DescribeLimitsResponse]
   def describeTable(a: DescribeTableRequest): F[DescribeTableResponse]
+
   def describeTableReplicaAutoScaling(
-    a: DescribeTableReplicaAutoScalingRequest
+      a: DescribeTableReplicaAutoScalingRequest
   ): F[DescribeTableReplicaAutoScalingResponse]
   def describeTimeToLive(a: DescribeTimeToLiveRequest): F[DescribeTimeToLiveResponse]
+
   def disableKinesisStreamingDestination(
-    a: DisableKinesisStreamingDestinationRequest
+      a: DisableKinesisStreamingDestinationRequest
   ): F[DisableKinesisStreamingDestinationResponse]
+
   def enableKinesisStreamingDestination(
-    a: EnableKinesisStreamingDestinationRequest
+      a: EnableKinesisStreamingDestinationRequest
   ): F[EnableKinesisStreamingDestinationResponse]
   def executeStatement(a: ExecuteStatementRequest): F[ExecuteStatementResponse]
   def executeTransaction(a: ExecuteTransactionRequest): F[ExecuteTransactionResponse]
   def exportTableToPointInTime(
-    a: ExportTableToPointInTimeRequest
+      a: ExportTableToPointInTimeRequest
   ): F[ExportTableToPointInTimeResponse]
   def getItem(a: GetItemRequest): F[GetItemResponse]
   def listBackups: F[ListBackupsResponse]
   def listBackups(a: ListBackupsRequest): F[ListBackupsResponse]
   def listContributorInsights(a: ListContributorInsightsRequest): F[ListContributorInsightsResponse]
   def listContributorInsightsPaginator(
-    a: ListContributorInsightsRequest
+      a: ListContributorInsightsRequest
   ): F[ListContributorInsightsPublisher]
   def listExports(a: ListExportsRequest): F[ListExportsResponse]
   def listExportsPaginator(a: ListExportsRequest): F[ListExportsPublisher]
@@ -73,7 +77,7 @@ trait DynamoDbAsyncClientOp[F[_]] {
   def queryPaginator(a: QueryRequest): F[QueryPublisher]
   def restoreTableFromBackup(a: RestoreTableFromBackupRequest): F[RestoreTableFromBackupResponse]
   def restoreTableToPointInTime(
-    a: RestoreTableToPointInTimeRequest
+      a: RestoreTableToPointInTimeRequest
   ): F[RestoreTableToPointInTimeResponse]
   def scan(a: ScanRequest): F[ScanResponse]
   def scanPaginator(a: ScanRequest): F[ScanPublisher]
@@ -84,16 +88,16 @@ trait DynamoDbAsyncClientOp[F[_]] {
   def untagResource(a: UntagResourceRequest): F[UntagResourceResponse]
   def updateContinuousBackups(a: UpdateContinuousBackupsRequest): F[UpdateContinuousBackupsResponse]
   def updateContributorInsights(
-    a: UpdateContributorInsightsRequest
+      a: UpdateContributorInsightsRequest
   ): F[UpdateContributorInsightsResponse]
   def updateGlobalTable(a: UpdateGlobalTableRequest): F[UpdateGlobalTableResponse]
   def updateGlobalTableSettings(
-    a: UpdateGlobalTableSettingsRequest
+      a: UpdateGlobalTableSettingsRequest
   ): F[UpdateGlobalTableSettingsResponse]
   def updateItem(a: UpdateItemRequest): F[UpdateItemResponse]
   def updateTable(a: UpdateTableRequest): F[UpdateTableResponse]
   def updateTableReplicaAutoScaling(
-    a: UpdateTableReplicaAutoScalingRequest
+      a: UpdateTableReplicaAutoScalingRequest
   ): F[UpdateTableReplicaAutoScalingResponse]
   def updateTimeToLive(a: UpdateTimeToLiveRequest): F[UpdateTimeToLiveResponse]
   def waiter: F[DynamoDbAsyncWaiter]

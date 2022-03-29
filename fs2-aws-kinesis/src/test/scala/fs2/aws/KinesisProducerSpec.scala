@@ -1,11 +1,12 @@
 package fs2
+
 package aws
 
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
-import com.amazonaws.services.kinesis.producer.{ Attempt, UserRecordResult }
+import com.amazonaws.services.kinesis.producer.{Attempt, UserRecordResult}
 import com.google.common.util.concurrent.SettableFuture
-import fs2.aws.kinesis.publisher._
+import fs2.aws.kinesis.publisher.*
 import fs2.aws.utils.KinesisStub
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.flatspec.AnyFlatSpec
@@ -13,7 +14,7 @@ import org.scalatest.matchers.should.Matchers
 
 import java.nio.ByteBuffer
 import scala.concurrent.ExecutionContext
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 class KinesisProducerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach {
   override def beforeEach(): Unit =
@@ -21,8 +22,9 @@ class KinesisProducerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
 
   trait KinesisProducerTestContext {
     implicit val ec: ExecutionContext = ExecutionContext.global
-    implicit val runtime: IORuntime   = IORuntime.global
-    val result                        = new UserRecordResult(List[Attempt]().asJava, "seq #", "shard #", true)
+    implicit val runtime: IORuntime = IORuntime.global
+    val result = new UserRecordResult(List[Attempt]().asJava, "seq #", "shard #", true)
+
     val ops = IO {
       val future: SettableFuture[UserRecordResult] = SettableFuture.create()
       future.set(result)
@@ -32,6 +34,7 @@ class KinesisProducerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
   }
 
   "Publishing data to a Kinesis stream via writeToKinesis" should "successfully save data to the stream and return the successful result" in new KinesisProducerTestContext {
+
     val output = fs2.Stream
       .eval(IO.pure("someData"))
       .flatMap(i => fs2.Stream.emit(("partitionKey", ByteBuffer.wrap(i.getBytes))))
@@ -43,7 +46,7 @@ class KinesisProducerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
       .toVector
       .unsafeRunSync()
 
-    output.size         should be(1)
+    output.size should be(1)
     output.head.isRight should be(true)
 
     KinesisStub._data.size should be(1)
@@ -67,6 +70,7 @@ class KinesisProducerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
 
   "Publishing data to a Kinesis stream via writeToKinesis1_" should "successfully save data to the stream bypassing original payload" in new KinesisProducerTestContext {
     implicit def encoder(in: String): ByteBuffer = ByteBuffer.wrap(in.getBytes)
+
     val res = fs2.Stream
       .eval(IO.pure("someData"))
       .flatMap(i => fs2.Stream.emit(("partitionKey", i)))
@@ -82,7 +86,7 @@ class KinesisProducerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
 
     KinesisStub._data.size should be(1)
     KinesisStub._data.head should be(ByteBuffer.wrap("someData".getBytes))
-    res                    should be(Vector("someData" -> result))
+    res should be(Vector("someData" -> result))
   }
 
   "error thrown when invoking writeToKinesis" should "return an error in the stream" in new KinesisProducerTestContext {
@@ -91,16 +95,22 @@ class KinesisProducerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
       .eval(IO.pure("someData"))
       .flatMap(i => fs2.Stream.emit(("partitionKey", ByteBuffer.wrap(i.getBytes))))
       .through(
-        writeToKinesis[IO]("test-stream", producer = TestKinesisProducerClient[IO](result, IO {
-          throw new Exception("couldn't connect to kinesis")
-        }))
+        writeToKinesis[IO](
+          "test-stream",
+          producer = TestKinesisProducerClient[IO](
+            result,
+            IO {
+              throw new Exception("couldn't connect to kinesis")
+            }
+          )
+        )
       )
       .attempt
       .compile
       .toVector
       .unsafeRunSync()
 
-    output.size        should be(1)
+    output.size should be(1)
     output.head.isLeft should be(true)
     output.head.left.getOrElse(throw new Error()).getMessage should be(
       "couldn't connect to kinesis"
@@ -113,9 +123,15 @@ class KinesisProducerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
         .eval(IO.pure("someData"))
         .flatMap(i => fs2.Stream.emit(("partitionKey", ByteBuffer.wrap(i.toString.getBytes))))
         .through(
-          writeToKinesis_[IO]("test-stream", producer = TestKinesisProducerClient[IO](result, IO {
-            throw new Exception("couldn't connect to kinesis")
-          }))
+          writeToKinesis_[IO](
+            "test-stream",
+            producer = TestKinesisProducerClient[IO](
+              result,
+              IO {
+                throw new Exception("couldn't connect to kinesis")
+              }
+            )
+          )
         )
         .compile
         .toVector

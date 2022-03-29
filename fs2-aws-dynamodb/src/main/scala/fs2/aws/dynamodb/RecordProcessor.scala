@@ -3,11 +3,11 @@ package fs2.aws.dynamodb
 import java.util.concurrent.Phaser
 
 import com.amazonaws.services.dynamodbv2.streamsadapter.model.RecordAdapter
-import com.amazonaws.services.kinesis.clientlibrary.interfaces._
+import com.amazonaws.services.kinesis.clientlibrary.interfaces.*
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.ShutdownReason
-import com.amazonaws.services.kinesis.clientlibrary.types._
+import com.amazonaws.services.kinesis.clientlibrary.types.*
 
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 /** Concrete implementation of the AWS RecordProcessor interface.
   * Wraps incoming records into CommitableRecord types to allow for downstream
@@ -17,13 +17,13 @@ import scala.jdk.CollectionConverters._
   *  @param cb callback function to run on record receive, passing the new CommittableRecord
   */
 class RecordProcessor(
-  cb: CommittableRecord => Unit
+    cb: CommittableRecord => Unit
 ) extends v2.IRecordProcessor {
-  private var shardId: String                                  = _
-  private var extendedSequenceNumber: ExtendedSequenceNumber   = _
+  private var shardId: String = _
+  private var extendedSequenceNumber: ExtendedSequenceNumber = _
   var latestCheckpointer: Option[IRecordProcessorCheckpointer] = None
-  var shutdown: Option[ShutdownReason]                         = None
-  private[aws] val inFlightRecordsPhaser                       = new Phaser(1)
+  var shutdown: Option[ShutdownReason] = None
+  private[aws] val inFlightRecordsPhaser = new Phaser(1)
 
   def isShutdown = shutdown.isDefined
 
