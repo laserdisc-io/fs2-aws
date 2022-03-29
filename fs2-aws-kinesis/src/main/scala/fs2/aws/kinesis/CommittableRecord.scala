@@ -17,17 +17,17 @@ import software.amazon.kinesis.retrieval.kpl.ExtendedSequenceNumber
   *  @param checkpointer reference to the checkpointer used to commit this record
   */
 case class CommittableRecord(
-  shardId: String,
-  recordProcessorStartingSequenceNumber: ExtendedSequenceNumber,
-  millisBehindLatest: Long,
-  record: KinesisClientRecord,
-  recordProcessor: ChunkedRecordProcessor,
-  checkpointer: RecordProcessorCheckpointer,
-  lastRecordSemaphore: Semaphore,
-  isLastInShard: Boolean = false
+    shardId: String,
+    recordProcessorStartingSequenceNumber: ExtendedSequenceNumber,
+    millisBehindLatest: Long,
+    record: KinesisClientRecord,
+    recordProcessor: ChunkedRecordProcessor,
+    checkpointer: RecordProcessorCheckpointer,
+    lastRecordSemaphore: Semaphore,
+    isLastInShard: Boolean = false
 ) {
-  val sequenceNumber: String                = record.sequenceNumber()
-  val subSequenceNumber: Long               = record.subSequenceNumber()
+  val sequenceNumber: String = record.sequenceNumber()
+  val subSequenceNumber: Long = record.subSequenceNumber()
   def canCheckpoint[F[_]: Sync]: F[Boolean] = Sync[F].delay(!recordProcessor.isShutdown)
   def checkpoint[F[_]: Sync]: F[Unit] =
     Sync[F].delay {
@@ -44,9 +44,12 @@ object CommittableRecord {
   // same sequence number but will differ by subsequence number
   implicit val orderBySequenceNumber: Ordering[CommittableRecord] =
     Ordering[(String, Long)].on(cr =>
-      (cr.sequenceNumber, cr.record match {
-        case ur: KinesisClientRecord => ur.subSequenceNumber()
-        case _                       => 0
-      })
+      (
+        cr.sequenceNumber,
+        cr.record match {
+          case ur: KinesisClientRecord => ur.subSequenceNumber()
+          case null                    => 0
+        }
+      )
     )
 }

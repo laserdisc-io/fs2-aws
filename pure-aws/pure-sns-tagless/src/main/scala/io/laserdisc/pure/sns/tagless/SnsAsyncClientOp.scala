@@ -1,84 +1,87 @@
 package io.laserdisc.pure.sns.tagless
 
-import software.amazon.awssdk.services.sns.model._
-import software.amazon.awssdk.services.sns.paginators._
+import software.amazon.awssdk.services.sns.model.*
+import software.amazon.awssdk.services.sns.paginators.*
 
 trait SnsAsyncClientOp[F[_]] {
   // SnsAsyncClient
   def addPermission(a: AddPermissionRequest): F[AddPermissionResponse]
   def checkIfPhoneNumberIsOptedOut(
-    a: CheckIfPhoneNumberIsOptedOutRequest
+      a: CheckIfPhoneNumberIsOptedOutRequest
   ): F[CheckIfPhoneNumberIsOptedOutResponse]
   def close: F[Unit]
   def confirmSubscription(a: ConfirmSubscriptionRequest): F[ConfirmSubscriptionResponse]
   def createPlatformApplication(
-    a: CreatePlatformApplicationRequest
+      a: CreatePlatformApplicationRequest
   ): F[CreatePlatformApplicationResponse]
   def createPlatformEndpoint(a: CreatePlatformEndpointRequest): F[CreatePlatformEndpointResponse]
   def createSMSSandboxPhoneNumber(
-    a: CreateSmsSandboxPhoneNumberRequest
+      a: CreateSmsSandboxPhoneNumberRequest
   ): F[CreateSmsSandboxPhoneNumberResponse]
   def createTopic(a: CreateTopicRequest): F[CreateTopicResponse]
   def deleteEndpoint(a: DeleteEndpointRequest): F[DeleteEndpointResponse]
   def deletePlatformApplication(
-    a: DeletePlatformApplicationRequest
+      a: DeletePlatformApplicationRequest
   ): F[DeletePlatformApplicationResponse]
   def deleteSMSSandboxPhoneNumber(
-    a: DeleteSmsSandboxPhoneNumberRequest
+      a: DeleteSmsSandboxPhoneNumberRequest
   ): F[DeleteSmsSandboxPhoneNumberResponse]
   def deleteTopic(a: DeleteTopicRequest): F[DeleteTopicResponse]
   def getEndpointAttributes(a: GetEndpointAttributesRequest): F[GetEndpointAttributesResponse]
+
   def getPlatformApplicationAttributes(
-    a: GetPlatformApplicationAttributesRequest
+      a: GetPlatformApplicationAttributesRequest
   ): F[GetPlatformApplicationAttributesResponse]
   def getSMSAttributes: F[GetSmsAttributesResponse]
   def getSMSAttributes(a: GetSmsAttributesRequest): F[GetSmsAttributesResponse]
   def getSMSSandboxAccountStatus(
-    a: GetSmsSandboxAccountStatusRequest
+      a: GetSmsSandboxAccountStatusRequest
   ): F[GetSmsSandboxAccountStatusResponse]
   def getSubscriptionAttributes(
-    a: GetSubscriptionAttributesRequest
+      a: GetSubscriptionAttributesRequest
   ): F[GetSubscriptionAttributesResponse]
   def getTopicAttributes(a: GetTopicAttributesRequest): F[GetTopicAttributesResponse]
+
   def listEndpointsByPlatformApplication(
-    a: ListEndpointsByPlatformApplicationRequest
+      a: ListEndpointsByPlatformApplicationRequest
   ): F[ListEndpointsByPlatformApplicationResponse]
+
   def listEndpointsByPlatformApplicationPaginator(
-    a: ListEndpointsByPlatformApplicationRequest
+      a: ListEndpointsByPlatformApplicationRequest
   ): F[ListEndpointsByPlatformApplicationPublisher]
   def listOriginationNumbers(a: ListOriginationNumbersRequest): F[ListOriginationNumbersResponse]
   def listOriginationNumbersPaginator(
-    a: ListOriginationNumbersRequest
+      a: ListOriginationNumbersRequest
   ): F[ListOriginationNumbersPublisher]
   def listPhoneNumbersOptedOut: F[ListPhoneNumbersOptedOutResponse]
   def listPhoneNumbersOptedOut(
-    a: ListPhoneNumbersOptedOutRequest
+      a: ListPhoneNumbersOptedOutRequest
   ): F[ListPhoneNumbersOptedOutResponse]
   def listPhoneNumbersOptedOutPaginator: F[ListPhoneNumbersOptedOutPublisher]
   def listPhoneNumbersOptedOutPaginator(
-    a: ListPhoneNumbersOptedOutRequest
+      a: ListPhoneNumbersOptedOutRequest
   ): F[ListPhoneNumbersOptedOutPublisher]
   def listPlatformApplications: F[ListPlatformApplicationsResponse]
   def listPlatformApplications(
-    a: ListPlatformApplicationsRequest
+      a: ListPlatformApplicationsRequest
   ): F[ListPlatformApplicationsResponse]
   def listPlatformApplicationsPaginator: F[ListPlatformApplicationsPublisher]
   def listPlatformApplicationsPaginator(
-    a: ListPlatformApplicationsRequest
+      a: ListPlatformApplicationsRequest
   ): F[ListPlatformApplicationsPublisher]
   def listSMSSandboxPhoneNumbers(
-    a: ListSmsSandboxPhoneNumbersRequest
+      a: ListSmsSandboxPhoneNumbersRequest
   ): F[ListSmsSandboxPhoneNumbersResponse]
   def listSMSSandboxPhoneNumbersPaginator(
-    a: ListSmsSandboxPhoneNumbersRequest
+      a: ListSmsSandboxPhoneNumbersRequest
   ): F[ListSMSSandboxPhoneNumbersPublisher]
   def listSubscriptions: F[ListSubscriptionsResponse]
   def listSubscriptions(a: ListSubscriptionsRequest): F[ListSubscriptionsResponse]
   def listSubscriptionsByTopic(
-    a: ListSubscriptionsByTopicRequest
+      a: ListSubscriptionsByTopicRequest
   ): F[ListSubscriptionsByTopicResponse]
   def listSubscriptionsByTopicPaginator(
-    a: ListSubscriptionsByTopicRequest
+      a: ListSubscriptionsByTopicRequest
   ): F[ListSubscriptionsByTopicPublisher]
   def listSubscriptionsPaginator: F[ListSubscriptionsPublisher]
   def listSubscriptionsPaginator(a: ListSubscriptionsRequest): F[ListSubscriptionsPublisher]
@@ -93,12 +96,13 @@ trait SnsAsyncClientOp[F[_]] {
   def removePermission(a: RemovePermissionRequest): F[RemovePermissionResponse]
   def serviceName: F[String]
   def setEndpointAttributes(a: SetEndpointAttributesRequest): F[SetEndpointAttributesResponse]
+
   def setPlatformApplicationAttributes(
-    a: SetPlatformApplicationAttributesRequest
+      a: SetPlatformApplicationAttributesRequest
   ): F[SetPlatformApplicationAttributesResponse]
   def setSMSAttributes(a: SetSmsAttributesRequest): F[SetSmsAttributesResponse]
   def setSubscriptionAttributes(
-    a: SetSubscriptionAttributesRequest
+      a: SetSubscriptionAttributesRequest
   ): F[SetSubscriptionAttributesResponse]
   def setTopicAttributes(a: SetTopicAttributesRequest): F[SetTopicAttributesResponse]
   def subscribe(a: SubscribeRequest): F[SubscribeResponse]
@@ -106,7 +110,7 @@ trait SnsAsyncClientOp[F[_]] {
   def unsubscribe(a: UnsubscribeRequest): F[UnsubscribeResponse]
   def untagResource(a: UntagResourceRequest): F[UntagResourceResponse]
   def verifySMSSandboxPhoneNumber(
-    a: VerifySmsSandboxPhoneNumberRequest
+      a: VerifySmsSandboxPhoneNumberRequest
   ): F[VerifySmsSandboxPhoneNumberResponse]
 
 }

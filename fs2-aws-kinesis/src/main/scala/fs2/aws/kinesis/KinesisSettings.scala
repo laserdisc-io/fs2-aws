@@ -1,14 +1,13 @@
 package fs2.aws.kinesis
 
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.numeric.Positive
-import fs2.aws.internal.Exceptions._
+import eu.timepit.refined.auto.*
+import eu.timepit.refined.types.numeric.*
+import fs2.aws.internal.Exceptions.*
 import software.amazon.awssdk.regions.Region
 import software.amazon.kinesis.common.InitialPositionInStream
 
 import java.util.Date
-import scala.concurrent.duration._
-import eu.timepit.refined.auto._
+import scala.concurrent.duration.*
 
 /** Settings for configuring the Kinesis consumer
   *
@@ -19,24 +18,25 @@ import eu.timepit.refined.auto._
   *  @param retrievalMode FanOut (push) or Polling (pull). Defaults to FanOut (the new default in KCL 2.x).
   */
 class KinesisConsumerSettings private (
-  val streamName: String,
-  val appName: String,
-  val region: Region,
-  val bufferSize: Int Refined Positive,
-  val initialPositionInStream: Either[InitialPositionInStream, Date],
-  val retrievalMode: RetrievalMode
+    val streamName: String,
+    val appName: String,
+    val region: Region,
+    val bufferSize: PosInt,
+    val initialPositionInStream: Either[InitialPositionInStream, Date],
+    val retrievalMode: RetrievalMode
 )
 
 object KinesisConsumerSettings {
+
   def apply(
-    streamName: String,
-    appName: String,
-    region: Region = Region.US_EAST_1,
-    bufferSize: Int Refined Positive = 10,
-    initialPositionInStream: Either[InitialPositionInStream, Date] = Left(
-      InitialPositionInStream.LATEST
-    ),
-    retrievalMode: RetrievalMode = FanOut
+      streamName: String,
+      appName: String,
+      region: Region = Region.US_EAST_1,
+      bufferSize: PosInt = PosInt.unsafeFrom(10),
+      initialPositionInStream: Either[InitialPositionInStream, Date] = Left(
+        InitialPositionInStream.LATEST
+      ),
+      retrievalMode: RetrievalMode = FanOut
   ): KinesisConsumerSettings =
     new KinesisConsumerSettings(
       streamName,
@@ -49,11 +49,10 @@ object KinesisConsumerSettings {
 }
 
 sealed trait RetrievalMode
-case object FanOut  extends RetrievalMode
+case object FanOut extends RetrievalMode
 case object Polling extends RetrievalMode
 
-/**
-  * Used when constructing a [KinesisConsumerSettings] instance that will by used by a client for cross-account access.
+/** Used when constructing a [KinesisConsumerSettings] instance that will by used by a client for cross-account access.
   *
   * This currently implements only the minimum required fields defined in:
   * https://docs.aws.amazon.com/cli/latest/reference/sts/assume-role.html
@@ -64,18 +63,19 @@ case object Polling extends RetrievalMode
   * @param durationSeconds The duration, in seconds, of the role session.
   */
 class STSAssumeRoleSettings private (
-  val roleArn: String,
-  val roleSessionName: String,
-  val externalId: Option[String],
-  val durationSeconds: Option[Int]
+    val roleArn: String,
+    val roleSessionName: String,
+    val externalId: Option[String],
+    val durationSeconds: Option[Int]
 )
 
 object STSAssumeRoleSettings {
+
   def apply(
-    roleArn: String,
-    roleSessionName: String,
-    externalId: Option[String] = None,
-    durationSeconds: Option[Int] = None
+      roleArn: String,
+      roleSessionName: String,
+      externalId: Option[String] = None,
+      durationSeconds: Option[Int] = None
   ) =
     new STSAssumeRoleSettings(roleArn, roleSessionName, externalId, durationSeconds)
 }
@@ -86,16 +86,16 @@ object STSAssumeRoleSettings {
   *  @param maxBatchWait the maximum amount of time to wait before checkpointing the cluster of records
   */
 class KinesisCheckpointSettings private (
-  val maxBatchSize: Int,
-  val maxBatchWait: FiniteDuration
+    val maxBatchSize: Int,
+    val maxBatchWait: FiniteDuration
 )
 
 object KinesisCheckpointSettings {
   val defaultInstance = new KinesisCheckpointSettings(1000, 10.seconds)
 
   def apply(
-    maxBatchSize: Int,
-    maxBatchWait: FiniteDuration
+      maxBatchSize: Int,
+      maxBatchWait: FiniteDuration
   ): Either[Throwable, KinesisCheckpointSettings] =
     (maxBatchSize, maxBatchWait) match {
       case (s, _) if s <= 0 =>

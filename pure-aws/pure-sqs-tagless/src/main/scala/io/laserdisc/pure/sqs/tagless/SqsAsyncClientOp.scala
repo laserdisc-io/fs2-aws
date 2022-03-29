@@ -1,6 +1,6 @@
 package io.laserdisc.pure.sqs.tagless
 
-import software.amazon.awssdk.services.sqs.model._
+import software.amazon.awssdk.services.sqs.model.*
 import software.amazon.awssdk.services.sqs.paginators.{
   ListDeadLetterSourceQueuesPublisher,
   ListQueuesPublisher
@@ -11,7 +11,7 @@ trait SqsAsyncClientOp[F[_]] {
   def addPermission(a: AddPermissionRequest): F[AddPermissionResponse]
   def changeMessageVisibility(a: ChangeMessageVisibilityRequest): F[ChangeMessageVisibilityResponse]
   def changeMessageVisibilityBatch(
-    a: ChangeMessageVisibilityBatchRequest
+      a: ChangeMessageVisibilityBatchRequest
   ): F[ChangeMessageVisibilityBatchResponse]
   def close: F[Unit]
   def createQueue(a: CreateQueueRequest): F[CreateQueueResponse]
@@ -21,10 +21,10 @@ trait SqsAsyncClientOp[F[_]] {
   def getQueueAttributes(a: GetQueueAttributesRequest): F[GetQueueAttributesResponse]
   def getQueueUrl(a: GetQueueUrlRequest): F[GetQueueUrlResponse]
   def listDeadLetterSourceQueues(
-    a: ListDeadLetterSourceQueuesRequest
+      a: ListDeadLetterSourceQueuesRequest
   ): F[ListDeadLetterSourceQueuesResponse]
   def listDeadLetterSourceQueuesPaginator(
-    a: ListDeadLetterSourceQueuesRequest
+      a: ListDeadLetterSourceQueuesRequest
   ): F[ListDeadLetterSourceQueuesPublisher]
   def listQueueTags(a: ListQueueTagsRequest): F[ListQueueTagsResponse]
   def listQueues: F[ListQueuesResponse]

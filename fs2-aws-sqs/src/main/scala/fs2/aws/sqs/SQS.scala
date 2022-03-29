@@ -1,14 +1,14 @@
 package fs2.aws.sqs
 
 import cats.effect.Async
-import cats.syntax.applicative._
+import cats.syntax.applicative.*
 import fs2.Pipe
 import fs2.aws.sqs.SQS.MsgBody
 import io.laserdisc.pure.sqs.tagless.SqsAsyncClientOp
-import software.amazon.awssdk.services.sqs.model._
+import software.amazon.awssdk.services.sqs.model.*
 import sqs.SqsConfig
 
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 trait SQS[F[_]] {
   def sqsStream: fs2.Stream[F, Message]
@@ -20,9 +20,10 @@ trait SQS[F[_]] {
 
 object SQS {
   type MsgBody = String
+
   def create[F[_]: Async](
-    sqsConfig: SqsConfig,
-    sqs: SqsAsyncClientOp[F]
+      sqsConfig: SqsConfig,
+      sqs: SqsAsyncClientOp[F]
   ): F[SQS[F]] =
     new SQS[F] {
       override def sqsStream: fs2.Stream[F, Message] =
