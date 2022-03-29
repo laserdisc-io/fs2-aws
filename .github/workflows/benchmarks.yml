@@ -1,0 +1,27 @@
+name: Benchmarks
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  benchmarks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK
+        uses: olafurpg/setup-scala@v10
+      - name: Cache SBT
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/coursier/v1
+            ~/.sbt
+          key: sbt-${{ hashFiles('**/build.sbt') }}
+      - name: Run Benchmarks
+        run: sbt "project fs2-aws-benchmarks" "jmh:run -i 10 -wi 10 -f1 -t1 -rf json -rff kinesis_bench.json"
+      - name: Upload Benchmark Results
+        uses: actions/upload-artifact@v2
+        with:
+          name: benchmarks
+          path: fs2-aws-benchmarks/kinesis_bench.json

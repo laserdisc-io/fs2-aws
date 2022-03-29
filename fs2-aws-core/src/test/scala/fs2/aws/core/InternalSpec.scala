@@ -1,6 +1,7 @@
 package fs2.aws.core
 
-import cats.effect.{ ContextShift, IO }
+import cats.effect.IO
+import cats.effect.unsafe.IORuntime
 import fs2.Stream
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -8,13 +9,14 @@ import org.scalatest.matchers.should.Matchers
 import scala.concurrent.ExecutionContext
 
 class InternalSpec extends AnyFlatSpec with Matchers {
-  implicit val ec: ExecutionContext             = ExecutionContext.global
-  implicit val ioContextShift: ContextShift[IO] = IO.contextShift(ec)
+  implicit val ec: ExecutionContext = ExecutionContext.global
+  implicit val runtime: IORuntime = IORuntime.global
 
   "groupBy" should "create K substreams based on K selector outputs" in {
     val k = 30
     val streams = Stream
       .emits(1 to 100000)
+      .covary[IO]
       .through(groupBy(i => IO(i % k)))
       .compile
       .toVector
@@ -26,6 +28,7 @@ class InternalSpec extends AnyFlatSpec with Matchers {
   it should "split stream elements into respective substreams" in {
     val streams = Stream
       .emits(1 to 10)
+      .covary[IO]
       .through(groupBy(i => IO(i % 2)))
       .compile
       .toVector
@@ -38,13 +41,14 @@ class InternalSpec extends AnyFlatSpec with Matchers {
   it should "fail on exception" in {
     val streams = Stream
       .emits(1 to 10)
+      .covary[IO]
       .through(groupBy(i => IO(throw new Exception())))
       .attempt
       .compile
       .toVector
       .unsafeRunSync()
 
-    streams.size        shouldBe 1
+    streams.size shouldBe 1
     streams.head.isLeft shouldBe true
   }
 }

@@ -1,22 +1,21 @@
 package fs2.aws.ciris;
 
-import java.util.Date
-
-import cats.effect.{ ContextShift, IO }
-import ciris.{ ConfigException, ConfigValue }
+import cats.effect.IO
+import cats.effect.unsafe.IORuntime
+import ciris.{ConfigException, ConfigValue}
 import org.scalatest.Assertion
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import software.amazon.kinesis.common.InitialPositionInStream
 
-import scala.concurrent.ExecutionContext.Implicits.global;
+import java.util.Date
 
 class CirisDecoderSpec extends AnyWordSpec with Matchers {
-  implicit val cs: ContextShift[IO] = IO.contextShift(global)
+  implicit val runtime: IORuntime = IORuntime.global
 
   "InitialPositionDecoderSpec" should {
 
-    "when decoding Either[InitialPositionInStream, Date]" can {
+    "when decoding Either[InitialPositionInStream, Date]".can {
 
       // same package, so `import fs2.aws.ciris._` not necessary here
       def decode(testStr: String): Either[InitialPositionInStream, Date] =
@@ -35,8 +34,8 @@ class CirisDecoderSpec extends AnyWordSpec with Matchers {
 
       "decode supported strings as initial offsets" in {
 
-        decode("LATEST")           should equal(Left(InitialPositionInStream.LATEST))
-        decode("TRIM_HORIZON")     should equal(Left(InitialPositionInStream.TRIM_HORIZON))
+        decode("LATEST") should equal(Left(InitialPositionInStream.LATEST))
+        decode("TRIM_HORIZON") should equal(Left(InitialPositionInStream.TRIM_HORIZON))
         decode("TS_1592404273000") should equal(Right(new Date(1592404273000L)))
 
       }

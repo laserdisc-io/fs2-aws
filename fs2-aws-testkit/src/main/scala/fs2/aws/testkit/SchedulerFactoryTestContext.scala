@@ -1,25 +1,30 @@
 package fs2.aws.testkit
 
-import java.util.concurrent.CountDownLatch
+import cats.Applicative
 
-import org.mockito.Mockito.mock
+import java.util.concurrent.CountDownLatch
+import org.mockito.Mockito.{doAnswer, mock}
+import cats.syntax.applicative.*
 import software.amazon.kinesis.coordinator.Scheduler
-import software.amazon.kinesis.processor.{ ShardRecordProcessor, ShardRecordProcessorFactory }
+import software.amazon.kinesis.processor.{ShardRecordProcessor, ShardRecordProcessorFactory}
 
 import scala.collection.mutable.ListBuffer
 
-class SchedulerFactoryTestContext(shards: Int) extends (ShardRecordProcessorFactory => Scheduler) {
+class SchedulerFactoryTestContext[F[_]: Applicative](shards: Int)
+    extends (ShardRecordProcessorFactory => F[Scheduler]) {
 
   val processorsAreReady = new CountDownLatch(1)
+  val latch = new CountDownLatch(1)
 
-  private[this] val mockScheduler: Scheduler = mock(classOf[Scheduler])
+  private val mockScheduler: Scheduler = mock(classOf[Scheduler])
+  doAnswer(_ => latch.await()).when(mockScheduler).run()
 
-  private[this] val shardProcessors = ListBuffer.empty[ShardRecordProcessor]
+  private val shardProcessors = ListBuffer.empty[ShardRecordProcessor]
 
-  override def apply(pf: ShardRecordProcessorFactory): Scheduler = {
-    (0 until shards) foreach (_ => shardProcessors += pf.shardRecordProcessor())
+  override def apply(pf: ShardRecordProcessorFactory): F[Scheduler] = {
+    (0 until shards).foreach(_ => shardProcessors += pf.shardRecordProcessor())
     processorsAreReady.countDown()
-    mockScheduler
+    mockScheduler.pure[F]
   }
 
   def getShardProcessors: List[ShardRecordProcessor] = {

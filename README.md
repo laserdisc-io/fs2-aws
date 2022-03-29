@@ -1,7 +1,8 @@
 # fs2-aws
-[![Build Status](https://travis-ci.org/laserdisc-io/fs2-aws.svg?branch=master)](https://travis-ci.org/laserdisc-io/fs2-aws)
+![Build](https://github.com/laserdisc-io/fs2-aws/workflows/Build/badge.svg)
+![Release](https://github.com/laserdisc-io/fs2-aws/workflows/Release/badge.svg)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.laserdisc/fs2-aws_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.laserdisc/fs2-aws_2.12)
-[![Coverage Status](https://coveralls.io/repos/github/laserdisc-io/fs2-aws/badge.svg?branch=master)](https://coveralls.io/github/laserdisc-io/fs2-aws?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/laserdisc-io/fs2-aws/badge.svg?branch=main)](https://coveralls.io/github/laserdisc-io/fs2-aws?branch=main)
 
 fs2 Streaming utilities for interacting with AWS
 
@@ -46,27 +47,35 @@ You can also combine them as you see fit. For example, use `uploadFileMultipart`
 In order to create an instance of `S3` we need to first create an `S3Client`, as well as a `cats.effect.Blocker`. Here's an example of the former:
 
 ```scala
-import cats.effect._
-import java.net.URI
-import software.amazon.awssdk.services.s3.S3Client
-
-val mkS3Client: Resource[IO, S3Client] =
-  Resource.fromAutoCloseable(
-    IO(S3Client.builder().endpointOverride(URI.create("http://localhost:9000")).build())
-  )
+def s3StreamResource: Resource[IO, (S3AsyncClientOp[IO], Blocker)] =
+  for {
+    blocker     <- Blocker[IO]
+    credentials = AwsBasicCredentials.create("accesskey", "secretkey")
+    port        = 4566
+    s3 <- S3Interpreter[IO](blocker).S3AsyncClientOpResource(
+      S3AsyncClient
+        .builder()
+        .credentialsProvider(StaticCredentialsProvider.create(credentials))
+        .endpointOverride(URI.create(s"http://localhost:$port"))
+        .region(Region.US_EAST_1)
+    )
+  } yield s3 -> blocker
 ```
 
-A `Blocker` can be easily created using its `apply` method and then share it. You should only create a single instance. Now we can create our `S3[IO]` instance:
+Now we can create our `S3[IO]` instance:
 
 ```scala
-import fs2.aws.s3._
 
-S3.create[IO](client, blocker).flatMap { s3 =>
-  // do stuff with s3 here (or just share it with other functions)
+s3StreamResource.use {
+  case (s3Ops, blocker) => S3.create(s3Ops, blocker).flatMap{ s3 =>
+    // do stuff with s3 here (or just share it with other functions)
+  }
 }
 ```
 
 Create it once and share it as an argument, as any other resource.
+
+For more details on how to work with S3 streams follow [link](fs2-aws-examples/src/main/scala/S3Example.scala)
 
 ### Reading a file from S3
 
@@ -126,7 +135,7 @@ There are a number of other stream constructors available where you can provide 
 #### Testing
 TODO: Implement better test consumer
 
-For now, you can stubbed CommitableRecord and create a fs2.Stream to emit these records:
+For now, you can stub CommitableRecord and create a fs2.Stream to emit these records:
 ```scala
 val record = new Record()
   .withApproximateArrivalTimestamp(new Date())
@@ -145,7 +154,7 @@ val testRecord = CommittableRecord(
 ```
 
 #### Checkpointing records
-Records must be checkpointed in Kinesis to keep track of which messages each consumer has received. Checkpointing a record in the KCL will automatically checkpoint all records upto that record. To checkpoint records, a Pipe and Sink are available. To help distinguish whether a record has been checkpointed or not, a CommittableRecord class exists to denote a record that hasn't been checkpointed, while the base Record class denotes a commited record.
+Records must be checkpointed in Kinesis to keep track of which messages each consumer has received. Checkpointing a record in the KCL will automatically checkpoint all records upto that record. To checkpoint records, a Pipe and Sink are available. To help distinguish whether a record has been checkpointed or not, a CommittableRecord class exists to denote a record that hasn't been checkpointed, while the base Record class denotes a committed record.
 
 ```scala
 readFromKinesisStream[IO]("appName", "streamName")
@@ -154,7 +163,7 @@ readFromKinesisStream[IO]("appName", "streamName")
 ```
 
 ### Publishing records to Kinesis with KPL
-A Pipe and Sink allow for writing a stream of tuple2 (paritionKey, ByteBuffer) to a Kinesis stream.
+A Pipe and Sink allow for writing a stream of tuple2 (partitionKey, ByteBuffer) to a Kinesis stream.
 
 Example:
 ```scala
@@ -164,6 +173,11 @@ Stream("testData")
 ```
 
 AWS credential chain and region can be configured by overriding the respective fields in the KinesisProducerClient parameter to `writeToKinesis`. Defaults to using the default AWS credentials chain and `us-east-1` for region.
+
+### Use with LocalStack
+
+In some situations (e.g. local dev and automated tests), it may be desirable to be able to consume from and publish to Kinesis running inside LocalStack.
+Ensure that the `endpoint` setting is set correctly (e.g. http://localhost:4566) and that `retrievalMode` is set to `Polling` (LocalStack doesn't support `FanOut`).
 
 ## Kinesis Firehose
 **TODO:** Stream get data, Stream send data
@@ -187,16 +201,16 @@ fs2.aws
 Testing
 ```scala
 //create stream for testing
-def stream(deferedListener: Deferred[IO, MessageListener]) =
+def stream(deferredListener: Deferred[IO, MessageListener]) =
             aws.testkit
-              .sqsStream[IO, Quote](deferedListener)
+              .sqsStream[IO, Quote](deferredListener)
               .through(...)
               .take(2)
               .compile
               .toList
 
 //create the program for testing the stream
-import io.circe.syntax._
+import io.circe.fs2.aws.examples.syntax._
 import io.circe.generic.auto._
 val quote = Quote(...)
 val program : IO[List[(Quote, MessageListener)]] = for {
@@ -216,4 +230,11 @@ val result = program
 result should be(...)
 ```
 **TODO:** Stream send SQS messages
+
+## Support
+
+![YourKit Image](https://www.yourkit.com/images/yklogo.png "YourKit")
+
+This project is supported by YourKit with monitoring and profiling Tools. YourKit supports open source with innovative and intelligent tools for monitoring and profiling Java and .NET applications. YourKit is the creator of [YourKit Java Profiler](https://www.yourkit.com/java/profiler/), [YourKit .NET Profiler](https://www.yourkit.com/.net/profiler/), and [YourKit YouMonitor](https://www.yourkit.com/youmonitor/).
+
 

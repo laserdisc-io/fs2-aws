@@ -1,0 +1,31 @@
+name: Build
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK
+        uses: olafurpg/setup-scala@v10
+      - name: Cache SBT
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/coursier/v1
+            ~/.sbt
+          key: sbt-${{ hashFiles('**/build.sbt') }}
+      - name: "Starting up MinIO 🐳"
+        run: docker-compose up -d
+      - name: Run tests
+        run: sbt +clean +test +doc
+        env:
+          AWS_ACCESS_KEY_ID: dummy
+          AWS_SECRET_ACCESS_KEY: dummy
+      - name: "Shutting down MinIO 🐳"
+        run: docker-compose down
