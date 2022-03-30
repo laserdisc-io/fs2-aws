@@ -125,7 +125,7 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
       "org.slf4j"        % "jul-to-slf4j"             % "1.7.36",
       "org.typelevel"    %% "log4cats-slf4j"          % "2.2.0",
       "io.laserdisc"     %% "scanamo-circe"           % "2.1.0",
-      "io.janstenpickle" %% "trace4cats-inject"       % "0.13.0"
+      "io.janstenpickle" %% "trace4cats-inject"       % "0.12.0"
     )
   )
   .settings(commonSettings)
