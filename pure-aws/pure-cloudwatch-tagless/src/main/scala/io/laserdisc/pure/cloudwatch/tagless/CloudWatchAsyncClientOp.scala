@@ -1,7 +1,7 @@
 package io.laserdisc.pure.cloudwatch.tagless
 
-import software.amazon.awssdk.services.cloudwatch.model._
-import software.amazon.awssdk.services.cloudwatch.paginators._
+import software.amazon.awssdk.services.cloudwatch.model.*
+import software.amazon.awssdk.services.cloudwatch.paginators.*
 import software.amazon.awssdk.services.cloudwatch.waiters.CloudWatchAsyncWaiter
 
 trait CloudWatchAsyncClientOp[F[_]] {
@@ -16,7 +16,7 @@ trait CloudWatchAsyncClientOp[F[_]] {
   def describeAlarmHistory(a: DescribeAlarmHistoryRequest): F[DescribeAlarmHistoryResponse]
   def describeAlarmHistoryPaginator: F[DescribeAlarmHistoryPublisher]
   def describeAlarmHistoryPaginator(
-    a: DescribeAlarmHistoryRequest
+      a: DescribeAlarmHistoryRequest
   ): F[DescribeAlarmHistoryPublisher]
   def describeAlarms: F[DescribeAlarmsResponse]
   def describeAlarms(a: DescribeAlarmsRequest): F[DescribeAlarmsResponse]
@@ -24,11 +24,11 @@ trait CloudWatchAsyncClientOp[F[_]] {
   def describeAlarmsPaginator: F[DescribeAlarmsPublisher]
   def describeAlarmsPaginator(a: DescribeAlarmsRequest): F[DescribeAlarmsPublisher]
   def describeAnomalyDetectors(
-    a: DescribeAnomalyDetectorsRequest
+      a: DescribeAnomalyDetectorsRequest
   ): F[DescribeAnomalyDetectorsResponse]
   def describeInsightRules(a: DescribeInsightRulesRequest): F[DescribeInsightRulesResponse]
   def describeInsightRulesPaginator(
-    a: DescribeInsightRulesRequest
+      a: DescribeInsightRulesRequest
   ): F[DescribeInsightRulesPublisher]
   def disableAlarmActions(a: DisableAlarmActionsRequest): F[DisableAlarmActionsResponse]
   def disableInsightRules(a: DisableInsightRulesRequest): F[DisableInsightRulesResponse]

@@ -1,36 +1,38 @@
 package fs2.aws.examples
 
-import cats.implicits._
-import com.amazonaws.auth.{ AWSStaticCredentialsProvider, BasicAWSCredentials }
+import cats.implicits.*
+import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.services.kinesis.producer.KinesisProducerConfiguration
-import fs2.aws.kinesis.{ KinesisConsumerSettings, Polling }
-import software.amazon.awssdk.auth.credentials.{ AwsBasicCredentials, StaticCredentialsProvider }
+import fs2.aws.kinesis.{KinesisConsumerSettings, Polling}
+import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import software.amazon.awssdk.awscore.client.builder.AwsClientBuilder
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.cloudwatch.{
   CloudWatchAsyncClient,
   CloudWatchAsyncClientBuilder
 }
-import software.amazon.awssdk.services.dynamodb.{ DynamoDbAsyncClient, DynamoDbAsyncClientBuilder }
-import software.amazon.awssdk.services.kinesis.{ KinesisAsyncClient, KinesisAsyncClientBuilder }
+import software.amazon.awssdk.services.dynamodb.{DynamoDbAsyncClient, DynamoDbAsyncClientBuilder}
+import software.amazon.awssdk.services.kinesis.{KinesisAsyncClient, KinesisAsyncClientBuilder}
 import software.amazon.kinesis.common.InitialPositionInStream
 
 import java.net.URI
 import java.util.Date
 
 case class KinesisAppConfig(
-  awsHost: String,
-  awsPort: Int,
-  awsRegion: Region,
-  awsKeyId: String,
-  awsKey: String,
-  streamName: String,
-  appName: String
+    awsHost: String,
+    awsPort: Long,
+    awsRegion: Region,
+    awsKeyId: String,
+    awsKey: String,
+    streamName: String,
+    appName: String
 )
+
 object KinesisAppConfig {
+
   def localstackConfig: KinesisAppConfig = KinesisAppConfig(
     awsHost = "localhost",
-    awsPort = 4566,
+    awsPort = 4566L,
     awsRegion = Region.US_EAST_1,
     awsKeyId = "dummy",
     awsKey = "dummy",
@@ -46,7 +48,7 @@ object syntax {
       AwsBasicCredentials.create(kinesisAppConfig.awsKeyId, kinesisAppConfig.awsKey)
     )
     private def overwriteStuff[B <: AwsClientBuilder[B, C], C](
-      awsClientBuilder: AwsClientBuilder[B, C]
+        awsClientBuilder: AwsClientBuilder[B, C]
     ) =
       awsClientBuilder
         .credentialsProvider(cp)
@@ -57,6 +59,7 @@ object syntax {
 
     def kinesisSdkBuilder: KinesisAsyncClientBuilder = overwriteStuff(KinesisAsyncClient.builder())
     def dynamoSdkBuilder: DynamoDbAsyncClientBuilder = overwriteStuff(DynamoDbAsyncClient.builder())
+
     def cloudwatchSdkBuilder: CloudWatchAsyncClientBuilder =
       overwriteStuff(CloudWatchAsyncClient.builder())
 
