@@ -10,7 +10,6 @@ import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCrede
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.*
-import sqs.SqsConfig
 
 import java.net.URI
 import scala.concurrent.ExecutionContext

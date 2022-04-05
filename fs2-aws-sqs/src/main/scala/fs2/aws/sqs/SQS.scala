@@ -6,7 +6,6 @@ import fs2.Pipe
 import fs2.aws.sqs.SQS.MsgBody
 import io.laserdisc.pure.sqs.tagless.SqsAsyncClientOp
 import software.amazon.awssdk.services.sqs.model.*
-import sqs.SqsConfig
 
 import scala.jdk.CollectionConverters.*
 
