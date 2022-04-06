@@ -26,16 +26,15 @@ object KinesisFlowBenchmark {
   @State(Scope.Thread)
   class ThreadState {
 
-    val records = (0 to 50000).map(
-      seq =>
-        KinesisClientRecord
-          .builder()
-          .sequenceNumber(s"$seq")
-          .approximateArrivalTimestamp(Instant.now())
-          .data(ByteBuffer.wrap(Array.fill(20)((scala.util.Random.nextInt(256) - 128).toByte)))
-          .partitionKey(s"shard${scala.util.Random.nextInt(256)}")
-          .encryptionType(model.EncryptionType.NONE)
-          .build()
+    val records = (0 to 50000).map(seq =>
+      KinesisClientRecord
+        .builder()
+        .sequenceNumber(s"$seq")
+        .approximateArrivalTimestamp(Instant.now())
+        .data(ByteBuffer.wrap(Array.fill(20)((scala.util.Random.nextInt(256) - 128).toByte)))
+        .partitionKey(s"shard${scala.util.Random.nextInt(256)}")
+        .encryptionType(model.EncryptionType.NONE)
+        .build()
     )
   }
 
@@ -57,30 +56,29 @@ object KinesisFlowBenchmark {
           Sync[IO]
             .delay(processorContext.getShardProcessors.zipWithIndex)
             .flatMap {
-              _.map {
-                case (p, idx) =>
-                  Sync[IO].delay {
-                    val shard = s"shard$idx"
-                    p.initialize(
-                      InitializationInput
-                        .builder()
-                        .shardId(shard)
-                        .extendedSequenceNumber(ExtendedSequenceNumber.AT_TIMESTAMP)
-                        .build()
-                    )
+              _.map { case (p, idx) =>
+                Sync[IO].delay {
+                  val shard = s"shard$idx"
+                  p.initialize(
+                    InitializationInput
+                      .builder()
+                      .shardId(shard)
+                      .extendedSequenceNumber(ExtendedSequenceNumber.AT_TIMESTAMP)
+                      .build()
+                  )
 
-                    p.processRecords(
-                      ProcessRecordsInput
-                        .builder()
-                        .checkpointer(
-                          mock(
-                            classOf[RecordProcessorCheckpointer]
-                          )
+                  p.processRecords(
+                    ProcessRecordsInput
+                      .builder()
+                      .checkpointer(
+                        mock(
+                          classOf[RecordProcessorCheckpointer]
                         )
-                        .records(state.records.asJava)
-                        .build()
-                    )
-                  }
+                      )
+                      .records(state.records.asJava)
+                      .build()
+                  )
+                }
               }.parUnorderedSequence
             }
         ).parMapN { case _ => () }

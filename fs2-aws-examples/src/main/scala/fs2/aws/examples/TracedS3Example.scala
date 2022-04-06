@@ -8,7 +8,7 @@ import fs2.aws.s3.models.Models.{BucketName, FileKey}
 import fs2.text
 import io.janstenpickle.trace4cats.Span
 import io.janstenpickle.trace4cats.inject.Trace
-import io.laserdisc.pure.s3.tagless.{S3AsyncClientOp, Interpreter as S3Interpreter}
+import io.laserdisc.pure.s3.tagless.{Interpreter as S3Interpreter, S3AsyncClientOp}
 import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3AsyncClient

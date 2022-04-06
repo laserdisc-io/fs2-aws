@@ -6,20 +6,23 @@ import cats.effect.Sync
 import cats.implicits._
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.streamsadapter.model.RecordAdapter
-import org.scanamo.{ DynamoFormat, DynamoObject, DynamoReadError }
+import org.scanamo.{DynamoFormat, DynamoObject, DynamoReadError}
 
 package object parsers {
   def parseDynamoEvent[F[_]: Sync, T](
-    record: RecordAdapter
+      record: RecordAdapter
   )(implicit df: DynamoFormat[T]): F[DynamoDBBeforeAfter[T]] =
-    (record.getInternalObject.getDynamodb.getStreamViewType, record.getInternalObject.getEventName) match {
+    (
+      record.getInternalObject.getDynamodb.getStreamViewType,
+      record.getInternalObject.getEventName
+    ) match {
       case ("NEW_IMAGE" | "NEW_AND_OLD_IMAGES", "INSERT") =>
         parseDynamoRecord(record.getInternalObject.getDynamodb.getNewImage)
           .map(after => Insert(after))
       case ("NEW_AND_OLD_IMAGES", "MODIFY") =>
         for {
           before <- parseDynamoRecord(record.getInternalObject.getDynamodb.getOldImage)
-          after  <- parseDynamoRecord(record.getInternalObject.getDynamodb.getNewImage)
+          after <- parseDynamoRecord(record.getInternalObject.getDynamodb.getNewImage)
         } yield Update(before, after)
       case ("NEW_IMAGE", "MODIFY") =>
         for {
@@ -35,12 +38,11 @@ package object parsers {
     }
 
   def parseDynamoRecord[F[_]: Sync, T](
-    image: util.Map[String, AttributeValue]
+      image: util.Map[String, AttributeValue]
   )(implicit df: DynamoFormat[T]): F[T] =
     df.read(
-        DynamoObject(image).toAttributeValue
-      )
-      .leftMap(e => new RuntimeException(DynamoReadError.describe(e)))
+      DynamoObject(image).toAttributeValue
+    ).leftMap(e => new RuntimeException(DynamoReadError.describe(e)))
       .liftTo[F]
 
 }

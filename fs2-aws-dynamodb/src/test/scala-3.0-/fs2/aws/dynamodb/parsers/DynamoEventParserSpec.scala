@@ -2,7 +2,13 @@ package fs2.aws.dynamodb.parsers
 
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
-import com.amazonaws.services.dynamodbv2.model.{AttributeValue, OperationType, Record, StreamRecord, StreamViewType}
+import com.amazonaws.services.dynamodbv2.model.{
+  AttributeValue,
+  OperationType,
+  Record,
+  StreamRecord,
+  StreamViewType
+}
 import com.amazonaws.services.dynamodbv2.streamsadapter.model.RecordAdapter
 import io.circe.Json
 import io.github.howardjohn.scanamo.CirceDynamoFormat.*
