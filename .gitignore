@@ -8,6 +8,10 @@ project/plugins/project/
 .history
 .cache
 .lib/
+.bloop/
 .bsp/
+.vscode/
+.metals/
 local.*
 .DS_Store
+metals.sbt
