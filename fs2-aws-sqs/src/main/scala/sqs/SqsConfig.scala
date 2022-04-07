@@ -2,7 +2,7 @@ package sqs
 
 import scala.concurrent.duration.*
 
-@deprecated("Use fs2.aws.sqs.SqsConfig instead")
+@deprecated(message = "Use fs2.aws.sqs.SqsConfig instead", since = "5.1.0")
 class SqsConfig(
     queueUrl: String,
     pollRate: FiniteDuration,
@@ -16,7 +16,7 @@ class SqsConfig(
     new SqsConfig(queueUrl, pollRate, fetchMessageCount)
 }
 
-@deprecated("Use fs2.aws.sqs.SqsConfig instead")
+@deprecated(message = "Use fs2.aws.sqs.SqsConfig instead", since = "5.1.0")
 object SqsConfig extends ((String, FiniteDuration, Int) => SqsConfig) {
   def apply(
       queueUrl: String,
