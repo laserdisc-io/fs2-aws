@@ -15,8 +15,8 @@ import java.util.concurrent.CompletableFuture
 
 object Interpreter {
 
-  def apply[M[_]](implicit
-      am: Async[M]
+  def apply[M[_]](
+    implicit am: Async[M]
   ): Interpreter[M] =
     new Interpreter[M] {
       val asyncM = am
@@ -29,8 +29,7 @@ trait Interpreter[M[_]] { outer =>
 
   implicit val asyncM: Async[M]
 
-  lazy val KinesisAsyncClientInterpreter: KinesisAsyncClientInterpreter =
-    new KinesisAsyncClientInterpreter {}
+  lazy val KinesisAsyncClientInterpreter: KinesisAsyncClientInterpreter = new KinesisAsyncClientInterpreter {}
   // Some methods are common to all interpreters and can be overridden to change behavior globally.
 
   def primitive[J, A](f: J => A): Kleisli[M, J, A] = Kleisli(a => asyncM.blocking(f(a)))
@@ -43,8 +42,7 @@ trait Interpreter[M[_]] { outer =>
           x match {
             case t: CompletionException => cb(Left(t.getCause))
             case t                      => cb(Left(t))
-          }
-        else
+          } else
           cb(Right(a))
       }
       ()
@@ -58,16 +56,14 @@ trait Interpreter[M[_]] { outer =>
           x match {
             case t: CompletionException => cb(Left(t.getCause))
             case t                      => cb(Left(t))
-          }
-        else
+          } else
           cb(Right(a))
       }
       ()
     }
 
   // Interpreters
-  trait KinesisAsyncClientInterpreter
-      extends KinesisAsyncClientOp[Kleisli[M, KinesisAsyncClient, *]] {
+  trait KinesisAsyncClientInterpreter extends KinesisAsyncClientOp[Kleisli[M, KinesisAsyncClient, *]] {
 
     // domain-specific operations are implemented in terms of `primitive`
     override def addTagsToStream(a: AddTagsToStreamRequest) = eff(_.addTagsToStream(a))
@@ -76,19 +72,14 @@ trait Interpreter[M[_]] { outer =>
     override def decreaseStreamRetentionPeriod(a: DecreaseStreamRetentionPeriodRequest) =
       eff(_.decreaseStreamRetentionPeriod(a))
     override def deleteStream(a: DeleteStreamRequest) = eff(_.deleteStream(a))
-    override def deregisterStreamConsumer(a: DeregisterStreamConsumerRequest) =
-      eff(_.deregisterStreamConsumer(a))
+    override def deregisterStreamConsumer(a: DeregisterStreamConsumerRequest) = eff(_.deregisterStreamConsumer(a))
     override def describeLimits = eff(_.describeLimits)
     override def describeLimits(a: DescribeLimitsRequest) = eff(_.describeLimits(a))
     override def describeStream(a: DescribeStreamRequest) = eff(_.describeStream(a))
-    override def describeStreamConsumer(a: DescribeStreamConsumerRequest) =
-      eff(_.describeStreamConsumer(a))
-    override def describeStreamSummary(a: DescribeStreamSummaryRequest) =
-      eff(_.describeStreamSummary(a))
-    override def disableEnhancedMonitoring(a: DisableEnhancedMonitoringRequest) =
-      eff(_.disableEnhancedMonitoring(a))
-    override def enableEnhancedMonitoring(a: EnableEnhancedMonitoringRequest) =
-      eff(_.enableEnhancedMonitoring(a))
+    override def describeStreamConsumer(a: DescribeStreamConsumerRequest) = eff(_.describeStreamConsumer(a))
+    override def describeStreamSummary(a: DescribeStreamSummaryRequest) = eff(_.describeStreamSummary(a))
+    override def disableEnhancedMonitoring(a: DisableEnhancedMonitoringRequest) = eff(_.disableEnhancedMonitoring(a))
+    override def enableEnhancedMonitoring(a: EnableEnhancedMonitoringRequest) = eff(_.enableEnhancedMonitoring(a))
     override def getRecords(a: GetRecordsRequest) = eff(_.getRecords(a))
     override def getShardIterator(a: GetShardIteratorRequest) = eff(_.getShardIterator(a))
     override def increaseStreamRetentionPeriod(a: IncreaseStreamRetentionPeriodRequest) =
@@ -103,16 +94,12 @@ trait Interpreter[M[_]] { outer =>
     override def mergeShards(a: MergeShardsRequest) = eff(_.mergeShards(a))
     override def putRecord(a: PutRecordRequest) = eff(_.putRecord(a))
     override def putRecords(a: PutRecordsRequest) = eff(_.putRecords(a))
-    override def registerStreamConsumer(a: RegisterStreamConsumerRequest) =
-      eff(_.registerStreamConsumer(a))
-    override def removeTagsFromStream(a: RemoveTagsFromStreamRequest) =
-      eff(_.removeTagsFromStream(a))
+    override def registerStreamConsumer(a: RegisterStreamConsumerRequest) = eff(_.registerStreamConsumer(a))
+    override def removeTagsFromStream(a: RemoveTagsFromStreamRequest) = eff(_.removeTagsFromStream(a))
     override def serviceName = primitive(_.serviceName)
     override def splitShard(a: SplitShardRequest) = eff(_.splitShard(a))
-    override def startStreamEncryption(a: StartStreamEncryptionRequest) =
-      eff(_.startStreamEncryption(a))
-    override def stopStreamEncryption(a: StopStreamEncryptionRequest) =
-      eff(_.stopStreamEncryption(a))
+    override def startStreamEncryption(a: StartStreamEncryptionRequest) = eff(_.startStreamEncryption(a))
+    override def stopStreamEncryption(a: StopStreamEncryptionRequest) = eff(_.stopStreamEncryption(a))
     override def subscribeToShard(a: SubscribeToShardRequest, b: SubscribeToShardResponseHandler) =
       eff(_.subscribeToShard(a, b))
     override def updateShardCount(a: UpdateShardCountRequest) = eff(_.updateShardCount(a))
@@ -121,8 +108,7 @@ trait Interpreter[M[_]] { outer =>
 
     def lens[E](f: E => KinesisAsyncClient): KinesisAsyncClientOp[Kleisli[M, E, *]] =
       new KinesisAsyncClientOp[Kleisli[M, E, *]] {
-        override def addTagsToStream(a: AddTagsToStreamRequest) =
-          Kleisli(e => eff1(f(e).addTagsToStream(a)))
+        override def addTagsToStream(a: AddTagsToStreamRequest) = Kleisli(e => eff1(f(e).addTagsToStream(a)))
         override def close = Kleisli(e => primitive1(f(e).close))
         override def createStream(a: CreateStreamRequest) = Kleisli(e => eff1(f(e).createStream(a)))
         override def decreaseStreamRetentionPeriod(a: DecreaseStreamRetentionPeriodRequest) =
@@ -131,10 +117,8 @@ trait Interpreter[M[_]] { outer =>
         override def deregisterStreamConsumer(a: DeregisterStreamConsumerRequest) =
           Kleisli(e => eff1(f(e).deregisterStreamConsumer(a)))
         override def describeLimits = Kleisli(e => eff1(f(e).describeLimits))
-        override def describeLimits(a: DescribeLimitsRequest) =
-          Kleisli(e => eff1(f(e).describeLimits(a)))
-        override def describeStream(a: DescribeStreamRequest) =
-          Kleisli(e => eff1(f(e).describeStream(a)))
+        override def describeLimits(a: DescribeLimitsRequest) = Kleisli(e => eff1(f(e).describeLimits(a)))
+        override def describeStream(a: DescribeStreamRequest) = Kleisli(e => eff1(f(e).describeStream(a)))
         override def describeStreamConsumer(a: DescribeStreamConsumerRequest) =
           Kleisli(e => eff1(f(e).describeStreamConsumer(a)))
         override def describeStreamSummary(a: DescribeStreamSummaryRequest) =
@@ -144,8 +128,7 @@ trait Interpreter[M[_]] { outer =>
         override def enableEnhancedMonitoring(a: EnableEnhancedMonitoringRequest) =
           Kleisli(e => eff1(f(e).enableEnhancedMonitoring(a)))
         override def getRecords(a: GetRecordsRequest) = Kleisli(e => eff1(f(e).getRecords(a)))
-        override def getShardIterator(a: GetShardIteratorRequest) =
-          Kleisli(e => eff1(f(e).getShardIterator(a)))
+        override def getShardIterator(a: GetShardIteratorRequest) = Kleisli(e => eff1(f(e).getShardIterator(a)))
         override def increaseStreamRetentionPeriod(a: IncreaseStreamRetentionPeriodRequest) =
           Kleisli(e => eff1(f(e).increaseStreamRetentionPeriod(a)))
         override def listShards(a: ListShardsRequest) = Kleisli(e => eff1(f(e).listShards(a)))
@@ -155,8 +138,7 @@ trait Interpreter[M[_]] { outer =>
           Kleisli(e => primitive1(f(e).listStreamConsumersPaginator(a)))
         override def listStreams = Kleisli(e => eff1(f(e).listStreams))
         override def listStreams(a: ListStreamsRequest) = Kleisli(e => eff1(f(e).listStreams(a)))
-        override def listTagsForStream(a: ListTagsForStreamRequest) =
-          Kleisli(e => eff1(f(e).listTagsForStream(a)))
+        override def listTagsForStream(a: ListTagsForStreamRequest) = Kleisli(e => eff1(f(e).listTagsForStream(a)))
         override def mergeShards(a: MergeShardsRequest) = Kleisli(e => eff1(f(e).mergeShards(a)))
         override def putRecord(a: PutRecordRequest) = Kleisli(e => eff1(f(e).putRecord(a)))
         override def putRecords(a: PutRecordsRequest) = Kleisli(e => eff1(f(e).putRecords(a)))
@@ -170,25 +152,17 @@ trait Interpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).startStreamEncryption(a)))
         override def stopStreamEncryption(a: StopStreamEncryptionRequest) =
           Kleisli(e => eff1(f(e).stopStreamEncryption(a)))
-        override def subscribeToShard(
-            a: SubscribeToShardRequest,
-            b: SubscribeToShardResponseHandler
-        ) =
+        override def subscribeToShard(a: SubscribeToShardRequest, b: SubscribeToShardResponseHandler) =
           Kleisli(e => eff1(f(e).subscribeToShard(a, b)))
-        override def updateShardCount(a: UpdateShardCountRequest) =
-          Kleisli(e => eff1(f(e).updateShardCount(a)))
-        override def updateStreamMode(a: UpdateStreamModeRequest) =
-          Kleisli(e => eff1(f(e).updateStreamMode(a)))
+        override def updateShardCount(a: UpdateShardCountRequest) = Kleisli(e => eff1(f(e).updateShardCount(a)))
+        override def updateStreamMode(a: UpdateStreamModeRequest) = Kleisli(e => eff1(f(e).updateStreamMode(a)))
         override def waiter = Kleisli(e => primitive1(f(e).waiter))
       }
   }
 
-  def KinesisAsyncClientResource(
-      builder: KinesisAsyncClientBuilder
-  ): Resource[M, KinesisAsyncClient] =
+  def KinesisAsyncClientResource(builder: KinesisAsyncClientBuilder): Resource[M, KinesisAsyncClient] =
     Resource.fromAutoCloseable(asyncM.delay(builder.build()))
-  def KinesisAsyncClientOpResource(builder: KinesisAsyncClientBuilder) =
-    KinesisAsyncClientResource(builder).map(create)
+  def KinesisAsyncClientOpResource(builder: KinesisAsyncClientBuilder) = KinesisAsyncClientResource(builder).map(create)
 
   def create(client: KinesisAsyncClient): KinesisAsyncClientOp[M] = new KinesisAsyncClientOp[M] {
 
@@ -199,26 +173,21 @@ trait Interpreter[M[_]] { outer =>
     override def decreaseStreamRetentionPeriod(a: DecreaseStreamRetentionPeriodRequest) =
       eff1(client.decreaseStreamRetentionPeriod(a))
     override def deleteStream(a: DeleteStreamRequest) = eff1(client.deleteStream(a))
-    override def deregisterStreamConsumer(a: DeregisterStreamConsumerRequest) =
-      eff1(client.deregisterStreamConsumer(a))
+    override def deregisterStreamConsumer(a: DeregisterStreamConsumerRequest) = eff1(client.deregisterStreamConsumer(a))
     override def describeLimits = eff1(client.describeLimits)
     override def describeLimits(a: DescribeLimitsRequest) = eff1(client.describeLimits(a))
     override def describeStream(a: DescribeStreamRequest) = eff1(client.describeStream(a))
-    override def describeStreamConsumer(a: DescribeStreamConsumerRequest) =
-      eff1(client.describeStreamConsumer(a))
-    override def describeStreamSummary(a: DescribeStreamSummaryRequest) =
-      eff1(client.describeStreamSummary(a))
+    override def describeStreamConsumer(a: DescribeStreamConsumerRequest) = eff1(client.describeStreamConsumer(a))
+    override def describeStreamSummary(a: DescribeStreamSummaryRequest) = eff1(client.describeStreamSummary(a))
     override def disableEnhancedMonitoring(a: DisableEnhancedMonitoringRequest) =
       eff1(client.disableEnhancedMonitoring(a))
-    override def enableEnhancedMonitoring(a: EnableEnhancedMonitoringRequest) =
-      eff1(client.enableEnhancedMonitoring(a))
+    override def enableEnhancedMonitoring(a: EnableEnhancedMonitoringRequest) = eff1(client.enableEnhancedMonitoring(a))
     override def getRecords(a: GetRecordsRequest) = eff1(client.getRecords(a))
     override def getShardIterator(a: GetShardIteratorRequest) = eff1(client.getShardIterator(a))
     override def increaseStreamRetentionPeriod(a: IncreaseStreamRetentionPeriodRequest) =
       eff1(client.increaseStreamRetentionPeriod(a))
     override def listShards(a: ListShardsRequest) = eff1(client.listShards(a))
-    override def listStreamConsumers(a: ListStreamConsumersRequest) =
-      eff1(client.listStreamConsumers(a))
+    override def listStreamConsumers(a: ListStreamConsumersRequest) = eff1(client.listStreamConsumers(a))
     override def listStreamConsumersPaginator(a: ListStreamConsumersRequest) =
       primitive1(client.listStreamConsumersPaginator(a))
     override def listStreams = eff1(client.listStreams)
@@ -227,16 +196,12 @@ trait Interpreter[M[_]] { outer =>
     override def mergeShards(a: MergeShardsRequest) = eff1(client.mergeShards(a))
     override def putRecord(a: PutRecordRequest) = eff1(client.putRecord(a))
     override def putRecords(a: PutRecordsRequest) = eff1(client.putRecords(a))
-    override def registerStreamConsumer(a: RegisterStreamConsumerRequest) =
-      eff1(client.registerStreamConsumer(a))
-    override def removeTagsFromStream(a: RemoveTagsFromStreamRequest) =
-      eff1(client.removeTagsFromStream(a))
+    override def registerStreamConsumer(a: RegisterStreamConsumerRequest) = eff1(client.registerStreamConsumer(a))
+    override def removeTagsFromStream(a: RemoveTagsFromStreamRequest) = eff1(client.removeTagsFromStream(a))
     override def serviceName = primitive1(client.serviceName)
     override def splitShard(a: SplitShardRequest) = eff1(client.splitShard(a))
-    override def startStreamEncryption(a: StartStreamEncryptionRequest) =
-      eff1(client.startStreamEncryption(a))
-    override def stopStreamEncryption(a: StopStreamEncryptionRequest) =
-      eff1(client.stopStreamEncryption(a))
+    override def startStreamEncryption(a: StartStreamEncryptionRequest) = eff1(client.startStreamEncryption(a))
+    override def stopStreamEncryption(a: StopStreamEncryptionRequest) = eff1(client.stopStreamEncryption(a))
     override def subscribeToShard(a: SubscribeToShardRequest, b: SubscribeToShardResponseHandler) =
       eff1(client.subscribeToShard(a, b))
     override def updateShardCount(a: UpdateShardCountRequest) = eff1(client.updateShardCount(a))

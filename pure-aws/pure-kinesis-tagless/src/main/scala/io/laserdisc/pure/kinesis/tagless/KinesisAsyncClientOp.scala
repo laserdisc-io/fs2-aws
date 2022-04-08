@@ -9,29 +9,19 @@ trait KinesisAsyncClientOp[F[_]] {
   def addTagsToStream(a: AddTagsToStreamRequest): F[AddTagsToStreamResponse]
   def close: F[Unit]
   def createStream(a: CreateStreamRequest): F[CreateStreamResponse]
-  def decreaseStreamRetentionPeriod(
-      a: DecreaseStreamRetentionPeriodRequest
-  ): F[DecreaseStreamRetentionPeriodResponse]
+  def decreaseStreamRetentionPeriod(a: DecreaseStreamRetentionPeriodRequest): F[DecreaseStreamRetentionPeriodResponse]
   def deleteStream(a: DeleteStreamRequest): F[DeleteStreamResponse]
-  def deregisterStreamConsumer(
-      a: DeregisterStreamConsumerRequest
-  ): F[DeregisterStreamConsumerResponse]
+  def deregisterStreamConsumer(a: DeregisterStreamConsumerRequest): F[DeregisterStreamConsumerResponse]
   def describeLimits: F[DescribeLimitsResponse]
   def describeLimits(a: DescribeLimitsRequest): F[DescribeLimitsResponse]
   def describeStream(a: DescribeStreamRequest): F[DescribeStreamResponse]
   def describeStreamConsumer(a: DescribeStreamConsumerRequest): F[DescribeStreamConsumerResponse]
   def describeStreamSummary(a: DescribeStreamSummaryRequest): F[DescribeStreamSummaryResponse]
-  def disableEnhancedMonitoring(
-      a: DisableEnhancedMonitoringRequest
-  ): F[DisableEnhancedMonitoringResponse]
-  def enableEnhancedMonitoring(
-      a: EnableEnhancedMonitoringRequest
-  ): F[EnableEnhancedMonitoringResponse]
+  def disableEnhancedMonitoring(a: DisableEnhancedMonitoringRequest): F[DisableEnhancedMonitoringResponse]
+  def enableEnhancedMonitoring(a: EnableEnhancedMonitoringRequest): F[EnableEnhancedMonitoringResponse]
   def getRecords(a: GetRecordsRequest): F[GetRecordsResponse]
   def getShardIterator(a: GetShardIteratorRequest): F[GetShardIteratorResponse]
-  def increaseStreamRetentionPeriod(
-      a: IncreaseStreamRetentionPeriodRequest
-  ): F[IncreaseStreamRetentionPeriodResponse]
+  def increaseStreamRetentionPeriod(a: IncreaseStreamRetentionPeriodRequest): F[IncreaseStreamRetentionPeriodResponse]
   def listShards(a: ListShardsRequest): F[ListShardsResponse]
   def listStreamConsumers(a: ListStreamConsumersRequest): F[ListStreamConsumersResponse]
   def listStreamConsumersPaginator(a: ListStreamConsumersRequest): F[ListStreamConsumersPublisher]

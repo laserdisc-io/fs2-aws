@@ -1,4 +1,10 @@
-import TaglessGen.{taglessAwsService, taglessGenClasses, taglessGenDir, taglessGenPackage, taglessGenSettings}
+import TaglessGen.{
+  taglessAwsService,
+  taglessGenClasses,
+  taglessGenDir,
+  taglessGenPackage,
+  taglessGenSettings
+}
 import sbt.Keys.scalaSource
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
 import software.amazon.awssdk.services.s3.S3AsyncClient
@@ -64,7 +70,7 @@ lazy val `fs2-aws-ciris` = (project in file("fs2-aws-ciris"))
       "org.scalatest" %% "scalatest" % V.ScalaTest % Test,
       "org.mockito" % "mockito-core" % V.MockitoCore % Test,
       "is.cir" %% "ciris" % "2.3.2",
-      "software.amazon.kinesis" % "amazon-kinesis-client" % "2.3.10",
+      "software.amazon.kinesis" % "amazon-kinesis-client" % "2.4.1",
       "org.typelevel" %% "cats-effect" % V.CE % Test
     ),
     coverageMinimumStmtTotal := 40,
@@ -153,7 +159,7 @@ lazy val `fs2-aws-kinesis` = (project in file("fs2-aws-kinesis"))
       "co.fs2" %% "fs2-core" % V.Fs2,
       "co.fs2" %% "fs2-io" % V.Fs2,
       "com.amazonaws" % "amazon-kinesis-producer" % "0.14.11",
-      "software.amazon.kinesis" % "amazon-kinesis-client" % "2.3.10",
+      "software.amazon.kinesis" % "amazon-kinesis-client" % "2.4.1",
       "software.amazon.awssdk" % "sts" % V.AwsSdk,
       "eu.timepit" %% "refined" % V.Refined,
       "org.scalatest" %% "scalatest" % V.ScalaTest % Test,
@@ -413,27 +419,26 @@ lazy val commonSettings = Def.settings(
   Test / console / scalacOptions := (Compile / console / scalacOptions).value,
   Test / scalacOptions := (Compile / scalacOptions).value,
   Test / scalacOptions += "-Wconf:msg=is not declared `infix`:s,msg=is declared 'open':s",
-  libraryDependencies += "org.scala-lang.modules" %% "scala-collection-compat" % "2.6.0",
+  libraryDependencies += "org.scala-lang.modules" %% "scala-collection-compat" % "2.7.0",
   libraryDependencies ++= Seq(
     compilerPlugin(("org.typelevel" %% "kind-projector" % "0.13.2").cross(CrossVersion.full)),
     compilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1")
   ).filterNot(_ => scalaVersion.value.startsWith("3.")),
   Seq(Compile, Test).map { config =>
     (config / unmanagedSourceDirectories) ++= {
-      (config / unmanagedSourceDirectories).value.flatMap {
-        dir: File =>
-          dir.getName match {
-            case "scala" =>
-              CrossVersion.partialVersion(scalaVersion.value) match {
-                case Some((2, 12)) => Seq(file(dir.getPath + "-3.0-"))
-                case Some((2, 13)) => Seq(file(dir.getPath + "-3.0-"))
-                case Some((0, _))  => Seq(file(dir.getPath + "-3.0+"))
-                case Some((3, _))  => Seq(file(dir.getPath + "-3.0+"))
-                case other         => sys.error(s"unmanagedSourceDirectories for scalaVersion $other not set")
-              }
+      (config / unmanagedSourceDirectories).value.flatMap { dir: File =>
+        dir.getName match {
+          case "scala" =>
+            CrossVersion.partialVersion(scalaVersion.value) match {
+              case Some((2, 12)) => Seq(file(dir.getPath + "-3.0-"))
+              case Some((2, 13)) => Seq(file(dir.getPath + "-3.0-"))
+              case Some((0, _))  => Seq(file(dir.getPath + "-3.0+"))
+              case Some((3, _))  => Seq(file(dir.getPath + "-3.0+"))
+              case other => sys.error(s"unmanagedSourceDirectories for scalaVersion $other not set")
+            }
 
-            case _ => Seq(dir)
-          }
+          case _ => Seq(dir)
+        }
       }
     }
   }
