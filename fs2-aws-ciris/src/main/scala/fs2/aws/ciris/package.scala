@@ -2,7 +2,7 @@ package fs2.aws
 
 import java.util.Date
 
-import cats.implicits._
+import cats.implicits.*
 import _root_.ciris.ConfigDecoder
 import software.amazon.kinesis.common.InitialPositionInStream
 
@@ -10,8 +10,7 @@ import scala.util.matching.Regex
 
 package object ciris {
 
-  /**
-    * Ciris decoder support for Either[InitialPositionInStream, Date], useful when building [[fs2.aws.kinesis.KinesisConsumerSettings]]
+  /** Ciris decoder support for Either[InitialPositionInStream, Date], useful when building [[fs2.aws.kinesis.KinesisConsumerSettings]]
     *
     * Usage:
     * `env("FOOBAR").as[Either[InitialPositionInStream, Date]]`
@@ -21,10 +20,9 @@ package object ciris {
     * <li>`"LATEST"` becomes `(Left[InitialPositionInStream.LATEST)` (consume from latest)</li>
     * <li>`"TS_123456"` becomes `Right(Date(123456))` (consume from timestamp)</li>
     * </ul>
-    *
     */
-  implicit def kinesisInitialPositionDecoder[T](
-    implicit decoder: ConfigDecoder[T, String]
+  implicit def kinesisInitialPositionDecoder[T](implicit
+      decoder: ConfigDecoder[T, String]
   ): ConfigDecoder[T, Either[InitialPositionInStream, Date]] = {
 
     val DateRegex: Regex = """^TS_([0-9]+)$""".r

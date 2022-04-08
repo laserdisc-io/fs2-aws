@@ -1,16 +1,15 @@
 package fs2.aws.sqs
 
 import cats.effect.unsafe.IORuntime
-import cats.effect.{ IO, Resource }
-import io.laserdisc.pure.sqs.tagless.{ Interpreter, SqsAsyncClientOp }
+import cats.effect.{IO, Resource}
+import io.laserdisc.pure.sqs.tagless.{Interpreter, SqsAsyncClientOp}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import software.amazon.awssdk.auth.credentials.{ AwsBasicCredentials, StaticCredentialsProvider }
+import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
-import software.amazon.awssdk.services.sqs.model._
-import sqs.SqsConfig
+import software.amazon.awssdk.services.sqs.model.*
 
 import java.net.URI
 import scala.concurrent.ExecutionContext
@@ -18,14 +17,14 @@ import scala.concurrent.duration.DurationInt
 
 class SqsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
   implicit val ec: ExecutionContext = ExecutionContext.global
-  implicit val runtime              = IORuntime.global
+  implicit val runtime: IORuntime = IORuntime.global
   implicit val messageDecoder: Message => Either[Throwable, Int] = { sqs_msg =>
     val text = sqs_msg.body()
     if ("fail" == text) Left(new Exception("failure"))
     else Right(text.toInt)
   }
   val sqsOpResource: Resource[IO, SqsAsyncClientOp[IO]] = mkSQSClient(4566)
-  var queueUrl: String                                  = _
+  var queueUrl: String = _
 
   override def beforeAll(): Unit =
     queueUrl = sqsOpResource
@@ -39,6 +38,7 @@ class SqsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
   override def afterAll(): Unit =
     sqsOpResource
       .use(_.deleteQueue(DeleteQueueRequest.builder().queueUrl(queueUrl).build()))
+      .void
       .unsafeRunSync()
 
   "SQS" should {
@@ -48,16 +48,16 @@ class SqsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
           (for {
 
             sqs <- fs2.Stream.eval(
-                    SQS
-                      .create[IO](
-                        SqsConfig(queueUrl = queueUrl, pollRate = 10 milliseconds),
-                        sqsOp
-                      )
-                  )
+              SQS
+                .create[IO](
+                  SqsConfig(queueUrl = queueUrl, pollRate = 10 milliseconds),
+                  sqsOp
+                )
+            )
             sqsS <- fs2
-                     .Stream("Barry", "Dmytro", "Ryan", "John", "Vlad")
-                     .covary[IO]
-                     .through(sqs.sendMessagePipe)
+              .Stream("Barry", "Dmytro", "Ryan", "John", "Vlad")
+              .covary[IO]
+              .through(sqs.sendMessagePipe)
           } yield sqsS).compile.drain
         }
         .unsafeRunSync()
@@ -69,16 +69,16 @@ class SqsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
         .use { sqsOp =>
           (for {
             sqs <- fs2.Stream.eval(
-                    SQS
-                      .create[IO](
-                        SqsConfig(
-                          queueUrl = queueUrl,
-                          pollRate = 10 milliseconds,
-                          fetchMessageCount = 1
-                        ),
-                        sqsOp
-                      )
-                  )
+              SQS
+                .create[IO](
+                  SqsConfig(
+                    queueUrl = queueUrl,
+                    pollRate = 10 milliseconds,
+                    fetchMessageCount = 1
+                  ),
+                  sqsOp
+                )
+            )
             sqsS <- sqs.sqsStream.map(_.body())
           } yield sqsS)
             .take(5)
@@ -100,7 +100,7 @@ class SqsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
 
   }
 
-  def mkSQSClient(sqsPort: Int) = {
+  def mkSQSClient(sqsPort: Int): Resource[IO, SqsAsyncClientOp[IO]] = {
     val credentials =
       AwsBasicCredentials.create("accesskey", "secretkey")
     Interpreter[IO].SqsAsyncClientOpResource(

@@ -1,6 +1,5 @@
 package fs2.aws.dynamodb.parsers
 
-import java.util
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
 import com.amazonaws.services.dynamodbv2.model.{
@@ -12,9 +11,11 @@ import com.amazonaws.services.dynamodbv2.model.{
 }
 import com.amazonaws.services.dynamodbv2.streamsadapter.model.RecordAdapter
 import io.circe.Json
-import org.scalatest.wordspec.AnyWordSpec
-import io.github.howardjohn.scanamo.CirceDynamoFormat._
+import io.github.howardjohn.scanamo.CirceDynamoFormat.*
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+
+import java.util
 
 class DynamoEventParserSpec extends AnyWordSpec with Matchers {
   implicit val runtime: IORuntime = IORuntime.global
