@@ -4,7 +4,7 @@ import cats.effect.{ExitCode, IO, IOApp, Resource}
 import eu.timepit.refined.types.string.NonEmptyString
 import fs2.aws.s3.S3
 import fs2.aws.s3.models.Models.{BucketName, FileKey}
-import io.laserdisc.pure.s3.tagless.{S3AsyncClientOp, Interpreter as S3Interpreter}
+import io.laserdisc.pure.s3.tagless.{Interpreter as S3Interpreter, S3AsyncClientOp}
 import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3AsyncClient
