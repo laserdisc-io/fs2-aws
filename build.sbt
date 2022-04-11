@@ -117,7 +117,7 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
       "org.slf4j" % "jcl-over-slf4j" % "1.7.36",
       "org.slf4j" % "jul-to-slf4j" % "1.7.36",
       "org.typelevel" %% "log4cats-slf4j" % "2.2.0",
-      "io.janstenpickle" %% "trace4cats-inject" % "0.12.0"
+      "io.janstenpickle" %% "trace4cats-inject" % "0.13.1"
     ),
     libraryDependencies ++= Seq(
       "io.laserdisc" %% "scanamo-circe" % "2.1.0"
@@ -158,7 +158,7 @@ lazy val `fs2-aws-kinesis` = (project in file("fs2-aws-kinesis"))
     libraryDependencies ++= Seq(
       "co.fs2" %% "fs2-core" % V.Fs2,
       "co.fs2" %% "fs2-io" % V.Fs2,
-      "com.amazonaws" % "amazon-kinesis-producer" % "0.14.11",
+      "com.amazonaws" % "amazon-kinesis-producer" % "0.14.12",
       "software.amazon.kinesis" % "amazon-kinesis-client" % "2.4.1",
       "software.amazon.awssdk" % "sts" % V.AwsSdk,
       "eu.timepit" %% "refined" % V.Refined,

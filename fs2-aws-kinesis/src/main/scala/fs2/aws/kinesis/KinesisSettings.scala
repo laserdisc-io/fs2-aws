@@ -1,6 +1,5 @@
 package fs2.aws.kinesis
 
-import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.numeric.*
 import fs2.aws.internal.Exceptions.*
 import software.amazon.awssdk.regions.Region
@@ -51,34 +50,6 @@ object KinesisConsumerSettings {
 sealed trait RetrievalMode
 case object FanOut extends RetrievalMode
 case object Polling extends RetrievalMode
-
-/** Used when constructing a [KinesisConsumerSettings] instance that will by used by a client for cross-account access.
-  *
-  * This currently implements only the minimum required fields defined in:
-  * https://docs.aws.amazon.com/cli/latest/reference/sts/assume-role.html
-  *
-  * @param roleArn The Amazon Resource Name (ARN) of the role to assume.
-  * @param roleSessionName An identifier for the assumed role session.
-  * @param externalId A unique identifier that might be required when you assume a role in another account.
-  * @param durationSeconds The duration, in seconds, of the role session.
-  */
-class STSAssumeRoleSettings private (
-    val roleArn: String,
-    val roleSessionName: String,
-    val externalId: Option[String],
-    val durationSeconds: Option[Int]
-)
-
-object STSAssumeRoleSettings {
-
-  def apply(
-      roleArn: String,
-      roleSessionName: String,
-      externalId: Option[String] = None,
-      durationSeconds: Option[Int] = None
-  ) =
-    new STSAssumeRoleSettings(roleArn, roleSessionName, externalId, durationSeconds)
-}
 
 /** Settings for configuring the Kinesis checkpointer pipe
   *
