@@ -1,5 +1,5 @@
 // Required for the freegen definition for postgres in ../build.sbt
-val AwsSdk = "2.17.164"
+val AwsSdk = "2.17.172"
 libraryDependencies += "software.amazon.awssdk" % "sqs" % AwsSdk
 libraryDependencies += "software.amazon.awssdk" % "s3" % AwsSdk
 libraryDependencies += "software.amazon.awssdk" % "sns" % AwsSdk
