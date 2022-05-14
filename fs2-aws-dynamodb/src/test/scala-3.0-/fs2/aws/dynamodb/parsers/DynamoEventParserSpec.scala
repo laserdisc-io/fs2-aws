@@ -21,12 +21,12 @@ class DynamoEventParserSpec extends AnyWordSpec with Matchers {
   implicit val runtime: IORuntime = IORuntime.global
   "Dynamo Event Parser" should {
     "parse insert event type" in {
-      val sr = new StreamRecord()
+      val sr = new StreamRecord
       sr.setStreamViewType(StreamViewType.NEW_IMAGE)
-      val newImage = new util.HashMap[String, AttributeValue]()
-      newImage.put("name", new AttributeValue().withS("Barry"))
+      val newImage = new util.HashMap[String, AttributeValue]
+      newImage.put("name", new AttributeValue.withS("Barry"))
       sr.setNewImage(newImage)
-      val r = new Record()
+      val r = new Record
       r.setEventName(OperationType.INSERT)
       r.withDynamodb(sr)
       parseDynamoEvent[IO, Json](new RecordAdapter(r)).unsafeRunSync() should be(
@@ -35,15 +35,15 @@ class DynamoEventParserSpec extends AnyWordSpec with Matchers {
     }
 
     "parse modify event type" in {
-      val sr = new StreamRecord()
+      val sr = new StreamRecord
       sr.setStreamViewType(StreamViewType.NEW_AND_OLD_IMAGES)
-      val oldImage = new util.HashMap[String, AttributeValue]()
-      oldImage.put("name", new AttributeValue().withS("Dmytro"))
+      val oldImage = new util.HashMap[String, AttributeValue]
+      oldImage.put("name", new AttributeValue.withS("Dmytro"))
       sr.setOldImage(oldImage)
-      val newImage = new util.HashMap[String, AttributeValue]()
-      newImage.put("name", new AttributeValue().withS("Barry"))
+      val newImage = new util.HashMap[String, AttributeValue]
+      newImage.put("name", new AttributeValue.withS("Barry"))
       sr.setNewImage(newImage)
-      val r = new Record()
+      val r = new Record
       r.setEventName(OperationType.MODIFY)
       r.withDynamodb(sr)
       parseDynamoEvent[IO, Json](new RecordAdapter(r)).unsafeRunSync() should be(
@@ -55,12 +55,12 @@ class DynamoEventParserSpec extends AnyWordSpec with Matchers {
     }
 
     "parse delete event type" in {
-      val sr = new StreamRecord()
+      val sr = new StreamRecord
       sr.setStreamViewType(StreamViewType.NEW_AND_OLD_IMAGES)
-      val oldImage = new util.HashMap[String, AttributeValue]()
-      oldImage.put("name", new AttributeValue().withS("Dmytro"))
+      val oldImage = new util.HashMap[String, AttributeValue]
+      oldImage.put("name", new AttributeValue.withS("Dmytro"))
       sr.setOldImage(oldImage)
-      val r = new Record()
+      val r = new Record
       r.setEventName(OperationType.REMOVE)
       r.withDynamodb(sr)
       parseDynamoEvent[IO, Json](new RecordAdapter(r)).unsafeRunSync() should be(
@@ -70,12 +70,12 @@ class DynamoEventParserSpec extends AnyWordSpec with Matchers {
       )
     }
     "parse modify event type with NewImage view only as Insert" in {
-      val sr = new StreamRecord()
+      val sr = new StreamRecord
       sr.setStreamViewType(StreamViewType.NEW_IMAGE)
-      val newImage = new util.HashMap[String, AttributeValue]()
-      newImage.put("name", new AttributeValue().withS("Barry"))
+      val newImage = new util.HashMap[String, AttributeValue]
+      newImage.put("name", new AttributeValue.withS("Barry"))
       sr.setNewImage(newImage)
-      val r = new Record()
+      val r = new Record
       r.setEventName(OperationType.MODIFY)
       r.withDynamodb(sr)
       parseDynamoEvent[IO, Json](new RecordAdapter(r)).unsafeRunSync() should be(
@@ -84,12 +84,12 @@ class DynamoEventParserSpec extends AnyWordSpec with Matchers {
     }
 
     "do not support NEW_IMAGE view type with REMOVE operation type" in {
-      val sr = new StreamRecord()
+      val sr = new StreamRecord
       sr.setStreamViewType(StreamViewType.NEW_IMAGE)
-      val oldImage = new util.HashMap[String, AttributeValue]()
-      oldImage.put("name", new AttributeValue().withS("Barry"))
+      val oldImage = new util.HashMap[String, AttributeValue]
+      oldImage.put("name", new AttributeValue.withS("Barry"))
       sr.setNewImage(oldImage)
-      val r = new Record()
+      val r = new Record
       r.setEventName(OperationType.REMOVE)
       r.withDynamodb(sr)
       parseDynamoEvent[IO, Json](new RecordAdapter(r)).unsafeRunSync() should be(

@@ -17,7 +17,7 @@ class SqsConfig(
 }
 
 @deprecated(message = "Use fs2.aws.sqs.SqsConfig instead", since = "5.1.0")
-object SqsConfig extends ((String, FiniteDuration, Int) => SqsConfig) {
+object SqsConfig extends (String, FiniteDuration, Int) => SqsConfig {
   def apply(
       queueUrl: String,
       pollRate: FiniteDuration = 3.seconds,

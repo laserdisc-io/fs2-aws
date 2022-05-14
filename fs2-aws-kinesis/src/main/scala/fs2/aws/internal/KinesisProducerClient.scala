@@ -20,11 +20,11 @@ trait KinesisProducerClient[F[_]] {
 class KinesisProducerClientImpl[F[_]](config: Option[KinesisProducerConfiguration] = None)
     extends KinesisProducerClient[F] {
 
-  val credentials: AWSCredentialsProviderChain = new DefaultAWSCredentialsProviderChain()
+  val credentials: AWSCredentialsProviderChain = new DefaultAWSCredentialsProviderChain
   val region: Option[String] = None
 
   private lazy val defaultConfig: KinesisProducerConfiguration = {
-    val c = new KinesisProducerConfiguration()
+    val c = new KinesisProducerConfiguration
       .setCredentialsProvider(credentials)
 
     region.map(r => c.setRegion(r))

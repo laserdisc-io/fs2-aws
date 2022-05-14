@@ -350,7 +350,7 @@ lazy val `fs2-aws-benchmarks` = (project in file("fs2-aws-benchmarks"))
     publishArtifact := false,
     scalacOptions ++= {
       CrossVersion.partialVersion(scalaVersion.value) match {
-        case Some((2, minor)) if minor >= 13 =>
+        case Some(2, minor) if minor >= 13 =>
           Seq("-Xsource:3", "-Xlint:-byname-implicit")
         case _ => Seq.empty
       }
@@ -388,7 +388,7 @@ lazy val commonSettings = Def.settings(
   ),
   scalacOptions ++= {
     CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, minor)) if minor >= 13 =>
+      case Some(2, minor) if minor >= 13 =>
         Seq(
           "-Xlint:-unused,_",
           "-Ywarn-numeric-widen",
@@ -406,7 +406,7 @@ lazy val commonSettings = Def.settings(
   },
   scalacOptions ++= {
     CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((3, _)) =>
+      case Some(3, _) =>
         Seq(
           "-Ykind-projector:underscores",
           "-source:future",
@@ -425,15 +425,15 @@ lazy val commonSettings = Def.settings(
     compilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1")
   ).filterNot(_ => scalaVersion.value.startsWith("3.")),
   Seq(Compile, Test).map { config =>
-    (config / unmanagedSourceDirectories) ++= {
+    config / unmanagedSourceDirectories ++= {
       (config / unmanagedSourceDirectories).value.flatMap { dir: File =>
         dir.getName match {
           case "scala" =>
             CrossVersion.partialVersion(scalaVersion.value) match {
-              case Some((2, 12)) => Seq(file(dir.getPath + "-3.0-"))
-              case Some((2, 13)) => Seq(file(dir.getPath + "-3.0-"))
-              case Some((0, _))  => Seq(file(dir.getPath + "-3.0+"))
-              case Some((3, _))  => Seq(file(dir.getPath + "-3.0+"))
+              case Some(2, 12) => Seq(file(dir.getPath + "-3.0-"))
+              case Some(2, 13) => Seq(file(dir.getPath + "-3.0-"))
+              case Some(0, _)  => Seq(file(dir.getPath + "-3.0+"))
+              case Some(3, _)  => Seq(file(dir.getPath + "-3.0+"))
               case other => sys.error(s"unmanagedSourceDirectories for scalaVersion $other not set")
             }
 

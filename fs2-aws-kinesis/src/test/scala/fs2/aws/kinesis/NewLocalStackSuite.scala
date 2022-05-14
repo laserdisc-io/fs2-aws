@@ -60,7 +60,7 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
   val credentials =
     new BasicAWSCredentials("dummy", "dummy")
 
-  val producerConfig = new KinesisProducerConfiguration()
+  val producerConfig = new KinesisProducerConfiguration
     .setCredentialsProvider(new AWSStaticCredentialsProvider(credentials))
     .setKinesisEndpoint("localhost")
     .setKinesisPort(4566)

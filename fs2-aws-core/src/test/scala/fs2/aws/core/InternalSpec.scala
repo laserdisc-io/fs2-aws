@@ -42,7 +42,7 @@ class InternalSpec extends AnyFlatSpec with Matchers {
     val streams = Stream
       .emits(1 to 10)
       .covary[IO]
-      .through(groupBy(i => IO(throw new Exception())))
+      .through(groupBy(i => IO(throw new Exception)))
       .attempt
       .compile
       .toVector

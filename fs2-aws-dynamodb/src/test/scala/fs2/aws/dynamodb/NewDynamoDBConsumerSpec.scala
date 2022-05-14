@@ -147,7 +147,7 @@ class NewDynamoDBConsumerSpec
         shard2Guard.await()
         println("acquired lock for record processor #2")
         recordProcessor2.initialize(
-          new InitializationInput()
+          new InitializationInput
             .withShardId("shard2")
             .withExtendedSequenceNumber(ExtendedSequenceNumber.AT_TIMESTAMP)
         )
@@ -177,7 +177,7 @@ class NewDynamoDBConsumerSpec
         .through(
           k.checkpointRecords(
             KinesisCheckpointSettings(maxBatchSize = Int.MaxValue, maxBatchWait = 500.millis)
-              .getOrElse(throw new Error())
+              .getOrElse(throw new Error)
           )
         )
         .compile
@@ -188,7 +188,7 @@ class NewDynamoDBConsumerSpec
         (1L to nRecords).foreach { i =>
           val record: Record = mock(classOf[RecordAdapter])
           when(record.getSequenceNumber).thenReturn(i.toString)
-          val ri = new ProcessRecordsInput()
+          val ri = new ProcessRecordsInput
             .withCheckpointer(checkpointer)
             .withMillisBehindLatest(1L)
             .withRecords(List(record).asJava)
@@ -197,7 +197,7 @@ class NewDynamoDBConsumerSpec
       } >> IO.delay {
         // Immediately publish end of shard event
         recordProcessor.shutdown(
-          new ShutdownInput()
+          new ShutdownInput
             .withCheckpointer(checkpointer)
             .withShutdownReason(ShutdownReason.TERMINATE)
         )
@@ -207,7 +207,7 @@ class NewDynamoDBConsumerSpec
     res should have size 5
   }
 
-  "KinesisWorker checkpoint pipe" should "checkpoint batch of records with same sequence number" in new WorkerContext() {
+  "KinesisWorker checkpoint pipe" should "checkpoint batch of records with same sequence number" in new WorkerContext {
     val inFlightRecordsPhaser = new Phaser(1)
 
     val input = (1 to 3).map { i =>
@@ -231,7 +231,7 @@ class NewDynamoDBConsumerSpec
     }
   }
 
-  it should "checkpoint batch of records of different shards" in new WorkerContext() {
+  it should "checkpoint batch of records of different shards" in new WorkerContext {
     val checkpointerShard2 = mock(classOf[IRecordProcessorCheckpointer])
     val inFlightRecordsPhaser = new Phaser(1)
 
@@ -272,7 +272,7 @@ class NewDynamoDBConsumerSpec
 
   }
 
-  it should "not checkpoint the batch if the IRecordProcessor has been shutdown with ZOMBIE reason" in new WorkerContext() {
+  it should "not checkpoint the batch if the IRecordProcessor has been shutdown with ZOMBIE reason" in new WorkerContext {
 
     val cS: IRecordProcessorCheckpointer = mock(
       classOf[IRecordProcessorCheckpointer]
@@ -280,7 +280,7 @@ class NewDynamoDBConsumerSpec
 
     val rp = new RecordProcessor(_ => ())
     rp.shutdown(
-      new ShutdownInput()
+      new ShutdownInput
         .withShutdownReason(ShutdownReason.ZOMBIE)
         .withCheckpointer(checkpointerShard1)
     )
@@ -304,7 +304,7 @@ class NewDynamoDBConsumerSpec
     verify(checkpointerShard1, never()).checkpoint()
   }
 
-  it should "fail with Exception if checkpoint action fails" in new WorkerContext() {
+  it should "fail with Exception if checkpoint action fails" in new WorkerContext {
     val checkpointer = mock(classOf[IRecordProcessorCheckpointer])
     val inFlightRecordsPhaser = new Phaser(1)
     val record = mock(classOf[RecordAdapter])
@@ -334,7 +334,7 @@ class NewDynamoDBConsumerSpec
     eventually(verify(checkpointer).checkpoint(input.record))
   }
 
-  it should "bypass all items when checkpoint" in new WorkerContext() {
+  it should "bypass all items when checkpoint" in new WorkerContext {
     val checkpointer = mock(classOf[IRecordProcessorCheckpointer])
     val inFlightRecordsPhaser = new Phaser(1)
     val rp = new RecordProcessor(_ => ())
@@ -394,7 +394,7 @@ class NewDynamoDBConsumerSpec
 
     val settings =
       KinesisCheckpointSettings(maxBatchSize = Int.MaxValue, maxBatchWait = 500.millis)
-        .getOrElse(throw new Error())
+        .getOrElse(throw new Error)
 
     val checkpointerShard1 = mock(classOf[IRecordProcessorCheckpointer])
 
@@ -426,19 +426,19 @@ class NewDynamoDBConsumerSpec
     }.when(checkpointer).checkpoint(any[String], any[Long])
 
     val initializationInput: InitializationInput =
-      new InitializationInput()
+      new InitializationInput
         .withShardId("shardId")
         .withExtendedSequenceNumber(ExtendedSequenceNumber.AT_TIMESTAMP)
 
     val record: Record =
       new RecordAdapter(
-        new model.Record()
-          .withDynamodb(new StreamRecord().addNewImageEntry("name", new AttributeValue("Barry")))
-      ).withApproximateArrivalTimestamp(new Date())
+        new model.Record
+          .withDynamodb(new StreamRecord.addNewImageEntry("name", new AttributeValue("Barry")))
+      ).withApproximateArrivalTimestamp(new Date)
         .withEncryptionType("encryption")
 
     val recordsInput: ProcessRecordsInput =
-      new ProcessRecordsInput()
+      new ProcessRecordsInput
         .withCheckpointer(checkpointer)
         .withMillisBehindLatest(1L)
         .withRecords(List(record).asJava)

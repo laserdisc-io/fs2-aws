@@ -73,7 +73,7 @@ object syntax {
     def producerConfig: KinesisProducerConfiguration = {
       val credentials = new BasicAWSCredentials(kinesisAppConfig.awsKeyId, kinesisAppConfig.awsKey)
 
-      new KinesisProducerConfiguration()
+      new KinesisProducerConfiguration
         .setCredentialsProvider(new AWSStaticCredentialsProvider(credentials))
         .setKinesisEndpoint(kinesisAppConfig.awsHost)
         .setKinesisPort(kinesisAppConfig.awsPort)

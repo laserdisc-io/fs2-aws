@@ -11,7 +11,7 @@ import software.amazon.kinesis.processor.{ShardRecordProcessor, ShardRecordProce
 import scala.collection.mutable.ListBuffer
 
 class SchedulerFactoryTestContext[F[_]: Applicative](shards: Int)
-    extends (ShardRecordProcessorFactory => F[Scheduler]) {
+    extends ShardRecordProcessorFactory => F[Scheduler] {
 
   val processorsAreReady = new CountDownLatch(1)
   val latch = new CountDownLatch(1)

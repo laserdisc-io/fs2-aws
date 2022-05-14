@@ -112,7 +112,7 @@ class KinesisProducerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
 
     output.size should be(1)
     output.head.isLeft should be(true)
-    output.head.left.getOrElse(throw new Error()).getMessage should be(
+    output.head.left.getOrElse(throw new Error).getMessage should be(
       "couldn't connect to kinesis"
     )
   }

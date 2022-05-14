@@ -176,7 +176,7 @@ class NewKinesisConsumerSpec
         .through(
           k.checkpointRecords(
             KinesisCheckpointSettings(maxBatchSize = Int.MaxValue, maxBatchWait = 500.millis)
-              .getOrElse(throw new Error())
+              .getOrElse(throw new Error)
           )
         )
         .compile
@@ -203,7 +203,7 @@ class NewKinesisConsumerSpec
     res should have size 5
   }
 
-  "KinesisWorker checkpoint pipe" should "checkpoint batch of records with same sequence number" in new WorkerContext() {
+  "KinesisWorker checkpoint pipe" should "checkpoint batch of records with same sequence number" in new WorkerContext {
     val lastRecordSemaphore = new Semaphore(1)
 
     val input = (1 to 3).map { i =>
@@ -229,7 +229,7 @@ class NewKinesisConsumerSpec
     }
   }
 
-  it should "checkpoint batch of records of different shards" in new WorkerContext() {
+  it should "checkpoint batch of records of different shards" in new WorkerContext {
     val checkpointerShard2 = mock(classOf[ShardRecordProcessorCheckpointer])
 
     val lastRecordSemaphore = new Semaphore(1)
@@ -273,7 +273,7 @@ class NewKinesisConsumerSpec
 
   }
 
-  it should "checkpoint one last time if the RecordProcessor has reached the end of the shard" in new WorkerContext() {
+  it should "checkpoint one last time if the RecordProcessor has reached the end of the shard" in new WorkerContext {
     chunkedRecordProcessor.shardEnded(
       ShardEndedInput.builder().checkpointer(checkpointerShard1).build()
     )
@@ -299,7 +299,7 @@ class NewKinesisConsumerSpec
     verify(checkpointerShard1, times(1)).checkpoint()
   }
 
-  it should "fail with Exception if checkpoint action fails" in new WorkerContext() {
+  it should "fail with Exception if checkpoint action fails" in new WorkerContext {
     val checkpointer = mock(classOf[ShardRecordProcessorCheckpointer])
 
     val lastRecordSemaphore = new Semaphore(1)
@@ -333,7 +333,7 @@ class NewKinesisConsumerSpec
     )
   }
 
-  it should "bypass all items when checkpoint" in new WorkerContext() {
+  it should "bypass all items when checkpoint" in new WorkerContext {
     val checkpointer = mock(classOf[ShardRecordProcessorCheckpointer])
 
     val lastRecordSemaphore = new Semaphore(1)
@@ -398,7 +398,7 @@ class NewKinesisConsumerSpec
 
     val settings =
       KinesisCheckpointSettings(maxBatchSize = Int.MaxValue, maxBatchWait = 500.millis)
-        .getOrElse(throw new Error())
+        .getOrElse(throw new Error)
 
     val checkpointerShard1 = mock(classOf[ShardRecordProcessorCheckpointer])
 

@@ -28,7 +28,7 @@ trait StreamScan[F[_]] {
 
 object StreamScan {
   def apply[F[_]: Functor: Async](ddb: DynamoDbAsyncClientOp[F]): StreamScan[F] =
-    new StreamScan[F]() {
+    new StreamScan[F] {
       def scanDynamoDB(
           scanRequest: ScanRequest,
           pageSize: Int

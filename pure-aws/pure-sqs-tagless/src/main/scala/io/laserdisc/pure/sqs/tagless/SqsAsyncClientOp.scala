@@ -7,7 +7,9 @@ trait SqsAsyncClientOp[F[_]] {
   // SqsAsyncClient
   def addPermission(a: AddPermissionRequest): F[AddPermissionResponse]
   def changeMessageVisibility(a: ChangeMessageVisibilityRequest): F[ChangeMessageVisibilityResponse]
-  def changeMessageVisibilityBatch(a: ChangeMessageVisibilityBatchRequest): F[ChangeMessageVisibilityBatchResponse]
+  def changeMessageVisibilityBatch(
+      a: ChangeMessageVisibilityBatchRequest
+  ): F[ChangeMessageVisibilityBatchResponse]
   def close: F[Unit]
   def createQueue(a: CreateQueueRequest): F[CreateQueueResponse]
   def deleteMessage(a: DeleteMessageRequest): F[DeleteMessageResponse]
@@ -15,8 +17,12 @@ trait SqsAsyncClientOp[F[_]] {
   def deleteQueue(a: DeleteQueueRequest): F[DeleteQueueResponse]
   def getQueueAttributes(a: GetQueueAttributesRequest): F[GetQueueAttributesResponse]
   def getQueueUrl(a: GetQueueUrlRequest): F[GetQueueUrlResponse]
-  def listDeadLetterSourceQueues(a: ListDeadLetterSourceQueuesRequest): F[ListDeadLetterSourceQueuesResponse]
-  def listDeadLetterSourceQueuesPaginator(a: ListDeadLetterSourceQueuesRequest): F[ListDeadLetterSourceQueuesPublisher]
+  def listDeadLetterSourceQueues(
+      a: ListDeadLetterSourceQueuesRequest
+  ): F[ListDeadLetterSourceQueuesResponse]
+  def listDeadLetterSourceQueuesPaginator(
+      a: ListDeadLetterSourceQueuesRequest
+  ): F[ListDeadLetterSourceQueuesPublisher]
   def listQueueTags(a: ListQueueTagsRequest): F[ListQueueTagsResponse]
   def listQueues: F[ListQueuesResponse]
   def listQueues(a: ListQueuesRequest): F[ListQueuesResponse]
