@@ -369,7 +369,7 @@ class NewDynamoDBConsumerSpec
 
     doAnswer(_ => latch.await()).when(mockScheduler).run()
 
-    val builder = { (x: IRecordProcessorFactory) =>
+    val builder: IRecordProcessorFactory => IO[Worker] = { (x: IRecordProcessorFactory) =>
       recordProcessorFactory = x
       recordProcessor = x.createProcessor()
       shard1Guard.countDown()
@@ -378,18 +378,18 @@ class NewDynamoDBConsumerSpec
       mockScheduler.pure[IO]
     }
 
-    val k = DynamoDB.create[IO](builder)
+    val k: DynamoDB[IO] = DynamoDB.create[IO](builder)
 
     val stream: fs2.Stream[IO, CommittableRecord] =
       k.readFromDynamoDBStream("testStream", "testApp")
         .map(i => if (errorStream) throw new Exception("boom") else i)
         .onFinalize(IO.delay(latch.countDown()))
 
-    val settings =
+    val settings: KinesisCheckpointSettings =
       KinesisCheckpointSettings(maxBatchSize = Int.MaxValue, maxBatchWait = 500.millis)
         .getOrElse(throw new Error())
 
-    val checkpointerShard1 = mock(classOf[IRecordProcessorCheckpointer])
+    val checkpointerShard1: IRecordProcessorCheckpointer = mock(classOf[IRecordProcessorCheckpointer])
 
     def startStream(input: Seq[CommittableRecord]): Seq[Record] =
       fs2.Stream

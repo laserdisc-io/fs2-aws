@@ -373,7 +373,7 @@ class NewKinesisConsumerSpec
 //      .when(mockScheduler)
 //      .run()
 
-    val builder = { (x: ShardRecordProcessorFactory) =>
+    val builder: ShardRecordProcessorFactory => IO[Scheduler] = { (x: ShardRecordProcessorFactory) =>
       recordProcessorFactory = x
       recordProcessor = x.shardRecordProcessor()
       shard1Guard.countDown()
@@ -382,9 +382,9 @@ class NewKinesisConsumerSpec
       mockScheduler.pure[IO]
     }
 
-    val config =
+    val config: KinesisConsumerSettings =
       KinesisConsumerSettings("testStream", "testApp")
-    val k = Kinesis.create[IO](builder)
+    val k: Kinesis[IO] = Kinesis.create[IO](builder)
 
     val stream: fs2.Stream[IO, CommittableRecord] =
       k.readFromKinesisStream(config)
@@ -392,11 +392,11 @@ class NewKinesisConsumerSpec
         .map(i => if (errorStream) throw new Exception("boom") else i)
         .onFinalize(IO.delay(latch.countDown()))
 
-    val settings =
+    val settings: KinesisCheckpointSettings =
       KinesisCheckpointSettings(maxBatchSize = Int.MaxValue, maxBatchWait = 500.millis)
         .getOrElse(throw new Error())
 
-    val checkpointerShard1 = mock(classOf[ShardRecordProcessorCheckpointer])
+    val checkpointerShard1: ShardRecordProcessorCheckpointer = mock(classOf[ShardRecordProcessorCheckpointer])
 
     def startStream(input: Seq[CommittableRecord]): Seq[KinesisClientRecord] =
       fs2.Stream
@@ -424,7 +424,7 @@ class NewKinesisConsumerSpec
       null
     }.when(checkpointer).checkpoint(any[String], any[Long])
 
-    val initializationInput =
+    val initializationInput: InitializationInput =
       InitializationInput
         .builder()
         .shardId("shardId")
@@ -440,7 +440,7 @@ class NewKinesisConsumerSpec
         .data(ByteBuffer.wrap("test".getBytes))
         .build()
 
-    val recordsInput =
+    val recordsInput: ProcessRecordsInput.ProcessRecordsInputBuilder =
       ProcessRecordsInput
         .builder()
         .checkpointer(checkpointer)
