@@ -32,8 +32,8 @@ class S3Suite extends CatsEffectSuite {
 
   val testFile: URL = getClass.getResource("/jsontest.json")
 
-  val bucket: BucketName = BucketName(NonEmptyString.unsafeFrom("resources"))
-  val fileKey: FileKey = FileKey(NonEmptyString.unsafeFrom("jsontest.json"))
+  val bucket: BucketName   = BucketName(NonEmptyString.unsafeFrom("resources"))
+  val fileKey: FileKey     = FileKey(NonEmptyString.unsafeFrom("jsontest.json"))
   val partSize: PartSizeMB = PartSizeMB.unsafeFrom(5)
 
   test("Upload JSON test file & read it back") {

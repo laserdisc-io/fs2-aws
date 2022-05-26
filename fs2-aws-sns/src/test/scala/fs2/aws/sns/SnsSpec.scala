@@ -26,13 +26,13 @@ import scala.util.matching.Regex
 class SnsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
-  implicit val runtime: IORuntime = IORuntime.global
+  implicit val runtime: IORuntime   = IORuntime.global
 
   val awsClientsResource: Resource[IO, (SnsAsyncClientOp[IO], SqsAsyncClientOp[IO])] =
     (mkSNSClient(4566), mkSQSClient(4566)).mapN { case (s1, s2) => s1 -> s2 }
   var topicArn: String = _
   var queueUrl: String = _
-  val pattern: Regex = new Regex("\"Message\": \"[0-9]\"")
+  val pattern: Regex   = new Regex("\"Message\": \"[0-9]\"")
 
   override def beforeAll(): Unit =
     awsClientsResource

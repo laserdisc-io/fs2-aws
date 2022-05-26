@@ -25,25 +25,21 @@ trait DynamoDbAsyncClientOp[F[_]] {
   def describeExport(a: DescribeExportRequest): F[DescribeExportResponse]
   def describeGlobalTable(a: DescribeGlobalTableRequest): F[DescribeGlobalTableResponse]
   def describeGlobalTableSettings(a: DescribeGlobalTableSettingsRequest): F[DescribeGlobalTableSettingsResponse]
-
   def describeKinesisStreamingDestination(
-    a: DescribeKinesisStreamingDestinationRequest
+      a: DescribeKinesisStreamingDestinationRequest
   ): F[DescribeKinesisStreamingDestinationResponse]
   def describeLimits: F[DescribeLimitsResponse]
   def describeLimits(a: DescribeLimitsRequest): F[DescribeLimitsResponse]
   def describeTable(a: DescribeTableRequest): F[DescribeTableResponse]
-
   def describeTableReplicaAutoScaling(
-    a: DescribeTableReplicaAutoScalingRequest
+      a: DescribeTableReplicaAutoScalingRequest
   ): F[DescribeTableReplicaAutoScalingResponse]
   def describeTimeToLive(a: DescribeTimeToLiveRequest): F[DescribeTimeToLiveResponse]
-
   def disableKinesisStreamingDestination(
-    a: DisableKinesisStreamingDestinationRequest
+      a: DisableKinesisStreamingDestinationRequest
   ): F[DisableKinesisStreamingDestinationResponse]
-
   def enableKinesisStreamingDestination(
-    a: EnableKinesisStreamingDestinationRequest
+      a: EnableKinesisStreamingDestinationRequest
   ): F[EnableKinesisStreamingDestinationResponse]
   def executeStatement(a: ExecuteStatementRequest): F[ExecuteStatementResponse]
   def executeTransaction(a: ExecuteTransactionRequest): F[ExecuteTransactionResponse]

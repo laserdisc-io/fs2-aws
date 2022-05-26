@@ -49,7 +49,7 @@ object KinesisConsumerSettings {
 }
 
 sealed trait RetrievalMode
-case object FanOut extends RetrievalMode
+case object FanOut  extends RetrievalMode
 case object Polling extends RetrievalMode
 
 /** Settings for configuring the Kinesis checkpointer pipe

@@ -18,22 +18,19 @@ trait SnsAsyncClientOp[F[_]] {
   def deleteSMSSandboxPhoneNumber(a: DeleteSmsSandboxPhoneNumberRequest): F[DeleteSmsSandboxPhoneNumberResponse]
   def deleteTopic(a: DeleteTopicRequest): F[DeleteTopicResponse]
   def getEndpointAttributes(a: GetEndpointAttributesRequest): F[GetEndpointAttributesResponse]
-
   def getPlatformApplicationAttributes(
-    a: GetPlatformApplicationAttributesRequest
+      a: GetPlatformApplicationAttributesRequest
   ): F[GetPlatformApplicationAttributesResponse]
   def getSMSAttributes: F[GetSmsAttributesResponse]
   def getSMSAttributes(a: GetSmsAttributesRequest): F[GetSmsAttributesResponse]
   def getSMSSandboxAccountStatus(a: GetSmsSandboxAccountStatusRequest): F[GetSmsSandboxAccountStatusResponse]
   def getSubscriptionAttributes(a: GetSubscriptionAttributesRequest): F[GetSubscriptionAttributesResponse]
   def getTopicAttributes(a: GetTopicAttributesRequest): F[GetTopicAttributesResponse]
-
   def listEndpointsByPlatformApplication(
-    a: ListEndpointsByPlatformApplicationRequest
+      a: ListEndpointsByPlatformApplicationRequest
   ): F[ListEndpointsByPlatformApplicationResponse]
-
   def listEndpointsByPlatformApplicationPaginator(
-    a: ListEndpointsByPlatformApplicationRequest
+      a: ListEndpointsByPlatformApplicationRequest
   ): F[ListEndpointsByPlatformApplicationPublisher]
   def listOriginationNumbers(a: ListOriginationNumbersRequest): F[ListOriginationNumbersResponse]
   def listOriginationNumbersPaginator(a: ListOriginationNumbersRequest): F[ListOriginationNumbersPublisher]
@@ -64,9 +61,8 @@ trait SnsAsyncClientOp[F[_]] {
   def removePermission(a: RemovePermissionRequest): F[RemovePermissionResponse]
   def serviceName: F[String]
   def setEndpointAttributes(a: SetEndpointAttributesRequest): F[SetEndpointAttributesResponse]
-
   def setPlatformApplicationAttributes(
-    a: SetPlatformApplicationAttributesRequest
+      a: SetPlatformApplicationAttributesRequest
   ): F[SetPlatformApplicationAttributesResponse]
   def setSMSAttributes(a: SetSmsAttributesRequest): F[SetSmsAttributesResponse]
   def setSubscriptionAttributes(a: SetSubscriptionAttributesRequest): F[SetSubscriptionAttributesResponse]

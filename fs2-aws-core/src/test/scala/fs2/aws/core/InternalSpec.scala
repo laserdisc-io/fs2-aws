@@ -10,7 +10,7 @@ import scala.concurrent.ExecutionContext
 
 class InternalSpec extends AnyFlatSpec with Matchers {
   implicit val ec: ExecutionContext = ExecutionContext.global
-  implicit val runtime: IORuntime = IORuntime.global
+  implicit val runtime: IORuntime   = IORuntime.global
 
   "groupBy" should "create K substreams based on K selector outputs" in {
     val k = 30

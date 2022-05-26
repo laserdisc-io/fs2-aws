@@ -25,7 +25,7 @@ import scala.jdk.CollectionConverters.*
 case class Environment(sqs: SqsAsyncClient, sns: SnsAsyncClient)
 object PureAWSKleisli extends IOApp {
   private val creds = AwsBasicCredentials.create("accesskey", "secretkey")
-  private val port = 4566
+  private val port  = 4566
   override def run(args: List[String]): IO[ExitCode] =
     // Kleisli example
     resourcesK.use { e =>

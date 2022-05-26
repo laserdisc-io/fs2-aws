@@ -13,7 +13,7 @@ object TaglessGen {
 
   lazy val taglessGenClasses =
     settingKey[List[Class[_]]]("classes for which tagless-final algebras should be generated")
-  lazy val taglessGenDir = settingKey[File]("directory where tagless-final algebras go")
+  lazy val taglessGenDir     = settingKey[File]("directory where tagless-final algebras go")
   lazy val taglessGenPackage = settingKey[String]("package where tagless-final algebras go")
   lazy val taglessGenRenames =
     settingKey[Map[Class[_], String]]("map of imports that must be renamed")
@@ -24,7 +24,7 @@ object TaglessGen {
 
   lazy val taglessGenSettings = Seq(
     taglessGenClasses := Nil,
-    taglessGenDir := (Compile / sourceManaged).value,
+    taglessGenDir     := (Compile / sourceManaged).value,
     taglessGenPackage := "aws.tagless",
     taglessGenRenames := Map(classOf[java.sql.Array] -> "SqlArray"),
     taglessGen :=
@@ -49,14 +49,14 @@ class TaglessGen(
 
   // These Java classes will have non-Java names in our generated code
   val ClassBoolean = classOf[Boolean]
-  val ClassByte = classOf[Byte]
-  val ClassShort = classOf[Short]
-  val ClassInt = classOf[Int]
-  val ClassLong = classOf[Long]
-  val ClassFloat = classOf[Float]
-  val ClassDouble = classOf[Double]
-  val ClassObject = classOf[Object]
-  val ClassVoid = Void.TYPE
+  val ClassByte    = classOf[Byte]
+  val ClassShort   = classOf[Short]
+  val ClassInt     = classOf[Int]
+  val ClassLong    = classOf[Long]
+  val ClassFloat   = classOf[Float]
+  val ClassDouble  = classOf[Double]
+  val ClassObject  = classOf[Object]
+  val ClassVoid    = Void.TYPE
 
   def tparams(t: Type): List[String] =
     t match {
@@ -209,7 +209,7 @@ class TaglessGen(
   def closure(c: Class[_]): List[Class[_]] =
     (c :: (Option(c.getSuperclass).toList ++ c.getInterfaces.toList).flatMap(closure)).distinct
       .filterNot(_.getName == "java.lang.AutoCloseable") // not available in jdk1.6
-      .filterNot(_.getName == "java.lang.Object") // we don't want .equals, etc.
+      .filterNot(_.getName == "java.lang.Object")        // we don't want .equals, etc.
 
   implicit class MethodOps(m: Method) {
     def isStatic: Boolean =
@@ -265,11 +265,11 @@ class TaglessGen(
 
   // The algebra module for A
   def module[A](implicit ev: ClassTag[A]): String = {
-    val oname = ev.runtimeClass.getSimpleName // original name, without name mapping
-    val sname = toScalaType(ev.runtimeClass)
+    val oname  = ev.runtimeClass.getSimpleName // original name, without name mapping
+    val sname  = toScalaType(ev.runtimeClass)
     val opname = s"${oname}Op"
     val ioname = s"${oname}IO"
-    val mname = oname.toLowerCase
+    val mname  = oname.toLowerCase
     s"""
     |package $pkg
     |
@@ -324,11 +324,11 @@ class TaglessGen(
   }
 
   def interpreterDef(c: Class[_]): String = {
-    val oname = c.getSimpleName // original name, without name mapping
-    val sname = toScalaType(c)
+    val oname  = c.getSimpleName // original name, without name mapping
+    val sname  = toScalaType(c)
     val opname = s"${oname}Op"
     val ioname = s"${oname}IO"
-    val mname = oname.toLowerCase
+    val mname  = oname.toLowerCase
     s"lazy val ${oname}Interpreter: ${oname}Interpreter = new ${oname}Interpreter { }"
   }
 
@@ -410,9 +410,9 @@ class TaglessGen(
     log.info("Generating tagless algebras into " + base)
     val fs = managed.map { c =>
       base.mkdirs
-      val mod = module(ClassTag(c))
+      val mod  = module(ClassTag(c))
       val file = new File(base, s"${c.getSimpleName}Op.scala")
-      val pw = new PrintWriter(file)
+      val pw   = new PrintWriter(file)
       pw.println(mod)
       pw.close()
       log.info(s"${c.getName} -> ${file.getName}")
@@ -420,7 +420,7 @@ class TaglessGen(
     }
     val ki = {
       val file = new File(base, s"Interpreter.scala")
-      val pw = new PrintWriter(file)
+      val pw   = new PrintWriter(file)
       pw.println(kleisliInterpreter)
       pw.close()
       log.info(s"... -> ${file.getName}")

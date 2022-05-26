@@ -31,9 +31,7 @@ object KinesisExample extends IOApp {
       appConfig.dynamoSdkBuilder,
       appConfig.cloudwatchSdkBuilder,
       appConfig.streamName
-    ).use(kinesis =>
-      program[IO](kinesis, appConfig.consumerConfig, appConfig.producerConfig).as(ExitCode.Success)
-    )
+    ).use(kinesis => program[IO](kinesis, appConfig.consumerConfig, appConfig.producerConfig).as(ExitCode.Success))
   }
   private def kAlgebraResource[F[_]: Async: Concurrent](
       kac: KinesisAsyncClientBuilder,

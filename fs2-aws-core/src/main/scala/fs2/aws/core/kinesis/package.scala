@@ -36,7 +36,7 @@ package object core {
               .fold {
                 for {
                   newQ <- Queue.unbounded[F, Option[A]] // Create a new queue
-                  _ <- queueMap.modify(queues => (queues + (key -> newQ), queues))
+                  _    <- queueMap.modify(queues => (queues + (key -> newQ), queues))
                   // Enqueue the element lifted into an Option to the new queue
                   _ <- newQ.offer(elem.some)
                 } yield (key -> Stream.fromQueueNoneTerminated(newQ, 100)).some

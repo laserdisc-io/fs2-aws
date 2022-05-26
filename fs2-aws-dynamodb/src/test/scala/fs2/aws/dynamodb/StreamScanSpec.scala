@@ -18,7 +18,7 @@ import scala.jdk.CollectionConverters.*
 
 class StreamScanSpec extends AnyWordSpec with Matchers with ScalaFutures {
   implicit val ec: ExecutionContext = ExecutionContext.global
-  implicit val runtime: IORuntime = IORuntime.global
+  implicit val runtime: IORuntime   = IORuntime.global
 
   implicit override val patienceConfig: PatienceConfig =
     PatienceConfig(timeout = scaled(Span(2, Minutes)), interval = scaled(Span(1, Second)))

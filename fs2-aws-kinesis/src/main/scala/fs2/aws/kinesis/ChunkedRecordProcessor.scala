@@ -20,12 +20,11 @@ import scala.jdk.CollectionConverters.*
   *  @constructor create a new instance with a callback function to perform on record receive
   *  @param cb callback function to run on record receive, passing the new CommittableRecord
   */
-private[aws] class ChunkedRecordProcessor(cb: Chunk[CommittableRecord] => Unit)
-    extends ShardRecordProcessor {
-  private[kinesis] var shardId: String = _
+private[aws] class ChunkedRecordProcessor(cb: Chunk[CommittableRecord] => Unit) extends ShardRecordProcessor {
+  private[kinesis] var shardId: String                                = _
   private[kinesis] var extendedSequenceNumber: ExtendedSequenceNumber = _
-  private[kinesis] var isShutdown: Boolean = false
-  private[aws] val lastRecordSemaphore = new Semaphore(1)
+  private[kinesis] var isShutdown: Boolean                            = false
+  private[aws] val lastRecordSemaphore                                = new Semaphore(1)
 
   override def initialize(initializationInput: InitializationInput): Unit = {
     shardId = initializationInput.shardId()

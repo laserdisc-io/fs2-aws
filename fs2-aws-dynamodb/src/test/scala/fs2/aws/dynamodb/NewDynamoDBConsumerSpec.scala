@@ -7,10 +7,7 @@ import com.amazonaws.services.dynamodbv2.model
 import com.amazonaws.services.dynamodbv2.model.{AttributeValue, StreamRecord}
 import com.amazonaws.services.dynamodbv2.streamsadapter.model.RecordAdapter
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer
-import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.{
-  IRecordProcessor,
-  IRecordProcessorFactory
-}
+import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.{IRecordProcessor, IRecordProcessorFactory}
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{ShutdownReason, Worker}
 import com.amazonaws.services.kinesis.clientlibrary.types.{
   ExtendedSequenceNumber,
@@ -41,15 +38,14 @@ class NewDynamoDBConsumerSpec
     with ScalaFutures {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
-  implicit val runtime: IORuntime = IORuntime.global
+  implicit val runtime: IORuntime   = IORuntime.global
 
   implicit def sList2jList[A](sList: List[A]): java.util.List[A] = sList.asJava
 
   implicit override val patienceConfig: PatienceConfig =
     PatienceConfig(timeout = scaled(Span(2, Seconds)), interval = scaled(Span(5, Millis)))
 
-  "DynamoDB source" should "successfully read data from the DynamoDB stream" in new WorkerContext
-    with TestData {
+  "DynamoDB source" should "successfully read data from the DynamoDB stream" in new WorkerContext with TestData {
 
     val res = (
       stream.take(1).compile.toList,
@@ -67,8 +63,7 @@ class NewDynamoDBConsumerSpec
     commitableRecord.millisBehindLatest shouldBe recordsInput.getMillisBehindLatest
   }
 
-  it should "Shutdown the worker if the stream is drained and has not failed" in new WorkerContext
-    with TestData {
+  it should "Shutdown the worker if the stream is drained and has not failed" in new WorkerContext with TestData {
     (
       stream.take(1).compile.toList,
       IO.blocking {
@@ -81,8 +76,7 @@ class NewDynamoDBConsumerSpec
     verify(mockScheduler, times(1)).shutdown()
   }
 
-  it should "Shutdown the worker if the stream terminates" in new WorkerContext(errorStream = true)
-    with TestData {
+  it should "Shutdown the worker if the stream terminates" in new WorkerContext(errorStream = true) with TestData {
     intercept[Exception] {
       (
         stream.take(1).compile.toList,
@@ -164,8 +158,7 @@ class NewDynamoDBConsumerSpec
     res should have size 10
   }
 
-  it should "delay the end of shard checkpoint until all messages are drained" in new WorkerContext
-    with TestData {
+  it should "delay the end of shard checkpoint until all messages are drained" in new WorkerContext with TestData {
     val nRecords = 5L
 
     val res: Seq[Record] = (
@@ -232,7 +225,7 @@ class NewDynamoDBConsumerSpec
   }
 
   it should "checkpoint batch of records of different shards" in new WorkerContext() {
-    val checkpointerShard2 = mock(classOf[IRecordProcessorCheckpointer])
+    val checkpointerShard2    = mock(classOf[IRecordProcessorCheckpointer])
     val inFlightRecordsPhaser = new Phaser(1)
 
     val input = (1L to 6L).map { i =>
@@ -305,10 +298,10 @@ class NewDynamoDBConsumerSpec
   }
 
   it should "fail with Exception if checkpoint action fails" in new WorkerContext() {
-    val checkpointer = mock(classOf[IRecordProcessorCheckpointer])
+    val checkpointer          = mock(classOf[IRecordProcessorCheckpointer])
     val inFlightRecordsPhaser = new Phaser(1)
-    val record = mock(classOf[RecordAdapter])
-    val rp = new RecordProcessor(_ => ())
+    val record                = mock(classOf[RecordAdapter])
+    val rp                    = new RecordProcessor(_ => ())
     when(record.getSequenceNumber).thenReturn("1")
 
     val input = new CommittableRecord(
@@ -335,9 +328,9 @@ class NewDynamoDBConsumerSpec
   }
 
   it should "bypass all items when checkpoint" in new WorkerContext() {
-    val checkpointer = mock(classOf[IRecordProcessorCheckpointer])
+    val checkpointer          = mock(classOf[IRecordProcessorCheckpointer])
     val inFlightRecordsPhaser = new Phaser(1)
-    val rp = new RecordProcessor(_ => ())
+    val rp                    = new RecordProcessor(_ => ())
 
     val record = mock(classOf[RecordAdapter])
     when(record.getSequenceNumber).thenReturn("1")
@@ -365,14 +358,14 @@ class NewDynamoDBConsumerSpec
 
   abstract private class WorkerContext(errorStream: Boolean = false) {
 
-    val shard1Guard = new CountDownLatch(1)
-    val shard2Guard = new CountDownLatch(1)
-    val latch = new CountDownLatch(1)
+    val shard1Guard                     = new CountDownLatch(1)
+    val shard2Guard                     = new CountDownLatch(1)
+    val latch                           = new CountDownLatch(1)
     protected val mockScheduler: Worker = mock(classOf[Worker])
 
     var recordProcessorFactory: IRecordProcessorFactory = _
-    var recordProcessor: IRecordProcessor = _
-    var recordProcessor2: IRecordProcessor = _
+    var recordProcessor: IRecordProcessor               = _
+    var recordProcessor2: IRecordProcessor              = _
 
     doAnswer(_ => latch.await()).when(mockScheduler).run()
 
