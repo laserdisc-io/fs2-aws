@@ -17,14 +17,14 @@ import scala.concurrent.duration.DurationInt
 
 class SqsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
   implicit val ec: ExecutionContext = ExecutionContext.global
-  implicit val runtime: IORuntime = IORuntime.global
+  implicit val runtime: IORuntime   = IORuntime.global
   implicit val messageDecoder: Message => Either[Throwable, Int] = { sqs_msg =>
     val text = sqs_msg.body()
     if ("fail" == text) Left(new Exception("failure"))
     else Right(text.toInt)
   }
   val sqsOpResource: Resource[IO, SqsAsyncClientOp[IO]] = mkSQSClient(4566)
-  var queueUrl: String = _
+  var queueUrl: String                                  = _
 
   override def beforeAll(): Unit =
     queueUrl = sqsOpResource

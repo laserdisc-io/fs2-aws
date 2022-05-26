@@ -7,10 +7,7 @@ import cats.syntax.flatMap.*
 import cats.syntax.functor.*
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch
-import com.amazonaws.services.dynamodbv2.streamsadapter.{
-  AmazonDynamoDBStreamsAdapterClient,
-  StreamsWorkerFactory
-}
+import com.amazonaws.services.dynamodbv2.streamsadapter.{AmazonDynamoDBStreamsAdapterClient, StreamsWorkerFactory}
 import com.amazonaws.services.dynamodbv2.{AmazonDynamoDB, AmazonDynamoDBStreams}
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.IRecordProcessorFactory
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{
@@ -75,21 +72,18 @@ object DynamoDB {
           signal: SignallingRef[F, Boolean]
       ): fs2.Stream[F, Worker] =
         Stream.bracket {
-          schedulerFactory(() =>
-            new RecordProcessor(records => dispatcher.unsafeRunSync(queue.offer(records)))
-          ).flatTap(s =>
-            Concurrent[F].start(Async[F].blocking(s.run()).flatTap(_ => signal.set(true)))
-          )
+          schedulerFactory(() => new RecordProcessor(records => dispatcher.unsafeRunSync(queue.offer(records))))
+            .flatTap(s => Concurrent[F].start(Async[F].blocking(s.run()).flatTap(_ => signal.set(true))))
         }(s => Async[F].blocking(s.shutdown()))
 
       // Instantiate a new bounded queue and concurrently run the queue populator
       // Expose the elements by dequeuing the internal buffer
       for {
-        dispatcher <- Stream.resource(Dispatcher[F])
-        buffer <- Stream.eval(Queue.unbounded[F, CommittableRecord])
+        dispatcher      <- Stream.resource(Dispatcher[F])
+        buffer          <- Stream.eval(Queue.unbounded[F, CommittableRecord])
         interruptSignal <- Stream.eval(SignallingRef[F, Boolean](false))
-        _ <- instantiateScheduler(dispatcher, buffer, interruptSignal)
-        stream <- Stream.fromQueueUnterminated(buffer).interruptWhen(interruptSignal)
+        _               <- instantiateScheduler(dispatcher, buffer, interruptSignal)
+        stream          <- Stream.fromQueueUnterminated(buffer).interruptWhen(interruptSignal)
       } yield stream
     }
 

@@ -33,15 +33,14 @@ class NewKinesisConsumerSpec
     with ScalaFutures {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
-  implicit val runtime: IORuntime = IORuntime.global
+  implicit val runtime: IORuntime   = IORuntime.global
 
   implicit def sList2jList[A](sList: List[A]): java.util.List[A] = sList.asJava
 
   implicit override val patienceConfig: PatienceConfig =
     PatienceConfig(timeout = scaled(Span(10, Seconds)), interval = scaled(Span(500, Millis)))
 
-  "KinesisWorker source" should "successfully read data from the Kinesis stream" in new WorkerContext
-    with TestData {
+  "KinesisWorker source" should "successfully read data from the Kinesis stream" in new WorkerContext with TestData {
 
     val res = (
       stream.take(1).compile.toList,
@@ -60,8 +59,7 @@ class NewKinesisConsumerSpec
     commitableRecord.millisBehindLatest shouldBe recordsInput.build().millisBehindLatest()
   }
 
-  it should "Shutdown the worker if the stream is drained and has not failed" in new WorkerContext
-    with TestData {
+  it should "Shutdown the worker if the stream is drained and has not failed" in new WorkerContext with TestData {
     (
       stream.take(1).compile.toList.flatMap(l => IO.blocking(latch.countDown()) >> IO.pure(l)),
       IO.blocking {
@@ -74,8 +72,7 @@ class NewKinesisConsumerSpec
     verify(mockScheduler, times(1)).shutdown()
   }
 
-  it should "shutdown the worker if the stream terminates" in new WorkerContext(errorStream = true)
-    with TestData {
+  it should "shutdown the worker if the stream terminates" in new WorkerContext(errorStream = true) with TestData {
     intercept[Exception] {
       (
         stream.take(1).compile.toList.flatMap(l => IO.blocking(latch.countDown()) >> IO.pure(l)),
@@ -163,8 +160,7 @@ class NewKinesisConsumerSpec
     res should have size 10
   }
 
-  it should "delay the end of shard checkpoint until all messages are drained" in new WorkerContext
-    with TestData {
+  it should "delay the end of shard checkpoint until all messages are drained" in new WorkerContext with TestData {
     val nRecords = 5
 
     val res: Seq[KinesisClientRecord] = (
@@ -303,7 +299,7 @@ class NewKinesisConsumerSpec
     val checkpointer = mock(classOf[ShardRecordProcessorCheckpointer])
 
     val lastRecordSemaphore = new Semaphore(1)
-    val record = mock(classOf[KinesisClientRecord])
+    val record              = mock(classOf[KinesisClientRecord])
     when(record.sequenceNumber()).thenReturn("1")
 
     val input = new CommittableRecord(
@@ -337,7 +333,7 @@ class NewKinesisConsumerSpec
     val checkpointer = mock(classOf[ShardRecordProcessorCheckpointer])
 
     val lastRecordSemaphore = new Semaphore(1)
-    val record = mock(classOf[KinesisClientRecord])
+    val record              = mock(classOf[KinesisClientRecord])
     when(record.sequenceNumber()).thenReturn("1")
 
     val input = (1L to 100L).map(idx =>
@@ -362,15 +358,15 @@ class NewKinesisConsumerSpec
 
   abstract private class WorkerContext(errorStream: Boolean = false) {
 
-    val shard1Guard = new CountDownLatch(1)
-    val shard2Guard = new CountDownLatch(1)
-    val latch = new CountDownLatch(1)
+    val shard1Guard                        = new CountDownLatch(1)
+    val shard2Guard                        = new CountDownLatch(1)
+    val latch                              = new CountDownLatch(1)
     protected val mockScheduler: Scheduler = mock(classOf[Scheduler])
 
     var recordProcessorFactory: ShardRecordProcessorFactory = _
-    var recordProcessor: ShardRecordProcessor = _
-    var recordProcessor2: ShardRecordProcessor = _
-    val chunkedRecordProcessor = new ChunkedRecordProcessor(_ => ())
+    var recordProcessor: ShardRecordProcessor               = _
+    var recordProcessor2: ShardRecordProcessor              = _
+    val chunkedRecordProcessor                              = new ChunkedRecordProcessor(_ => ())
 
     doAnswer(_ => latch.await()).when(mockScheduler).run()
 //    doThrow(new RuntimeException("boom"))

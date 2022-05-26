@@ -36,7 +36,7 @@ trait S3[F[_]] {
 
 object S3 {
   type PartETag = String
-  type PartId = Int
+  type PartId   = Int
   type UploadId = String
 
   /** It creates an instance of the purely functional S3 API. */
@@ -141,9 +141,7 @@ object S3 {
                 .through(uploadPart(uploadId))
                 .fold[List[(PartETag, PartId)]](List.empty)(_ :+ _)
                 .through(completeUpload(uploadId))
-                .handleErrorWith(ex =>
-                  fs2.Stream.eval(cancelUpload(uploadId) >> Sync[F].raiseError[ETag](ex))
-                )
+                .handleErrorWith(ex => fs2.Stream.eval(cancelUpload(uploadId) >> Sync[F].raiseError[ETag](ex)))
             }
       }
 
@@ -199,7 +197,7 @@ object S3 {
               case Some(resp) =>
                 Pull.eval {
                   Async[F].blocking {
-                    val bs = resp.asByteArray()
+                    val bs  = resp.asByteArray()
                     val len = bs.length
                     if (len < 0) None else Some(Chunk(unsafeWrapArray(bs)*))
                   }

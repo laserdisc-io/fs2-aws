@@ -12,7 +12,7 @@ object FreeGen2 {
 
   lazy val freeGen2Classes =
     settingKey[List[Class[_]]]("classes for which free algebras should be generated")
-  lazy val freeGen2Dir = settingKey[File]("directory where free algebras go")
+  lazy val freeGen2Dir     = settingKey[File]("directory where free algebras go")
   lazy val freeGen2Package = settingKey[String]("package where free algebras go")
   lazy val freeGen2Renames =
     settingKey[Map[Class[_], String]]("map of imports that must be renamed")
@@ -20,7 +20,7 @@ object FreeGen2 {
 
   lazy val freeGen2Settings = Seq(
     freeGen2Classes := Nil,
-    freeGen2Dir := (Compile / sourceManaged).value,
+    freeGen2Dir     := (Compile / sourceManaged).value,
     freeGen2Package := "doobie.free",
     freeGen2Renames := Map(classOf[java.sql.Array] -> "SqlArray"),
     freeGen2 :=
@@ -38,14 +38,14 @@ class FreeGen2(managed: List[Class[_]], pkg: String, renames: Map[Class[_], Stri
 
   // These Java classes will have non-Java names in our generated code
   val ClassBoolean = classOf[Boolean]
-  val ClassByte = classOf[Byte]
-  val ClassShort = classOf[Short]
-  val ClassInt = classOf[Int]
-  val ClassLong = classOf[Long]
-  val ClassFloat = classOf[Float]
-  val ClassDouble = classOf[Double]
-  val ClassObject = classOf[Object]
-  val ClassVoid = Void.TYPE
+  val ClassByte    = classOf[Byte]
+  val ClassShort   = classOf[Short]
+  val ClassInt     = classOf[Int]
+  val ClassLong    = classOf[Long]
+  val ClassFloat   = classOf[Float]
+  val ClassDouble  = classOf[Double]
+  val ClassObject  = classOf[Object]
+  val ClassVoid    = Void.TYPE
 
   def tparams(t: Type): List[String] =
     t match {
@@ -177,7 +177,7 @@ class FreeGen2(managed: List[Class[_]], pkg: String, renames: Map[Class[_], Stri
   def closure(c: Class[_]): List[Class[_]] =
     (c :: (Option(c.getSuperclass).toList ++ c.getInterfaces.toList).flatMap(closure)).distinct
       .filterNot(_.getName == "java.lang.AutoCloseable") // not available in jdk1.6
-      .filterNot(_.getName == "java.lang.Object") // we don't want .equals, etc.
+      .filterNot(_.getName == "java.lang.Object")        // we don't want .equals, etc.
 
   implicit class MethodOps(m: Method) {
     def isStatic: Boolean =
@@ -233,11 +233,11 @@ class FreeGen2(managed: List[Class[_]], pkg: String, renames: Map[Class[_], Stri
 
   // The algebra module for A
   def module[A](implicit ev: ClassTag[A]): String = {
-    val oname = ev.runtimeClass.getSimpleName // original name, without name mapping
-    val sname = toScalaType(ev.runtimeClass)
+    val oname  = ev.runtimeClass.getSimpleName // original name, without name mapping
+    val sname  = toScalaType(ev.runtimeClass)
     val opname = s"${oname}Op"
     val ioname = s"${oname}IO"
-    val mname = oname.toLowerCase
+    val mname  = oname.toLowerCase
     s"""
     |package $pkg
     |
@@ -403,11 +403,11 @@ class FreeGen2(managed: List[Class[_]], pkg: String, renames: Map[Class[_], Stri
      |""".trim.stripMargin
 
   def interp[A](implicit ev: ClassTag[A]): String = {
-    val oname = ev.runtimeClass.getSimpleName // original name, without name mapping
-    val sname = toScalaType(ev.runtimeClass)
+    val oname  = ev.runtimeClass.getSimpleName // original name, without name mapping
+    val sname  = toScalaType(ev.runtimeClass)
     val opname = s"${oname}Op"
     val ioname = s"${oname}IO"
-    val mname = oname.toLowerCase
+    val mname  = oname.toLowerCase
     s"""
        |  trait ${oname}Interpreter extends ${oname}Op.Visitor[Kleisli[M, $sname, *]] {
        |
@@ -447,11 +447,11 @@ class FreeGen2(managed: List[Class[_]], pkg: String, renames: Map[Class[_], Stri
   }
 
   def interpreterDef(c: Class[_]): String = {
-    val oname = c.getSimpleName // original name, without name mapping
-    val sname = toScalaType(c)
+    val oname  = c.getSimpleName // original name, without name mapping
+    val sname  = toScalaType(c)
     val opname = s"${oname}Op"
     val ioname = s"${oname}IO"
-    val mname = oname.toLowerCase
+    val mname  = oname.toLowerCase
     s"lazy val ${oname}Interpreter: $opname ~> Kleisli[M, $sname, *] = new ${oname}Interpreter { }"
   }
 
@@ -551,9 +551,9 @@ class FreeGen2(managed: List[Class[_]], pkg: String, renames: Map[Class[_], Stri
     log.info("Generating free algebras into " + base)
     val fs = managed.map { c =>
       base.mkdirs
-      val mod = module(ClassTag(c))
+      val mod  = module(ClassTag(c))
       val file = new File(base, s"${c.getSimpleName.toLowerCase}.scala")
-      val pw = new PrintWriter(file)
+      val pw   = new PrintWriter(file)
       pw.println(mod)
       pw.close()
       log.info(s"${c.getName} -> ${file.getName}")
@@ -561,7 +561,7 @@ class FreeGen2(managed: List[Class[_]], pkg: String, renames: Map[Class[_], Stri
     }
     val e = {
       val file = new File(base, s"embedded.scala")
-      val pw = new PrintWriter(file)
+      val pw   = new PrintWriter(file)
       pw.println(embeds)
       pw.close()
       log.info(s"... -> ${file.getName}")
@@ -569,7 +569,7 @@ class FreeGen2(managed: List[Class[_]], pkg: String, renames: Map[Class[_], Stri
     }
     val ki = {
       val file = new File(base, s"kleisliinterpreter.scala")
-      val pw = new PrintWriter(file)
+      val pw   = new PrintWriter(file)
       pw.println(kleisliInterpreter)
       pw.close()
       log.info(s"... -> ${file.getName}")

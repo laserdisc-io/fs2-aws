@@ -21,7 +21,7 @@ import scala.jdk.CollectionConverters.*
 object KinesisFlowBenchmark {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
-  implicit val runtime: IORuntime = IORuntime.global
+  implicit val runtime: IORuntime   = IORuntime.global
 
   @State(Scope.Thread)
   class ThreadState {
@@ -44,7 +44,7 @@ object KinesisFlowBenchmark {
     def KinesisStream(state: ThreadState): Unit =
       (for {
         processorContext <- IO.delay(new SchedulerFactoryTestContext[IO](shards = 10))
-        k = Kinesis.create(processorContext)
+        k               = Kinesis.create(processorContext)
         streamUnderTest = k.readFromKinesisStream("foo", "bar")
         _ <- (
           streamUnderTest

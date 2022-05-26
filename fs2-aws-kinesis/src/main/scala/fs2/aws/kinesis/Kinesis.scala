@@ -78,21 +78,18 @@ object Kinesis {
           signal: SignallingRef[F, Boolean]
       ): fs2.Stream[F, Scheduler] =
         Stream.bracket {
-          schedulerFactory(() =>
-            new ChunkedRecordProcessor(records => dispatcher.unsafeRunSync(queue.offer(records)))
-          ).flatTap(s =>
-            Concurrent[F].start(Async[F].blocking(s.run()).flatTap(_ => signal.set(true)))
-          )
+          schedulerFactory(() => new ChunkedRecordProcessor(records => dispatcher.unsafeRunSync(queue.offer(records))))
+            .flatTap(s => Concurrent[F].start(Async[F].blocking(s.run()).flatTap(_ => signal.set(true))))
         }(s => Async[F].blocking(s.shutdown()))
 
       // Instantiate a new bounded queue and concurrently run the queue populator
       // Expose the elements by dequeuing the internal buffer
       for {
-        dispatcher <- Stream.resource(Dispatcher[F])
-        buffer <- Stream.eval(Queue.bounded[F, Chunk[CommittableRecord]](streamConfig.bufferSize))
+        dispatcher      <- Stream.resource(Dispatcher[F])
+        buffer          <- Stream.eval(Queue.bounded[F, Chunk[CommittableRecord]](streamConfig.bufferSize))
         interruptSignal <- Stream.eval(SignallingRef[F, Boolean](false))
-        _ <- instantiateScheduler(dispatcher, buffer, interruptSignal)
-        stream <- Stream.fromQueueUnterminated(buffer).interruptWhen(interruptSignal)
+        _               <- instantiateScheduler(dispatcher, buffer, interruptSignal)
+        stream          <- Stream.fromQueueUnterminated(buffer).interruptWhen(interruptSignal)
       } yield stream
     }
 

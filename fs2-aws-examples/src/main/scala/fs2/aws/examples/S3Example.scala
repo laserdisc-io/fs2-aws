@@ -13,7 +13,7 @@ import java.net.URI
 
 object S3Example extends IOApp {
   val credentials = AwsBasicCredentials.create("accesskey", "secretkey")
-  val port = 4566
+  val port        = 4566
   override def run(args: List[String]): IO[ExitCode] =
     s3StreamResource.use(s3 => S3.create(s3).flatMap(program).as(ExitCode.Success))
 

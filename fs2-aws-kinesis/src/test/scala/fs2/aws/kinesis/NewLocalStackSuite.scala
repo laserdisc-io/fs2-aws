@@ -16,10 +16,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Minutes, Second, Span}
 import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import software.amazon.awssdk.regions.Region
-import software.amazon.awssdk.services.cloudwatch.{
-  CloudWatchAsyncClient,
-  CloudWatchAsyncClientBuilder
-}
+import software.amazon.awssdk.services.cloudwatch.{CloudWatchAsyncClient, CloudWatchAsyncClientBuilder}
 import software.amazon.awssdk.services.dynamodb.{DynamoDbAsyncClient, DynamoDbAsyncClientBuilder}
 import software.amazon.awssdk.services.kinesis.model.{
   CreateStreamRequest,
@@ -39,7 +36,7 @@ import scala.concurrent.duration.DurationInt
 class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
-  implicit val runtime: IORuntime = IORuntime.global
+  implicit val runtime: IORuntime   = IORuntime.global
 
   // this is required to make the KCL work with LocalStack
   System.setProperty("aws.cborEnabled", "false")
@@ -116,7 +113,7 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
     val records = test.unsafeToFuture().futureValue
 
     val actualPartitionKeys = records.map(_.record.partitionKey())
-    val actualData = records.map(deserialiseData)
+    val actualData          = records.map(deserialiseData)
     actualPartitionKeys shouldBe (1 to data.length).map(_ => partitionKey)
     actualData shouldBe data
   }
@@ -124,7 +121,7 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
   ("The Kinesis fs2 Stream" should "seamlessly consume from re-sharded stream ").ignore {
 
     val data = List("foo", "bar", "baz")
-    val sn = "resharding_test"
+    val sn   = "resharding_test"
     val consumerConfig = KinesisConsumerSettings(
       sn,
       "test-app",
@@ -193,7 +190,7 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
     val records = test.unsafeToFuture().futureValue
 
     val actualPartitionKeys = records.map(_.record.partitionKey())
-    val actualData = records.map(deserialiseData)
+    val actualData          = records.map(deserialiseData)
     actualPartitionKeys shouldBe (1 to data.length).map(_ => partitionKey)
     actualData shouldBe data
   }
@@ -212,7 +209,7 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
       i = KinesisInterpreter[IO]
       k <- i.KinesisAsyncClientResource(kac)
       kinesisInterpreter = i.create(k)
-      kAlgebra = Kinesis.create[IO](k, d, c)
+      kAlgebra           = Kinesis.create[IO](k, d, c)
     } yield kinesisInterpreter -> kAlgebra
 
 }
