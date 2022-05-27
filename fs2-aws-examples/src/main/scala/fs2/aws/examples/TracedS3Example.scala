@@ -16,7 +16,7 @@ import software.amazon.awssdk.services.s3.S3AsyncClient
 import java.net.URI
 
 object TracedS3Example extends IOApp {
-  val credentials = AwsBasicCredentials
+  val credentials: AwsBasicCredentials = AwsBasicCredentials
     .create("AKIAIOSFODNN7EXAMPLE", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
   val port = 9000
   override def run(args: List[String]): IO[ExitCode] =

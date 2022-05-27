@@ -91,7 +91,7 @@ class StreamScanSpec extends AnyWordSpec with Matchers with ScalaFutures {
 
     } yield tableName -> ddb
 
-  def mkWriteRequest(name: String) =
+  def mkWriteRequest(name: String): WriteRequest =
     WriteRequest
       .builder()
       .putRequest(

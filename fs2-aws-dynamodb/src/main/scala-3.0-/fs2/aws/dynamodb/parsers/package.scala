@@ -22,7 +22,7 @@ package object parsers {
       case ("NEW_AND_OLD_IMAGES", "MODIFY") =>
         for {
           before <- parseDynamoRecord(record.getInternalObject.getDynamodb.getOldImage)
-          after <- parseDynamoRecord(record.getInternalObject.getDynamodb.getNewImage)
+          after  <- parseDynamoRecord(record.getInternalObject.getDynamodb.getNewImage)
         } yield Update(before, after)
       case ("NEW_IMAGE", "MODIFY") =>
         for {

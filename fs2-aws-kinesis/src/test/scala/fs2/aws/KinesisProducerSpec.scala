@@ -25,7 +25,7 @@ class KinesisProducerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
     implicit val runtime: IORuntime   = IORuntime.global
     val result                        = new UserRecordResult(List[Attempt]().asJava, "seq #", "shard #", true)
 
-    val ops = IO {
+    val ops: IO[SettableFuture[UserRecordResult]] = IO {
       val future: SettableFuture[UserRecordResult] = SettableFuture.create()
       future.set(result)
       future

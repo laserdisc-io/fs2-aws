@@ -47,7 +47,7 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
 
   val partitionKey = "test"
 
-  val consumerConfig = KinesisConsumerSettings(
+  val consumerConfig: KinesisConsumerSettings = KinesisConsumerSettings(
     streamName,
     "test-app",
     initialPositionInStream = Left(InitialPositionInStream.TRIM_HORIZON),
@@ -57,7 +57,7 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
   val credentials =
     new BasicAWSCredentials("dummy", "dummy")
 
-  val producerConfig = new KinesisProducerConfiguration()
+  val producerConfig: KinesisProducerConfiguration = new KinesisProducerConfiguration()
     .setCredentialsProvider(new AWSStaticCredentialsProvider(credentials))
     .setKinesisEndpoint("localhost")
     .setKinesisPort(4566)
@@ -66,19 +66,19 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
     .setVerifyCertificate(false)
     .setRegion("us-east-1")
 
-  val cp = StaticCredentialsProvider.create(AwsBasicCredentials.create("dummy", "dummy"))
+  val cp: StaticCredentialsProvider = StaticCredentialsProvider.create(AwsBasicCredentials.create("dummy", "dummy"))
 
-  val kac = KinesisAsyncClient
+  val kac: KinesisAsyncClientBuilder = KinesisAsyncClient
     .builder()
     .credentialsProvider(cp)
     .region(Region.US_EAST_1)
     .endpointOverride(URI.create("http://localhost:4566"))
-  val dac = DynamoDbAsyncClient
+  val dac: DynamoDbAsyncClientBuilder = DynamoDbAsyncClient
     .builder()
     .credentialsProvider(cp)
     .region(Region.US_EAST_1)
     .endpointOverride(URI.create("http://localhost:4566"))
-  val cac =
+  val cac: CloudWatchAsyncClientBuilder =
     CloudWatchAsyncClient
       .builder()
       .credentialsProvider(cp)
@@ -129,16 +129,12 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
       retrievalMode = Polling
     )
     val resource = for {
-      r @ (kAsyncInterpreter, _) <- kAlgebraResource(kac, dac, cac)
+      r <- kAlgebraResource(kac, dac, cac)
       _ <- Resource.make(
-        kAsyncInterpreter.createStream(
+        r._1.createStream(
           CreateStreamRequest.builder().streamName(sn).shardCount(1).build()
         )
-      )(_ =>
-        kAsyncInterpreter
-          .deleteStream(DeleteStreamRequest.builder().streamName(sn).build())
-          .void
-      )
+      )(_ => r._1.deleteStream(DeleteStreamRequest.builder().streamName(sn).build()).void)
     } yield r
 
     val producer = new KinesisProducerClientImpl[IO](Some(producerConfig))
