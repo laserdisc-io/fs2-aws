@@ -413,7 +413,7 @@ lazy val commonSettings = Def.settings(
   Test / console / scalacOptions := (Compile / console / scalacOptions).value,
   Test / scalacOptions           := (Compile / scalacOptions).value,
   Test / scalacOptions += "-Wconf:msg=is not declared `infix`:s,msg=is declared 'open':s",
-  libraryDependencies += "org.scala-lang.modules" %% "scala-collection-compat" % "2.7.0",
+  libraryDependencies += "org.scala-lang.modules" %% "scala-collection-compat" % "2.8.0",
   libraryDependencies ++= Seq(
     compilerPlugin(("org.typelevel" %% "kind-projector" % "0.13.2").cross(CrossVersion.full)),
     compilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1")
