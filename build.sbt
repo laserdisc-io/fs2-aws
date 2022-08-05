@@ -130,6 +130,7 @@ lazy val `fs2-aws-s3` = (project in file("fs2-aws-s3"))
       "co.fs2"                %% "fs2-io"              % V.Fs2,
       "eu.timepit"            %% "refined"             % V.Refined,
       "software.amazon.awssdk" % "s3"                  % V.AwsSdk,
+      "software.amazon.awssdk" % "sts"                 % V.AwsSdk,
       "org.scalameta"         %% "munit"               % V.Munit % Test,
       "org.typelevel"         %% "munit-cats-effect-3" % "1.0.7" % Test
     ),
