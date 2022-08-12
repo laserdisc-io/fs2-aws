@@ -99,9 +99,11 @@ object DynamoDB {
 
       def bypass: Pipe[F, CommittableRecord, Record] = _.map(r => r.record)
 
-      _.through(core.groupBy(r => Sync[F].pure(r.shardId))).map { case (_, st) =>
-        st.broadcastThrough(checkpoint(checkpointSettings), bypass)
-      }.parJoinUnbounded
+      _.through(core.groupBy(r => Sync[F].pure(r.shardId)))
+        .map { case (_, st) =>
+          st.broadcastThrough(checkpoint(checkpointSettings), bypass)
+        }
+        .parJoinUnbounded
     }
   }
 

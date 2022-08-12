@@ -102,7 +102,7 @@ class TaglessGen(
     // The case class constructor name, capitalized and with an index when needed
     def cname: String = {
       val s = mname(0).toUpper +: mname.drop(1)
-      (if (index == 0) s else s"$s$index")
+      if (index == 0) s else s"$s$index"
     }
 
     // Constructor parameter type names
