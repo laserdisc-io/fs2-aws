@@ -17,7 +17,7 @@ object S3Example extends IOApp {
   override def run(args: List[String]): IO[ExitCode] =
     s3StreamResource.use(s3 => S3.create(s3).flatMap(program).as(ExitCode.Success))
 
-  def s3StreamResource: Resource[IO, (S3AsyncClientOp[IO])] =
+  def s3StreamResource: Resource[IO, S3AsyncClientOp[IO]] =
     S3Interpreter[IO].S3AsyncClientOpResource(
       S3AsyncClient
         .builder()
