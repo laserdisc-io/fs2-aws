@@ -110,7 +110,7 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
       "ch.qos.logback"    % "logback-core"      % "1.2.11",
       "org.slf4j"         % "jcl-over-slf4j"    % "1.7.36",
       "org.slf4j"         % "jul-to-slf4j"      % "1.7.36",
-      "org.typelevel"    %% "log4cats-slf4j"    % "2.3.0",
+      "org.typelevel"    %% "log4cats-slf4j"    % "2.3.2",
       "io.janstenpickle" %% "trace4cats-inject" % "0.13.1"
     ),
     libraryDependencies ++= Seq(
@@ -413,7 +413,7 @@ lazy val commonSettings = Def.settings(
   Test / console / scalacOptions := (Compile / console / scalacOptions).value,
   Test / scalacOptions           := (Compile / scalacOptions).value,
   Test / scalacOptions += "-Wconf:msg=is not declared `infix`:s,msg=is declared 'open':s",
-  libraryDependencies += "org.scala-lang.modules" %% "scala-collection-compat" % "2.7.0",
+  libraryDependencies += "org.scala-lang.modules" %% "scala-collection-compat" % "2.8.1",
   libraryDependencies ++= Seq(
     compilerPlugin(("org.typelevel" %% "kind-projector" % "0.13.2").cross(CrossVersion.full)),
     compilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1")
