@@ -63,7 +63,7 @@ lazy val `fs2-aws-ciris` = (project in file("fs2-aws-ciris"))
     libraryDependencies ++= Seq(
       "org.scalatest"          %% "scalatest"             % V.ScalaTest   % Test,
       "org.mockito"             % "mockito-core"          % V.MockitoCore % Test,
-      "is.cir"                 %% "ciris"                 % "2.3.2",
+      "is.cir"                 %% "ciris"                 % "2.3.3",
       "software.amazon.kinesis" % "amazon-kinesis-client" % "2.4.1",
       "org.typelevel"          %% "cats-effect"           % V.CE          % Test
     ),
