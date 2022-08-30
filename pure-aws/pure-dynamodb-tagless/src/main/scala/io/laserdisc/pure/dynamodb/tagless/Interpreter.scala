@@ -90,6 +90,7 @@ trait Interpreter[M[_]] { outer =>
     override def describeGlobalTableSettings(a: DescribeGlobalTableSettingsRequest) = eff(
       _.describeGlobalTableSettings(a)
     )
+    override def describeImport(a: DescribeImportRequest) = eff(_.describeImport(a))
     override def describeKinesisStreamingDestination(a: DescribeKinesisStreamingDestinationRequest) = eff(
       _.describeKinesisStreamingDestination(a)
     )
@@ -110,6 +111,7 @@ trait Interpreter[M[_]] { outer =>
     override def executeTransaction(a: ExecuteTransactionRequest)             = eff(_.executeTransaction(a))
     override def exportTableToPointInTime(a: ExportTableToPointInTimeRequest) = eff(_.exportTableToPointInTime(a))
     override def getItem(a: GetItemRequest)                                   = eff(_.getItem(a))
+    override def importTable(a: ImportTableRequest)                           = eff(_.importTable(a))
     override def listBackups                                                  = eff(_.listBackups)
     override def listBackups(a: ListBackupsRequest)                           = eff(_.listBackups(a))
     override def listContributorInsights(a: ListContributorInsightsRequest)   = eff(_.listContributorInsights(a))
@@ -120,6 +122,8 @@ trait Interpreter[M[_]] { outer =>
     override def listExportsPaginator(a: ListExportsRequest)                    = primitive(_.listExportsPaginator(a))
     override def listGlobalTables                                               = eff(_.listGlobalTables)
     override def listGlobalTables(a: ListGlobalTablesRequest)                   = eff(_.listGlobalTables(a))
+    override def listImports(a: ListImportsRequest)                             = eff(_.listImports(a))
+    override def listImportsPaginator(a: ListImportsRequest)                    = primitive(_.listImportsPaginator(a))
     override def listTables                                                     = eff(_.listTables)
     override def listTables(a: ListTablesRequest)                               = eff(_.listTables(a))
     override def listTablesPaginator                                            = primitive(_.listTablesPaginator)
@@ -175,6 +179,7 @@ trait Interpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).describeGlobalTable(a)))
         override def describeGlobalTableSettings(a: DescribeGlobalTableSettingsRequest) =
           Kleisli(e => eff1(f(e).describeGlobalTableSettings(a)))
+        override def describeImport(a: DescribeImportRequest) = Kleisli(e => eff1(f(e).describeImport(a)))
         override def describeKinesisStreamingDestination(a: DescribeKinesisStreamingDestinationRequest) =
           Kleisli(e => eff1(f(e).describeKinesisStreamingDestination(a)))
         override def describeLimits                           = Kleisli(e => eff1(f(e).describeLimits))
@@ -192,6 +197,7 @@ trait Interpreter[M[_]] { outer =>
         override def exportTableToPointInTime(a: ExportTableToPointInTimeRequest) =
           Kleisli(e => eff1(f(e).exportTableToPointInTime(a)))
         override def getItem(a: GetItemRequest)         = Kleisli(e => eff1(f(e).getItem(a)))
+        override def importTable(a: ImportTableRequest) = Kleisli(e => eff1(f(e).importTable(a)))
         override def listBackups                        = Kleisli(e => eff1(f(e).listBackups))
         override def listBackups(a: ListBackupsRequest) = Kleisli(e => eff1(f(e).listBackups(a)))
         override def listContributorInsights(a: ListContributorInsightsRequest) =
@@ -203,9 +209,12 @@ trait Interpreter[M[_]] { outer =>
           Kleisli(e => primitive1(f(e).listExportsPaginator(a)))
         override def listGlobalTables                             = Kleisli(e => eff1(f(e).listGlobalTables))
         override def listGlobalTables(a: ListGlobalTablesRequest) = Kleisli(e => eff1(f(e).listGlobalTables(a)))
-        override def listTables                                   = Kleisli(e => eff1(f(e).listTables))
-        override def listTables(a: ListTablesRequest)             = Kleisli(e => eff1(f(e).listTables(a)))
-        override def listTablesPaginator                          = Kleisli(e => primitive1(f(e).listTablesPaginator))
+        override def listImports(a: ListImportsRequest)           = Kleisli(e => eff1(f(e).listImports(a)))
+        override def listImportsPaginator(a: ListImportsRequest) =
+          Kleisli(e => primitive1(f(e).listImportsPaginator(a)))
+        override def listTables                                = Kleisli(e => eff1(f(e).listTables))
+        override def listTables(a: ListTablesRequest)          = Kleisli(e => eff1(f(e).listTables(a)))
+        override def listTablesPaginator                       = Kleisli(e => primitive1(f(e).listTablesPaginator))
         override def listTablesPaginator(a: ListTablesRequest) = Kleisli(e => primitive1(f(e).listTablesPaginator(a)))
         override def listTagsOfResource(a: ListTagsOfResourceRequest) = Kleisli(e => eff1(f(e).listTagsOfResource(a)))
         override def putItem(a: PutItemRequest)                       = Kleisli(e => eff1(f(e).putItem(a)))
@@ -270,6 +279,7 @@ trait Interpreter[M[_]] { outer =>
     override def describeGlobalTableSettings(a: DescribeGlobalTableSettingsRequest) = eff1(
       client.describeGlobalTableSettings(a)
     )
+    override def describeImport(a: DescribeImportRequest) = eff1(client.describeImport(a))
     override def describeKinesisStreamingDestination(a: DescribeKinesisStreamingDestinationRequest) = eff1(
       client.describeKinesisStreamingDestination(a)
     )
@@ -290,6 +300,7 @@ trait Interpreter[M[_]] { outer =>
     override def executeTransaction(a: ExecuteTransactionRequest)             = eff1(client.executeTransaction(a))
     override def exportTableToPointInTime(a: ExportTableToPointInTimeRequest) = eff1(client.exportTableToPointInTime(a))
     override def getItem(a: GetItemRequest)                                   = eff1(client.getItem(a))
+    override def importTable(a: ImportTableRequest)                           = eff1(client.importTable(a))
     override def listBackups                                                  = eff1(client.listBackups)
     override def listBackups(a: ListBackupsRequest)                           = eff1(client.listBackups(a))
     override def listContributorInsights(a: ListContributorInsightsRequest)   = eff1(client.listContributorInsights(a))
@@ -300,6 +311,8 @@ trait Interpreter[M[_]] { outer =>
     override def listExportsPaginator(a: ListExportsRequest)              = primitive1(client.listExportsPaginator(a))
     override def listGlobalTables                                         = eff1(client.listGlobalTables)
     override def listGlobalTables(a: ListGlobalTablesRequest)             = eff1(client.listGlobalTables(a))
+    override def listImports(a: ListImportsRequest)                       = eff1(client.listImports(a))
+    override def listImportsPaginator(a: ListImportsRequest)              = primitive1(client.listImportsPaginator(a))
     override def listTables                                               = eff1(client.listTables)
     override def listTables(a: ListTablesRequest)                         = eff1(client.listTables(a))
     override def listTablesPaginator                                      = primitive1(client.listTablesPaginator)
