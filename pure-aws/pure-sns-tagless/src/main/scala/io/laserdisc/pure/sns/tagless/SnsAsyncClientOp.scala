@@ -72,5 +72,4 @@ trait SnsAsyncClientOp[F[_]] {
   def unsubscribe(a: UnsubscribeRequest): F[UnsubscribeResponse]
   def untagResource(a: UntagResourceRequest): F[UntagResourceResponse]
   def verifySMSSandboxPhoneNumber(a: VerifySmsSandboxPhoneNumberRequest): F[VerifySmsSandboxPhoneNumberResponse]
-
 }
