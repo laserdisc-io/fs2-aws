@@ -17,6 +17,7 @@ trait SnsAsyncClientOp[F[_]] {
   def deletePlatformApplication(a: DeletePlatformApplicationRequest): F[DeletePlatformApplicationResponse]
   def deleteSMSSandboxPhoneNumber(a: DeleteSmsSandboxPhoneNumberRequest): F[DeleteSmsSandboxPhoneNumberResponse]
   def deleteTopic(a: DeleteTopicRequest): F[DeleteTopicResponse]
+  def getDataProtectionPolicy(a: GetDataProtectionPolicyRequest): F[GetDataProtectionPolicyResponse]
   def getEndpointAttributes(a: GetEndpointAttributesRequest): F[GetEndpointAttributesResponse]
   def getPlatformApplicationAttributes(
       a: GetPlatformApplicationAttributesRequest
@@ -58,6 +59,7 @@ trait SnsAsyncClientOp[F[_]] {
   def optInPhoneNumber(a: OptInPhoneNumberRequest): F[OptInPhoneNumberResponse]
   def publish(a: PublishRequest): F[PublishResponse]
   def publishBatch(a: PublishBatchRequest): F[PublishBatchResponse]
+  def putDataProtectionPolicy(a: PutDataProtectionPolicyRequest): F[PutDataProtectionPolicyResponse]
   def removePermission(a: RemovePermissionRequest): F[RemovePermissionResponse]
   def serviceName: F[String]
   def setEndpointAttributes(a: SetEndpointAttributesRequest): F[SetEndpointAttributesResponse]
@@ -72,4 +74,5 @@ trait SnsAsyncClientOp[F[_]] {
   def unsubscribe(a: UnsubscribeRequest): F[UnsubscribeResponse]
   def untagResource(a: UntagResourceRequest): F[UntagResourceResponse]
   def verifySMSSandboxPhoneNumber(a: VerifySmsSandboxPhoneNumberRequest): F[VerifySmsSandboxPhoneNumberResponse]
+
 }
