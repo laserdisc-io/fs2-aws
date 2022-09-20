@@ -25,6 +25,7 @@ trait DynamoDbAsyncClientOp[F[_]] {
   def describeExport(a: DescribeExportRequest): F[DescribeExportResponse]
   def describeGlobalTable(a: DescribeGlobalTableRequest): F[DescribeGlobalTableResponse]
   def describeGlobalTableSettings(a: DescribeGlobalTableSettingsRequest): F[DescribeGlobalTableSettingsResponse]
+  def describeImport(a: DescribeImportRequest): F[DescribeImportResponse]
   def describeKinesisStreamingDestination(
       a: DescribeKinesisStreamingDestinationRequest
   ): F[DescribeKinesisStreamingDestinationResponse]
@@ -45,6 +46,7 @@ trait DynamoDbAsyncClientOp[F[_]] {
   def executeTransaction(a: ExecuteTransactionRequest): F[ExecuteTransactionResponse]
   def exportTableToPointInTime(a: ExportTableToPointInTimeRequest): F[ExportTableToPointInTimeResponse]
   def getItem(a: GetItemRequest): F[GetItemResponse]
+  def importTable(a: ImportTableRequest): F[ImportTableResponse]
   def listBackups: F[ListBackupsResponse]
   def listBackups(a: ListBackupsRequest): F[ListBackupsResponse]
   def listContributorInsights(a: ListContributorInsightsRequest): F[ListContributorInsightsResponse]
@@ -53,6 +55,8 @@ trait DynamoDbAsyncClientOp[F[_]] {
   def listExportsPaginator(a: ListExportsRequest): F[ListExportsPublisher]
   def listGlobalTables: F[ListGlobalTablesResponse]
   def listGlobalTables(a: ListGlobalTablesRequest): F[ListGlobalTablesResponse]
+  def listImports(a: ListImportsRequest): F[ListImportsResponse]
+  def listImportsPaginator(a: ListImportsRequest): F[ListImportsPublisher]
   def listTables: F[ListTablesResponse]
   def listTables(a: ListTablesRequest): F[ListTablesResponse]
   def listTablesPaginator: F[ListTablesPublisher]
