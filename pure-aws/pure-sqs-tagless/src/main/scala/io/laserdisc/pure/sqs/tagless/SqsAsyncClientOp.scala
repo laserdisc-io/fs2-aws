@@ -31,4 +31,5 @@ trait SqsAsyncClientOp[F[_]] {
   def setQueueAttributes(a: SetQueueAttributesRequest): F[SetQueueAttributesResponse]
   def tagQueue(a: TagQueueRequest): F[TagQueueResponse]
   def untagQueue(a: UntagQueueRequest): F[UntagQueueResponse]
+
 }

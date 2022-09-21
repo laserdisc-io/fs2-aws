@@ -64,7 +64,7 @@ lazy val `fs2-aws-ciris` = (project in file("fs2-aws-ciris"))
       "org.scalatest"          %% "scalatest"             % V.ScalaTest   % Test,
       "org.mockito"             % "mockito-core"          % V.MockitoCore % Test,
       "is.cir"                 %% "ciris"                 % "2.3.3",
-      "software.amazon.kinesis" % "amazon-kinesis-client" % "2.4.2",
+      "software.amazon.kinesis" % "amazon-kinesis-client" % "2.4.3",
       "org.typelevel"          %% "cats-effect"           % V.CE          % Test
     ),
     coverageMinimumStmtTotal := 40,
@@ -108,8 +108,8 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
     libraryDependencies ++= Seq(
       "ch.qos.logback"    % "logback-classic"   % "1.4.0",
       "ch.qos.logback"    % "logback-core"      % "1.4.0",
-      "org.slf4j"         % "jcl-over-slf4j"    % "1.7.36",
-      "org.slf4j"         % "jul-to-slf4j"      % "1.7.36",
+      "org.slf4j"         % "jcl-over-slf4j"    % "2.0.0",
+      "org.slf4j"         % "jul-to-slf4j"      % "2.0.0",
       "org.typelevel"    %% "log4cats-slf4j"    % "2.4.0",
       "io.janstenpickle" %% "trace4cats-inject" % "0.13.1"
     ),
@@ -153,8 +153,7 @@ lazy val `fs2-aws-kinesis` = (project in file("fs2-aws-kinesis"))
       "co.fs2"                 %% "fs2-core"                % V.Fs2,
       "co.fs2"                 %% "fs2-io"                  % V.Fs2,
       "com.amazonaws"           % "amazon-kinesis-producer" % "0.14.11",
-      "software.amazon.kinesis" % "amazon-kinesis-client"   % "2.4.2",
-      "software.amazon.awssdk"  % "sts"                     % V.AwsSdk,
+      "software.amazon.kinesis" % "amazon-kinesis-client"   % "2.4.3",
       "eu.timepit"             %% "refined"                 % V.Refined,
       "org.scalatest"          %% "scalatest"               % V.ScalaTest   % Test,
       "org.mockito"             % "mockito-core"            % V.MockitoCore % Test,
@@ -338,8 +337,8 @@ lazy val `fs2-aws-benchmarks` = (project in file("fs2-aws-benchmarks"))
     libraryDependencies ++= Seq(
       "ch.qos.logback" % "logback-classic" % "1.4.0",
       "ch.qos.logback" % "logback-core"    % "1.4.0",
-      "org.slf4j"      % "jcl-over-slf4j"  % "1.7.36",
-      "org.slf4j"      % "jul-to-slf4j"    % "1.7.36"
+      "org.slf4j"      % "jcl-over-slf4j"  % "2.0.0",
+      "org.slf4j"      % "jul-to-slf4j"    % "2.0.0"
     ),
     publishArtifact := false,
     scalacOptions ++= {
