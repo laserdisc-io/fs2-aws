@@ -106,8 +106,8 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
     name                     := "fs2-aws-examples",
     coverageMinimumStmtTotal := 0,
     libraryDependencies ++= Seq(
-      "ch.qos.logback"    % "logback-classic"   % "1.2.11",
-      "ch.qos.logback"    % "logback-core"      % "1.2.11",
+      "ch.qos.logback"    % "logback-classic"   % "1.4.0",
+      "ch.qos.logback"    % "logback-core"      % "1.4.0",
       "org.slf4j"         % "jcl-over-slf4j"    % "2.0.0",
       "org.slf4j"         % "jul-to-slf4j"      % "2.0.0",
       "org.typelevel"    %% "log4cats-slf4j"    % "2.4.0",
@@ -157,8 +157,8 @@ lazy val `fs2-aws-kinesis` = (project in file("fs2-aws-kinesis"))
       "eu.timepit"             %% "refined"                 % V.Refined,
       "org.scalatest"          %% "scalatest"               % V.ScalaTest   % Test,
       "org.mockito"             % "mockito-core"            % V.MockitoCore % Test,
-      "ch.qos.logback"          % "logback-classic"         % "1.2.11"      % Test,
-      "ch.qos.logback"          % "logback-core"            % "1.2.11"      % Test
+      "ch.qos.logback"          % "logback-classic"         % "1.4.0"       % Test,
+      "ch.qos.logback"          % "logback-core"            % "1.4.0"       % Test
     ),
     coverageMinimumStmtTotal := 40,
     coverageFailOnMinimum    := true
@@ -335,8 +335,8 @@ lazy val `fs2-aws-benchmarks` = (project in file("fs2-aws-benchmarks"))
   .settings(
     name := "fs2-aws-benchmarks",
     libraryDependencies ++= Seq(
-      "ch.qos.logback" % "logback-classic" % "1.2.11",
-      "ch.qos.logback" % "logback-core"    % "1.2.11",
+      "ch.qos.logback" % "logback-classic" % "1.4.0",
+      "ch.qos.logback" % "logback-core"    % "1.4.0",
       "org.slf4j"      % "jcl-over-slf4j"  % "2.0.0",
       "org.slf4j"      % "jul-to-slf4j"    % "2.0.0"
     ),
