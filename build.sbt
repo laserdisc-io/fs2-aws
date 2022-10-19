@@ -114,7 +114,7 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
       "io.janstenpickle" %% "trace4cats-inject" % "0.13.1"
     ),
     libraryDependencies ++= Seq(
-      "io.laserdisc" %% "scanamo-circe" % "2.1.0"
+      "io.laserdisc" %% "scanamo-circe" % "2.2.0"
     ).filterNot(_ => scalaVersion.value.startsWith("3."))
   )
   .settings(commonSettings)
