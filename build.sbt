@@ -110,7 +110,7 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
       "ch.qos.logback"    % "logback-core"      % "1.4.0",
       "org.slf4j"         % "jcl-over-slf4j"    % "2.0.0",
       "org.slf4j"         % "jul-to-slf4j"      % "2.0.0",
-      "org.typelevel"    %% "log4cats-slf4j"    % "2.4.0",
+      "org.typelevel"    %% "log4cats-slf4j"    % "2.5.0",
       "io.janstenpickle" %% "trace4cats-inject" % "0.13.1"
     ),
     libraryDependencies ++= Seq(
