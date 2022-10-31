@@ -63,8 +63,8 @@ lazy val `fs2-aws-ciris` = (project in file("fs2-aws-ciris"))
     libraryDependencies ++= Seq(
       "org.scalatest"          %% "scalatest"             % V.ScalaTest   % Test,
       "org.mockito"             % "mockito-core"          % V.MockitoCore % Test,
-      "is.cir"                 %% "ciris"                 % "2.3.3",
-      "software.amazon.kinesis" % "amazon-kinesis-client" % "2.4.3",
+      "is.cir"                 %% "ciris"                 % V.Ciris,
+      "software.amazon.kinesis" % "amazon-kinesis-client" % V.Ciris,
       "org.typelevel"          %% "cats-effect"           % V.CE          % Test
     ),
     coverageMinimumStmtTotal := 40,
@@ -83,7 +83,7 @@ lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb"))
       "co.fs2"        %% "fs2-io"                           % V.Fs2,
       "org.scalatest" %% "scalatest"                        % V.ScalaTest   % Test,
       "org.mockito"    % "mockito-core"                     % V.MockitoCore % Test,
-      "com.amazonaws"  % "dynamodb-streams-kinesis-adapter" % "1.5.3"
+      "com.amazonaws"  % "dynamodb-streams-kinesis-adapter" % "1.5.4"
     ),
     libraryDependencies ++= Seq("io.laserdisc" %% "scanamo-circe" % "1.0.8")
       .filterNot(_ => scalaVersion.value.startsWith("3."))
@@ -106,11 +106,11 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
     name                     := "fs2-aws-examples",
     coverageMinimumStmtTotal := 0,
     libraryDependencies ++= Seq(
-      "ch.qos.logback"    % "logback-classic"   % "1.4.0",
-      "ch.qos.logback"    % "logback-core"      % "1.4.0",
-      "org.slf4j"         % "jcl-over-slf4j"    % "2.0.0",
-      "org.slf4j"         % "jul-to-slf4j"      % "2.0.0",
-      "org.typelevel"    %% "log4cats-slf4j"    % "2.4.0",
+      "ch.qos.logback"    % "logback-classic"   % V.Logback,
+      "ch.qos.logback"    % "logback-core"      % V.Logback,
+      "org.slf4j"         % "jcl-over-slf4j"    % V.SLF4J,
+      "org.slf4j"         % "jul-to-slf4j"      % V.SLF4J,
+      "org.typelevel"    %% "log4cats-slf4j"    % V.Log4Cats,
       "io.janstenpickle" %% "trace4cats-inject" % "0.13.1"
     ),
     libraryDependencies ++= Seq(
@@ -152,13 +152,13 @@ lazy val `fs2-aws-kinesis` = (project in file("fs2-aws-kinesis"))
     libraryDependencies ++= Seq(
       "co.fs2"                 %% "fs2-core"                % V.Fs2,
       "co.fs2"                 %% "fs2-io"                  % V.Fs2,
-      "com.amazonaws"           % "amazon-kinesis-producer" % "0.14.11",
+      "com.amazonaws"           % "amazon-kinesis-producer" % "0.14.13",
       "software.amazon.kinesis" % "amazon-kinesis-client"   % "2.4.3",
       "eu.timepit"             %% "refined"                 % V.Refined,
       "org.scalatest"          %% "scalatest"               % V.ScalaTest   % Test,
       "org.mockito"             % "mockito-core"            % V.MockitoCore % Test,
-      "ch.qos.logback"          % "logback-classic"         % "1.4.0"       % Test,
-      "ch.qos.logback"          % "logback-core"            % "1.4.0"       % Test
+      "ch.qos.logback"          % "logback-classic"         % V.Logback     % Test,
+      "ch.qos.logback"          % "logback-core"            % V.Logback     % Test
     ),
     coverageMinimumStmtTotal := 40,
     coverageFailOnMinimum    := true
@@ -335,10 +335,10 @@ lazy val `fs2-aws-benchmarks` = (project in file("fs2-aws-benchmarks"))
   .settings(
     name := "fs2-aws-benchmarks",
     libraryDependencies ++= Seq(
-      "ch.qos.logback" % "logback-classic" % "1.4.0",
-      "ch.qos.logback" % "logback-core"    % "1.4.0",
-      "org.slf4j"      % "jcl-over-slf4j"  % "2.0.0",
-      "org.slf4j"      % "jul-to-slf4j"    % "2.0.0"
+      "ch.qos.logback" % "logback-classic" % V.Logback,
+      "ch.qos.logback" % "logback-core"    % V.Logback,
+      "org.slf4j"      % "jcl-over-slf4j"  % V.SLF4J,
+      "org.slf4j"      % "jul-to-slf4j"    % V.SLF4J
     ),
     publishArtifact := false,
     scalacOptions ++= {
