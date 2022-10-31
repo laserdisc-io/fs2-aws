@@ -21,7 +21,7 @@ services:
       exit 0;
       "
   localstack:
-    image: localstack/localstack:0.12.11
+    image: localstack/localstack:1.2.0
     ports:
       - 4566:4566
     environment:

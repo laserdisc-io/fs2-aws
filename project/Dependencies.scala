@@ -1,0 +1,85 @@
+import sbt.Keys._
+import sbt.{Def, _}
+
+object Dependencies {
+
+  object V {
+    val AwsSdk           = "2.18.7"
+    val Circe            = "0.14.3"
+    val Munit            = "0.7.29"
+    val Fs2              = "3.3.0"
+    val Refined          = "0.10.1"
+    val ScalaTest        = "3.2.14"
+    val MockitoScalaTest = "1.17.5"
+    val MockitoCore      = "4.8.1"
+    val CE               = "3.3.14"
+    val Logback          = "1.4.4"
+    val SLF4J            = "2.0.3"
+    val Log4Cats         = "2.5.0"
+
+    // TODO: https://github.com/vlovgr/ciris/releases/tag/v2.4.0 requires a move to scala 3.2.0 (binary incompatible, it appears)
+    val Ciris = "2.3.3"
+  }
+
+  val Ciris = libraryDependencies += "is.cir" %% "ciris" % V.Ciris
+
+  val Fs2Core = libraryDependencies ++= Seq(
+    "co.fs2" %% "fs2-core" % V.Fs2,
+    "co.fs2" %% "fs2-io"   % V.Fs2
+  )
+
+  val CatsEffect = libraryDependencies += "org.typelevel" %% "cats-effect" % V.CE
+
+  val KinesisClient = libraryDependencies += "software.amazon.kinesis" % "amazon-kinesis-client" % "2.4.3"
+
+  val KinesisProducer = libraryDependencies += "com.amazonaws" % "amazon-kinesis-producer" % "0.14.13"
+
+  def AwsSDK(artifact: String, config: Configuration = Compile): Def.Setting[Seq[ModuleID]] =
+    libraryDependencies += "software.amazon.awssdk" % artifact % V.AwsSdk % config
+
+  val Refined = libraryDependencies += "eu.timepit" %% "refined" % V.Refined
+
+  val Testing = libraryDependencies ++= Seq(
+    "org.scalameta" %% "munit"               % V.Munit,
+    "org.typelevel" %% "munit-cats-effect-3" % "1.0.7",
+    "org.scalatest" %% "scalatest"           % V.ScalaTest,
+    "org.mockito"    % "mockito-core"        % V.MockitoCore,
+    "org.typelevel" %% "cats-effect"         % V.CE,
+    "javax.xml.bind" % "jaxb-api"            % "2.3.1"
+  ).map(_ % Test)
+
+  val Circe = libraryDependencies ++= Seq(
+    "io.circe" %% "circe-core"    % V.Circe,
+    "io.circe" %% "circe-generic" % V.Circe,
+    "io.circe" %% "circe-parser"  % V.Circe
+  )
+
+  val ScalaTest = libraryDependencies += "org.scalatest" %% "scalatest" % V.ScalaTest
+
+  val Mockito = libraryDependencies += "org.mockito" % "mockito-core" % V.MockitoCore
+
+  // TODO: it seems that different modules require different versions - look into this
+  def ScanamoCirce(version: String) = libraryDependencies ++= Seq(
+    "io.laserdisc" %% "scanamo-circe"
+      % version
+  ).filterNot(_ => scalaVersion.value.startsWith("3."))
+
+  val DynamoStreamAdapter =
+    libraryDependencies += "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.5.4"
+
+  val Logging = libraryDependencies ++= Seq(
+    "ch.qos.logback" % "logback-classic" % V.Logback,
+    "ch.qos.logback" % "logback-core"    % V.Logback,
+    "org.typelevel" %% "log4cats-slf4j"  % V.Log4Cats,
+    "org.slf4j"      % "jcl-over-slf4j"  % V.SLF4J,
+    "org.slf4j"      % "jul-to-slf4j"    % V.SLF4J
+  )
+
+  val Logback = libraryDependencies ++= Seq(
+    "ch.qos.logback" % "logback-classic" % V.Logback,
+    "ch.qos.logback" % "logback-core"    % V.Logback
+  )
+
+  val Trace4Cats = libraryDependencies +=
+    "io.janstenpickle" %% "trace4cats-inject" % "0.13.1"
+}
