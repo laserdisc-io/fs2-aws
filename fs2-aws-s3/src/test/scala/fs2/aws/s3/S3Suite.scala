@@ -1,19 +1,19 @@
 package fs2.aws.s3
 
-import java.net.{URI, URL}
-import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
-import software.amazon.awssdk.regions.Region
-import software.amazon.awssdk.services.s3.S3AsyncClient
-import software.amazon.awssdk.services.s3.model.NoSuchKeyException
 import cats.effect.*
 import cats.implicits.*
-import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.string.NonEmptyString
 import fs2.aws.s3.models.Models.{BucketName, FileKey, PartSizeMB}
 import fs2.io.file.{Files, Flags, Path}
-import io.laserdisc.pure.s3.tagless.{Interpreter, S3AsyncClientOp}
 import fs2.text
+import io.laserdisc.pure.s3.tagless.{Interpreter, S3AsyncClientOp}
 import munit.CatsEffectSuite
+import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException
+import software.amazon.awssdk.services.s3.{S3AsyncClient, S3Configuration}
+
+import java.net.{URI, URL}
 
 class S3Suite extends CatsEffectSuite {
 
@@ -21,12 +21,19 @@ class S3Suite extends CatsEffectSuite {
     AwsBasicCredentials
       .create("AKIAIOSFODNN7EXAMPLE", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
 
-  val s3R: Resource[IO, S3AsyncClientOp[IO]] =
+  def s3R: Resource[IO, S3AsyncClientOp[IO]] =
     Interpreter[IO].S3AsyncClientOpResource(
       S3AsyncClient
         .builder()
-        .credentialsProvider(StaticCredentialsProvider.create(credentials))
         .endpointOverride(URI.create("http://localhost:9000"))
+        .credentialsProvider(StaticCredentialsProvider.create(credentials))
+        .serviceConfiguration(
+          // see https://stackoverflow.com/a/61602647
+          S3Configuration
+            .builder()
+            .pathStyleAccessEnabled(true)
+            .build()
+        )
         .region(Region.US_EAST_1)
     )
 

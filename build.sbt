@@ -1,5 +1,4 @@
-import TaglessGen.{taglessAwsService, taglessGenClasses, taglessGenDir, taglessGenPackage, taglessGenSettings}
-import sbt.Keys.scalaSource
+import TaglessGen.taglessGenSettings
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.sns.SnsAsyncClient
@@ -46,12 +45,8 @@ lazy val root = (project in file("."))
 lazy val `fs2-aws-core` = (project in file("fs2-aws-core"))
   .settings(
     name := "fs2-aws-core",
-    libraryDependencies ++= Seq(
-      "co.fs2"        %% "fs2-core"     % V.Fs2,
-      "co.fs2"        %% "fs2-io"       % V.Fs2,
-      "org.mockito"    % "mockito-core" % V.MockitoCore % Test,
-      "org.scalatest" %% "scalatest"    % V.ScalaTest   % Test
-    ),
+    Dependencies.Fs2Core,
+    Dependencies.Testing,
     coverageMinimumStmtTotal := 40,
     coverageFailOnMinimum    := true
   )
@@ -60,13 +55,9 @@ lazy val `fs2-aws-core` = (project in file("fs2-aws-core"))
 lazy val `fs2-aws-ciris` = (project in file("fs2-aws-ciris"))
   .settings(
     name := "fs2-aws-ciris",
-    libraryDependencies ++= Seq(
-      "org.scalatest"          %% "scalatest"             % V.ScalaTest   % Test,
-      "org.mockito"             % "mockito-core"          % V.MockitoCore % Test,
-      "is.cir"                 %% "ciris"                 % "2.3.3",
-      "software.amazon.kinesis" % "amazon-kinesis-client" % "2.4.3",
-      "org.typelevel"          %% "cats-effect"           % V.CE          % Test
-    ),
+    Dependencies.Ciris,
+    Dependencies.KinesisClient,
+    Dependencies.Testing,
     coverageMinimumStmtTotal := 40,
     coverageFailOnMinimum    := true
   )
@@ -78,15 +69,10 @@ lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb"))
     name                     := "fs2-aws-dynamodb",
     coverageMinimumStmtTotal := 40,
     coverageFailOnMinimum    := true,
-    libraryDependencies ++= Seq(
-      "co.fs2"        %% "fs2-core"                         % V.Fs2,
-      "co.fs2"        %% "fs2-io"                           % V.Fs2,
-      "org.scalatest" %% "scalatest"                        % V.ScalaTest   % Test,
-      "org.mockito"    % "mockito-core"                     % V.MockitoCore % Test,
-      "com.amazonaws"  % "dynamodb-streams-kinesis-adapter" % "1.5.3"
-    ),
-    libraryDependencies ++= Seq("io.laserdisc" %% "scanamo-circe" % "1.0.8")
-      .filterNot(_ => scalaVersion.value.startsWith("3."))
+    Dependencies.Fs2Core,
+    Dependencies.DynamoStreamAdapter,
+    Dependencies.ScanamoCirce("1.0.8"),
+    Dependencies.Testing
   )
   .settings(commonSettings)
 
@@ -105,17 +91,9 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
   .settings(
     name                     := "fs2-aws-examples",
     coverageMinimumStmtTotal := 0,
-    libraryDependencies ++= Seq(
-      "ch.qos.logback"    % "logback-classic"   % "1.4.0",
-      "ch.qos.logback"    % "logback-core"      % "1.4.0",
-      "org.slf4j"         % "jcl-over-slf4j"    % "2.0.0",
-      "org.slf4j"         % "jul-to-slf4j"      % "2.0.0",
-      "org.typelevel"    %% "log4cats-slf4j"    % "2.4.0",
-      "io.janstenpickle" %% "trace4cats-inject" % "0.13.1"
-    ),
-    libraryDependencies ++= Seq(
-      "io.laserdisc" %% "scanamo-circe" % "2.1.0"
-    ).filterNot(_ => scalaVersion.value.startsWith("3."))
+    Dependencies.Logging,
+    Dependencies.Trace4Cats,
+    Dependencies.ScanamoCirce("2.1.0")
   )
   .settings(commonSettings)
   .settings(
@@ -125,15 +103,10 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
 lazy val `fs2-aws-s3` = (project in file("fs2-aws-s3"))
   .settings(
     name := "fs2-aws-s3",
-    libraryDependencies ++= Seq(
-      "co.fs2"                %% "fs2-core"            % V.Fs2,
-      "co.fs2"                %% "fs2-io"              % V.Fs2,
-      "eu.timepit"            %% "refined"             % V.Refined,
-      "software.amazon.awssdk" % "s3"                  % V.AwsSdk,
-      "org.scalameta"         %% "munit"               % V.Munit % Test,
-      "org.typelevel"         %% "munit-cats-effect-3" % "1.0.7" % Test
-    ),
-    testFrameworks += new TestFramework("munit.Framework"),
+    Dependencies.Fs2Core,
+    Dependencies.Refined,
+    Dependencies.AWS("s3"),
+    Dependencies.Testing,
     coverageMinimumStmtTotal := 0,
     coverageFailOnMinimum    := true
   )
@@ -149,17 +122,11 @@ lazy val `fs2-aws-kinesis` = (project in file("fs2-aws-kinesis"))
   )
   .settings(
     name := "fs2-aws-kinesis",
-    libraryDependencies ++= Seq(
-      "co.fs2"                 %% "fs2-core"                % V.Fs2,
-      "co.fs2"                 %% "fs2-io"                  % V.Fs2,
-      "com.amazonaws"           % "amazon-kinesis-producer" % "0.14.11",
-      "software.amazon.kinesis" % "amazon-kinesis-client"   % "2.4.3",
-      "eu.timepit"             %% "refined"                 % V.Refined,
-      "org.scalatest"          %% "scalatest"               % V.ScalaTest   % Test,
-      "org.mockito"             % "mockito-core"            % V.MockitoCore % Test,
-      "ch.qos.logback"          % "logback-classic"         % "1.4.0"       % Test,
-      "ch.qos.logback"          % "logback-core"            % "1.4.0"       % Test
-    ),
+    Dependencies.Fs2Core,
+    Dependencies.KinesisClient,
+    Dependencies.KinesisProducer,
+    Dependencies.Refined,
+    Dependencies.Testing,
     coverageMinimumStmtTotal := 40,
     coverageFailOnMinimum    := true
   )
@@ -168,14 +135,10 @@ lazy val `fs2-aws-kinesis` = (project in file("fs2-aws-kinesis"))
 lazy val `fs2-aws-sqs` = (project in file("fs2-aws-sqs"))
   .settings(
     name := "fs2-aws-sqs",
-    libraryDependencies ++= Seq(
-      "co.fs2"                %% "fs2-core"     % V.Fs2,
-      "co.fs2"                %% "fs2-io"       % V.Fs2,
-      "software.amazon.awssdk" % "sqs"          % V.AwsSdk,
-      "org.mockito"            % "mockito-core" % V.MockitoCore % Test,
-      "org.scalatest"         %% "scalatest"    % V.ScalaTest   % Test,
-      "eu.timepit"            %% "refined"      % V.Refined
-    ),
+    Dependencies.Fs2Core,
+    Dependencies.AWS("sqs"),
+    Dependencies.Refined,
+    Dependencies.Testing,
     coverageMinimumStmtTotal := 55.80,
     coverageFailOnMinimum    := true
   )
@@ -185,16 +148,11 @@ lazy val `fs2-aws-sqs` = (project in file("fs2-aws-sqs"))
 lazy val `fs2-aws-sns` = (project in file("fs2-aws-sns"))
   .settings(
     name := "fs2-aws-sns",
-    libraryDependencies ++= Seq(
-      "co.fs2"                %% "fs2-core"     % V.Fs2,
-      "co.fs2"                %% "fs2-io"       % V.Fs2,
-      "software.amazon.awssdk" % "sns"          % V.AwsSdk,
-      "org.mockito"            % "mockito-core" % V.MockitoCore % Test,
-      "org.scalatest"         %% "scalatest"    % V.ScalaTest   % Test,
-      "software.amazon.awssdk" % "sqs"          % V.AwsSdk      % Test,
-      "eu.timepit"            %% "refined"      % V.Refined,
-      "org.typelevel"         %% "cats-effect"  % V.CE
-    ),
+    Dependencies.Fs2Core,
+    Dependencies.AWS("sns"),
+    Dependencies.AWS("sqs", Test),
+    Dependencies.Testing,
+    Dependencies.Refined,
     coverageMinimumStmtTotal := 55.80,
     coverageFailOnMinimum    := true
   )
@@ -202,116 +160,56 @@ lazy val `fs2-aws-sns` = (project in file("fs2-aws-sns"))
   .dependsOn(`pure-sqs-tagless`, `pure-sns-tagless`)
 
 lazy val `pure-sqs-tagless` = (project in file("pure-aws/pure-sqs-tagless"))
-  .settings(taglessGenSettings)
   .settings(
     name := "pure-sqs-tagless",
-    libraryDependencies ++= Seq(
-      "software.amazon.awssdk" % "sqs"         % V.AwsSdk,
-      "org.typelevel"         %% "cats-effect" % V.CE
-    ),
-    taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "sqs" / "tagless",
-    taglessGenPackage := "io.laserdisc.pure.sqs.tagless",
-    taglessAwsService := "sqs",
-    taglessGenClasses := {
-      List[Class[_]](
-        classOf[SqsAsyncClient]
-      )
-    }
+    Dependencies.AWS("sqs"),
+    Dependencies.CatsEffect,
+    taglessGenSettings[SqsAsyncClient]("sqs")
   )
   .settings(commonSettings)
 
 lazy val `pure-s3-tagless` = (project in file("pure-aws/pure-s3-tagless"))
-  .settings(taglessGenSettings)
   .settings(
     name := "pure-s3-tagless",
-    libraryDependencies ++= Seq(
-      "software.amazon.awssdk" % "s3"          % V.AwsSdk,
-      "org.typelevel"         %% "cats-effect" % V.CE
-    ),
-    taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "s3" / "tagless",
-    taglessGenPackage := "io.laserdisc.pure.s3.tagless",
-    taglessAwsService := "s3",
-    taglessGenClasses := {
-      List[Class[_]](
-        classOf[S3AsyncClient]
-      )
-    }
+    Dependencies.AWS("s3"),
+    Dependencies.CatsEffect,
+    taglessGenSettings[S3AsyncClient]("s3")
   )
   .settings(commonSettings)
 
 lazy val `pure-sns-tagless` = (project in file("pure-aws/pure-sns-tagless"))
-  .settings(taglessGenSettings)
   .settings(
     name := "pure-sns-tagless",
-    libraryDependencies ++= Seq(
-      "software.amazon.awssdk" % "sns"         % V.AwsSdk,
-      "org.typelevel"         %% "cats-effect" % V.CE
-    ),
-    taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "sns" / "tagless",
-    taglessGenPackage := "io.laserdisc.pure.sns.tagless",
-    taglessAwsService := "sns",
-    taglessGenClasses := {
-      List[Class[_]](
-        classOf[SnsAsyncClient]
-      )
-    }
+    Dependencies.AWS("sns"),
+    Dependencies.CatsEffect,
+    taglessGenSettings[SnsAsyncClient]("sns")
   )
   .settings(commonSettings)
 
 lazy val `pure-kinesis-tagless` = (project in file("pure-aws/pure-kinesis-tagless"))
-  .settings(taglessGenSettings)
   .settings(
     name := "pure-kinesis-tagless",
-    libraryDependencies ++= Seq(
-      "software.amazon.awssdk" % "kinesis"     % V.AwsSdk,
-      "org.typelevel"         %% "cats-effect" % V.CE
-    ),
-    taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "kinesis" / "tagless",
-    taglessGenPackage := "io.laserdisc.pure.kinesis.tagless",
-    taglessAwsService := "kinesis",
-    taglessGenClasses := {
-      List[Class[_]](
-        classOf[KinesisAsyncClient]
-      )
-    }
+    Dependencies.AWS("kinesis"),
+    Dependencies.CatsEffect,
+    taglessGenSettings[KinesisAsyncClient]("kinesis")
   )
   .settings(commonSettings)
 
 lazy val `pure-dynamodb-tagless` = (project in file("pure-aws/pure-dynamodb-tagless"))
-  .settings(taglessGenSettings)
   .settings(
     name := "pure-dynamodb-tagless",
-    libraryDependencies ++= Seq(
-      "software.amazon.awssdk" % "dynamodb"    % V.AwsSdk,
-      "org.typelevel"         %% "cats-effect" % V.CE
-    ),
-    taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "dynamodb" / "tagless",
-    taglessGenPackage := "io.laserdisc.pure.dynamodb.tagless",
-    taglessAwsService := "dynamodb",
-    taglessGenClasses := {
-      List[Class[_]](
-        classOf[DynamoDbAsyncClient]
-      )
-    }
+    Dependencies.AWS("dynamodb"),
+    Dependencies.CatsEffect,
+    taglessGenSettings[DynamoDbAsyncClient]("dynamodb")
   )
   .settings(commonSettings)
 
 lazy val `pure-cloudwatch-tagless` = (project in file("pure-aws/pure-cloudwatch-tagless"))
-  .settings(taglessGenSettings)
   .settings(
     name := "pure-cloudwatch-tagless",
-    libraryDependencies ++= Seq(
-      "software.amazon.awssdk" % "cloudwatch"  % V.AwsSdk,
-      "org.typelevel"         %% "cats-effect" % V.CE
-    ),
-    taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "cloudwatch" / "tagless",
-    taglessGenPackage := "io.laserdisc.pure.cloudwatch.tagless",
-    taglessAwsService := "cloudwatch",
-    taglessGenClasses := {
-      List[Class[_]](
-        classOf[CloudWatchAsyncClient]
-      )
-    }
+    Dependencies.AWS("cloudwatch"),
+    Dependencies.CatsEffect,
+    taglessGenSettings[CloudWatchAsyncClient]("cloudwatch")
   )
   .settings(commonSettings)
 
@@ -319,13 +217,9 @@ lazy val `fs2-aws-testkit` = (project in file("fs2-aws-testkit"))
   .dependsOn(`fs2-aws-kinesis`)
   .settings(
     name := "fs2-aws-testkit",
-    libraryDependencies ++= Seq(
-      "io.circe"      %% "circe-core"    % V.Circe,
-      "io.circe"      %% "circe-generic" % V.Circe,
-      "io.circe"      %% "circe-parser"  % V.Circe,
-      "org.scalatest" %% "scalatest"     % V.ScalaTest,
-      "org.mockito"    % "mockito-core"  % V.MockitoCore
-    )
+    Dependencies.Circe,
+    Dependencies.ScalaTest,
+    Dependencies.Mockito
   )
   .settings(commonSettings)
 
@@ -334,12 +228,7 @@ lazy val `fs2-aws-benchmarks` = (project in file("fs2-aws-benchmarks"))
   .dependsOn(`fs2-aws-testkit`)
   .settings(
     name := "fs2-aws-benchmarks",
-    libraryDependencies ++= Seq(
-      "ch.qos.logback" % "logback-classic" % "1.4.0",
-      "ch.qos.logback" % "logback-core"    % "1.4.0",
-      "org.slf4j"      % "jcl-over-slf4j"  % "2.0.0",
-      "org.slf4j"      % "jul-to-slf4j"    % "2.0.0"
-    ),
+    Dependencies.Logging,
     publishArtifact := false,
     scalacOptions ++= {
       CrossVersion.partialVersion(scalaVersion.value) match {

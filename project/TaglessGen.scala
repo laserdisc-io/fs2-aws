@@ -22,10 +22,11 @@ object TaglessGen {
     "What aws service generate algebras, must match the package name  ex [s3, sqs, sns, kinesis]"
   )
 
-  lazy val taglessGenSettings = Seq(
-    taglessGenClasses := Nil,
-    taglessGenDir     := (Compile / sourceManaged).value,
-    taglessGenPackage := "aws.tagless",
+  def taglessGenSettings[T](awsSvcId: String)(implicit ct: ClassTag[T]) = Seq(
+    taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / awsSvcId / "tagless",
+    taglessGenPackage := s"io.laserdisc.pure.$awsSvcId.tagless",
+    taglessAwsService := awsSvcId,
+    taglessGenClasses := List[Class[_]](ct.runtimeClass),
     taglessGenRenames := Map(classOf[java.sql.Array] -> "SqlArray"),
     taglessGen :=
       new TaglessGen(
