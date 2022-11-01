@@ -1,19 +1,22 @@
 package fs2.aws.s3
 
-import java.net.{URI, URL}
-import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
-import software.amazon.awssdk.regions.Region
-import software.amazon.awssdk.services.s3.S3AsyncClient
-import software.amazon.awssdk.services.s3.model.NoSuchKeyException
 import cats.effect.*
 import cats.implicits.*
-import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.string.NonEmptyString
 import fs2.aws.s3.models.Models.{BucketName, FileKey, PartSizeMB}
 import fs2.io.file.{Files, Flags, Path}
-import io.laserdisc.pure.s3.tagless.{Interpreter, S3AsyncClientOp}
 import fs2.text
+import io.laserdisc.pure.s3.tagless.{Interpreter, S3AsyncClientOp}
 import munit.CatsEffectSuite
+import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
+import software.amazon.awssdk.endpoints.Endpoint
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.s3.S3AsyncClient
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException
+
+import java.net.{URI, URL}
+import scala.concurrent.Future
+import scala.jdk.FutureConverters.FutureOps
 
 class S3Suite extends CatsEffectSuite {
 
@@ -26,7 +29,9 @@ class S3Suite extends CatsEffectSuite {
       S3AsyncClient
         .builder()
         .credentialsProvider(StaticCredentialsProvider.create(credentials))
-        .endpointOverride(URI.create("http://localhost:9000"))
+        .endpointProvider(_ => Future {
+          Endpoint.builder().url(URI.create("http://localhost:9000")).build()
+        }.asJava.toCompletableFuture)
         .region(Region.US_EAST_1)
     )
 
