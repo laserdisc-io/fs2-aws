@@ -34,7 +34,7 @@ object Dependencies {
 
   val KinesisProducer = libraryDependencies += "com.amazonaws" % "amazon-kinesis-producer" % "0.14.13"
 
-  def AwsSDK(artifact: String, config: Configuration = Compile): Def.Setting[Seq[ModuleID]] =
+  def AWS(artifact: String, config: Configuration = Compile): Def.Setting[Seq[ModuleID]] =
     libraryDependencies += "software.amazon.awssdk" % artifact % V.AwsSdk % config
 
   val Refined = libraryDependencies += "eu.timepit" %% "refined" % V.Refined

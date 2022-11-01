@@ -1,5 +1,4 @@
-import TaglessGen.{taglessAwsService, taglessGenClasses, taglessGenDir, taglessGenPackage, taglessGenSettings}
-import sbt.Keys.scalaSource
+import TaglessGen.taglessGenSettings
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.sns.SnsAsyncClient
@@ -106,8 +105,9 @@ lazy val `fs2-aws-s3` = (project in file("fs2-aws-s3"))
     name := "fs2-aws-s3",
     Dependencies.Fs2Core,
     Dependencies.Refined,
-    Dependencies.AwsSDK("s3"),
+    Dependencies.AWS("s3"),
     Dependencies.Testing,
+    Dependencies.Logging, // TODO: temporary
     coverageMinimumStmtTotal := 0,
     coverageFailOnMinimum    := true
   )
@@ -138,7 +138,7 @@ lazy val `fs2-aws-sqs` = (project in file("fs2-aws-sqs"))
   .settings(
     name := "fs2-aws-sqs",
     Dependencies.Fs2Core,
-    Dependencies.AwsSDK("sqs"),
+    Dependencies.AWS("sqs"),
     Dependencies.Refined,
     Dependencies.Testing,
     coverageMinimumStmtTotal := 55.80,
@@ -151,8 +151,8 @@ lazy val `fs2-aws-sns` = (project in file("fs2-aws-sns"))
   .settings(
     name := "fs2-aws-sns",
     Dependencies.Fs2Core,
-    Dependencies.AwsSDK("sns"),
-    Dependencies.AwsSDK("sqs", Test),
+    Dependencies.AWS("sns"),
+    Dependencies.AWS("sqs", Test),
     Dependencies.Testing,
     Dependencies.Refined,
     Dependencies.CatsEffect, // TODO why?
@@ -163,104 +163,56 @@ lazy val `fs2-aws-sns` = (project in file("fs2-aws-sns"))
   .dependsOn(`pure-sqs-tagless`, `pure-sns-tagless`)
 
 lazy val `pure-sqs-tagless` = (project in file("pure-aws/pure-sqs-tagless"))
-  .settings(taglessGenSettings)
   .settings(
     name := "pure-sqs-tagless",
-    Dependencies.AwsSDK("sqs"),
+    Dependencies.AWS("sqs"),
     Dependencies.CatsEffect,
-    taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "sqs" / "tagless",
-    taglessGenPackage := "io.laserdisc.pure.sqs.tagless",
-    taglessAwsService := "sqs",
-    taglessGenClasses := {
-      List[Class[_]](
-        classOf[SqsAsyncClient]
-      )
-    }
+    taglessGenSettings[SqsAsyncClient]("sqs")
   )
   .settings(commonSettings)
 
 lazy val `pure-s3-tagless` = (project in file("pure-aws/pure-s3-tagless"))
-  .settings(taglessGenSettings)
   .settings(
     name := "pure-s3-tagless",
-    Dependencies.AwsSDK("s3"),
+    Dependencies.AWS("s3"),
     Dependencies.CatsEffect,
-    taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "s3" / "tagless",
-    taglessGenPackage := "io.laserdisc.pure.s3.tagless",
-    taglessAwsService := "s3",
-    taglessGenClasses := {
-      List[Class[_]](
-        classOf[S3AsyncClient]
-      )
-    }
+    taglessGenSettings[S3AsyncClient]("s3")
   )
   .settings(commonSettings)
 
 lazy val `pure-sns-tagless` = (project in file("pure-aws/pure-sns-tagless"))
-  .settings(taglessGenSettings)
   .settings(
     name := "pure-sns-tagless",
-    Dependencies.AwsSDK("sns"),
+    Dependencies.AWS("sns"),
     Dependencies.CatsEffect,
-    taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "sns" / "tagless",
-    taglessGenPackage := "io.laserdisc.pure.sns.tagless",
-    taglessAwsService := "sns",
-    taglessGenClasses := {
-      List[Class[_]](
-        classOf[SnsAsyncClient]
-      )
-    }
+    taglessGenSettings[SnsAsyncClient]("sns")
   )
   .settings(commonSettings)
 
 lazy val `pure-kinesis-tagless` = (project in file("pure-aws/pure-kinesis-tagless"))
-  .settings(taglessGenSettings)
   .settings(
     name := "pure-kinesis-tagless",
-    Dependencies.AwsSDK("kinesis"),
+    Dependencies.AWS("kinesis"),
     Dependencies.CatsEffect,
-    taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "kinesis" / "tagless",
-    taglessGenPackage := "io.laserdisc.pure.kinesis.tagless",
-    taglessAwsService := "kinesis",
-    taglessGenClasses := {
-      List[Class[_]](
-        classOf[KinesisAsyncClient]
-      )
-    }
+    taglessGenSettings[KinesisAsyncClient]("kinesis")
   )
   .settings(commonSettings)
 
 lazy val `pure-dynamodb-tagless` = (project in file("pure-aws/pure-dynamodb-tagless"))
-  .settings(taglessGenSettings)
   .settings(
     name := "pure-dynamodb-tagless",
-    Dependencies.AwsSDK("dynamodb"),
+    Dependencies.AWS("dynamodb"),
     Dependencies.CatsEffect,
-    taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "dynamodb" / "tagless",
-    taglessGenPackage := "io.laserdisc.pure.dynamodb.tagless",
-    taglessAwsService := "dynamodb",
-    taglessGenClasses := {
-      List[Class[_]](
-        classOf[DynamoDbAsyncClient]
-      )
-    }
+    taglessGenSettings[DynamoDbAsyncClient]("dynamodb")
   )
   .settings(commonSettings)
 
 lazy val `pure-cloudwatch-tagless` = (project in file("pure-aws/pure-cloudwatch-tagless"))
-  .settings(taglessGenSettings)
   .settings(
     name := "pure-cloudwatch-tagless",
-    Dependencies.AwsSDK("cloudwatch"),
+    Dependencies.AWS("cloudwatch"),
     Dependencies.CatsEffect,
-    taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / "cloudwatch" / "tagless",
-    taglessGenPackage := "io.laserdisc.pure.cloudwatch.tagless",
-    taglessAwsService := "cloudwatch",
-    taglessGenClasses := {
-      List[Class[_]](
-        classOf[CloudWatchAsyncClient]
-      )
-    }
+    taglessGenSettings[CloudWatchAsyncClient]("cloudwatch")
   )
   .settings(commonSettings)
 
@@ -294,6 +246,7 @@ lazy val `fs2-aws-benchmarks` = (project in file("fs2-aws-benchmarks"))
 addCommandAlias("format", ";scalafmt;test:scalafmt;scalafmtSbt")
 addCommandAlias("checkFormat", ";scalafmtCheck;test:scalafmtCheck;scalafmtSbtCheck")
 addCommandAlias("build", ";checkFormat;clean;+test;coverage")
+
 
 lazy val commonSettings = Def.settings(
   organization := "io.laserdisc",
