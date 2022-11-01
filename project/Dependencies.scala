@@ -1,6 +1,7 @@
 import sbt.Keys._
 import sbt.{Def, _}
 
+//noinspection TypeAnnotation
 object Dependencies {
 
   object V {
@@ -39,13 +40,17 @@ object Dependencies {
 
   val Refined = libraryDependencies += "eu.timepit" %% "refined" % V.Refined
 
-  val Testing = libraryDependencies ++= Seq(
-    "org.scalameta" %% "munit"               % V.Munit,
-    "org.typelevel" %% "munit-cats-effect-3" % "1.0.7",
-    "org.scalatest" %% "scalatest"           % V.ScalaTest,
-    "org.mockito"    % "mockito-core"        % V.MockitoCore,
-    "org.typelevel" %% "cats-effect"         % V.CE,
-    "javax.xml.bind" % "jaxb-api"            % "2.3.1"
+  val Testing = libraryDependencies ++= (
+    Seq(
+      "org.scalameta" %% "munit"               % V.Munit,
+      "org.typelevel" %% "munit-cats-effect-3" % "1.0.7",
+      "org.scalatest" %% "scalatest"           % V.ScalaTest,
+      "org.mockito"    % "mockito-core"        % V.MockitoCore,
+      "org.typelevel" %% "cats-effect"         % V.CE,
+      "javax.xml.bind" % "jaxb-api"            % "2.3.1"
+    )
+      ++ LogModules.LogBack
+      ++ LogModules.LogImpl
   ).map(_ % Test)
 
   val Circe = libraryDependencies ++= Seq(
@@ -68,18 +73,24 @@ object Dependencies {
     libraryDependencies += "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.5.4"
 
   val Logging = libraryDependencies ++= Seq(
-    "ch.qos.logback" % "logback-classic" % V.Logback,
-    "ch.qos.logback" % "logback-core"    % V.Logback,
-    "org.typelevel" %% "log4cats-slf4j"  % V.Log4Cats,
-    "org.slf4j"      % "jcl-over-slf4j"  % V.SLF4J,
-    "org.slf4j"      % "jul-to-slf4j"    % V.SLF4J
-  )
+    "org.typelevel" %% "log4cats-slf4j" % V.Log4Cats
+  ) ++ LogModules.LogBack ++ LogModules.LogImpl
 
-  val Logback = libraryDependencies ++= Seq(
-    "ch.qos.logback" % "logback-classic" % V.Logback,
-    "ch.qos.logback" % "logback-core"    % V.Logback
-  )
+  val Logback = libraryDependencies ++= LogModules.LogBack
 
   val Trace4Cats = libraryDependencies +=
     "io.janstenpickle" %% "trace4cats-inject" % "0.13.1"
+
+  // save redefining these over and over
+  private[this] object LogModules {
+    val LogBack = Seq(
+      "ch.qos.logback" % "logback-classic" % V.Logback,
+      "ch.qos.logback" % "logback-core"    % V.Logback
+    )
+    val LogImpl = Seq(
+      "org.slf4j" % "jcl-over-slf4j" % V.SLF4J,
+      "org.slf4j" % "jul-to-slf4j"   % V.SLF4J
+    )
+  }
+
 }

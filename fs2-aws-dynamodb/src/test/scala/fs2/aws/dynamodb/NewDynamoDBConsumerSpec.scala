@@ -23,6 +23,7 @@ import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.*
+import org.slf4j.LoggerFactory
 
 import java.util.Date
 import java.util.concurrent.{CountDownLatch, Phaser}
@@ -39,6 +40,8 @@ class NewDynamoDBConsumerSpec
 
   implicit val ec: ExecutionContext = ExecutionContext.global
   implicit val runtime: IORuntime   = IORuntime.global
+
+  val logger = LoggerFactory.getLogger(getClass)
 
   implicit def sList2jList[A](sList: List[A]): java.util.List[A] = sList.asJava
 
@@ -126,9 +129,9 @@ class NewDynamoDBConsumerSpec
     val res = (
       stream.take(10).compile.toList,
       IO.blocking {
-        println("about to acquire lock for record processor #1")
+        logger.info("about to acquire lock for record processor #1")
         shard1Guard.await()
-        println("acquired lock for record processor #1")
+        logger.info("acquired lock for record processor #1")
         recordProcessor.initialize(initializationInput)
         for (i <- 1 to 5) {
           val record: Record = mock(classOf[RecordAdapter])
@@ -137,9 +140,9 @@ class NewDynamoDBConsumerSpec
         }
       },
       IO.blocking {
-        println("about to acquire lock for record processor #2")
+        logger.info("about to acquire lock for record processor #2")
         shard2Guard.await()
-        println("acquired lock for record processor #2")
+        logger.info("acquired lock for record processor #2")
         recordProcessor2.initialize(
           new InitializationInput()
             .withShardId("shard2")

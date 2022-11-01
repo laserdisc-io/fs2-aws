@@ -23,7 +23,7 @@ object TaglessGen {
   )
 
   def taglessGenSettings[T](awsSvcId: String)(implicit ct: ClassTag[T]) = Seq(
-    taglessGenDir := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / awsSvcId / "tagless",
+    taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / awsSvcId / "tagless",
     taglessGenPackage := s"io.laserdisc.pure.$awsSvcId.tagless",
     taglessAwsService := awsSvcId,
     taglessGenClasses := List[Class[_]](ct.runtimeClass),

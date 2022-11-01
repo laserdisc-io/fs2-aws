@@ -107,7 +107,6 @@ lazy val `fs2-aws-s3` = (project in file("fs2-aws-s3"))
     Dependencies.Refined,
     Dependencies.AWS("s3"),
     Dependencies.Testing,
-    Dependencies.Logging, // TODO: temporary
     coverageMinimumStmtTotal := 0,
     coverageFailOnMinimum    := true
   )
@@ -128,7 +127,6 @@ lazy val `fs2-aws-kinesis` = (project in file("fs2-aws-kinesis"))
     Dependencies.KinesisProducer,
     Dependencies.Refined,
     Dependencies.Testing,
-    // TODO: logback?
     coverageMinimumStmtTotal := 40,
     coverageFailOnMinimum    := true
   )
@@ -155,7 +153,6 @@ lazy val `fs2-aws-sns` = (project in file("fs2-aws-sns"))
     Dependencies.AWS("sqs", Test),
     Dependencies.Testing,
     Dependencies.Refined,
-    Dependencies.CatsEffect, // TODO why?
     coverageMinimumStmtTotal := 55.80,
     coverageFailOnMinimum    := true
   )
@@ -246,7 +243,6 @@ lazy val `fs2-aws-benchmarks` = (project in file("fs2-aws-benchmarks"))
 addCommandAlias("format", ";scalafmt;test:scalafmt;scalafmtSbt")
 addCommandAlias("checkFormat", ";scalafmtCheck;test:scalafmtCheck;scalafmtSbtCheck")
 addCommandAlias("build", ";checkFormat;clean;+test;coverage")
-
 
 lazy val commonSettings = Def.settings(
   organization := "io.laserdisc",

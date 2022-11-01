@@ -11,6 +11,7 @@ import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.*
+import org.slf4j.LoggerFactory
 import software.amazon.kinesis.checkpoint.ShardRecordProcessorCheckpointer
 import software.amazon.kinesis.coordinator.Scheduler
 import software.amazon.kinesis.lifecycle.events.*
@@ -34,6 +35,8 @@ class NewKinesisConsumerSpec
 
   implicit val ec: ExecutionContext = ExecutionContext.global
   implicit val runtime: IORuntime   = IORuntime.global
+
+  val logger = LoggerFactory.getLogger(getClass)
 
   implicit def sList2jList[A](sList: List[A]): java.util.List[A] = sList.asJava
 
@@ -93,31 +96,31 @@ class NewKinesisConsumerSpec
     val res = (
       stream.take(60).compile.toList,
       IO.blocking {
-        println("about to acquire lock for record processor #1")
+        logger.info("about to acquire lock for record processor #1")
         shard1Guard.await()
-        println("acquired lock for record processor #1")
+        logger.info("acquired lock for record processor #1")
         recordProcessor.initialize(initializationInput)
         for (i <- 1 to 10) {
           val record = mock(classOf[KinesisClientRecord])
           when(record.sequenceNumber()).thenReturn(i.toString)
           recordProcessor.processRecords(recordsInput.records(List(record)).build())
         }
-        println("completed ingestion #1")
+        logger.info("completed ingestion #1")
       },
       // Send a batch that exceeds the internal buffer size
       IO.blocking {
-        println("about to acquire lock for record processor #2")
+        logger.info("about to acquire lock for record processor #2")
         shard1Guard.await()
-        println("acquired lock for record processor #2")
+        logger.info("acquired lock for record processor #2")
         recordProcessor.initialize(initializationInput)
-        println("Initialized #2")
+        logger.info("Initialized #2")
         for (i <- 1 to 50) {
           val record = mock(classOf[KinesisClientRecord])
           when(record.sequenceNumber()).thenReturn(i.toString)
           recordProcessor.processRecords(recordsInput.records(List(record)).build())
-          println(s"processed $i message #2")
+          logger.info(s"processed $i message #2")
         }
-        println("completed ingestion #2")
+        logger.info("completed ingestion #2")
       }
     ).parMapN { case (msgs, _, _) => msgs }.unsafeToFuture().futureValue
 
