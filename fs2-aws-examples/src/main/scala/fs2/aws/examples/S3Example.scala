@@ -15,7 +15,7 @@ object S3Example extends IOApp {
   val credentials: AwsBasicCredentials = AwsBasicCredentials.create("accesskey", "secretkey")
   val port                             = 4566
   override def run(args: List[String]): IO[ExitCode] =
-    s3StreamResource.use(s3 => S3.create(s3).flatMap(program).as(ExitCode.Success))
+    s3StreamResource.map(S3.create).use(s3 => program(s3).as(ExitCode.Success))
 
   def s3StreamResource: Resource[IO, S3AsyncClientOp[IO]] =
     S3Interpreter[IO].S3AsyncClientOpResource(

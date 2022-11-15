@@ -44,12 +44,11 @@ You can also combine them as you see fit. For example, use `uploadFileMultipart`
 
 ### Getting started with the S3 module
 
-In order to create an instance of `S3` we need to first create an `S3Client`, as well as a `cats.effect.Blocker`. Here's an example of the former:
+In order to create an instance of `S3` we need to first create an `S3Client`. Here's an example of the former:
 
 ```scala
-def s3StreamResource: Resource[IO, (S3AsyncClientOp[IO], Blocker)] =
+def s3StreamResource: Resource[IO, S3AsyncClientOp[IO]] =
   for {
-    blocker     <- Blocker[IO]
     credentials = AwsBasicCredentials.create("accesskey", "secretkey")
     port        = 4566
     s3 <- S3Interpreter[IO](blocker).S3AsyncClientOpResource(
@@ -59,17 +58,15 @@ def s3StreamResource: Resource[IO, (S3AsyncClientOp[IO], Blocker)] =
         .endpointOverride(URI.create(s"http://localhost:$port"))
         .region(Region.US_EAST_1)
     )
-  } yield s3 -> blocker
+  } yield s3
 ```
 
 Now we can create our `S3[IO]` instance:
 
 ```scala
 
-s3StreamResource.use {
-  case (s3Ops, blocker) => S3.create(s3Ops, blocker).flatMap{ s3 =>
-    // do stuff with s3 here (or just share it with other functions)
-  }
+s3StreamResource.map(S3.create).use { s3 =>
+  // do stuff with s3 here (or just share it with other functions)
 }
 ```
 
