@@ -65,7 +65,7 @@ Now we can create our `S3[IO]` instance:
 
 ```scala
 
-s3StreamResource.map(S3.create).use { s3 =>
+s3StreamResource.map(S3.create[IO]).use { s3 =>
   // do stuff with s3 here (or just share it with other functions)
 }
 ```
