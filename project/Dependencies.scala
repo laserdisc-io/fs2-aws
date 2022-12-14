@@ -15,7 +15,7 @@ object Dependencies {
     val MockitoCore      = "4.8.1"
     val CE               = "3.3.14"
     val Logback          = "1.4.4"
-    val SLF4J            = "2.0.3"
+    val SLF4J            = "2.0.6"
     val Log4Cats         = "2.5.0"
 
     // TODO: https://github.com/vlovgr/ciris/releases/tag/v2.4.0 requires a move to scala 3.2.0 (binary incompatible, it appears)
