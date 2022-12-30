@@ -13,7 +13,7 @@ object Dependencies {
     val ScalaTest        = "3.2.14"
     val MockitoScalaTest = "1.17.5"
     val MockitoCore      = "4.8.1"
-    val CE               = "3.3.14"
+    val CE               = "3.4.3"
     val Logback          = "1.4.4"
     val SLF4J            = "2.0.3"
     val Log4Cats         = "2.5.0"
