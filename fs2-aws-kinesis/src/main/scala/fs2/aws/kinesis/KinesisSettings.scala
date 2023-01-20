@@ -29,6 +29,9 @@ object KinesisConsumerSettings {
       KinesisKCLSettings(streamName, appName, region, initialPositionInStream, retrievalMode),
       KinesisFS2Settings(bufferSize)
     )
+
+  def create(kcl: KinesisKCLSettings, fs2: KinesisFS2Settings): KinesisConsumerSettings =
+    new KinesisConsumerSettings(kcl, fs2)
 }
 
 /** Settings for configuring the KCL
