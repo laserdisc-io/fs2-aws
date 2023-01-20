@@ -18,6 +18,8 @@ ThisBuild / crossScalaVersions := supportedScalaVersions
 
 ThisBuild / scalaVersion := scala3
 
+ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
+
 lazy val root = (project in file("."))
   .aggregate(
     `fs2-aws-kinesis`,

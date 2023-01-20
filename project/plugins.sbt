@@ -13,3 +13,5 @@ addSbtPlugin("pl.project13.scala" % "sbt-jmh" % "0.4.3")
 //addSbtPlugin("ch.epfl.scala" % "sbt-scala3-migrate" % "0.5.0")
 
 addDependencyTreePlugin
+
+ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
