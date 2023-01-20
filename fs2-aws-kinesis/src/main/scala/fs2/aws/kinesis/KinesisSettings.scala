@@ -9,25 +9,12 @@ import software.amazon.kinesis.common.InitialPositionInStream
 import java.util.Date
 import scala.concurrent.duration.*
 
-/** Settings for configuring the Kinesis consumer
-  *
-  *  @param streamName name of the Kinesis stream to read from
-  *  @param appName name of the application which the KCL daemon should assume
-  *  @param region AWS region in which the Kinesis stream resides. Defaults to US-EAST-1
-  *  @param bufferSize size of the internal buffer used when reading messages from Kinesis
-  *  @param retrievalMode FanOut (push) or Polling (pull). Defaults to FanOut (the new default in KCL 2.x).
-  */
 class KinesisConsumerSettings private (
-    val streamName: String,
-    val appName: String,
-    val region: Region,
-    val bufferSize: PosInt,
-    val initialPositionInStream: Either[InitialPositionInStream, Date],
-    val retrievalMode: RetrievalMode
+    val kcl: KinesisKCLSettings,
+    val fs2: KinesisFS2Settings
 )
 
 object KinesisConsumerSettings {
-
   def apply(
       streamName: String,
       appName: String,
@@ -39,10 +26,41 @@ object KinesisConsumerSettings {
       retrievalMode: RetrievalMode = FanOut
   ): KinesisConsumerSettings =
     new KinesisConsumerSettings(
+      KinesisKCLSettings(streamName, appName, region, initialPositionInStream, retrievalMode),
+      KinesisFS2Settings(bufferSize)
+    )
+}
+
+/** Settings for configuring the KCL
+  *
+  *  @param streamName name of the Kinesis stream to read from
+  *  @param appName name of the application which the KCL daemon should assume
+  *  @param region AWS region in which the Kinesis stream resides. Defaults to US-EAST-1
+  *  @param retrievalMode FanOut (push) or Polling (pull). Defaults to FanOut (the new default in KCL 2.x).
+  */
+class KinesisKCLSettings private (
+    val streamName: String,
+    val appName: String,
+    val region: Region,
+    val initialPositionInStream: Either[InitialPositionInStream, Date],
+    val retrievalMode: RetrievalMode
+)
+
+object KinesisKCLSettings {
+
+  def apply(
+      streamName: String,
+      appName: String,
+      region: Region = Region.US_EAST_1,
+      initialPositionInStream: Either[InitialPositionInStream, Date] = Left(
+        InitialPositionInStream.LATEST
+      ),
+      retrievalMode: RetrievalMode = FanOut
+  ): KinesisKCLSettings =
+    new KinesisKCLSettings(
       streamName,
       appName,
       region,
-      bufferSize,
       initialPositionInStream,
       retrievalMode
     )
@@ -81,4 +99,14 @@ object KinesisCheckpointSettings {
       case (s, w) =>
         Right(new KinesisCheckpointSettings(s, w))
     }
+}
+
+/** Settings for configuring the Kinesis consumer's FS2 Stream
+  *
+  *   @param bufferSize size of the internal buffer used when reading messages from Kinesis
+  */
+class KinesisFS2Settings private (val bufferSize: PosInt)
+
+object KinesisFS2Settings {
+  def apply(bufferSize: PosInt = PosInt.unsafeFrom(10)): KinesisFS2Settings = new KinesisFS2Settings(bufferSize)
 }

@@ -60,7 +60,7 @@ object KinesisExample extends IOApp {
         .map(d => (d, ByteBuffer.wrap(d.getBytes)))
         .through(
           writeToKinesis[F](
-            consumerSettings.streamName,
+            consumerSettings.kcl.streamName,
             producer = new KinesisProducerClientImpl[F](Some(producerConfiguration))
           )
         )

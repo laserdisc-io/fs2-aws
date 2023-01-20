@@ -49,6 +49,18 @@ trait Kinesis[F[_]] {
       consumerConfig: KinesisConsumerSettings
   ): Stream[F, Chunk[CommittableRecord]]
 
+  /** Initialize a worker and start streaming records from a Kinesis stream
+    * On stream finish (due to error or other), worker will be shutdown
+    *
+    * @param fs2Config configuration parameters for FS2
+    * @param schedulerFactory Method to create a Scheduler from
+    * @return an infinite fs2 Stream that emits Kinesis Records Chunks
+    */
+  def readChunkedFromKinesisStream(
+      fs2Config: KinesisFS2Settings,
+      schedulerFactory: ShardRecordProcessorFactory => F[Scheduler]
+  ): Stream[F, Chunk[CommittableRecord]]
+
   /** Pipe to checkpoint records in Kinesis, marking them as processed
     * Groups records by shard id, so that each shard is subject to its own clustering of records
     * After accumulating maxBatchSize or reaching maxBatchWait for a respective shard, the latest record is checkpointed
@@ -64,14 +76,11 @@ trait Kinesis[F[_]] {
 }
 
 object Kinesis {
-
   abstract class GenericKinesis[F[_]: Async: Concurrent] extends Kinesis[F] {
-
-    private[kinesis] def readChunksFromKinesisStream(
-        streamConfig: KinesisConsumerSettings,
+    override def readChunkedFromKinesisStream(
+        fs2Config: KinesisFS2Settings,
         schedulerFactory: ShardRecordProcessorFactory => F[Scheduler]
     ): Stream[F, Chunk[CommittableRecord]] = {
-      // Initialize a KCL scheduler which appends to the internal stream queue on message receipt
       def instantiateScheduler(
           dispatcher: Dispatcher[F],
           queue: Queue[F, Chunk[CommittableRecord]],
@@ -86,7 +95,7 @@ object Kinesis {
       // Expose the elements by dequeuing the internal buffer
       for {
         dispatcher      <- Stream.resource(Dispatcher[F])
-        buffer          <- Stream.eval(Queue.bounded[F, Chunk[CommittableRecord]](streamConfig.bufferSize))
+        buffer          <- Stream.eval(Queue.bounded[F, Chunk[CommittableRecord]](fs2Config.bufferSize))
         interruptSignal <- Stream.eval(SignallingRef[F, Boolean](false))
         _               <- instantiateScheduler(dispatcher, buffer, interruptSignal)
         stream          <- Stream.fromQueueUnterminated(buffer).interruptWhen(interruptSignal)
@@ -118,8 +127,10 @@ object Kinesis {
   ): Kinesis[F] = new GenericKinesis[F] {
     override def readChunkedFromKinesisStream(
         consumerConfig: KinesisConsumerSettings
-    ): Stream[F, Chunk[CommittableRecord]] =
-      readChunksFromKinesisStream(consumerConfig, schedulerFactory)
+    ): Stream[F, Chunk[CommittableRecord]] = readChunkedFromKinesisStream(
+      consumerConfig.fs2,
+      schedulerFactory
+    )
   }
 
   def create[F[_]: Async: Concurrent](
@@ -136,8 +147,8 @@ object Kinesis {
         schedulerId: UUID
     ): ShardRecordProcessorFactory => F[Scheduler] = { recordProcessorFactory =>
       val configsBuilder: ConfigsBuilder = new ConfigsBuilder(
-        settings.streamName,
-        settings.appName,
+        settings.kcl.streamName,
+        settings.kcl.appName,
         kinesisClient,
         dynamoClient,
         cloudWatchClient,
@@ -147,16 +158,16 @@ object Kinesis {
 
       val retrievalConfig = configsBuilder.retrievalConfig()
 
-      settings.retrievalMode match {
+      settings.kcl.retrievalMode match {
         case Polling =>
           retrievalConfig.retrievalSpecificConfig(
-            new PollingConfig(settings.streamName, kinesisClient)
+            new PollingConfig(settings.kcl.streamName, kinesisClient)
           )
         case _ => ()
       }
 
       retrievalConfig.initialPositionInStreamExtended(
-        settings.initialPositionInStream match {
+        settings.kcl.initialPositionInStream match {
           case Left(position) =>
             InitialPositionInStreamExtended.newInitialPosition(position)
 
@@ -183,8 +194,8 @@ object Kinesis {
         Stream
           .eval(Sync[F].delay(UUID.randomUUID()))
           .flatMap(uuid =>
-            readChunksFromKinesisStream(
-              consumerConfig,
+            readChunkedFromKinesisStream(
+              consumerConfig.fs2,
               defaultScheduler(
                 consumerConfig,
                 kinesisAsyncClient,
