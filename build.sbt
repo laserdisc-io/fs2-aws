@@ -28,7 +28,6 @@ lazy val root = (project in file("."))
     `fs2-aws-sns`,
     `fs2-aws-core`,
     `fs2-aws-examples`,
-    `fs2-aws-ciris`,
     `fs2-aws-benchmarks`,
     `pure-sqs-tagless`,
     `pure-sns-tagless`,
@@ -46,17 +45,6 @@ lazy val `fs2-aws-core` = (project in file("fs2-aws-core"))
   .settings(
     name := "fs2-aws-core",
     Dependencies.Fs2Core,
-    Dependencies.Testing,
-    coverageMinimumStmtTotal := 40,
-    coverageFailOnMinimum    := true
-  )
-  .settings(commonSettings)
-
-lazy val `fs2-aws-ciris` = (project in file("fs2-aws-ciris"))
-  .settings(
-    name := "fs2-aws-ciris",
-    Dependencies.Ciris,
-    Dependencies.KinesisClient,
     Dependencies.Testing,
     coverageMinimumStmtTotal := 40,
     coverageFailOnMinimum    := true
