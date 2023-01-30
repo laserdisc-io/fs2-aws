@@ -18,11 +18,7 @@ object Dependencies {
     val SLF4J            = "2.0.3"
     val Log4Cats         = "2.5.0"
 
-    // TODO: https://github.com/vlovgr/ciris/releases/tag/v2.4.0 requires a move to scala 3.2.0 (binary incompatible, it appears)
-    val Ciris = "2.3.3"
   }
-
-  val Ciris = libraryDependencies += "is.cir" %% "ciris" % V.Ciris
 
   val Fs2Core = libraryDependencies ++= Seq(
     "co.fs2" %% "fs2-core" % V.Fs2,
