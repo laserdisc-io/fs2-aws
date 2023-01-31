@@ -40,7 +40,7 @@ object S3 {
   type UploadId = String
 
   /** It creates an instance of the purely functional S3 API. */
-  def create[F[_]: Async](s3: S3AsyncClientOp[F]): F[S3[F]] =
+  def create[F[_]: Async](s3: S3AsyncClientOp[F]): S3[F] =
     new S3[F] {
 
       /** Deletes a file in a single request.
@@ -215,7 +215,7 @@ object S3 {
         go(0).stream
       }
 
-    }.pure[F]
+    }
 
   /** Translates effect type from F to G using the supplied FunctionKs.
     */
