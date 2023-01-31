@@ -10,7 +10,7 @@ organization := "io.laserdisc"
 name         := "fs2-aws"
 
 lazy val scala213 = "2.13.10"
-lazy val scala3   = "3.1.1"
+lazy val scala3   = "3.2.1"
 
 lazy val supportedScalaVersions = List(scala213, scala3)
 
@@ -28,7 +28,6 @@ lazy val root = (project in file("."))
     `fs2-aws-sns`,
     `fs2-aws-core`,
     `fs2-aws-examples`,
-    `fs2-aws-ciris`,
     `fs2-aws-benchmarks`,
     `pure-sqs-tagless`,
     `pure-sns-tagless`,
@@ -46,17 +45,6 @@ lazy val `fs2-aws-core` = (project in file("fs2-aws-core"))
   .settings(
     name := "fs2-aws-core",
     Dependencies.Fs2Core,
-    Dependencies.Testing,
-    coverageMinimumStmtTotal := 40,
-    coverageFailOnMinimum    := true
-  )
-  .settings(commonSettings)
-
-lazy val `fs2-aws-ciris` = (project in file("fs2-aws-ciris"))
-  .settings(
-    name := "fs2-aws-ciris",
-    Dependencies.Ciris,
-    Dependencies.KinesisClient,
     Dependencies.Testing,
     coverageMinimumStmtTotal := 40,
     coverageFailOnMinimum    := true
@@ -300,7 +288,7 @@ lazy val commonSettings = Def.settings(
   },
   Test / console / scalacOptions := (Compile / console / scalacOptions).value,
   Test / scalacOptions           := (Compile / scalacOptions).value,
-  Test / scalacOptions += "-Wconf:msg=is not declared `infix`:s,msg=is declared 'open':s",
+  Test / scalacOptions += "-Wconf:msg=is not declared infix:s,msg=is declared 'open':s",
   libraryDependencies += "org.scala-lang.modules" %% "scala-collection-compat" % "2.9.0",
   libraryDependencies ++= Seq(
     compilerPlugin(("org.typelevel" %% "kind-projector" % "0.13.2").cross(CrossVersion.full)),
