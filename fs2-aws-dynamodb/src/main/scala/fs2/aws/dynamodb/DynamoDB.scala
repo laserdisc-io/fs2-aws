@@ -25,7 +25,6 @@ trait DynamoDB[F[_]] {
   /** Initialize a worker and start streaming records from a DynamoDB stream
     * On stream finish (due to error or other), worker will be shutdown
     *
-    * @tparam F effect type of the fs2 stream
     * @param appName    name of the DynamoDB application. Used by KCL when resharding
     * @param streamName name of the DynamoDB stream to consume from
     * @return an infinite fs2 Stream that emits Kinesis Records
@@ -35,8 +34,7 @@ trait DynamoDB[F[_]] {
   /** Initialize a worker and start streaming records from a DynamoDB stream
     * On stream finish (due to error or other), worker will be shutdown
     *
-    * @tparam F effect type of the fs2 stream
-    * @param consumerConfig configuration parameters for the KCL
+    * @param workerConfiguration configuration parameters for the KCL
     * @return an infinite fs2 Stream that emits DynamoDB Records
     */
   def readFromDynamoDBStream(
@@ -48,7 +46,6 @@ trait DynamoDB[F[_]] {
     * After accumulating maxBatchSize or reaching maxBatchWait for a respective shard, the latest record is checkpointed
     * By design, all records prior to the checkpointed record are also checkpointed in Kinesis
     *
-    * @tparam F effect type of the fs2 stream
     * @param checkpointSettings configure maxBatchSize and maxBatchWait time before triggering a checkpoint
     * @return a stream of Record types representing checkpointed messages
     */
@@ -79,7 +76,7 @@ object DynamoDB {
       // Instantiate a new bounded queue and concurrently run the queue populator
       // Expose the elements by dequeuing the internal buffer
       for {
-        dispatcher      <- Stream.resource(Dispatcher[F])
+        dispatcher      <- Stream.resource(Dispatcher.parallel[F])
         buffer          <- Stream.eval(Queue.unbounded[F, CommittableRecord])
         interruptSignal <- Stream.eval(SignallingRef[F, Boolean](false))
         _               <- instantiateScheduler(dispatcher, buffer, interruptSignal)
@@ -146,6 +143,7 @@ object DynamoDB {
     }
 
     new GenericKinesis[F] {
+      @annotation.nowarn("msg=constructor KinesisClientLibConfiguration in class KinesisClientLibConfiguration is deprecated")
       override def readFromDynamoDBStream(
           appName: String,
           streamName: String
