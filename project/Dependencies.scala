@@ -5,7 +5,7 @@ import sbt.{Def, _}
 object Dependencies {
 
   object V {
-    val AwsSdk           = "2.18.7"
+    val AwsSdk           = "2.18.41"
     val Circe            = "0.14.3"
     val Munit            = "0.7.29"
     val Fs2              = "3.5.0"
@@ -66,7 +66,7 @@ object Dependencies {
   ).filterNot(_ => scalaVersion.value.startsWith("3."))
 
   val DynamoStreamAdapter =
-    libraryDependencies += "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.5.4"
+    libraryDependencies += "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.6.0"
 
   val Logging = libraryDependencies ++= Seq(
     "org.typelevel" %% "log4cats-slf4j" % V.Log4Cats
