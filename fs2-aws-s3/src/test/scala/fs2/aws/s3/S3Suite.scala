@@ -44,29 +44,27 @@ class S3Suite extends CatsEffectSuite {
   val partSize: PartSizeMB = PartSizeMB.unsafeFrom(5)
 
   test("Upload JSON test file & read it back") {
-    s3R.use { s3Op =>
-      S3.create[IO](s3Op).flatMap { s3 =>
-        val upload =
-          Files[IO]
-            .readAll(Path(testFile.getPath), 4096, Flags.Read)
-            .through(s3.uploadFile(bucket, fileKey))
-            .compile
-            .drain
+    s3R.map(S3.create[IO](_)).use { s3 =>
+      val upload =
+        Files[IO]
+          .readAll(Path(testFile.getPath), 4096, Flags.Read)
+          .through(s3.uploadFile(bucket, fileKey))
+          .compile
+          .drain
 
-        val read =
-          s3.readFile(bucket, fileKey)
-            .through(text.utf8.decode)
-            .through(fs2.text.lines)
-            .compile
-            .toVector
-            .map { res =>
-              val expected =
-                """{"test": 1}{"test": 2}{"test": 3}{"test": 4}{"test": 5}{"test": 6}{"test": 7}{"test": 8}"""
-              assert(res.reduce(_ + _).concat("") === expected)
-            }
+      val read =
+        s3.readFile(bucket, fileKey)
+          .through(text.utf8.decode)
+          .through(fs2.text.lines)
+          .compile
+          .toVector
+          .map { res =>
+            val expected =
+              """{"test": 1}{"test": 2}{"test": 3}{"test": 4}{"test": 5}{"test": 6}{"test": 7}{"test": 8}"""
+            assert(res.reduce(_ + _).concat("") === expected)
+          }
 
-        upload >> read
-      }
+      upload >> read
     }
   }
 
@@ -74,7 +72,7 @@ class S3Suite extends CatsEffectSuite {
     "Upload JSON test file in multipart fashion & read it back in a one go, then delete it and try to read it again"
   ) {
     s3R.use { s3 =>
-      S3.create[IO](s3).flatMap { s3 =>
+      s3R.map(S3.create[IO](_)).use { s3 =>
         val fileKeyMix = FileKey(NonEmptyString.unsafeFrom("jsontest-mix.json"))
         val upload =
           Files[IO]
@@ -110,7 +108,7 @@ class S3Suite extends CatsEffectSuite {
   test("Upload JSON test file & read it back in multipart fashion all the way") {
 
     s3R.use { s3 =>
-      S3.create[IO](s3).flatMap { s3 =>
+      s3R.map(S3.create[IO](_)).use { s3 =>
         val fileKeyMultipart = FileKey(NonEmptyString.unsafeFrom("jsontest-multipart.json"))
 
         val upload =
