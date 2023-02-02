@@ -66,7 +66,7 @@ object Dependencies {
   ).filterNot(_ => scalaVersion.value.startsWith("3."))
 
   val DynamoStreamAdapter =
-    libraryDependencies += "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.5.4"
+    libraryDependencies += "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.6.0"
 
   val Logging = libraryDependencies ++= Seq(
     "org.typelevel" %% "log4cats-slf4j" % V.Log4Cats
