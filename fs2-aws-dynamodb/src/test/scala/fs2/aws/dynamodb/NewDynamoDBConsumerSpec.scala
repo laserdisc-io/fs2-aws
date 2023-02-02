@@ -9,12 +9,7 @@ import com.amazonaws.services.dynamodbv2.streamsadapter.model.RecordAdapter
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.{IRecordProcessor, IRecordProcessorFactory}
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{ShutdownReason, Worker}
-import com.amazonaws.services.kinesis.clientlibrary.types.{
-  ExtendedSequenceNumber,
-  InitializationInput,
-  ProcessRecordsInput,
-  ShutdownInput
-}
+import com.amazonaws.services.kinesis.clientlibrary.types.{ExtendedSequenceNumber, InitializationInput, ProcessRecordsInput, ShutdownInput}
 import com.amazonaws.services.kinesis.model.Record
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.*
@@ -27,7 +22,7 @@ import org.slf4j.LoggerFactory
 
 import java.util.Date
 import java.util.concurrent.{CountDownLatch, Phaser}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.*
 import scala.jdk.CollectionConverters.*
 
@@ -118,7 +113,7 @@ class NewDynamoDBConsumerSpec
             recordProcessor.processRecords(recordsInput.withRecords(List(record).asJava))
           }
         }
-      ).parMapN { case (msgs, _, _) => msgs }.unsafeToFuture().futureValue
+      ).parMapN { case (msgs, _, _) => msgs }.unsafeToFuture().onError(e => Future(e.printStackTrace())).futureValue
 
     res should have size 60
   }

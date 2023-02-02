@@ -5,15 +5,15 @@ import sbt.{Def, _}
 object Dependencies {
 
   object V {
-    val AwsSdk           = "2.18.7"
+    val AwsSdk           = "2.18.41"
     val Circe            = "0.14.3"
     val Munit            = "0.7.29"
-    val Fs2              = "3.3.0"
+    val Fs2              = "3.5.0"
     val Refined          = "0.10.1"
     val ScalaTest        = "3.2.14"
     val MockitoScalaTest = "1.17.5"
     val MockitoCore      = "4.8.1"
-    val CE               = "3.3.14"
+    val CE               = "3.4.5"
     val Logback          = "1.4.4"
     val SLF4J            = "2.0.3"
     val Log4Cats         = "2.5.0"
@@ -27,7 +27,7 @@ object Dependencies {
 
   val CatsEffect = libraryDependencies += "org.typelevel" %% "cats-effect" % V.CE
 
-  val KinesisClient = libraryDependencies += "software.amazon.kinesis" % "amazon-kinesis-client" % "2.4.3"
+  val KinesisClient = libraryDependencies += "software.amazon.kinesis" % "amazon-kinesis-client" % "2.4.4"
 
   val KinesisProducer = libraryDependencies += "com.amazonaws" % "amazon-kinesis-producer" % "0.14.13"
 
@@ -66,7 +66,7 @@ object Dependencies {
   ).filterNot(_ => scalaVersion.value.startsWith("3."))
 
   val DynamoStreamAdapter =
-    libraryDependencies += "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.5.4"
+    libraryDependencies += "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.6.0"
 
   val Logging = libraryDependencies ++= Seq(
     "org.typelevel" %% "log4cats-slf4j" % V.Log4Cats
