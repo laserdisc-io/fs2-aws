@@ -1,7 +1,7 @@
 package io.laserdisc.pure.kinesis.tagless
 
 import software.amazon.awssdk.services.kinesis.model.*
-import software.amazon.awssdk.services.kinesis.paginators.ListStreamConsumersPublisher
+import software.amazon.awssdk.services.kinesis.paginators.{ListStreamConsumersPublisher, ListStreamsPublisher}
 import software.amazon.awssdk.services.kinesis.waiters.KinesisAsyncWaiter
 
 trait KinesisAsyncClientOp[F[_]] {
@@ -27,6 +27,8 @@ trait KinesisAsyncClientOp[F[_]] {
   def listStreamConsumersPaginator(a: ListStreamConsumersRequest): F[ListStreamConsumersPublisher]
   def listStreams: F[ListStreamsResponse]
   def listStreams(a: ListStreamsRequest): F[ListStreamsResponse]
+  def listStreamsPaginator: F[ListStreamsPublisher]
+  def listStreamsPaginator(a: ListStreamsRequest): F[ListStreamsPublisher]
   def listTagsForStream(a: ListTagsForStreamRequest): F[ListTagsForStreamResponse]
   def mergeShards(a: MergeShardsRequest): F[MergeShardsResponse]
   def putRecord(a: PutRecordRequest): F[PutRecordResponse]
