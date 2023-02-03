@@ -34,7 +34,7 @@ object StreamScan {
           pageSize: Int
       ): Stream[F, Chunk[JMap[String, AttributeValue]]] =
         for {
-          dispatcher <- Stream.resource(Dispatcher[F])
+          dispatcher <- Stream.resource(Dispatcher.parallel[F])
           queue      <- Stream.eval(Queue.bounded[F, Option[Chunk[JMap[String, AttributeValue]]]](1))
           sub        <- Stream.eval(Ref[F].of[Option[Subscription]](None))
           _ <- Stream.eval(

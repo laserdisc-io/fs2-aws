@@ -28,7 +28,7 @@ services:
     environment:
       - "AWS_ACCESS_KEY_ID=dummy"
       - "AWS_SECRET_ACCESS_KEY=dummy"
-      - "SERVICES=sqs,sns,kinesis,cloudwatch,dynamodb"
+      - "SERVICES=sqs,sns,kinesis,cloudwatch,dynamodb,sts"
       - "DEFAULT_REGION=us-east-1"
       - "USE_SSL=true"
     volumes:

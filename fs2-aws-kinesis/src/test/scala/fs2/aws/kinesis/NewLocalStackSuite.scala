@@ -18,12 +18,7 @@ import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCrede
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.cloudwatch.{CloudWatchAsyncClient, CloudWatchAsyncClientBuilder}
 import software.amazon.awssdk.services.dynamodb.{DynamoDbAsyncClient, DynamoDbAsyncClientBuilder}
-import software.amazon.awssdk.services.kinesis.model.{
-  CreateStreamRequest,
-  DeleteStreamRequest,
-  DescribeStreamRequest,
-  UpdateShardCountRequest
-}
+import software.amazon.awssdk.services.kinesis.model.{CreateStreamRequest, DeleteStreamRequest, DescribeStreamRequest, UpdateShardCountRequest}
 import software.amazon.awssdk.services.kinesis.{KinesisAsyncClient, KinesisAsyncClientBuilder}
 import software.amazon.kinesis.common.InitialPositionInStream
 
@@ -39,7 +34,7 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
   implicit val runtime: IORuntime   = IORuntime.global
 
   // this is required to make the KCL work with LocalStack
-  System.setProperty("aws.cborEnabled", "false")
+//  System.setProperty("aws.cborEnabled", "false")
   implicit override val patienceConfig: PatienceConfig =
     PatienceConfig(timeout = scaled(Span(2, Minutes)), interval = scaled(Span(1, Second)))
 
@@ -56,9 +51,10 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
 
   val credentials =
     new BasicAWSCredentials("dummy", "dummy")
-
   val producerConfig: KinesisProducerConfiguration = new KinesisProducerConfiguration()
     .setCredentialsProvider(new AWSStaticCredentialsProvider(credentials))
+    .setStsEndpoint("localhost")
+    .setStsPort(4566)
     .setKinesisEndpoint("localhost")
     .setKinesisPort(4566)
     .setCloudwatchEndpoint("localhost")
