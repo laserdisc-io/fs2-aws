@@ -8,7 +8,7 @@ addSbtPlugin("org.scoverage" % "sbt-coveralls" % "1.3.5")
 // release
 addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.5.10")
 
-addSbtPlugin("pl.project13.scala" % "sbt-jmh" % "0.4.3")
+addSbtPlugin("pl.project13.scala" % "sbt-jmh" % "0.4.4")
 
 //addSbtPlugin("ch.epfl.scala" % "sbt-scala3-migrate" % "0.5.0")
 
