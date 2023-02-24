@@ -18,7 +18,12 @@ import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCrede
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.cloudwatch.{CloudWatchAsyncClient, CloudWatchAsyncClientBuilder}
 import software.amazon.awssdk.services.dynamodb.{DynamoDbAsyncClient, DynamoDbAsyncClientBuilder}
-import software.amazon.awssdk.services.kinesis.model.{CreateStreamRequest, DeleteStreamRequest, DescribeStreamRequest, UpdateShardCountRequest}
+import software.amazon.awssdk.services.kinesis.model.{
+  CreateStreamRequest,
+  DeleteStreamRequest,
+  DescribeStreamRequest,
+  UpdateShardCountRequest
+}
 import software.amazon.awssdk.services.kinesis.{KinesisAsyncClient, KinesisAsyncClientBuilder}
 import software.amazon.kinesis.common.InitialPositionInStream
 

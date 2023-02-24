@@ -143,7 +143,9 @@ object DynamoDB {
     }
 
     new GenericKinesis[F] {
-      @annotation.nowarn("msg=constructor KinesisClientLibConfiguration in class KinesisClientLibConfiguration is deprecated")
+      @annotation.nowarn(
+        "msg=constructor KinesisClientLibConfiguration in class KinesisClientLibConfiguration is deprecated"
+      )
       override def readFromDynamoDBStream(
           appName: String,
           streamName: String
