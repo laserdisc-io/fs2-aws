@@ -9,7 +9,12 @@ import com.amazonaws.services.dynamodbv2.streamsadapter.model.RecordAdapter
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.{IRecordProcessor, IRecordProcessorFactory}
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{ShutdownReason, Worker}
-import com.amazonaws.services.kinesis.clientlibrary.types.{ExtendedSequenceNumber, InitializationInput, ProcessRecordsInput, ShutdownInput}
+import com.amazonaws.services.kinesis.clientlibrary.types.{
+  ExtendedSequenceNumber,
+  InitializationInput,
+  ProcessRecordsInput,
+  ShutdownInput
+}
 import com.amazonaws.services.kinesis.model.Record
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.*
