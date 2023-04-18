@@ -10,9 +10,9 @@ import fs2.{Chunk, Pipe, Stream}
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient
-import software.amazon.kinesis.common.{ConfigsBuilder, InitialPositionInStreamExtended}
+import software.amazon.kinesis.common.{ConfigsBuilder, InitialPositionInStreamExtended, StreamIdentifier}
 import software.amazon.kinesis.coordinator.Scheduler
-import software.amazon.kinesis.processor.ShardRecordProcessorFactory
+import software.amazon.kinesis.processor.{ShardRecordProcessorFactory, SingleStreamTracker}
 import software.amazon.kinesis.retrieval.KinesisClientRecord
 import software.amazon.kinesis.retrieval.polling.PollingConfig
 
@@ -155,14 +155,17 @@ object Kinesis {
         case _ => ()
       }
 
-      retrievalConfig.initialPositionInStreamExtended(
-        settings.initialPositionInStream match {
-          case Left(position) =>
-            InitialPositionInStreamExtended.newInitialPosition(position)
+      retrievalConfig.streamTracker(
+        new SingleStreamTracker(
+          StreamIdentifier.singleStreamInstance(settings.streamName),
+          settings.initialPositionInStream match {
+            case Left(position) =>
+              InitialPositionInStreamExtended.newInitialPosition(position)
 
-          case Right(date) =>
-            InitialPositionInStreamExtended.newInitialPositionAtTimestamp(date)
-        }
+            case Right(date) =>
+              InitialPositionInStreamExtended.newInitialPositionAtTimestamp(date)
+          }
+        )
       )
 
       new Scheduler(
