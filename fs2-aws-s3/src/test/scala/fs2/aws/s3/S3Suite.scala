@@ -141,10 +141,10 @@ class S3Suite extends CatsEffectSuite {
 
     s3R.use { s3 =>
       s3R.map(S3.create[IO](_)).use { s3 =>
-        val fileKeyMultipart = FileKey(NonEmptyString.unsafeFrom("jsontest-multipart.json"))
+        val fileKey = FileKey(NonEmptyString.unsafeFrom("jsontest-multipart-upload-empty-file-disabled.json"))
 
         fs2.Stream.empty
-          .through(s3.uploadFileMultipart(bucket, fileKeyMultipart, partSize, uploadEmptyFiles = false))
+          .through(s3.uploadFileMultipart(bucket, fileKey, partSize, uploadEmptyFiles = false))
           .compile
           .last
           .map(_.get)
@@ -155,7 +155,7 @@ class S3Suite extends CatsEffectSuite {
     }
   }
 
-  test("Upload an empty file when no data has been passed through the stream and `uploadEmptyFile` is enabled.") {
+  test("Upload an empty file when using multipart upload when no data has been passed through the stream and `uploadEmptyFile` is enabled.") {
 
     s3R.use { s3 =>
       s3R.map(S3.create[IO](_)).use { s3 =>
