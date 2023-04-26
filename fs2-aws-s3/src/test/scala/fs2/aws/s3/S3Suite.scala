@@ -78,7 +78,7 @@ class S3Suite extends CatsEffectSuite {
           Files[IO]
             .readAll(Path(testFile.getPath), 4096, Flags.Read)
             .through(
-              s3.uploadFileMultipart(bucket, fileKeyMix, partSize, uploadEmptyFiles = false)
+              s3.uploadFileMultipart(bucket, fileKeyMix, partSize)
             )
             .compile
             .drain
@@ -114,7 +114,7 @@ class S3Suite extends CatsEffectSuite {
         val upload =
           Files[IO]
             .readAll(Path(testFile.getPath), 4096, Flags.Read)
-            .through(s3.uploadFileMultipart(bucket, fileKeyMultipart, partSize, uploadEmptyFiles = false))
+            .through(s3.uploadFileMultipart(bucket, fileKeyMultipart, partSize))
             .compile
             .drain
 
