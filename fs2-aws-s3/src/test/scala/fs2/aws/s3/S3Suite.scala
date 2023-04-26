@@ -78,7 +78,7 @@ class S3Suite extends CatsEffectSuite {
           Files[IO]
             .readAll(Path(testFile.getPath), 4096, Flags.Read)
             .through(
-              s3.uploadFileMultipart(bucket, fileKeyMix, partSize)
+              s3.uploadFileMultipart(bucket, fileKeyMix, partSize, uploadEmptyFiles = false)
             )
             .compile
             .drain
@@ -114,7 +114,7 @@ class S3Suite extends CatsEffectSuite {
         val upload =
           Files[IO]
             .readAll(Path(testFile.getPath), 4096, Flags.Read)
-            .through(s3.uploadFileMultipart(bucket, fileKeyMultipart, partSize))
+            .through(s3.uploadFileMultipart(bucket, fileKeyMultipart, partSize, uploadEmptyFiles = false))
             .compile
             .drain
 
@@ -128,6 +128,55 @@ class S3Suite extends CatsEffectSuite {
               val expected =
                 """{"test": 1}{"test": 2}{"test": 3}{"test": 4}{"test": 5}{"test": 6}{"test": 7}{"test": 8}"""
               assert(res.reduce(_ + _).concat("") === expected)
+            }
+
+        upload >> read
+      }
+    }
+  }
+
+  test(
+    "Gracefully abort multipart upload when no data has been passed through the stream and `uploadEmptyFile` is disabled."
+  ) {
+
+    s3R.use { s3 =>
+      s3R.map(S3.create[IO](_)).use { s3 =>
+        val fileKeyMultipart = FileKey(NonEmptyString.unsafeFrom("jsontest-multipart.json"))
+
+        fs2.Stream.empty
+          .through(s3.uploadFileMultipart(bucket, fileKeyMultipart, partSize, uploadEmptyFiles = false))
+          .compile
+          .last
+          .map(_.get)
+          .map { res =>
+            assert(res.isEmpty)
+          }
+      }
+    }
+  }
+
+  test("Upload an empty file when no data has been passed through the stream and `uploadEmptyFile` is enabled.") {
+
+    s3R.use { s3 =>
+      s3R.map(S3.create[IO](_)).use { s3 =>
+        val fileKey = FileKey(NonEmptyString.unsafeFrom("jsontest-multipart-upload-empty-file-enabled.json"))
+
+        val upload = fs2.Stream.empty
+          .through(s3.uploadFileMultipart(bucket, fileKey, partSize, uploadEmptyFiles = true))
+          .compile
+          .last
+          .map(_.get)
+          .map { res =>
+            assert(res.nonEmpty)
+          }
+
+        val read =
+          s3.readFile(bucket, fileKey)
+            .compile
+            .toVector
+            .map(_.toArray)
+            .map { res =>
+              res.isEmpty
             }
 
         upload >> read
