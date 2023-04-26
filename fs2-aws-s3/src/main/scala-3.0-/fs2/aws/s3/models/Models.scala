@@ -9,8 +9,9 @@ object Models {
 
   // Each part must be at least 5 MB in size
   // https://sdk.amazonaws.com/java/api/latest/software/amazon/awssdk/services/s3/S3Client.html#uploadPart-software.amazon.awssdk.services.s3.model.UploadPartRequest-software.amazon.awssdk.core.sync.RequestBody-
-  type PartSizeMB = Int Refined GreaterEqual[W.`5`.T]
-  type ETag       = String
+  type PartSizeMB      = Int Refined GreaterEqual[W.`5`.T]
+  type ETag            = String
+  type UploadEmptyFiles = Boolean
 
   object PartSizeMB extends RefinedTypeOps.Numeric[PartSizeMB, Int]
 
