@@ -25,17 +25,17 @@ object DefaultKinesisStreamBuilder {
 
 class DefaultKinesisStreamBuilder[F[_]: Async: Concurrent] extends KinesisStreamBuilder[F] {
 
-  class DefaultInitialPhase extends InitialPhase {
+  private class DefaultInitialPhase extends InitialPhase {
     override protected def next(appName: Resource[F, AppName]): KinesisClientPhase =
       new DefaultKinesisClientPhase(appName)
   }
 
-  class DefaultKinesisClientPhase(appName: Resource[F, AppName]) extends KinesisClientPhase {
+  private class DefaultKinesisClientPhase(appName: Resource[F, AppName]) extends KinesisClientPhase {
     override protected def next(build: Resource[F, KinesisAsyncClient]): DynamoDBClientPhase =
       new DefaultDynamoDBClientPhase(appName, build)
   }
 
-  case class DefaultDynamoDBClientPhase(
+  private class DefaultDynamoDBClientPhase(
       appName: Resource[F, AppName],
       kinesisClient: Resource[F, KinesisAsyncClient]
   ) extends DynamoDBClientPhase {
@@ -43,7 +43,7 @@ class DefaultKinesisStreamBuilder[F[_]: Async: Concurrent] extends KinesisStream
       new DefaultCloudWatchClientPhase(appName, kinesisClient, dynamoDBClient)
   }
 
-  class DefaultCloudWatchClientPhase(
+  private class DefaultCloudWatchClientPhase(
       appName: Resource[F, AppName],
       kinesisClient: Resource[F, KinesisAsyncClient],
       dynamoDBClient: Resource[F, DynamoDbAsyncClient]
@@ -52,7 +52,7 @@ class DefaultKinesisStreamBuilder[F[_]: Async: Concurrent] extends KinesisStream
       new DefaultSchedulerIdPhase(appName, kinesisClient, dynamoDBClient, cloudWatchClient)
   }
 
-  final class DefaultSchedulerIdPhase(
+  final private class DefaultSchedulerIdPhase(
       appName: Resource[F, AppName],
       kinesisClient: Resource[F, KinesisAsyncClient],
       dynamoDBClient: Resource[F, DynamoDbAsyncClient],
@@ -71,7 +71,7 @@ class DefaultKinesisStreamBuilder[F[_]: Async: Concurrent] extends KinesisStream
 
   }
 
-  class DefaultStreamTrackerJunctionPhase(
+  private class DefaultStreamTrackerJunctionPhase(
       appName: Resource[F, AppName],
       kinesisClient: Resource[F, KinesisAsyncClient],
       dynamoDBClient: Resource[F, DynamoDbAsyncClient],
@@ -89,7 +89,7 @@ class DefaultKinesisStreamBuilder[F[_]: Async: Concurrent] extends KinesisStream
       schedulerId
     )
   }
-  final class DefaultStreamTrackerPhase(
+  final private class DefaultStreamTrackerPhase(
       appName: Resource[F, AppName],
       kinesisClient: Resource[F, KinesisAsyncClient],
       dynamoDBClient: Resource[F, DynamoDbAsyncClient],
@@ -113,7 +113,7 @@ class DefaultKinesisStreamBuilder[F[_]: Async: Concurrent] extends KinesisStream
       )
   }
 
-  class DefaultMultiStreamTrackerPhase(
+  private class DefaultMultiStreamTrackerPhase(
       appName: Resource[F, AppName],
       kinesisClient: Resource[F, KinesisAsyncClient],
       dynamoDBClient: Resource[F, DynamoDbAsyncClient],
@@ -131,7 +131,7 @@ class DefaultKinesisStreamBuilder[F[_]: Async: Concurrent] extends KinesisStream
       )
   }
 
-  final class DefaultSchedulerConfigPhase(
+  final private class DefaultSchedulerConfigPhase(
       appName: Resource[F, AppName],
       kinesisClient: Resource[F, KinesisAsyncClient],
       dynamoDBClient: Resource[F, DynamoDbAsyncClient],
@@ -188,7 +188,7 @@ class DefaultKinesisStreamBuilder[F[_]: Async: Concurrent] extends KinesisStream
     }
   }
 
-  class DefaultBufferSizePhase(
+  private class DefaultBufferSizePhase(
       appName: Resource[F, AppName],
       kinesisClient: Resource[F, KinesisAsyncClient],
       dynamoDBClient: Resource[F, DynamoDbAsyncClient],
@@ -222,7 +222,7 @@ class DefaultKinesisStreamBuilder[F[_]: Async: Concurrent] extends KinesisStream
       Resource.eval(Sync[F].fromEither(BufferSize(10).leftMap(new IllegalArgumentException(_))))
   }
 
-  class DefaultSchedulerPhase(
+  private class DefaultSchedulerPhase(
       appName: Resource[F, AppName],
       kinesisClient: Resource[F, KinesisAsyncClient],
       dynamoDBClient: Resource[F, DynamoDbAsyncClient],
@@ -285,7 +285,7 @@ class DefaultKinesisStreamBuilder[F[_]: Async: Concurrent] extends KinesisStream
       )
   }
 
-  class DefaultFinalPhase(
+  private class DefaultFinalPhase(
       scheduler: Resource[F, (Scheduler, Queue[F, Chunk[CommittableRecord]], SignallingRef[F, Boolean])]
   ) extends FinalPhase {
     override def build: Resource[F, Stream[F, Chunk[CommittableRecord]]] =
