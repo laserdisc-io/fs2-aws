@@ -113,6 +113,7 @@ lazy val `fs2-aws-kinesis` = (project in file("fs2-aws-kinesis"))
     Dependencies.Fs2Core,
     Dependencies.KinesisClient,
     Dependencies.KinesisProducer,
+    Dependencies.newTypes,
     Dependencies.Refined,
     Dependencies.Testing,
     coverageMinimumStmtTotal := 40,

@@ -31,6 +31,8 @@ object Dependencies {
 
   val KinesisProducer = libraryDependencies += "com.amazonaws" % "amazon-kinesis-producer" % "0.15.6"
 
+  val newTypes = libraryDependencies += "io.monix" %% "newtypes-core" % "0.2.3"
+
   def AWS(artifact: String, config: Configuration = Compile): Def.Setting[Seq[ModuleID]] =
     libraryDependencies += "software.amazon.awssdk" % artifact % V.AwsSdk % config
 
