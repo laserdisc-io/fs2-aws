@@ -13,7 +13,7 @@ object Dependencies {
     val ScalaTest        = "3.2.15"
     val MockitoScalaTest = "1.17.5"
     val MockitoCore      = "5.1.1"
-    val CE               = "3.4.10"
+    val CE               = "3.4.11"
     val Logback          = "1.4.5"
     val SLF4J            = "2.0.6"
     val Log4Cats         = "2.5.0"
@@ -27,9 +27,11 @@ object Dependencies {
 
   val CatsEffect = libraryDependencies += "org.typelevel" %% "cats-effect" % V.CE
 
-  val KinesisClient = libraryDependencies += "software.amazon.kinesis" % "amazon-kinesis-client" % "2.4.5"
+  val KinesisClient = libraryDependencies += "software.amazon.kinesis" % "amazon-kinesis-client" % "2.4.8"
 
   val KinesisProducer = libraryDependencies += "com.amazonaws" % "amazon-kinesis-producer" % "0.15.6"
+
+  val newTypes = libraryDependencies += "io.monix" %% "newtypes-core" % "0.2.3"
 
   def AWS(artifact: String, config: Configuration = Compile): Def.Setting[Seq[ModuleID]] =
     libraryDependencies += "software.amazon.awssdk" % artifact % V.AwsSdk % config
