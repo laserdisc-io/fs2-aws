@@ -29,7 +29,7 @@ object Dependencies {
 
   val KinesisClient = libraryDependencies += "software.amazon.kinesis" % "amazon-kinesis-client" % "2.5.0"
 
-  val KinesisProducer = libraryDependencies += "com.amazonaws" % "amazon-kinesis-producer" % "0.15.6"
+  val KinesisProducer = libraryDependencies += "com.amazonaws" % "amazon-kinesis-producer" % "0.15.7"
 
   val newTypes = libraryDependencies += "io.monix" %% "newtypes-core" % "0.2.3"
 
