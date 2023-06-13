@@ -1,5 +1,6 @@
 package io.laserdisc.pure.sqs.tagless
 
+import software.amazon.awssdk.services.sqs.SqsServiceClientConfiguration
 import software.amazon.awssdk.services.sqs.model.*
 import software.amazon.awssdk.services.sqs.paginators.*
 
@@ -27,6 +28,7 @@ trait SqsAsyncClientOp[F[_]] {
   def removePermission(a: RemovePermissionRequest): F[RemovePermissionResponse]
   def sendMessage(a: SendMessageRequest): F[SendMessageResponse]
   def sendMessageBatch(a: SendMessageBatchRequest): F[SendMessageBatchResponse]
+  def serviceClientConfiguration: F[SqsServiceClientConfiguration]
   def serviceName: F[String]
   def setQueueAttributes(a: SetQueueAttributesRequest): F[SetQueueAttributesResponse]
   def tagQueue(a: TagQueueRequest): F[TagQueueResponse]
