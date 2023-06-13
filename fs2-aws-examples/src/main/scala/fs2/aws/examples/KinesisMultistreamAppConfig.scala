@@ -3,7 +3,6 @@ package fs2.aws.examples
 import cats.implicits.*
 import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.services.kinesis.producer.KinesisProducerConfiguration
-import fs2.aws.kinesis.models.KinesisModels.{AppName, StreamName}
 import fs2.aws.kinesis.{KinesisConsumerSettings, Polling}
 import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import software.amazon.awssdk.awscore.client.builder.AwsClientBuilder
@@ -16,34 +15,31 @@ import software.amazon.kinesis.common.InitialPositionInStream
 import java.net.URI
 import java.util.Date
 
-case class KinesisAppConfig(
+case class KinesisMultistreamAppConfig(
     awsHost: String,
     awsPort: Long,
     awsRegion: Region,
     awsKeyId: String,
     awsKey: String,
-    streamName: StreamName,
-    appName: AppName
+    streamNames: List[String],
+    appName: String
 )
 
-object KinesisAppConfig {
+object KinesisMultistreamAppConfig {
 
-  def localstackConfig: Either[String, KinesisAppConfig] = (AppName("test-app"), StreamName("example")).mapN {
-    case (appName, streamName) =>
-      KinesisAppConfig(
-        awsHost = "localhost",
-        awsPort = 4566L,
-        awsRegion = Region.US_EAST_1,
-        awsKeyId = "dummy",
-        awsKey = "dummy",
-        streamName = streamName,
-        appName = appName
-      )
-  }
+  def localstackConfig: KinesisMultistreamAppConfig = KinesisMultistreamAppConfig(
+    awsHost = "localhost",
+    awsPort = 4566L,
+    awsRegion = Region.US_EAST_1,
+    awsKeyId = "dummy",
+    awsKey = "dummy",
+    streamNames = List("example1", "example2", "example3"),
+    appName = "test-app"
+  )
 
   object syntax {
 
-    implicit class ConfigExtensions(kinesisAppConfig: KinesisAppConfig) {
+    implicit class ConfigExtensions(kinesisAppConfig: KinesisMultistreamAppConfig) {
       private val cp = StaticCredentialsProvider.create(
         AwsBasicCredentials.create(kinesisAppConfig.awsKeyId, kinesisAppConfig.awsKey)
       )
@@ -64,7 +60,7 @@ object KinesisAppConfig {
         overwriteStuff(CloudWatchAsyncClient.builder())
 
       def consumerConfig: KinesisConsumerSettings = KinesisConsumerSettings(
-        kinesisAppConfig.streamName,
+        kinesisAppConfig.streamNames(0),
         kinesisAppConfig.appName,
         initialPositionInStream = InitialPositionInStream.TRIM_HORIZON.asLeft[Date],
         retrievalMode = Polling
