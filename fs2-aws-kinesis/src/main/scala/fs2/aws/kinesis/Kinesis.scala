@@ -17,6 +17,7 @@ import software.amazon.kinesis.retrieval.KinesisClientRecord
 import software.amazon.kinesis.retrieval.polling.PollingConfig
 
 import java.util.UUID
+import scala.annotation.nowarn
 
 trait Kinesis[F[_]] {
 
@@ -128,6 +129,7 @@ object Kinesis {
       cloudWatchAsyncClient: CloudWatchAsyncClient
   ): Kinesis[F] = {
 
+    @nowarn("msg=deprecated")
     def defaultScheduler(
         settings: KinesisConsumerSettings,
         kinesisClient: KinesisAsyncClient,
@@ -154,7 +156,6 @@ object Kinesis {
           )
         case _ => ()
       }
-
       retrievalConfig.initialPositionInStreamExtended(
         settings.initialPositionInStream match {
           case Left(position) =>

@@ -1,5 +1,6 @@
 package io.laserdisc.pure.dynamodb.tagless
 
+import software.amazon.awssdk.services.dynamodb.DynamoDbServiceClientConfiguration
 import software.amazon.awssdk.services.dynamodb.model.*
 import software.amazon.awssdk.services.dynamodb.paginators.*
 import software.amazon.awssdk.services.dynamodb.waiters.DynamoDbAsyncWaiter
@@ -69,6 +70,7 @@ trait DynamoDbAsyncClientOp[F[_]] {
   def restoreTableToPointInTime(a: RestoreTableToPointInTimeRequest): F[RestoreTableToPointInTimeResponse]
   def scan(a: ScanRequest): F[ScanResponse]
   def scanPaginator(a: ScanRequest): F[ScanPublisher]
+  def serviceClientConfiguration: F[DynamoDbServiceClientConfiguration]
   def serviceName: F[String]
   def tagResource(a: TagResourceRequest): F[TagResourceResponse]
   def transactGetItems(a: TransactGetItemsRequest): F[TransactGetItemsResponse]
