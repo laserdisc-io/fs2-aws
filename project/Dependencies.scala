@@ -10,7 +10,7 @@ object Dependencies {
     val Munit            = "0.7.29"
     val Fs2              = "3.7.0"
     val Refined          = "0.10.1"
-    val ScalaTest        = "3.2.15"
+    val ScalaTest        = "3.2.16"
     val MockitoScalaTest = "1.17.5"
     val MockitoCore      = "5.1.1"
     val CE               = "3.4.11"
