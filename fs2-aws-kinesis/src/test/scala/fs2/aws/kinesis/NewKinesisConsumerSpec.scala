@@ -1,9 +1,10 @@
 package fs2.aws.kinesis
 
-import cats.effect.IO
 import cats.effect.unsafe.IORuntime
+import cats.effect.{IO, Resource}
 import cats.implicits.*
-import eu.timepit.refined.auto.*
+import fs2.Chunk
+import fs2.aws.kinesis.models.KinesisModels.{AppName, StreamName}
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.*
 import org.scalatest.BeforeAndAfterEach
@@ -12,6 +13,9 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.*
 import org.slf4j.LoggerFactory
+import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
+import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
+import software.amazon.awssdk.services.kinesis.KinesisAsyncClient
 import software.amazon.kinesis.checkpoint.ShardRecordProcessorCheckpointer
 import software.amazon.kinesis.coordinator.Scheduler
 import software.amazon.kinesis.lifecycle.events.*
@@ -45,14 +49,20 @@ class NewKinesisConsumerSpec
 
   "KinesisWorker source" should "successfully read data from the Kinesis stream" in new WorkerContext with TestData {
 
-    val res = (
-      stream.take(1).compile.toList,
-      IO.blocking {
-        shard1Guard.await()
-        recordProcessor.initialize(initializationInput)
-        recordProcessor.processRecords(recordsInput.build())
-      }
-    ).parMapN { case (msgs, _) => msgs }.unsafeToFuture().futureValue
+    val res =
+      streamResource
+        .use(stream =>
+          (
+            stream.flatMap(fs2.Stream.chunk).take(1).compile.toList,
+            IO.blocking {
+              shard1Guard.await()
+              recordProcessor.initialize(initializationInput)
+              recordProcessor.processRecords(recordsInput.build())
+            }
+          ).parMapN { case (msgs, _) => msgs }
+        )
+        .unsafeToFuture()
+        .futureValue
 
     val commitableRecord = res.head
     commitableRecord.record.data() should be(record.data())
@@ -64,7 +74,14 @@ class NewKinesisConsumerSpec
 
   it should "Shutdown the worker if the stream is drained and has not failed" in new WorkerContext with TestData {
     (
-      stream.take(1).compile.toList.flatMap(l => IO.blocking(latch.countDown()) >> IO.pure(l)),
+      streamResource.use(stream =>
+        stream
+          .flatMap(fs2.Stream.chunk)
+          .take(1)
+          .compile
+          .toList
+          .flatMap(l => IO.blocking(latch.countDown()) >> IO.pure(l))
+      ),
       IO.blocking {
         shard1Guard.await()
         recordProcessor.initialize(initializationInput)
@@ -78,7 +95,14 @@ class NewKinesisConsumerSpec
   it should "shutdown the worker if the stream terminates" in new WorkerContext(errorStream = true) with TestData {
     intercept[Exception] {
       (
-        stream.take(1).compile.toList.flatMap(l => IO.blocking(latch.countDown()) >> IO.pure(l)),
+        streamResource.use(stream =>
+          stream
+            .flatMap(fs2.Stream.chunk)
+            .take(1)
+            .compile
+            .toList
+            .flatMap(l => IO.blocking(latch.countDown()) >> IO.pure(l))
+        ),
         IO.blocking {
           shard1Guard.await()
           recordProcessor.initialize(initializationInput)
@@ -94,7 +118,7 @@ class NewKinesisConsumerSpec
 
     // Create and send 10 records (to match buffer size)
     val res = (
-      stream.take(60).compile.toList,
+      streamResource.use(stream => stream.flatMap(fs2.Stream.chunk).take(60).compile.toList),
       IO.blocking {
         logger.info("about to acquire lock for record processor #1")
         shard1Guard.await()
@@ -131,7 +155,7 @@ class NewKinesisConsumerSpec
     with TestData {
 
     val res = (
-      stream.take(10).compile.toList,
+      streamResource.use(stream => stream.flatMap(fs2.Stream.chunk).take(10).compile.toList),
       IO.blocking {
         shard1Guard.await()
         recordProcessor.initialize(initializationInput)
@@ -167,20 +191,23 @@ class NewKinesisConsumerSpec
     val nRecords = 5
 
     val res: Seq[KinesisClientRecord] = (
-      stream
-        .take(nRecords.toLong)
-        // emulate message processing latency to reproduce the situation when End of Shard arrives BEFORE
-        // all in-flight records are done
-        .parEvalMap(3)(msg => IO.sleep(200 millis) >> IO.pure(msg))
-        .through(
-          k.checkpointRecords(
-            KinesisCheckpointSettings(maxBatchSize = Int.MaxValue, maxBatchWait = 500.millis)
-              .getOrElse(throw new Error())
+      streamResource.use(stream =>
+        stream
+          .flatMap(fs2.Stream.chunk)
+          .take(nRecords.toLong)
+          // emulate message processing latency to reproduce the situation when End of Shard arrives BEFORE
+          // all in-flight records are done
+          .parEvalMap(3)(msg => IO.sleep(200 millis) >> IO.pure(msg))
+          .through(
+            k.checkpointRecords(
+              KinesisCheckpointSettings(maxBatchSize = Int.MaxValue, maxBatchWait = 500.millis)
+                .getOrElse(throw new Error())
+            )
           )
-        )
-        .compile
-        .toList
-        .flatMap(l => IO.blocking(latch.countDown()) >> IO.pure(l)),
+          .compile
+          .toList
+          .flatMap(l => IO.blocking(latch.countDown()) >> IO.pure(l))
+      ),
       IO.blocking {
         shard1Guard.await()
         recordProcessor.initialize(initializationInput)
@@ -366,10 +393,10 @@ class NewKinesisConsumerSpec
     val latch                              = new CountDownLatch(1)
     protected val mockScheduler: Scheduler = mock(classOf[Scheduler])
 
-    var recordProcessorFactory: ShardRecordProcessorFactory = _
-    var recordProcessor: ShardRecordProcessor               = _
-    var recordProcessor2: ShardRecordProcessor              = _
-    val chunkedRecordProcessor                              = new ChunkedRecordProcessor(_ => ())
+//    var recordProcessorFactory: ShardRecordProcessorFactory = _
+    var recordProcessor: ShardRecordProcessor  = _
+    var recordProcessor2: ShardRecordProcessor = _
+    val chunkedRecordProcessor                 = new ChunkedRecordProcessor(_ => ())
 
     doAnswer(_ => latch.await()).when(mockScheduler).run()
 //    doThrow(new RuntimeException("boom"))
@@ -377,7 +404,7 @@ class NewKinesisConsumerSpec
 //      .run()
 
     val builder: ShardRecordProcessorFactory => IO[Scheduler] = { (x: ShardRecordProcessorFactory) =>
-      recordProcessorFactory = x
+//      recordProcessorFactory = x
       recordProcessor = x.shardRecordProcessor()
       shard1Guard.countDown()
       recordProcessor2 = x.shardRecordProcessor()
@@ -387,13 +414,38 @@ class NewKinesisConsumerSpec
 
     val config: KinesisConsumerSettings =
       KinesisConsumerSettings("testStream", "testApp")
-    val k: Kinesis[IO] = Kinesis.create[IO](builder)
 
-    val stream: fs2.Stream[IO, CommittableRecord] =
-      k.readFromKinesisStream(config)
-        .evalTap(_ => IO.sleep(100 millis))
-        .map(i => if (errorStream) throw new Exception("boom") else i)
-        .onFinalize(IO.delay(latch.countDown()))
+    val appNameRes = Resource.eval(IO.fromEither(AppName(config.appName).leftMap(new IllegalArgumentException(_))))
+    val streamNameRes =
+      Resource.eval(IO.fromEither(StreamName(config.streamName).leftMap(new IllegalArgumentException(_))))
+
+    val streamResource: Resource[IO, fs2.Stream[IO, Chunk[CommittableRecord]]] = DefaultKinesisStreamBuilder[IO]()
+      .withAppName(appNameRes)
+      .withKinesisClient(mock(classOf[KinesisAsyncClient]))
+      .withDynamoDBClient(mock(classOf[DynamoDbAsyncClient]))
+      .withCloudWatchClient(mock(classOf[CloudWatchAsyncClient]))
+      .withDefaultSchedulerId
+      .withSingleStreamTracker(streamNameRes)
+      .withDefaultStreamTracker
+      .withDefaultSchedulerConfigs
+      .withDefaultBufferSize
+      .withScheduler { cb =>
+        val x = cb.shardRecordProcessorFactory()
+        recordProcessor = x.shardRecordProcessor()
+        shard1Guard.countDown()
+        recordProcessor2 = x.shardRecordProcessor()
+        shard2Guard.countDown()
+        Resource.pure(mockScheduler)
+      }
+      .build
+      .map(stream =>
+        stream
+          .evalTap(_ => IO.sleep(100 millis))
+          .map(i => if (errorStream) throw new Exception("boom") else i)
+          .onFinalize(IO.delay(latch.countDown()))
+      )
+
+    val k: Kinesis[IO] = Kinesis.create[IO](builder)
 
     val settings: KinesisCheckpointSettings =
       KinesisCheckpointSettings(maxBatchSize = Int.MaxValue, maxBatchWait = 500.millis)
