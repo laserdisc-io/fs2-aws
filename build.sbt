@@ -9,8 +9,8 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 organization := "io.laserdisc"
 name         := "fs2-aws"
 
-lazy val scala213 = "2.13.10"
-lazy val scala3   = "3.2.2"
+lazy val scala213 = "2.13.11"
+lazy val scala3   = "3.3.0"
 
 lazy val supportedScalaVersions = List(scala213, scala3)
 
@@ -113,6 +113,7 @@ lazy val `fs2-aws-kinesis` = (project in file("fs2-aws-kinesis"))
     Dependencies.Fs2Core,
     Dependencies.KinesisClient,
     Dependencies.KinesisProducer,
+    Dependencies.newTypes,
     Dependencies.Refined,
     Dependencies.Testing,
     coverageMinimumStmtTotal := 40,
@@ -289,7 +290,7 @@ lazy val commonSettings = Def.settings(
   Test / console / scalacOptions := (Compile / console / scalacOptions).value,
   Test / scalacOptions           := (Compile / scalacOptions).value,
   Test / scalacOptions += "-Wconf:msg=is not declared infix:s,msg=is declared 'open':s",
-  libraryDependencies += "org.scala-lang.modules" %% "scala-collection-compat" % "2.9.0",
+  libraryDependencies += "org.scala-lang.modules" %% "scala-collection-compat" % "2.10.0",
   libraryDependencies ++= Seq(
     compilerPlugin(("org.typelevel" %% "kind-projector" % "0.13.2").cross(CrossVersion.full)),
     compilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1")

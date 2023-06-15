@@ -68,6 +68,7 @@ trait Interpreter[M[_]] { outer =>
 
     // domain-specific operations are implemented in terms of `primitive`
     override def addPermission(a: AddPermissionRequest)                     = eff(_.addPermission(a))
+    override def cancelMessageMoveTask(a: CancelMessageMoveTaskRequest)     = eff(_.cancelMessageMoveTask(a))
     override def changeMessageVisibility(a: ChangeMessageVisibilityRequest) = eff(_.changeMessageVisibility(a))
     override def changeMessageVisibilityBatch(a: ChangeMessageVisibilityBatchRequest) = eff(
       _.changeMessageVisibilityBatch(a)
@@ -83,23 +84,28 @@ trait Interpreter[M[_]] { outer =>
     override def listDeadLetterSourceQueuesPaginator(a: ListDeadLetterSourceQueuesRequest) = primitive(
       _.listDeadLetterSourceQueuesPaginator(a)
     )
-    override def listQueueTags(a: ListQueueTagsRequest)           = eff(_.listQueueTags(a))
-    override def listQueues                                       = eff(_.listQueues)
-    override def listQueues(a: ListQueuesRequest)                 = eff(_.listQueues(a))
-    override def listQueuesPaginator                              = primitive(_.listQueuesPaginator)
-    override def listQueuesPaginator(a: ListQueuesRequest)        = primitive(_.listQueuesPaginator(a))
-    override def purgeQueue(a: PurgeQueueRequest)                 = eff(_.purgeQueue(a))
-    override def receiveMessage(a: ReceiveMessageRequest)         = eff(_.receiveMessage(a))
-    override def removePermission(a: RemovePermissionRequest)     = eff(_.removePermission(a))
-    override def sendMessage(a: SendMessageRequest)               = eff(_.sendMessage(a))
-    override def sendMessageBatch(a: SendMessageBatchRequest)     = eff(_.sendMessageBatch(a))
-    override def serviceName                                      = primitive(_.serviceName)
-    override def setQueueAttributes(a: SetQueueAttributesRequest) = eff(_.setQueueAttributes(a))
-    override def tagQueue(a: TagQueueRequest)                     = eff(_.tagQueue(a))
-    override def untagQueue(a: UntagQueueRequest)                 = eff(_.untagQueue(a))
+    override def listMessageMoveTasks(a: ListMessageMoveTasksRequest) = eff(_.listMessageMoveTasks(a))
+    override def listQueueTags(a: ListQueueTagsRequest)               = eff(_.listQueueTags(a))
+    override def listQueues                                           = eff(_.listQueues)
+    override def listQueues(a: ListQueuesRequest)                     = eff(_.listQueues(a))
+    override def listQueuesPaginator                                  = primitive(_.listQueuesPaginator)
+    override def listQueuesPaginator(a: ListQueuesRequest)            = primitive(_.listQueuesPaginator(a))
+    override def purgeQueue(a: PurgeQueueRequest)                     = eff(_.purgeQueue(a))
+    override def receiveMessage(a: ReceiveMessageRequest)             = eff(_.receiveMessage(a))
+    override def removePermission(a: RemovePermissionRequest)         = eff(_.removePermission(a))
+    override def sendMessage(a: SendMessageRequest)                   = eff(_.sendMessage(a))
+    override def sendMessageBatch(a: SendMessageBatchRequest)         = eff(_.sendMessageBatch(a))
+    override def serviceClientConfiguration                           = primitive(_.serviceClientConfiguration)
+    override def serviceName                                          = primitive(_.serviceName)
+    override def setQueueAttributes(a: SetQueueAttributesRequest)     = eff(_.setQueueAttributes(a))
+    override def startMessageMoveTask(a: StartMessageMoveTaskRequest) = eff(_.startMessageMoveTask(a))
+    override def tagQueue(a: TagQueueRequest)                         = eff(_.tagQueue(a))
+    override def untagQueue(a: UntagQueueRequest)                     = eff(_.untagQueue(a))
     def lens[E](f: E => SqsAsyncClient): SqsAsyncClientOp[Kleisli[M, E, *]] =
       new SqsAsyncClientOp[Kleisli[M, E, *]] {
         override def addPermission(a: AddPermissionRequest) = Kleisli(e => eff1(f(e).addPermission(a)))
+        override def cancelMessageMoveTask(a: CancelMessageMoveTaskRequest) =
+          Kleisli(e => eff1(f(e).cancelMessageMoveTask(a)))
         override def changeMessageVisibility(a: ChangeMessageVisibilityRequest) =
           Kleisli(e => eff1(f(e).changeMessageVisibility(a)))
         override def changeMessageVisibilityBatch(a: ChangeMessageVisibilityBatchRequest) =
@@ -115,6 +121,8 @@ trait Interpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).listDeadLetterSourceQueues(a)))
         override def listDeadLetterSourceQueuesPaginator(a: ListDeadLetterSourceQueuesRequest) =
           Kleisli(e => primitive1(f(e).listDeadLetterSourceQueuesPaginator(a)))
+        override def listMessageMoveTasks(a: ListMessageMoveTasksRequest) =
+          Kleisli(e => eff1(f(e).listMessageMoveTasks(a)))
         override def listQueueTags(a: ListQueueTagsRequest)    = Kleisli(e => eff1(f(e).listQueueTags(a)))
         override def listQueues                                = Kleisli(e => eff1(f(e).listQueues))
         override def listQueues(a: ListQueuesRequest)          = Kleisli(e => eff1(f(e).listQueues(a)))
@@ -122,13 +130,16 @@ trait Interpreter[M[_]] { outer =>
         override def listQueuesPaginator(a: ListQueuesRequest) = Kleisli(e => primitive1(f(e).listQueuesPaginator(a)))
         override def purgeQueue(a: PurgeQueueRequest)          = Kleisli(e => eff1(f(e).purgeQueue(a)))
         override def receiveMessage(a: ReceiveMessageRequest)  = Kleisli(e => eff1(f(e).receiveMessage(a)))
-        override def removePermission(a: RemovePermissionRequest)     = Kleisli(e => eff1(f(e).removePermission(a)))
-        override def sendMessage(a: SendMessageRequest)               = Kleisli(e => eff1(f(e).sendMessage(a)))
-        override def sendMessageBatch(a: SendMessageBatchRequest)     = Kleisli(e => eff1(f(e).sendMessageBatch(a)))
-        override def serviceName                                      = Kleisli(e => primitive1(f(e).serviceName))
+        override def removePermission(a: RemovePermissionRequest) = Kleisli(e => eff1(f(e).removePermission(a)))
+        override def sendMessage(a: SendMessageRequest)           = Kleisli(e => eff1(f(e).sendMessage(a)))
+        override def sendMessageBatch(a: SendMessageBatchRequest) = Kleisli(e => eff1(f(e).sendMessageBatch(a)))
+        override def serviceClientConfiguration = Kleisli(e => primitive1(f(e).serviceClientConfiguration))
+        override def serviceName                = Kleisli(e => primitive1(f(e).serviceName))
         override def setQueueAttributes(a: SetQueueAttributesRequest) = Kleisli(e => eff1(f(e).setQueueAttributes(a)))
-        override def tagQueue(a: TagQueueRequest)                     = Kleisli(e => eff1(f(e).tagQueue(a)))
-        override def untagQueue(a: UntagQueueRequest)                 = Kleisli(e => eff1(f(e).untagQueue(a)))
+        override def startMessageMoveTask(a: StartMessageMoveTaskRequest) =
+          Kleisli(e => eff1(f(e).startMessageMoveTask(a)))
+        override def tagQueue(a: TagQueueRequest)     = Kleisli(e => eff1(f(e).tagQueue(a)))
+        override def untagQueue(a: UntagQueueRequest) = Kleisli(e => eff1(f(e).untagQueue(a)))
       }
   }
 
@@ -139,6 +150,7 @@ trait Interpreter[M[_]] { outer =>
 
     // domain-specific operations are implemented in terms of `primitive`
     override def addPermission(a: AddPermissionRequest)                     = eff1(client.addPermission(a))
+    override def cancelMessageMoveTask(a: CancelMessageMoveTaskRequest)     = eff1(client.cancelMessageMoveTask(a))
     override def changeMessageVisibility(a: ChangeMessageVisibilityRequest) = eff1(client.changeMessageVisibility(a))
     override def changeMessageVisibilityBatch(a: ChangeMessageVisibilityBatchRequest) = eff1(
       client.changeMessageVisibilityBatch(a)
@@ -156,20 +168,23 @@ trait Interpreter[M[_]] { outer =>
     override def listDeadLetterSourceQueuesPaginator(a: ListDeadLetterSourceQueuesRequest) = primitive1(
       client.listDeadLetterSourceQueuesPaginator(a)
     )
-    override def listQueueTags(a: ListQueueTagsRequest)           = eff1(client.listQueueTags(a))
-    override def listQueues                                       = eff1(client.listQueues)
-    override def listQueues(a: ListQueuesRequest)                 = eff1(client.listQueues(a))
-    override def listQueuesPaginator                              = primitive1(client.listQueuesPaginator)
-    override def listQueuesPaginator(a: ListQueuesRequest)        = primitive1(client.listQueuesPaginator(a))
-    override def purgeQueue(a: PurgeQueueRequest)                 = eff1(client.purgeQueue(a))
-    override def receiveMessage(a: ReceiveMessageRequest)         = eff1(client.receiveMessage(a))
-    override def removePermission(a: RemovePermissionRequest)     = eff1(client.removePermission(a))
-    override def sendMessage(a: SendMessageRequest)               = eff1(client.sendMessage(a))
-    override def sendMessageBatch(a: SendMessageBatchRequest)     = eff1(client.sendMessageBatch(a))
-    override def serviceName                                      = primitive1(client.serviceName)
-    override def setQueueAttributes(a: SetQueueAttributesRequest) = eff1(client.setQueueAttributes(a))
-    override def tagQueue(a: TagQueueRequest)                     = eff1(client.tagQueue(a))
-    override def untagQueue(a: UntagQueueRequest)                 = eff1(client.untagQueue(a))
+    override def listMessageMoveTasks(a: ListMessageMoveTasksRequest) = eff1(client.listMessageMoveTasks(a))
+    override def listQueueTags(a: ListQueueTagsRequest)               = eff1(client.listQueueTags(a))
+    override def listQueues                                           = eff1(client.listQueues)
+    override def listQueues(a: ListQueuesRequest)                     = eff1(client.listQueues(a))
+    override def listQueuesPaginator                                  = primitive1(client.listQueuesPaginator)
+    override def listQueuesPaginator(a: ListQueuesRequest)            = primitive1(client.listQueuesPaginator(a))
+    override def purgeQueue(a: PurgeQueueRequest)                     = eff1(client.purgeQueue(a))
+    override def receiveMessage(a: ReceiveMessageRequest)             = eff1(client.receiveMessage(a))
+    override def removePermission(a: RemovePermissionRequest)         = eff1(client.removePermission(a))
+    override def sendMessage(a: SendMessageRequest)                   = eff1(client.sendMessage(a))
+    override def sendMessageBatch(a: SendMessageBatchRequest)         = eff1(client.sendMessageBatch(a))
+    override def serviceClientConfiguration                           = primitive1(client.serviceClientConfiguration)
+    override def serviceName                                          = primitive1(client.serviceName)
+    override def setQueueAttributes(a: SetQueueAttributesRequest)     = eff1(client.setQueueAttributes(a))
+    override def startMessageMoveTask(a: StartMessageMoveTaskRequest) = eff1(client.startMessageMoveTask(a))
+    override def tagQueue(a: TagQueueRequest)                         = eff1(client.tagQueue(a))
+    override def untagQueue(a: UntagQueueRequest)                     = eff1(client.untagQueue(a))
 
   }
 
