@@ -76,7 +76,7 @@ object DynamoDB {
       // Instantiate a new bounded queue and concurrently run the queue populator
       // Expose the elements by dequeuing the internal buffer
       for {
-        dispatcher      <- Stream.resource(Dispatcher.parallel[F])
+        dispatcher      <- Stream.resource(Dispatcher.parallel[F](await = true))
         buffer          <- Stream.eval(Queue.unbounded[F, CommittableRecord])
         interruptSignal <- Stream.eval(SignallingRef[F, Boolean](false))
         _               <- instantiateScheduler(dispatcher, buffer, interruptSignal)
