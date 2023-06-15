@@ -4,7 +4,7 @@ import cats.effect.*
 import cats.implicits.*
 import cats.~>
 import eu.timepit.refined.auto.*
-import fs2.aws.s3.models.Models.{BucketName, ETag, FileKey, MultiPartConcurrency, PartSizeMB, UploadEmptyFiles}
+import fs2.aws.s3.models.Models.*
 import fs2.{Chunk, Pipe, Pull}
 import io.laserdisc.pure.s3.tagless.S3AsyncClientOp
 import software.amazon.awssdk.core.async.{AsyncRequestBody, AsyncResponseTransformer}
@@ -128,7 +128,7 @@ object S3 {
           AsyncRequestBody.fromBytes(new Array[Byte](0))
         )
         def completeUpload(uploadId: UploadId): Pipe[F, List[(PartETag, PartId)], Option[ETag]] =
-          _.parEvalMap(multiPartConcurrency) {
+          _.evalMap {
             case Nil =>
               cancelUpload(uploadId) *>
                 Async[F]
@@ -173,6 +173,7 @@ object S3 {
                 .through(completeUpload(uploadId))
                 .handleErrorWith(ex => fs2.Stream.eval(cancelUpload(uploadId) >> Sync[F].raiseError(ex)))
             }
+
       }
 
       /** Reads a file in a single request. Suitable for small files.
