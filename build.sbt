@@ -59,6 +59,7 @@ lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb"))
     coverageFailOnMinimum    := true,
     Dependencies.Fs2Core,
     Dependencies.DynamoStreamAdapter,
+    Dependencies.newTypes,
     Dependencies.ScanamoCirce("1.0.8"),
     Dependencies.Testing
   )
