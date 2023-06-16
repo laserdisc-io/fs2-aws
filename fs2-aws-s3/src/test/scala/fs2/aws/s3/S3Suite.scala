@@ -10,10 +10,11 @@ import io.laserdisc.pure.s3.tagless.{Interpreter, S3AsyncClientOp}
 import munit.CatsEffectSuite
 import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import software.amazon.awssdk.regions.Region
-import software.amazon.awssdk.services.s3.model.NoSuchKeyException
+import software.amazon.awssdk.services.s3.model.{ListMultipartUploadsRequest, NoSuchKeyException}
 import software.amazon.awssdk.services.s3.{S3AsyncClient, S3Configuration}
 
 import java.net.{URI, URL}
+import java.util.UUID
 
 class S3Suite extends CatsEffectSuite {
 
@@ -131,6 +132,68 @@ class S3Suite extends CatsEffectSuite {
             }
 
         upload >> read
+      }
+    }
+  }
+
+  test(
+    "Gracefully abort multipart upload when no data has been passed through the stream and `uploadEmptyFile` is disabled."
+  ) {
+
+    s3R.map(s3 => s3 -> S3.create[IO](s3)).use { case (s3Ops, s3) =>
+      for {
+        fileKey <- IO.delay(UUID.randomUUID().toString).map(k => FileKey(NonEmptyString.unsafeFrom(k)))
+        uploadedTags <- fs2.Stream.empty
+          .through(s3.uploadFileMultipart(bucket, fileKey, partSize))
+          .compile
+          .last
+          .map(_.get)
+        activeUploads <- s3Ops
+          .listMultipartUploads(
+            ListMultipartUploadsRequest
+              .builder()
+              .bucket(bucket.value.value)
+              .prefix(fileKey.value.value)
+              .build()
+          )
+          .map(_.uploads())
+      } yield {
+        assert(uploadedTags.isEmpty)
+        assert(activeUploads.isEmpty)
+      }
+    }
+  }
+
+  test(
+    "upload an empty file when using multipart upload when no data has been passed through the stream and `uploademptyfile` is enabled."
+  ) {
+
+    s3R.map(s3 => s3 -> S3.create[IO](s3)).use { case (s3Ops, s3) =>
+      for {
+        fileKey <- IO.delay(UUID.randomUUID().toString).map(k => FileKey(NonEmptyString.unsafeFrom(k)))
+        uploadedTags <- fs2.Stream.empty
+          .through(s3.uploadFileMultipart(bucket, fileKey, partSize, uploadEmptyFiles = true))
+          .compile
+          .last
+          .map(_.get)
+        read <- s3
+          .readFile(bucket, fileKey)
+          .compile
+          .toVector
+          .map(_.toArray)
+        activeUploads <- s3Ops
+          .listMultipartUploads(
+            ListMultipartUploadsRequest
+              .builder()
+              .bucket(bucket.value.value)
+              .prefix(fileKey.value.value)
+              .build()
+          )
+          .map(_.uploads())
+      } yield {
+        assert(uploadedTags.nonEmpty)
+        assert(read.isEmpty)
+        assert(activeUploads.isEmpty)
       }
     }
   }
