@@ -15,9 +15,8 @@ object Dependencies {
     val MockitoCore      = "5.3.1"
     val CE               = "3.5.0"
     val Logback          = "1.4.8"
-    val SLF4J            = "2.0.6"
+    val SLF4J            = "2.0.7"
     val Log4Cats         = "2.6.0"
-
   }
 
   val Fs2Core = libraryDependencies ++= Seq(
