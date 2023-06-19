@@ -9,7 +9,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 organization := "io.laserdisc"
 name         := "fs2-aws"
 
-lazy val scala213 = "2.13.10"
+lazy val scala213 = "2.13.11"
 lazy val scala3   = "3.3.0"
 
 lazy val supportedScalaVersions = List(scala213, scala3)
@@ -59,6 +59,7 @@ lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb"))
     coverageFailOnMinimum    := true,
     Dependencies.Fs2Core,
     Dependencies.DynamoStreamAdapter,
+    Dependencies.newTypes,
     Dependencies.ScanamoCirce("1.0.8"),
     Dependencies.Testing
   )
@@ -81,7 +82,7 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
     coverageMinimumStmtTotal := 0,
     Dependencies.Logging,
     Dependencies.Trace4Cats,
-    Dependencies.ScanamoCirce("2.1.0")
+    Dependencies.ScanamoCirce("2.3.0")
   )
   .settings(commonSettings)
   .settings(
