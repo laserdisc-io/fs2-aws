@@ -16,7 +16,7 @@ object Dependencies {
     val CE               = "3.5.0"
     val Logback          = "1.4.8"
     val SLF4J            = "2.0.6"
-    val Log4Cats         = "2.5.0"
+    val Log4Cats         = "2.6.0"
 
   }
 
