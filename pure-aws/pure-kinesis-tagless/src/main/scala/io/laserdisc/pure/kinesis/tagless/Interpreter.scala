@@ -102,6 +102,7 @@ trait Interpreter[M[_]] { outer =>
     override def putRecords(a: PutRecordsRequest)                         = eff(_.putRecords(a))
     override def registerStreamConsumer(a: RegisterStreamConsumerRequest) = eff(_.registerStreamConsumer(a))
     override def removeTagsFromStream(a: RemoveTagsFromStreamRequest)     = eff(_.removeTagsFromStream(a))
+    override def serviceClientConfiguration                               = primitive(_.serviceClientConfiguration)
     override def serviceName                                              = primitive(_.serviceName)
     override def splitShard(a: SplitShardRequest)                         = eff(_.splitShard(a))
     override def startStreamEncryption(a: StartStreamEncryptionRequest)   = eff(_.startStreamEncryption(a))
@@ -155,6 +156,7 @@ trait Interpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).registerStreamConsumer(a)))
         override def removeTagsFromStream(a: RemoveTagsFromStreamRequest) =
           Kleisli(e => eff1(f(e).removeTagsFromStream(a)))
+        override def serviceClientConfiguration       = Kleisli(e => primitive1(f(e).serviceClientConfiguration))
         override def serviceName                      = Kleisli(e => primitive1(f(e).serviceName))
         override def splitShard(a: SplitShardRequest) = Kleisli(e => eff1(f(e).splitShard(a)))
         override def startStreamEncryption(a: StartStreamEncryptionRequest) =
@@ -212,10 +214,11 @@ trait Interpreter[M[_]] { outer =>
     override def putRecords(a: PutRecordsRequest)                         = eff1(client.putRecords(a))
     override def registerStreamConsumer(a: RegisterStreamConsumerRequest) = eff1(client.registerStreamConsumer(a))
     override def removeTagsFromStream(a: RemoveTagsFromStreamRequest)     = eff1(client.removeTagsFromStream(a))
-    override def serviceName                                              = primitive1(client.serviceName)
-    override def splitShard(a: SplitShardRequest)                         = eff1(client.splitShard(a))
-    override def startStreamEncryption(a: StartStreamEncryptionRequest)   = eff1(client.startStreamEncryption(a))
-    override def stopStreamEncryption(a: StopStreamEncryptionRequest)     = eff1(client.stopStreamEncryption(a))
+    override def serviceClientConfiguration                             = primitive1(client.serviceClientConfiguration)
+    override def serviceName                                            = primitive1(client.serviceName)
+    override def splitShard(a: SplitShardRequest)                       = eff1(client.splitShard(a))
+    override def startStreamEncryption(a: StartStreamEncryptionRequest) = eff1(client.startStreamEncryption(a))
+    override def stopStreamEncryption(a: StopStreamEncryptionRequest)   = eff1(client.stopStreamEncryption(a))
     override def subscribeToShard(a: SubscribeToShardRequest, b: SubscribeToShardResponseHandler) = eff1(
       client.subscribeToShard(a, b)
     )

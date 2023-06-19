@@ -4,7 +4,7 @@ import cats.effect.*
 import cats.implicits.*
 import cats.~>
 import eu.timepit.refined.auto.*
-import fs2.aws.s3.models.Models.{BucketName, ETag, FileKey, PartSizeMB}
+import fs2.aws.s3.models.Models.*
 import fs2.{Chunk, Pipe, Pull}
 import io.laserdisc.pure.s3.tagless.S3AsyncClientOp
 import software.amazon.awssdk.core.async.{AsyncRequestBody, AsyncResponseTransformer}
@@ -23,8 +23,10 @@ trait S3[F[_]] {
   def uploadFileMultipart(
       bucket: BucketName,
       key: FileKey,
-      partSize: PartSizeMB
-  ): Pipe[F, Byte, ETag]
+      partSize: PartSizeMB,
+      uploadEmptyFiles: UploadEmptyFiles = false,
+      multiPartConcurrency: MultiPartConcurrency = 10
+  ): Pipe[F, Byte, Option[ETag]]
   def readFile(bucket: BucketName, key: FileKey): fs2.Stream[F, Byte]
 
   def readFileMultipart(
@@ -35,9 +37,9 @@ trait S3[F[_]] {
 }
 
 object S3 {
-  type PartETag = String
-  type PartId   = Int
-  type UploadId = String
+  private type PartETag = String
+  private type PartId   = Int
+  private type UploadId = String
 
   /** It creates an instance of the purely functional S3 API. */
   def create[F[_]: Async](s3: S3AsyncClientOp[F]): S3[F] =
@@ -75,15 +77,30 @@ object S3 {
         * It does so in constant memory. So at a given time, only the number of bytes indicated by @partSize
         * will be loaded in memory.
         *
+        * Note: AWS S3 API does not support uploading empty files via multipart upload. It does not gracefully
+        * respond on attempting to do this and returns a `400` response with a generic error message. This function
+        * accepts a boolean `uploadEmptyFile` (set to `false` by default) to determine how to handle this scenario. If
+        * set to false (default) and no data has passed through the stream, it will gracefully abort the multi-part
+        * upload request. If set to true, and no data has passed through the stream, an empty file will be uploaded on
+        * completion. An `Option[ETag]` of `None` will be emitted on the stream if no file was uploaded, else a
+        * `Some(ETag)` will be emitted. Alternatively, If you need to create empty files, consider using consider using
+        * [[uploadFile]] instead.
+        *
         * For small files, consider using [[uploadFile]] instead.
         *
+        * @param bucket the bucket name
+        * @param key the target file key
         * @param partSize the part size indicated in MBs. It must be at least 5, as required by AWS.
+        * @param uploadEmptyFiles whether to upload empty files or not, if no data has passed through the stream create an empty file default is false
+        * @param multiPartConcurrency the number of concurrent parts to upload
         */
       def uploadFileMultipart(
           bucket: BucketName,
           key: FileKey,
-          partSize: PartSizeMB
-      ): Pipe[F, Byte, ETag] = {
+          partSize: PartSizeMB,
+          uploadEmptyFiles: UploadEmptyFiles,
+          multiPartConcurrency: MultiPartConcurrency
+      ): Pipe[F, Byte, Option[ETag]] = {
         val chunkSizeBytes = partSize * 1048576
 
         def initiateMultipartUpload: F[UploadId] =
@@ -92,7 +109,7 @@ object S3 {
           ).map(_.uploadId())
 
         def uploadPart(uploadId: UploadId): Pipe[F, (Chunk[Byte], Long), (PartETag, PartId)] =
-          _.evalMap { case (c, i) =>
+          _.parEvalMap(multiPartConcurrency) { case (c, i) =>
             s3.uploadPart(
               UploadPartRequest
                 .builder()
@@ -106,20 +123,33 @@ object S3 {
             ).map(_.eTag() -> i.toInt)
           }
 
-        def completeUpload(uploadId: UploadId): Pipe[F, List[(PartETag, PartId)], ETag] =
-          _.evalMap { tags =>
-            val parts = tags.map { case (t, i) =>
-              CompletedPart.builder().partNumber(i).eTag(t).build()
-            }.asJava
-            s3.completeMultipartUpload(
-              CompleteMultipartUploadRequest
-                .builder()
-                .bucket(bucket.value)
-                .key(key.value)
-                .uploadId(uploadId)
-                .multipartUpload(CompletedMultipartUpload.builder().parts(parts).build())
-                .build()
-            ).map(_.eTag())
+        def uploadEmptyFile = s3.putObject(
+          PutObjectRequest.builder().bucket(bucket.value).key(key.value).build(),
+          AsyncRequestBody.fromBytes(new Array[Byte](0))
+        )
+        def completeUpload(uploadId: UploadId): Pipe[F, List[(PartETag, PartId)], Option[ETag]] =
+          _.evalMap {
+            case Nil =>
+              cancelUpload(uploadId) *>
+                Async[F]
+                  .ifM(Async[F].pure(uploadEmptyFiles))(
+                    uploadEmptyFile.map(eTag => Option(eTag.eTag())),
+                    Async[F].pure(Option.empty[ETag])
+                  )
+            case tags =>
+              val parts = tags.map { case (t, i) =>
+                CompletedPart.builder().partNumber(i).eTag(t).build()
+              }.asJava
+              s3.completeMultipartUpload(
+                CompleteMultipartUploadRequest
+                  .builder()
+                  .bucket(bucket.value)
+                  .key(key.value)
+                  .uploadId(uploadId)
+                  .multipartUpload(CompletedMultipartUpload.builder().parts(parts).build())
+                  .build()
+              ).map(eTag => Option(eTag.eTag()))
+
           }
 
         def cancelUpload(uploadId: UploadId): F[Unit] =
@@ -141,8 +171,9 @@ object S3 {
                 .through(uploadPart(uploadId))
                 .fold[List[(PartETag, PartId)]](List.empty)(_ :+ _)
                 .through(completeUpload(uploadId))
-                .handleErrorWith(ex => fs2.Stream.eval(cancelUpload(uploadId) >> Sync[F].raiseError[ETag](ex)))
+                .handleErrorWith(ex => fs2.Stream.eval(cancelUpload(uploadId) >> Sync[F].raiseError(ex)))
             }
+
       }
 
       /** Reads a file in a single request. Suitable for small files.
@@ -232,10 +263,12 @@ object S3 {
       override def uploadFileMultipart(
           bucket: BucketName,
           key: FileKey,
-          partSize: PartSizeMB
-      ): Pipe[G, Byte, ETag] =
+          partSize: PartSizeMB,
+          uploadEmptyFiles: UploadEmptyFiles,
+          multiPartConcurrency: MultiPartConcurrency = 10
+      ): Pipe[G, Byte, Option[ETag]] =
         _.translate(gToF)
-          .through(s3.uploadFileMultipart(bucket, key, partSize))
+          .through(s3.uploadFileMultipart(bucket, key, partSize, uploadEmptyFiles, multiPartConcurrency))
           .translate(fToG)
 
       override def readFile(bucket: BucketName, key: FileKey): fs2.Stream[G, Byte] =

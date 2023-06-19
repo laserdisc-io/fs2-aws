@@ -222,6 +222,7 @@ trait Interpreter[M[_]] { outer =>
     override def selectObjectContent(a: SelectObjectContentRequest, b: SelectObjectContentResponseHandler) = eff(
       _.selectObjectContent(a, b)
     )
+    override def serviceClientConfiguration                            = primitive(_.serviceClientConfiguration)
     override def serviceName                                           = primitive(_.serviceName)
     override def uploadPart(a: UploadPartRequest, b: AsyncRequestBody) = eff(_.uploadPart(a, b))
     override def uploadPart(a: UploadPartRequest, b: Path)             = eff(_.uploadPart(a, b))
@@ -393,7 +394,8 @@ trait Interpreter[M[_]] { outer =>
         override def restoreObject(a: RestoreObjectRequest) = Kleisli(e => eff1(f(e).restoreObject(a)))
         override def selectObjectContent(a: SelectObjectContentRequest, b: SelectObjectContentResponseHandler) =
           Kleisli(e => eff1(f(e).selectObjectContent(a, b)))
-        override def serviceName                                           = Kleisli(e => primitive1(f(e).serviceName))
+        override def serviceClientConfiguration = Kleisli(e => primitive1(f(e).serviceClientConfiguration))
+        override def serviceName                = Kleisli(e => primitive1(f(e).serviceName))
         override def uploadPart(a: UploadPartRequest, b: AsyncRequestBody) = Kleisli(e => eff1(f(e).uploadPart(a, b)))
         override def uploadPart(a: UploadPartRequest, b: Path)             = Kleisli(e => eff1(f(e).uploadPart(a, b)))
         override def uploadPartCopy(a: UploadPartCopyRequest)              = Kleisli(e => eff1(f(e).uploadPartCopy(a)))
@@ -573,6 +575,7 @@ trait Interpreter[M[_]] { outer =>
     override def selectObjectContent(a: SelectObjectContentRequest, b: SelectObjectContentResponseHandler) = eff1(
       client.selectObjectContent(a, b)
     )
+    override def serviceClientConfiguration                            = primitive1(client.serviceClientConfiguration)
     override def serviceName                                           = primitive1(client.serviceName)
     override def uploadPart(a: UploadPartRequest, b: AsyncRequestBody) = eff1(client.uploadPart(a, b))
     override def uploadPart(a: UploadPartRequest, b: Path)             = eff1(client.uploadPart(a, b))
