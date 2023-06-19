@@ -6,8 +6,8 @@ import eu.timepit.refined.types.string.NonEmptyString
 import fs2.aws.s3.S3
 import fs2.aws.s3.models.Models.{BucketName, FileKey}
 import fs2.text
-import io.janstenpickle.trace4cats.Span
-import io.janstenpickle.trace4cats.inject.Trace
+import trace4cats.Span
+import trace4cats.Trace
 import io.laserdisc.pure.s3.tagless.{Interpreter as S3Interpreter, S3AsyncClientOp}
 import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import software.amazon.awssdk.regions.Region
