@@ -12,7 +12,7 @@ object Dependencies {
     val Refined          = "0.10.3"
     val ScalaTest        = "3.2.16"
     val MockitoScalaTest = "1.17.5"
-    val MockitoCore      = "5.3.1"
+    val MockitoCore      = "5.4.0"
     val CE               = "3.5.0"
     val Logback          = "1.4.8"
     val SLF4J            = "2.0.7"
