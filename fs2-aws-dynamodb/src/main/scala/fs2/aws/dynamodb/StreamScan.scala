@@ -2,7 +2,7 @@ package fs2.aws.dynamodb
 
 import cats.Functor
 import cats.effect.std.{Dispatcher, Queue}
-import cats.effect.{Async, Ref}
+import cats.effect.{Async, Deferred, Ref}
 import cats.implicits.*
 import fs2.{Chunk, Stream}
 import io.laserdisc.pure.dynamodb.tagless.DynamoDbAsyncClientOp
@@ -37,13 +37,11 @@ object StreamScan {
           dispatcher <- Stream.resource(Dispatcher.parallel[F])
           queue      <- Stream.eval(Queue.bounded[F, Option[Chunk[JMap[String, AttributeValue]]]](1))
           sub        <- Stream.eval(Ref[F].of[Option[Subscription]](None))
+          error      <- Stream.eval(Deferred[F, Throwable])
           _ <- Stream.eval(
             ddb
               .scanPaginator(scanRequest)
-              .map(publisher =>
-                // subscribe to the paginator, every time we request to deliver next pageSize items from the DDB table
-                // we use FS2 Queue as bounded buffer with size 1, this way we implement back pressure, not allowing
-                // paginator exhaust memory
+              .map { publisher =>
                 publisher.subscribe(new Subscriber[ScanResponse] {
 
                   override def onSubscribe(s: Subscription): Unit =
@@ -63,14 +61,17 @@ object StreamScan {
                       )
 
                   override def onError(t: Throwable): Unit =
-                    dispatcher.unsafeRunSync(Async[F].raiseError(t))
+                    dispatcher.unsafeRunSync(error.complete(t) >> queue.offer(None))
 
                   override def onComplete(): Unit =
                     dispatcher.unsafeRunSync(queue.offer(None))
                 })
-              )
+              }
           )
-          stream <- Stream.fromQueueNoneTerminated(queue)
+          stream <- Stream.fromQueueNoneTerminated(queue) ++ Stream.eval(error.tryGet).flatMap {
+            case Some(value) => Stream.raiseError[F](value)
+            case None        => Stream.empty
+          }
         } yield stream
 
     }
