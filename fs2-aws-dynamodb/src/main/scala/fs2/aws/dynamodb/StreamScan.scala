@@ -42,6 +42,9 @@ object StreamScan {
             ddb
               .scanPaginator(scanRequest)
               .map { publisher =>
+                // subscribe to the paginator, every time we request to deliver next pageSize items from the DDB table
+                // we use FS2 Queue as bounded buffer with size 1, this way we implement back pressure, not allowing
+                // paginator exhaust memory
                 publisher.subscribe(new Subscriber[ScanResponse] {
 
                   override def onSubscribe(s: Subscription): Unit =
