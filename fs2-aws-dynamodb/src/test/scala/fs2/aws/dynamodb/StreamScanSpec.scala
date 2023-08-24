@@ -42,7 +42,7 @@ class StreamScanSpec extends AnyWordSpec with Matchers with ScalaFutures {
             )
             scanned <- StreamScan[IO](ddb)
               .scanDynamoDB(ScanRequest.builder().tableName(tableName).build(), 3)
-              .flatMap(fs2.Stream.chunk)
+              .unchunks
               .compile
               .toList
           } yield scanned.map(_.get("name").s()) should contain theSameElementsAs List(
@@ -51,6 +51,23 @@ class StreamScanSpec extends AnyWordSpec with Matchers with ScalaFutures {
             "Ryan",
             "Vlad"
           )
+        }
+        .unsafeToFuture()
+        .futureValue
+    }
+
+    "fails stream on error" in {
+      resourcesF
+        .use { case (_, ddb) =>
+          StreamScan[IO](ddb)
+            .scanDynamoDB(ScanRequest.builder().filterExpression("bad-expression").build(), 3)
+            .unchunks
+            .compile
+            .drain
+            .attempt
+            .map { failed =>
+              assert(failed.isLeft, "should be left")
+            }
         }
         .unsafeToFuture()
         .futureValue
