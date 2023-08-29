@@ -76,7 +76,7 @@ object Dependencies {
   val Logback = libraryDependencies ++= LogModules.LogBack
 
   val Trace4Cats = libraryDependencies +=
-    "io.janstenpickle" %% "trace4cats-core" % "0.14.2"
+    "io.janstenpickle" %% "trace4cats-core" % "0.14.5"
 
   // save redefining these over and over
   private[this] object LogModules {
