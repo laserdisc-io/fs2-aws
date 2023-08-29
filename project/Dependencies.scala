@@ -12,7 +12,7 @@ object Dependencies {
     val Refined          = "0.11.0"
     val ScalaTest        = "3.2.16"
     val MockitoScalaTest = "1.17.5"
-    val MockitoCore      = "5.4.0"
+    val MockitoCore      = "5.5.0"
     val CE               = "3.5.1"
     val Logback          = "1.4.11"
     val SLF4J            = "2.0.7"
@@ -76,7 +76,7 @@ object Dependencies {
   val Logback = libraryDependencies ++= LogModules.LogBack
 
   val Trace4Cats = libraryDependencies +=
-    "io.janstenpickle" %% "trace4cats-core" % "0.14.2"
+    "io.janstenpickle" %% "trace4cats-core" % "0.14.5"
 
   // save redefining these over and over
   private[this] object LogModules {
