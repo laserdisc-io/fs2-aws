@@ -5,17 +5,17 @@ import sbt.{Def, _}
 object Dependencies {
 
   object V {
-    val AwsSdk           = "2.20.135"
-    val Circe            = "0.14.5"
+    val AwsSdk           = "2.20.148"
+    val Circe            = "0.14.6"
     val Munit            = "0.7.29"
-    val Fs2              = "3.8.0"
+    val Fs2              = "3.9.2"
     val Refined          = "0.11.0"
-    val ScalaTest        = "3.2.16"
+    val ScalaTest        = "3.2.17"
     val MockitoScalaTest = "1.17.5"
     val MockitoCore      = "5.5.0"
     val CE               = "3.5.1"
     val Logback          = "1.4.11"
-    val SLF4J            = "2.0.7"
+    val SLF4J            = "2.0.9"
     val Log4Cats         = "2.6.0"
   }
 
@@ -60,11 +60,10 @@ object Dependencies {
 
   val Mockito = libraryDependencies += "org.mockito" % "mockito-core" % V.MockitoCore
 
-  // TODO: it seems that different modules require different versions - look into this
-  def ScanamoCirce(version: String) = libraryDependencies ++= Seq(
-    "io.laserdisc" %% "scanamo-circe"
-      % version
-  ).filterNot(_ => scalaVersion.value.startsWith("3."))
+  val ScanamoCirce = libraryDependencies ++= Seq(
+    "com.amazonaws" % "aws-lambda-java-events-sdk-transformer" % "3.1.0",
+    "io.laserdisc" %% "scanamo-circe"                          % "3.1.0"
+  )
 
   val DynamoStreamAdapter =
     libraryDependencies += "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.6.0"

@@ -1,12 +1,13 @@
 package fs2.aws.dynamodb
 
-import java.util
-
 import cats.effect.Sync
-import cats.implicits._
+import cats.implicits.*
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.streamsadapter.model.RecordAdapter
+import com.amazonaws.services.lambda.runtime.events.transformers.v2.dynamodb.DynamodbAttributeValueTransformer.toAttributeValueMapV2
 import org.scanamo.{DynamoFormat, DynamoObject, DynamoReadError}
+
+import java.util
 
 package object parsers {
   def parseDynamoEvent[F[_]: Sync, T](
@@ -39,10 +40,12 @@ package object parsers {
 
   def parseDynamoRecord[F[_]: Sync, T](
       image: util.Map[String, AttributeValue]
-  )(implicit df: DynamoFormat[T]): F[T] =
+  )(implicit df: DynamoFormat[T]): F[T] = {
+    val v2Image = toAttributeValueMapV2(image)
     df.read(
-      DynamoObject(image).toAttributeValue
+      DynamoObject(v2Image).toAttributeValue
     ).leftMap(e => new RuntimeException(DynamoReadError.describe(e)))
       .liftTo[F]
+  }
 
 }
