@@ -60,7 +60,7 @@ lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb"))
     Dependencies.Fs2Core,
     Dependencies.DynamoStreamAdapter,
     Dependencies.newTypes,
-    Dependencies.ScanamoCirce,
+    Dependencies.ScanamoCirce("1.0.8"),
     Dependencies.Testing
   )
   .settings(commonSettings)
@@ -82,7 +82,7 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
     coverageMinimumStmtTotal := 0,
     Dependencies.Logging,
     Dependencies.Trace4Cats,
-    Dependencies.ScanamoCirce
+    Dependencies.ScanamoCirce("3.1.0")
   )
   .settings(commonSettings)
   .settings(
