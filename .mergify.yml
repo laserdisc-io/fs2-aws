@@ -10,7 +10,7 @@ pull_request_rules:
   - name: merge scala-steward's PRs
     conditions:
       - author=scala-steward
-      - status-success=Build (2.13.11, adopt@1.11, ubuntu-latest)
+      - status-success=build
     actions:
       merge:
         method: squash
