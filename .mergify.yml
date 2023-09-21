@@ -10,7 +10,7 @@ pull_request_rules:
   - name: automatic update of pull requests where more 1 commits behind
     conditions:
       - base=main
-      - "#commits-behind>1"
+      - "#commits-behind>0"
     actions:
       update:
   - name: automatic approval for scala-stewart pull requests
