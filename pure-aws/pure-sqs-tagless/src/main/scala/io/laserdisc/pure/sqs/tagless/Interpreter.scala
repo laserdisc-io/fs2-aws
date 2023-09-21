@@ -5,8 +5,6 @@ import cats.data.Kleisli
 import cats.effect.{Async, Resource}
 import software.amazon.awssdk.services.sqs.SqsAsyncClientBuilder
 
-import java.util.concurrent.CompletionException
-
 // Types referenced
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.*
@@ -32,36 +30,14 @@ trait Interpreter[M[_]] { outer =>
   lazy val SqsAsyncClientInterpreter: SqsAsyncClientInterpreter = new SqsAsyncClientInterpreter {}
   // Some methods are common to all interpreters and can be overridden to change behavior globally.
 
-  def primitive[J, A](f: J => A): Kleisli[M, J, A] = Kleisli(a => asyncM.blocking(f(a)))
+  def primitive[J, A](f: J => A): Kleisli[M, J, A] = Kleisli(j => asyncM.blocking(f(j)))
   def primitive1[J, A](f: => A): M[A]              = asyncM.blocking(f)
 
-  def eff[J, A](fut: J => CompletableFuture[A]): Kleisli[M, J, A] = Kleisli { a =>
-    asyncM.async_ { cb =>
-      fut(a).handle[Unit] { (a, x) =>
-        if (a == null)
-          x match {
-            case t: CompletionException => cb(Left(t.getCause))
-            case t                      => cb(Left(t))
-          }
-        else
-          cb(Right(a))
-      }
-      ()
-    }
+  def eff[J, A](fut: J => CompletableFuture[A]): Kleisli[M, J, A] = Kleisli { j =>
+    asyncM.fromCompletableFuture(asyncM.delay(fut(j)))
   }
   def eff1[J, A](fut: => CompletableFuture[A]): M[A] =
-    asyncM.async_ { cb =>
-      fut.handle[Unit] { (a, x) =>
-        if (a == null)
-          x match {
-            case t: CompletionException => cb(Left(t.getCause))
-            case t                      => cb(Left(t))
-          }
-        else
-          cb(Right(a))
-      }
-      ()
-    }
+    asyncM.fromCompletableFuture(asyncM.delay(fut))
 
   // Interpreters
   trait SqsAsyncClientInterpreter extends SqsAsyncClientOp[Kleisli[M, SqsAsyncClient, *]] {
