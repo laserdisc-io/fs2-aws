@@ -1,0 +1,16 @@
+pull_request_rules:
+  - name: assign and label scala-steward's PRs
+    conditions:
+      - author=scala-steward
+    actions:
+      assign:
+        users: [semenodm]
+      label:
+        add: [dependency-update]
+  - name: merge scala-steward's PRs
+    conditions:
+      - author=scala-steward
+      - status-success=Build (2.13.11, adopt@1.11, ubuntu-latest)
+    actions:
+      merge:
+        method: squash
