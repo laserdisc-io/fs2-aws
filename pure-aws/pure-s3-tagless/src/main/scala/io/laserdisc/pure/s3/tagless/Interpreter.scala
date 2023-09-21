@@ -6,8 +6,6 @@ import cats.effect.{Async, Resource}
 import software.amazon.awssdk.services.s3.S3AsyncClientBuilder
 import software.amazon.awssdk.services.s3.model.*
 
-import java.util.concurrent.CompletionException
-
 // Types referenced
 import software.amazon.awssdk.core.async.{AsyncRequestBody, AsyncResponseTransformer}
 import software.amazon.awssdk.services.s3.S3AsyncClient

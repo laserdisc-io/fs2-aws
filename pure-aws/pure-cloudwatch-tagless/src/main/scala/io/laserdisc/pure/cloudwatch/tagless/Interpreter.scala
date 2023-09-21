@@ -5,8 +5,6 @@ import cats.data.Kleisli
 import cats.effect.{Async, Resource}
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClientBuilder
 
-import java.util.concurrent.CompletionException
-
 // Types referenced
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
 import software.amazon.awssdk.services.cloudwatch.model.*

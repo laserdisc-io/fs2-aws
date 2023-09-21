@@ -5,8 +5,6 @@ import cats.data.Kleisli
 import cats.effect.{Async, Resource}
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClientBuilder
 
-import java.util.concurrent.CompletionException
-
 // Types referenced
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient
 import software.amazon.awssdk.services.kinesis.model.*

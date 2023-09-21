@@ -5,8 +5,6 @@ import cats.data.Kleisli
 import cats.effect.{Async, Resource}
 import software.amazon.awssdk.services.sns.SnsAsyncClientBuilder
 
-import java.util.concurrent.CompletionException
-
 // Types referenced
 import software.amazon.awssdk.services.sns.SnsAsyncClient
 import software.amazon.awssdk.services.sns.model.*
