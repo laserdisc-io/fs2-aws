@@ -7,6 +7,12 @@ pull_request_rules:
         users: [semenodm]
       label:
         add: [dependency-update]
+  - name: automatic update of pull requests where more 1 commits behind
+    conditions:
+      - base=main
+      - "#commits-behind>1"
+    actions:
+      update:
   - name: merge scala-steward's PRs
     conditions:
       - author=scala-steward
