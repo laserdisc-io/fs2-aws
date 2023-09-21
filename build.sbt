@@ -9,7 +9,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 organization := "io.laserdisc"
 name         := "fs2-aws"
 
-lazy val scala213 = "2.13.11"
+lazy val scala213 = "2.13.12"
 lazy val scala3   = "3.3.0"
 
 lazy val supportedScalaVersions = List(scala213, scala3)
