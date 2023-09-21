@@ -13,6 +13,13 @@ pull_request_rules:
       - "#commits-behind>1"
     actions:
       update:
+  - name: automatic approval for scala-stewart pull requests
+    conditions:
+      - author=scala-steward
+    actions:
+      review:
+        type: APPROVE
+        message: Automatically approving scala-steward PRs
   - name: merge scala-steward's PRs
     conditions:
       - author=scala-steward
