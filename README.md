@@ -72,7 +72,7 @@ s3StreamResource.map(S3.create[IO]).use { s3 =>
 
 Create it once and share it as an argument, as any other resource.
 
-For more details on how to work with S3 streams follow [link](fs2-aws-examples/src/main/scala/S3Example.scala)
+For more details on how to work with S3 streams follow [link](fs2-aws-examples/src/main/scala/fs2/aws/examples/S3Example.scala)
 
 ### Reading a file from S3
 
