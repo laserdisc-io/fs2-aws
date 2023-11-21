@@ -9,9 +9,7 @@ import com.amazonaws.services.dynamodbv2.{
   AmazonDynamoDBStreams,
   AmazonDynamoDBStreamsClientBuilder
 }
-import fs2.aws.dynamodb.{DynamoDB, parsers}
-import io.circe.Json
-import io.laserdisc.scanamo.circe.CirceDynamoFormat.*
+import fs2.aws.dynamodb.DynamoDB
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 object DynamoDBStreamer extends IOApp {
@@ -26,7 +24,6 @@ object DynamoDBStreamer extends IOApp {
             "app-name",
             "ddb-stream-arn"
           )
-          .evalMap(cr => parsers.parseDynamoEvent[IO, Json](cr.record))
           .evalTap(msg => logger.info(s"received $msg"))
           .compile
           .drain
