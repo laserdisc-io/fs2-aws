@@ -90,7 +90,7 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
 
     val data = List("foo", "bar", "baz")
 
-    val test = kAlgebraResource(kac, dac, cac).use { case (_, kAlgebra) =>
+    val test = kAlgebraResource(kac, dac, cac).use { case (ki, kAlgebra) =>
       for {
         _ <- Stream
           .emits(data)
@@ -207,6 +207,9 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
       k <- i.KinesisAsyncClientResource(kac)
       kinesisInterpreter = i.create(k)
       kAlgebra           = Kinesis.create[IO](k, d, c)
+      _ <- Resource.make(
+        kinesisInterpreter.createStream(CreateStreamRequest.builder().streamName("test").build())
+      )(_ => kinesisInterpreter.deleteStream(DeleteStreamRequest.builder().streamName("test").build()).void)
     } yield kinesisInterpreter -> kAlgebra
 
 }
