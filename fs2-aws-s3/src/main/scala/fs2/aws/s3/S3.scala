@@ -48,6 +48,8 @@ object S3 {
   private type PartDigest = Array[Byte]
   private type Checksum   = String
 
+  private case class PartProcessingOutcome(tag: PartETag, id: PartId, digest: PartDigest)
+
   case object NoEtagReturnedByS3 extends RuntimeException("No etag returned by s3")
 
   trait MultipartETagValidation[F[_]] {
@@ -149,7 +151,7 @@ object S3 {
             CreateMultipartUploadRequest.builder().bucket(bucket.value).key(key.value).build()
           ).map(_.uploadId())
 
-        def uploadPart(uploadId: UploadId): Pipe[F, (Chunk[Byte], PartNumber), (PartETag, PartId, PartDigest)] =
+        def uploadPart(uploadId: UploadId): Pipe[F, (Chunk[Byte], PartNumber), PartProcessingOutcome] =
           _.parEvalMap(multiPartConcurrency) { case (c, i) =>
             s3.uploadPart(
               UploadPartRequest
@@ -161,7 +163,7 @@ object S3 {
                 .contentLength(c.size.toLong)
                 .build(),
               AsyncRequestBody.fromBytes(c.toArray)
-            ).map(resp => (resp.eTag(), i.toInt, checksumPart(c)))
+            ).map(resp => PartProcessingOutcome(resp.eTag(), i.toInt, checksumPart(c)))
           }
 
         def uploadEmptyFile = s3.putObject(
@@ -170,7 +172,7 @@ object S3 {
         )
         def completeUpload(
             uploadId: UploadId
-        ): Pipe[F, List[(PartETag, PartId, PartDigest)], (Option[ETag], Option[Checksum], Option[PartId])] =
+        ): Pipe[F, List[PartProcessingOutcome], (Option[ETag], Option[Checksum], Option[PartId])] =
           _.evalMap[F, (Option[ETag], Option[Checksum], Option[PartId])] {
             case Nil =>
               cancelUpload(uploadId) *>
@@ -180,7 +182,7 @@ object S3 {
                     Async[F].pure((Option.empty[ETag], Option.empty[Checksum], Option.empty[PartId]))
                   )
             case tags =>
-              val parts = tags.map { case (t, i, _) =>
+              val parts = tags.map { case PartProcessingOutcome(t, i, _) =>
                 CompletedPart.builder().partNumber(i).eTag(t).build()
               }.asJava
               val maxPartId = getMaxPartId(tags)
@@ -224,13 +226,13 @@ object S3 {
             sb.append(String.format("%02x", b))
           sb.toString()
         }
-        def getOverallChecksum(tags: List[(PartETag, PartId, PartDigest)]): F[Checksum] = {
+        def getOverallChecksum(tags: List[PartProcessingOutcome]): F[Checksum] = {
           val md = createMD5
-          tags.sortBy(_._2).foreach { case (_, _, partDigest) => md.update(partDigest) }
+          tags.sortBy(_.id).foreach { case PartProcessingOutcome(_, _, partDigest) => md.update(partDigest) }
           formatChecksum(md.digest())
         }
-        def getMaxPartId(tags: List[(PartETag, PartId, PartDigest)]): Option[PartId] =
-          tags.maxByOption(_._2).map(_._2)
+        def getMaxPartId(tags: List[PartProcessingOutcome]): Option[PartId] =
+          tags.maxByOption(_.id).map(_.id)
 
         def validateETag(et: Option[ETag], maxPartId: Option[PartId], cs: Option[Checksum]): F[Unit] =
           (multipartETagValidation, maxPartId, cs) match {
@@ -249,7 +251,7 @@ object S3 {
               .chunkN(chunkSizeBytes)
               .zip(fs2.Stream.iterate(1L)(_ + 1))
               .through(uploadPart(uploadId))
-              .fold[List[(PartETag, PartId, PartDigest)]](List.empty)(_ :+ _)
+              .fold[List[PartProcessingOutcome]](List.empty)(_ :+ _)
               .through(completeUpload(uploadId))
               .handleErrorWith(ex => fs2.Stream.eval(cancelUpload(uploadId) >> Sync[F].raiseError(ex)))
             _ <- fs2.Stream.eval(validateETag(eTag, maxPartNum, checksum))
