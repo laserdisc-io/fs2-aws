@@ -3,6 +3,7 @@ package fs2.aws.s3
 import cats.effect.*
 import cats.implicits.*
 import eu.timepit.refined.types.string.NonEmptyString
+import fs2.aws.s3.S3.MultipartETagValidation
 import fs2.aws.s3.models.Models.{BucketName, FileKey, PartSizeMB}
 import fs2.io.file.{Files, Flags, Path}
 import fs2.text
@@ -21,6 +22,8 @@ class S3Suite extends CatsEffectSuite {
   val credentials: AwsBasicCredentials =
     AwsBasicCredentials
       .create("AKIAIOSFODNN7EXAMPLE", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
+
+  val multipartETagValidation = MultipartETagValidation.create[IO]
 
   def s3R: Resource[IO, S3AsyncClientOp[IO]] =
     Interpreter[IO].S3AsyncClientOpResource(
@@ -79,7 +82,7 @@ class S3Suite extends CatsEffectSuite {
           Files[IO]
             .readAll(Path(testFile.getPath), 4096, Flags.Read)
             .through(
-              s3.uploadFileMultipart(bucket, fileKeyMix, partSize)
+              s3.uploadFileMultipart(bucket, fileKeyMix, partSize, eTagValidation = multipartETagValidation.some)
             )
             .compile
             .drain
@@ -115,7 +118,9 @@ class S3Suite extends CatsEffectSuite {
         val upload =
           Files[IO]
             .readAll(Path(testFile.getPath), 4096, Flags.Read)
-            .through(s3.uploadFileMultipart(bucket, fileKeyMultipart, partSize))
+            .through(
+              s3.uploadFileMultipart(bucket, fileKeyMultipart, partSize, eTagValidation = multipartETagValidation.some)
+            )
             .compile
             .drain
 
@@ -144,7 +149,7 @@ class S3Suite extends CatsEffectSuite {
       for {
         fileKey <- IO.delay(UUID.randomUUID().toString).map(k => FileKey(NonEmptyString.unsafeFrom(k)))
         uploadedTags <- fs2.Stream.empty
-          .through(s3.uploadFileMultipart(bucket, fileKey, partSize))
+          .through(s3.uploadFileMultipart(bucket, fileKey, partSize, eTagValidation = multipartETagValidation.some))
           .compile
           .last
           .map(_.get)
@@ -172,7 +177,15 @@ class S3Suite extends CatsEffectSuite {
       for {
         fileKey <- IO.delay(UUID.randomUUID().toString).map(k => FileKey(NonEmptyString.unsafeFrom(k)))
         uploadedTags <- fs2.Stream.empty
-          .through(s3.uploadFileMultipart(bucket, fileKey, partSize, uploadEmptyFiles = true))
+          .through(
+            s3.uploadFileMultipart(
+              bucket,
+              fileKey,
+              partSize,
+              uploadEmptyFiles = true,
+              eTagValidation = multipartETagValidation.some
+            )
+          )
           .compile
           .last
           .map(_.get)
