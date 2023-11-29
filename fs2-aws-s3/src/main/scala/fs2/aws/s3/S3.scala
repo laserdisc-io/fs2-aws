@@ -213,7 +213,7 @@ object S3 {
 
         def checksumPart(chunk: Chunk[Byte]): PartDigest = {
           val md = createMD5
-          chunk.foreach(byte => md.update(byte))
+          md.update(chunk.toArray)
           md.digest()
         }
 
