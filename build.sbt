@@ -214,6 +214,7 @@ lazy val `fs2-aws-testkit` = (project in file("fs2-aws-testkit"))
 
 lazy val `fs2-aws-benchmarks` = (project in file("fs2-aws-benchmarks"))
   .dependsOn(`fs2-aws-kinesis`)
+  .dependsOn(`fs2-aws-s3`)
   .dependsOn(`fs2-aws-testkit`)
   .settings(
     name := "fs2-aws-benchmarks",

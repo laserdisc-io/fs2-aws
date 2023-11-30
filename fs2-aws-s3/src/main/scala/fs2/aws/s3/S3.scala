@@ -232,22 +232,20 @@ object S3 {
 
         def checksumPart(chunk: Chunk[Byte]): PartDigest = {
           val md = createMD5
-          md.update(chunk.toArray)
+          chunk.foreach(byte => md.update(byte))
           md.digest()
         }
 
         def formatChecksum(checksum: Array[Byte]): F[Checksum] = ApplicativeThrow[F].catchNonFatal {
-          import scala.collection.mutable
-          val sb = new mutable.StringBuilder
-          for (b <- checksum)
-            sb.append(String.format("%02x", b))
-          sb.toString()
+          checksum.map(b => f"$b%02x").mkString
         }
+
         def getOverallChecksum(tags: List[PartProcessingOutcome]): F[Checksum] = {
           val md = createMD5
           tags.sortBy(_.id).foreach { case PartProcessingOutcome(_, _, partDigest) => md.update(partDigest) }
           formatChecksum(md.digest())
         }
+
         def getMaxPartId(tags: List[PartProcessingOutcome]): Option[PartId] =
           tags.maxByOption(_.id).map(_.id)
 
