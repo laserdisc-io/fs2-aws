@@ -3,7 +3,7 @@ package fs2.aws.s3
 import cats.effect.*
 import cats.implicits.*
 import fs2.aws.s3.S3.MultipartETagValidation
-import fs2.aws.s3.S3.MultipartETagValidation.InvalidChecksum
+import fs2.aws.s3.S3.MultipartETagValidation.{ETagValidated, InvalidChecksum}
 import munit.CatsEffectSuite
 
 class MultipartETagValidationSuite extends CatsEffectSuite {
@@ -17,7 +17,7 @@ class MultipartETagValidationSuite extends CatsEffectSuite {
     val checksum   = "77458ecf309cd60b283376e14bb03d55"
     val validator  = multipartETagValidation
     val result     = validator.validateETag(s3ETag, maxPartNum, checksum)
-    assertIO_(result)
+    assertIO(result, ETagValidated(s3ETag))
   }
 
   test("it should validate invalid eTag's by raising an error") {
@@ -31,7 +31,7 @@ class MultipartETagValidationSuite extends CatsEffectSuite {
 
     val validator = multipartETagValidation
 
-    val result: IO[List[Either[Throwable, Unit]]] =
+    val result: IO[List[Either[Throwable, ETagValidated]]] =
       List(
         validator.validateETag(s3ETag, wrongPart, validChecksum).attempt,
         validator.validateETag(s3ETag, validPartNumber, wrongChecksum).attempt
