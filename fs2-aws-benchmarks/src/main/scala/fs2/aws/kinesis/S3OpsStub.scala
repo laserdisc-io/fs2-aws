@@ -17,7 +17,7 @@ class S3OpsStub extends S3AsyncClientOp[IO] {
   override def close: IO[Unit] = ???
 
   override def completeMultipartUpload(a: CompleteMultipartUploadRequest): IO[CompleteMultipartUploadResponse] =
-    IO.pure(CompleteMultipartUploadResponse.builder().build())
+    IO.pure(CompleteMultipartUploadResponse.builder().eTag("dummy").build())
 
   override def copyObject(a: CopyObjectRequest): IO[CopyObjectResponse] = ???
 
