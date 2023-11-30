@@ -5,6 +5,7 @@ import cats.implicits.*
 import cats.{Applicative, ApplicativeThrow, ~>}
 import eu.timepit.refined.auto.*
 import fs2.aws.s3.S3.MultipartETagValidation
+import fs2.aws.s3.S3.MultipartETagValidation.ETagValidated
 import fs2.aws.s3.models.Models.*
 import fs2.{Chunk, Pipe, Pull}
 import io.laserdisc.pure.s3.tagless.S3AsyncClientOp
@@ -58,23 +59,28 @@ object S3 {
   case object NoEtagReturnedByS3 extends RuntimeException("No etag returned by s3")
 
   trait MultipartETagValidation[F[_]] {
-    def validateETag(eTag: ETag, maxPartNumber: PartNumber, checksum: Checksum): F[Unit]
+    def validateETag(eTag: ETag, maxPartNumber: PartNumber, checksum: Checksum): F[ETagValidated]
   }
   object MultipartETagValidation {
+
+    final case class ETagValidated(s3ETag: ETag) extends AnyVal
+
     final case class InvalidChecksum(s3ETag: ETag, expectedTag: ETag)
         extends RuntimeException(show"Invalid checksum. found $s3ETag, expected $expectedTag")
         with NoStackTrace
 
     def create[F[_]: ApplicativeThrow]: MultipartETagValidation[F] = new MultipartETagValidation[F] {
-      def validateETag(eTag: ETag, maxPartNumber: PartNumber, checksum: Checksum): F[Unit] = {
+      def validateETag(eTag: ETag, maxPartNumber: PartNumber, checksum: Checksum): F[ETagValidated] = {
         import cats.syntax.eq.*
 
         val eTagWithoutQuotes = eTag.replace("\"", "") // ETag from uploadFileMultipart has double quotes around it
 
         val expectedEtag = show"$checksum-$maxPartNumber"
-        ApplicativeThrow[F].raiseWhen(expectedEtag =!= eTagWithoutQuotes)(
-          InvalidChecksum(eTagWithoutQuotes, expectedEtag)
-        )
+        ApplicativeThrow[F]
+          .raiseWhen(expectedEtag =!= eTagWithoutQuotes)(
+            InvalidChecksum(eTagWithoutQuotes, expectedEtag)
+          )
+          .as(ETagValidated(eTag))
       }
     }
 
@@ -84,7 +90,7 @@ object S3 {
           eTag: ETag,
           maxPartNumber: PartNumber,
           checksum: Checksum
-      ): F[Unit] = Applicative[F].unit
+      ): F[ETagValidated] = Applicative[F].pure(ETagValidated(eTag))
     }
   }
 
@@ -249,14 +255,14 @@ object S3 {
         def getMaxPartId(tags: List[PartProcessingOutcome]): Option[PartId] =
           tags.maxByOption(_.id).map(_.id)
 
-        def validateETag(et: Option[ETag], maxPartId: Option[PartId], cs: Option[Checksum]): F[Unit] =
+        def validateETag(et: Option[ETag], maxPartId: Option[PartId], cs: Option[Checksum]): F[Option[ETagValidated]] =
           (multipartETagValidation, maxPartId, cs) match {
             case (Some(validator), Some(partId), Some(checksum)) =>
               for {
                 eTag   <- ApplicativeThrow[F].fromOption(et, NoEtagReturnedByS3)
                 result <- validator.validateETag(eTag, partId.toLong, checksum)
-              } yield result
-            case _ => Applicative[F].unit
+              } yield result.some
+            case _ => Applicative[F].pure(None)
           }
 
         in =>
@@ -382,7 +388,8 @@ object S3 {
               requestModifier,
               multipartETagValidation.map { validator =>
                 new MultipartETagValidation[F] {
-                  override def validateETag(eTag: ETag, maxPartNumber: PartNumber, checksum: Checksum): F[Unit] =
+                  override def validateETag(eTag: ETag, maxPartNumber: PartNumber, checksum: Checksum)
+                      : F[ETagValidated] =
                     gToF(validator.validateETag(eTag, maxPartNumber, checksum))
                 }
               }
