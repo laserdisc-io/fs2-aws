@@ -54,7 +54,7 @@ object S3 {
   private type PartDigest = Array[Byte]
   private type Checksum   = String
 
-  private case class PartProcessingOutcome(tag: PartETag, id: PartId, digest: PartDigest)
+  private case class PartProcessingOutcome(tag: PartETag, id: PartId, digest: Option[PartDigest])
 
   case object NoEtagReturnedByS3 extends RuntimeException("No etag returned by s3")
 
@@ -181,7 +181,9 @@ object S3 {
                 )
                 .build(),
               AsyncRequestBody.fromBytes(bytes)
-            ).map(resp => PartProcessingOutcome(resp.eTag(), i.toInt, checksumPart(bytes)))
+            ).map(resp =>
+              PartProcessingOutcome(resp.eTag(), i.toInt, multipartETagValidation.map(_ => checksumPart(bytes)))
+            )
           }
 
         def uploadEmptyFile = s3.putObject(
@@ -217,8 +219,8 @@ object S3 {
                     )
                     .build()
                 )
-                overallCheckSum <- getOverallChecksum(tags)
-              } yield (Option(resp.eTag()), Some(overallCheckSum), maxPartId)
+                maybeOverallCheckSum = multipartETagValidation.map(_ => getOverallChecksum(tags))
+              } yield (Option(resp.eTag()), maybeOverallCheckSum, maxPartId)
 
           }
 
@@ -239,19 +241,14 @@ object S3 {
 
         def checksumPart(chunk: Array[Byte]): PartDigest = {
           val md = createMD5
-//          chunk.foreach(byte => md.update(byte))
           md.update(chunk)
           md.digest()
         }
 
-        def formatChecksum(checksum: Array[Byte]): F[Checksum] = ApplicativeThrow[F].catchNonFatal {
-          checksum.map(b => f"$b%02x").mkString
-        }
-
-        def getOverallChecksum(tags: List[PartProcessingOutcome]): F[Checksum] = {
+        def getOverallChecksum(tags: List[PartProcessingOutcome]): Checksum = {
           val md = createMD5
-          tags.sortBy(_.id).foreach { case PartProcessingOutcome(_, _, partDigest) => md.update(partDigest) }
-          formatChecksum(md.digest())
+          tags.sortBy(_.id).foreach(outcome => outcome.digest.foreach(partDigest => md.update(partDigest)))
+          md.digest().map(b => f"$b%02x").mkString
         }
 
         def getMaxPartId(tags: List[PartProcessingOutcome]): Option[PartId] =
