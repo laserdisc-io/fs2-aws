@@ -34,7 +34,7 @@ trait S3[F[_]] {
       uploadEmptyFiles: UploadEmptyFiles = false,
       multiPartConcurrency: MultiPartConcurrency = 10,
       requestModifier: AwsRequestModifier.MultipartUpload = AwsRequestModifier.MultipartUpload.identity,
-      eTagValidation: Option[MultipartETagValidation[F]] = None
+      multipartETagValidation: Option[MultipartETagValidation[F]] = None
   ): Pipe[F, Byte, Option[ETag]]
   def readFile(bucket: BucketName, key: FileKey): fs2.Stream[F, Byte]
 
@@ -146,7 +146,9 @@ object S3 {
           key: FileKey,
           partSize: PartSizeMB,
           uploadEmptyFiles: UploadEmptyFiles,
-          multiPartConcurrency: MultiPartConcurrency
+          multiPartConcurrency: MultiPartConcurrency,
+          requestModifier: AwsRequestModifier.MultipartUpload,
+          multipartETagValidation: Option[MultipartETagValidation[F]]
       ): Pipe[F, Byte, Option[ETag]] = {
         val chunkSizeBytes = partSize * 1048576
 
@@ -199,8 +201,7 @@ object S3 {
                 resp <- s3.completeMultipartUpload(
                   requestModifier
                     .completeMultipartUpload(
-                      requestModifier
-                  .completeMultipartUpload(CompleteMultipartUploadRequest
+                      CompleteMultipartUploadRequest
                         .builder()
                         .bucket(bucket.value)
                         .key(key.value)
@@ -368,7 +369,9 @@ object S3 {
           key: FileKey,
           partSize: PartSizeMB,
           uploadEmptyFiles: UploadEmptyFiles,
-          multiPartConcurrency: MultiPartConcurrency = 10
+          multiPartConcurrency: MultiPartConcurrency = 10,
+          requestModifier: AwsRequestModifier.MultipartUpload,
+          multipartETagValidation: Option[MultipartETagValidation[G]]
       ): Pipe[G, Byte, Option[ETag]] =
         _.translate(gToF)
           .through(
