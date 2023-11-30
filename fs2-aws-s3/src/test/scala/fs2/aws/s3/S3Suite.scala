@@ -83,7 +83,12 @@ class S3Suite extends CatsEffectSuite {
           Files[IO]
             .readAll(Path(testFile.getPath), 4096, Flags.Read)
             .through(
-              s3.uploadFileMultipart(bucket, fileKeyMix, partSize, eTagValidation = multipartETagValidation.some)
+              s3.uploadFileMultipart(
+                bucket,
+                fileKeyMix,
+                partSize,
+                multipartETagValidation = multipartETagValidation.some
+              )
             )
             .compile
             .drain
@@ -120,7 +125,12 @@ class S3Suite extends CatsEffectSuite {
           Files[IO]
             .readAll(Path(testFile.getPath), 4096, Flags.Read)
             .through(
-              s3.uploadFileMultipart(bucket, fileKeyMultipart, partSize, eTagValidation = multipartETagValidation.some)
+              s3.uploadFileMultipart(
+                bucket,
+                fileKeyMultipart,
+                partSize,
+                multipartETagValidation = multipartETagValidation.some
+              )
             )
             .compile
             .drain
@@ -150,7 +160,9 @@ class S3Suite extends CatsEffectSuite {
       for {
         fileKey <- IO.delay(UUID.randomUUID().toString).map(k => FileKey(NonEmptyString.unsafeFrom(k)))
         uploadedTags <- fs2.Stream.empty
-          .through(s3.uploadFileMultipart(bucket, fileKey, partSize, eTagValidation = multipartETagValidation.some))
+          .through(
+            s3.uploadFileMultipart(bucket, fileKey, partSize, multipartETagValidation = multipartETagValidation.some)
+          )
           .compile
           .last
           .map(_.get)
@@ -184,7 +196,7 @@ class S3Suite extends CatsEffectSuite {
               fileKey,
               partSize,
               uploadEmptyFiles = true,
-              eTagValidation = multipartETagValidation.some
+              multipartETagValidation = multipartETagValidation.some
             )
           )
           .compile
