@@ -161,6 +161,7 @@ object S3 {
 
         def uploadPart(uploadId: UploadId): Pipe[F, (Chunk[Byte], PartNumber), PartProcessingOutcome] =
           _.parEvalMap(multiPartConcurrency) { case (c, i) =>
+            val bytes = c.toArray
             s3.uploadPart(
               requestModifier
                 .uploadPart(
@@ -170,11 +171,11 @@ object S3 {
                     .key(key.value)
                     .uploadId(uploadId)
                     .partNumber(i.toInt)
-                    .contentLength(c.size.toLong)
+                    .contentLength(bytes.length.toLong)
                 )
                 .build(),
-              AsyncRequestBody.fromBytes(c.toArray)
-            ).map(resp => PartProcessingOutcome(resp.eTag(), i.toInt, checksumPart(c)))
+              AsyncRequestBody.fromBytes(bytes)
+            ).map(resp => PartProcessingOutcome(resp.eTag(), i.toInt, checksumPart(bytes)))
           }
 
         def uploadEmptyFile = s3.putObject(
@@ -230,9 +231,10 @@ object S3 {
 
         def createMD5: MessageDigest = MessageDigest.getInstance("MD5")
 
-        def checksumPart(chunk: Chunk[Byte]): PartDigest = {
+        def checksumPart(chunk: Array[Byte]): PartDigest = {
           val md = createMD5
-          chunk.foreach(byte => md.update(byte))
+//          chunk.foreach(byte => md.update(byte))
+          md.update(chunk)
           md.digest()
         }
 
