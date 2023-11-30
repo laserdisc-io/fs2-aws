@@ -146,9 +146,7 @@ object S3 {
           key: FileKey,
           partSize: PartSizeMB,
           uploadEmptyFiles: UploadEmptyFiles,
-          multiPartConcurrency: MultiPartConcurrency,
-          requestModifier: AwsRequestModifier.MultipartUpload,
-          multipartETagValidation: Option[MultipartETagValidation[F]]
+          multiPartConcurrency: MultiPartConcurrency
       ): Pipe[F, Byte, Option[ETag]] = {
         val chunkSizeBytes = partSize * 1048576
 
@@ -201,7 +199,8 @@ object S3 {
                 resp <- s3.completeMultipartUpload(
                   requestModifier
                     .completeMultipartUpload(
-                      CompleteMultipartUploadRequest
+                      requestModifier
+                  .completeMultipartUpload(CompleteMultipartUploadRequest
                         .builder()
                         .bucket(bucket.value)
                         .key(key.value)
@@ -369,9 +368,7 @@ object S3 {
           key: FileKey,
           partSize: PartSizeMB,
           uploadEmptyFiles: UploadEmptyFiles,
-          multiPartConcurrency: MultiPartConcurrency = 10,
-          requestModifier: AwsRequestModifier.MultipartUpload = AwsRequestModifier.MultipartUpload.identity,
-          multipartETagValidation: Option[MultipartETagValidation[G]] = None
+          multiPartConcurrency: MultiPartConcurrency = 10
       ): Pipe[G, Byte, Option[ETag]] =
         _.translate(gToF)
           .through(
