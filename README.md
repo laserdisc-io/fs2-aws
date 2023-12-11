@@ -100,7 +100,7 @@ The simple way:
 
 ```scala
 Stream.emits("test data".getBytes("UTF-8"))
-  .through(s3.uploadFile(BucketName("foo"), FileKey("bar"), partSize = 5))
+  .through(s3.uploadFile(BucketName("foo"), FileKey("bar"))
   .evalMap(t => IO(println(s"eTag: $t")))
 ```
 
