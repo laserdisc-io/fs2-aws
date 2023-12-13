@@ -12,7 +12,6 @@ import io.laserdisc.pure.s3.tagless.S3AsyncClientOp
 import software.amazon.awssdk.core.async.{AsyncRequestBody, AsyncResponseTransformer}
 import software.amazon.awssdk.services.s3.model.*
 
-import java.nio.ByteBuffer
 import java.security.MessageDigest
 import scala.collection.immutable.ArraySeq
 import scala.collection.immutable.ArraySeq.unsafeWrapArray
@@ -116,8 +115,8 @@ object S3 {
       def uploadFile(bucket: BucketName, key: FileKey, modifier: AwsRequestModifier.Upload1): Pipe[F, Byte, ETag] =
         in =>
           fs2.Stream.eval {
-            in.compile.toVector.flatMap { vs =>
-              val bs = ByteBuffer.wrap(vs.toArray)
+            in.compile.to(Chunk).flatMap { chunks =>
+              val bs = chunks.toByteBuffer
               s3.putObject(
                 modifier.putObject(PutObjectRequest.builder().bucket(bucket.value).key(key.value)).build(),
                 AsyncRequestBody.fromByteBuffer(bs)
