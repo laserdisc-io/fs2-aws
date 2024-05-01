@@ -17,6 +17,7 @@ trait DynamoDbAsyncClientOp[F[_]] {
   def createTable(a: CreateTableRequest): F[CreateTableResponse]
   def deleteBackup(a: DeleteBackupRequest): F[DeleteBackupResponse]
   def deleteItem(a: DeleteItemRequest): F[DeleteItemResponse]
+  def deleteResourcePolicy(a: DeleteResourcePolicyRequest): F[DeleteResourcePolicyResponse]
   def deleteTable(a: DeleteTableRequest): F[DeleteTableResponse]
   def describeBackup(a: DescribeBackupRequest): F[DescribeBackupResponse]
   def describeContinuousBackups(a: DescribeContinuousBackupsRequest): F[DescribeContinuousBackupsResponse]
@@ -47,6 +48,7 @@ trait DynamoDbAsyncClientOp[F[_]] {
   def executeTransaction(a: ExecuteTransactionRequest): F[ExecuteTransactionResponse]
   def exportTableToPointInTime(a: ExportTableToPointInTimeRequest): F[ExportTableToPointInTimeResponse]
   def getItem(a: GetItemRequest): F[GetItemResponse]
+  def getResourcePolicy(a: GetResourcePolicyRequest): F[GetResourcePolicyResponse]
   def importTable(a: ImportTableRequest): F[ImportTableResponse]
   def listBackups: F[ListBackupsResponse]
   def listBackups(a: ListBackupsRequest): F[ListBackupsResponse]
@@ -64,6 +66,7 @@ trait DynamoDbAsyncClientOp[F[_]] {
   def listTablesPaginator(a: ListTablesRequest): F[ListTablesPublisher]
   def listTagsOfResource(a: ListTagsOfResourceRequest): F[ListTagsOfResourceResponse]
   def putItem(a: PutItemRequest): F[PutItemResponse]
+  def putResourcePolicy(a: PutResourcePolicyRequest): F[PutResourcePolicyResponse]
   def query(a: QueryRequest): F[QueryResponse]
   def queryPaginator(a: QueryRequest): F[QueryPublisher]
   def restoreTableFromBackup(a: RestoreTableFromBackupRequest): F[RestoreTableFromBackupResponse]
@@ -81,6 +84,9 @@ trait DynamoDbAsyncClientOp[F[_]] {
   def updateGlobalTable(a: UpdateGlobalTableRequest): F[UpdateGlobalTableResponse]
   def updateGlobalTableSettings(a: UpdateGlobalTableSettingsRequest): F[UpdateGlobalTableSettingsResponse]
   def updateItem(a: UpdateItemRequest): F[UpdateItemResponse]
+  def updateKinesisStreamingDestination(
+      a: UpdateKinesisStreamingDestinationRequest
+  ): F[UpdateKinesisStreamingDestinationResponse]
   def updateTable(a: UpdateTableRequest): F[UpdateTableResponse]
   def updateTableReplicaAutoScaling(a: UpdateTableReplicaAutoScalingRequest): F[UpdateTableReplicaAutoScalingResponse]
   def updateTimeToLive(a: UpdateTimeToLiveRequest): F[UpdateTimeToLiveResponse]

@@ -304,4 +304,10 @@ class S3OpsStub extends S3AsyncClientOp[IO] {
       a: WriteGetObjectResponseRequest,
       b: Path
   ): IO[WriteGetObjectResponseResponse] = ???
+
+  override def createSession(a: CreateSessionRequest): IO[CreateSessionResponse] = ???
+
+  override def listDirectoryBuckets(a: ListDirectoryBucketsRequest): IO[ListDirectoryBucketsResponse] = ???
+
+  override def listDirectoryBucketsPaginator(a: ListDirectoryBucketsRequest): IO[ListDirectoryBucketsPublisher] = ???
 }
