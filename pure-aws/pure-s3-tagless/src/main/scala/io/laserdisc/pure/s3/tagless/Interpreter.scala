@@ -51,6 +51,7 @@ trait Interpreter[M[_]] { outer =>
     override def copyObject(a: CopyObjectRequest)                           = eff(_.copyObject(a))
     override def createBucket(a: CreateBucketRequest)                       = eff(_.createBucket(a))
     override def createMultipartUpload(a: CreateMultipartUploadRequest)     = eff(_.createMultipartUpload(a))
+    override def createSession(a: CreateSessionRequest)                     = eff(_.createSession(a))
     override def deleteBucket(a: DeleteBucketRequest)                       = eff(_.deleteBucket(a))
     override def deleteBucketAnalyticsConfiguration(a: DeleteBucketAnalyticsConfigurationRequest) = eff(
       _.deleteBucketAnalyticsConfiguration(a)
@@ -143,6 +144,10 @@ trait Interpreter[M[_]] { outer =>
     )
     override def listBuckets                                          = eff(_.listBuckets)
     override def listBuckets(a: ListBucketsRequest)                   = eff(_.listBuckets(a))
+    override def listDirectoryBuckets(a: ListDirectoryBucketsRequest) = eff(_.listDirectoryBuckets(a))
+    override def listDirectoryBucketsPaginator(a: ListDirectoryBucketsRequest) = primitive(
+      _.listDirectoryBucketsPaginator(a)
+    )
     override def listMultipartUploads(a: ListMultipartUploadsRequest) = eff(_.listMultipartUploads(a))
     override def listMultipartUploadsPaginator(a: ListMultipartUploadsRequest) = primitive(
       _.listMultipartUploadsPaginator(a)
@@ -220,7 +225,8 @@ trait Interpreter[M[_]] { outer =>
         override def createBucket(a: CreateBucketRequest) = Kleisli(e => eff1(f(e).createBucket(a)))
         override def createMultipartUpload(a: CreateMultipartUploadRequest) =
           Kleisli(e => eff1(f(e).createMultipartUpload(a)))
-        override def deleteBucket(a: DeleteBucketRequest) = Kleisli(e => eff1(f(e).deleteBucket(a)))
+        override def createSession(a: CreateSessionRequest) = Kleisli(e => eff1(f(e).createSession(a)))
+        override def deleteBucket(a: DeleteBucketRequest)   = Kleisli(e => eff1(f(e).deleteBucket(a)))
         override def deleteBucketAnalyticsConfiguration(a: DeleteBucketAnalyticsConfigurationRequest) =
           Kleisli(e => eff1(f(e).deleteBucketAnalyticsConfiguration(a)))
         override def deleteBucketCors(a: DeleteBucketCorsRequest) = Kleisli(e => eff1(f(e).deleteBucketCors(a)))
@@ -314,6 +320,10 @@ trait Interpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).listBucketMetricsConfigurations(a)))
         override def listBuckets                        = Kleisli(e => eff1(f(e).listBuckets))
         override def listBuckets(a: ListBucketsRequest) = Kleisli(e => eff1(f(e).listBuckets(a)))
+        override def listDirectoryBuckets(a: ListDirectoryBucketsRequest) =
+          Kleisli(e => eff1(f(e).listDirectoryBuckets(a)))
+        override def listDirectoryBucketsPaginator(a: ListDirectoryBucketsRequest) =
+          Kleisli(e => primitive1(f(e).listDirectoryBucketsPaginator(a)))
         override def listMultipartUploads(a: ListMultipartUploadsRequest) =
           Kleisli(e => eff1(f(e).listMultipartUploads(a)))
         override def listMultipartUploadsPaginator(a: ListMultipartUploadsRequest) =
@@ -396,6 +406,7 @@ trait Interpreter[M[_]] { outer =>
     override def copyObject(a: CopyObjectRequest)                           = eff1(client.copyObject(a))
     override def createBucket(a: CreateBucketRequest)                       = eff1(client.createBucket(a))
     override def createMultipartUpload(a: CreateMultipartUploadRequest)     = eff1(client.createMultipartUpload(a))
+    override def createSession(a: CreateSessionRequest)                     = eff1(client.createSession(a))
     override def deleteBucket(a: DeleteBucketRequest)                       = eff1(client.deleteBucket(a))
     override def deleteBucketAnalyticsConfiguration(a: DeleteBucketAnalyticsConfigurationRequest) = eff1(
       client.deleteBucketAnalyticsConfiguration(a)
@@ -490,6 +501,10 @@ trait Interpreter[M[_]] { outer =>
     )
     override def listBuckets                                          = eff1(client.listBuckets)
     override def listBuckets(a: ListBucketsRequest)                   = eff1(client.listBuckets(a))
+    override def listDirectoryBuckets(a: ListDirectoryBucketsRequest) = eff1(client.listDirectoryBuckets(a))
+    override def listDirectoryBucketsPaginator(a: ListDirectoryBucketsRequest) = primitive1(
+      client.listDirectoryBucketsPaginator(a)
+    )
     override def listMultipartUploads(a: ListMultipartUploadsRequest) = eff1(client.listMultipartUploads(a))
     override def listMultipartUploadsPaginator(a: ListMultipartUploadsRequest) = primitive1(
       client.listMultipartUploadsPaginator(a)

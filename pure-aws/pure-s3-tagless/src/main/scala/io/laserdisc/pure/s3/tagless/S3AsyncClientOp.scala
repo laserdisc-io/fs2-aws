@@ -16,6 +16,7 @@ trait S3AsyncClientOp[F[_]] {
   def copyObject(a: CopyObjectRequest): F[CopyObjectResponse]
   def createBucket(a: CreateBucketRequest): F[CreateBucketResponse]
   def createMultipartUpload(a: CreateMultipartUploadRequest): F[CreateMultipartUploadResponse]
+  def createSession(a: CreateSessionRequest): F[CreateSessionResponse]
   def deleteBucket(a: DeleteBucketRequest): F[DeleteBucketResponse]
   def deleteBucketAnalyticsConfiguration(
       a: DeleteBucketAnalyticsConfigurationRequest
@@ -103,6 +104,8 @@ trait S3AsyncClientOp[F[_]] {
   ): F[ListBucketMetricsConfigurationsResponse]
   def listBuckets: F[ListBucketsResponse]
   def listBuckets(a: ListBucketsRequest): F[ListBucketsResponse]
+  def listDirectoryBuckets(a: ListDirectoryBucketsRequest): F[ListDirectoryBucketsResponse]
+  def listDirectoryBucketsPaginator(a: ListDirectoryBucketsRequest): F[ListDirectoryBucketsPublisher]
   def listMultipartUploads(a: ListMultipartUploadsRequest): F[ListMultipartUploadsResponse]
   def listMultipartUploadsPaginator(a: ListMultipartUploadsRequest): F[ListMultipartUploadsPublisher]
   def listObjectVersions(a: ListObjectVersionsRequest): F[ListObjectVersionsResponse]
