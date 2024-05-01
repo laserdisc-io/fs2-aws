@@ -1,6 +1,5 @@
 package fs2.aws.kinesis
 
-import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.numeric.*
 import fs2.aws.internal.Exceptions.*
 import software.amazon.awssdk.regions.Region
