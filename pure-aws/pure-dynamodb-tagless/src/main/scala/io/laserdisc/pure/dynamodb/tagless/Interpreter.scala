@@ -53,6 +53,7 @@ trait Interpreter[M[_]] { outer =>
     override def createTable(a: CreateTableRequest)                             = eff(_.createTable(a))
     override def deleteBackup(a: DeleteBackupRequest)                           = eff(_.deleteBackup(a))
     override def deleteItem(a: DeleteItemRequest)                               = eff(_.deleteItem(a))
+    override def deleteResourcePolicy(a: DeleteResourcePolicyRequest)           = eff(_.deleteResourcePolicy(a))
     override def deleteTable(a: DeleteTableRequest)                             = eff(_.deleteTable(a))
     override def describeBackup(a: DescribeBackupRequest)                       = eff(_.describeBackup(a))
     override def describeContinuousBackups(a: DescribeContinuousBackupsRequest) = eff(_.describeContinuousBackups(a))
@@ -87,6 +88,7 @@ trait Interpreter[M[_]] { outer =>
     override def executeTransaction(a: ExecuteTransactionRequest)             = eff(_.executeTransaction(a))
     override def exportTableToPointInTime(a: ExportTableToPointInTimeRequest) = eff(_.exportTableToPointInTime(a))
     override def getItem(a: GetItemRequest)                                   = eff(_.getItem(a))
+    override def getResourcePolicy(a: GetResourcePolicyRequest)               = eff(_.getResourcePolicy(a))
     override def importTable(a: ImportTableRequest)                           = eff(_.importTable(a))
     override def listBackups                                                  = eff(_.listBackups)
     override def listBackups(a: ListBackupsRequest)                           = eff(_.listBackups(a))
@@ -106,6 +108,7 @@ trait Interpreter[M[_]] { outer =>
     override def listTablesPaginator(a: ListTablesRequest)                      = primitive(_.listTablesPaginator(a))
     override def listTagsOfResource(a: ListTagsOfResourceRequest)               = eff(_.listTagsOfResource(a))
     override def putItem(a: PutItemRequest)                                     = eff(_.putItem(a))
+    override def putResourcePolicy(a: PutResourcePolicyRequest)                 = eff(_.putResourcePolicy(a))
     override def query(a: QueryRequest)                                         = eff(_.query(a))
     override def queryPaginator(a: QueryRequest)                                = primitive(_.queryPaginator(a))
     override def restoreTableFromBackup(a: RestoreTableFromBackupRequest)       = eff(_.restoreTableFromBackup(a))
@@ -123,7 +126,10 @@ trait Interpreter[M[_]] { outer =>
     override def updateGlobalTable(a: UpdateGlobalTableRequest)                 = eff(_.updateGlobalTable(a))
     override def updateGlobalTableSettings(a: UpdateGlobalTableSettingsRequest) = eff(_.updateGlobalTableSettings(a))
     override def updateItem(a: UpdateItemRequest)                               = eff(_.updateItem(a))
-    override def updateTable(a: UpdateTableRequest)                             = eff(_.updateTable(a))
+    override def updateKinesisStreamingDestination(a: UpdateKinesisStreamingDestinationRequest) = eff(
+      _.updateKinesisStreamingDestination(a)
+    )
+    override def updateTable(a: UpdateTableRequest) = eff(_.updateTable(a))
     override def updateTableReplicaAutoScaling(a: UpdateTableReplicaAutoScalingRequest) = eff(
       _.updateTableReplicaAutoScaling(a)
     )
@@ -143,8 +149,10 @@ trait Interpreter[M[_]] { outer =>
         override def createTable(a: CreateTableRequest)             = Kleisli(e => eff1(f(e).createTable(a)))
         override def deleteBackup(a: DeleteBackupRequest)           = Kleisli(e => eff1(f(e).deleteBackup(a)))
         override def deleteItem(a: DeleteItemRequest)               = Kleisli(e => eff1(f(e).deleteItem(a)))
-        override def deleteTable(a: DeleteTableRequest)             = Kleisli(e => eff1(f(e).deleteTable(a)))
-        override def describeBackup(a: DescribeBackupRequest)       = Kleisli(e => eff1(f(e).describeBackup(a)))
+        override def deleteResourcePolicy(a: DeleteResourcePolicyRequest) =
+          Kleisli(e => eff1(f(e).deleteResourcePolicy(a)))
+        override def deleteTable(a: DeleteTableRequest)       = Kleisli(e => eff1(f(e).deleteTable(a)))
+        override def describeBackup(a: DescribeBackupRequest) = Kleisli(e => eff1(f(e).describeBackup(a)))
         override def describeContinuousBackups(a: DescribeContinuousBackupsRequest) =
           Kleisli(e => eff1(f(e).describeContinuousBackups(a)))
         override def describeContributorInsights(a: DescribeContributorInsightsRequest) =
@@ -173,10 +181,11 @@ trait Interpreter[M[_]] { outer =>
         override def executeTransaction(a: ExecuteTransactionRequest) = Kleisli(e => eff1(f(e).executeTransaction(a)))
         override def exportTableToPointInTime(a: ExportTableToPointInTimeRequest) =
           Kleisli(e => eff1(f(e).exportTableToPointInTime(a)))
-        override def getItem(a: GetItemRequest)         = Kleisli(e => eff1(f(e).getItem(a)))
-        override def importTable(a: ImportTableRequest) = Kleisli(e => eff1(f(e).importTable(a)))
-        override def listBackups                        = Kleisli(e => eff1(f(e).listBackups))
-        override def listBackups(a: ListBackupsRequest) = Kleisli(e => eff1(f(e).listBackups(a)))
+        override def getItem(a: GetItemRequest)                     = Kleisli(e => eff1(f(e).getItem(a)))
+        override def getResourcePolicy(a: GetResourcePolicyRequest) = Kleisli(e => eff1(f(e).getResourcePolicy(a)))
+        override def importTable(a: ImportTableRequest)             = Kleisli(e => eff1(f(e).importTable(a)))
+        override def listBackups                                    = Kleisli(e => eff1(f(e).listBackups))
+        override def listBackups(a: ListBackupsRequest)             = Kleisli(e => eff1(f(e).listBackups(a)))
         override def listContributorInsights(a: ListContributorInsightsRequest) =
           Kleisli(e => eff1(f(e).listContributorInsights(a)))
         override def listContributorInsightsPaginator(a: ListContributorInsightsRequest) =
@@ -195,6 +204,7 @@ trait Interpreter[M[_]] { outer =>
         override def listTablesPaginator(a: ListTablesRequest) = Kleisli(e => primitive1(f(e).listTablesPaginator(a)))
         override def listTagsOfResource(a: ListTagsOfResourceRequest) = Kleisli(e => eff1(f(e).listTagsOfResource(a)))
         override def putItem(a: PutItemRequest)                       = Kleisli(e => eff1(f(e).putItem(a)))
+        override def putResourcePolicy(a: PutResourcePolicyRequest)   = Kleisli(e => eff1(f(e).putResourcePolicy(a)))
         override def query(a: QueryRequest)                           = Kleisli(e => eff1(f(e).query(a)))
         override def queryPaginator(a: QueryRequest)                  = Kleisli(e => primitive1(f(e).queryPaginator(a)))
         override def restoreTableFromBackup(a: RestoreTableFromBackupRequest) =
@@ -216,7 +226,9 @@ trait Interpreter[M[_]] { outer =>
         override def updateGlobalTable(a: UpdateGlobalTableRequest) = Kleisli(e => eff1(f(e).updateGlobalTable(a)))
         override def updateGlobalTableSettings(a: UpdateGlobalTableSettingsRequest) =
           Kleisli(e => eff1(f(e).updateGlobalTableSettings(a)))
-        override def updateItem(a: UpdateItemRequest)   = Kleisli(e => eff1(f(e).updateItem(a)))
+        override def updateItem(a: UpdateItemRequest) = Kleisli(e => eff1(f(e).updateItem(a)))
+        override def updateKinesisStreamingDestination(a: UpdateKinesisStreamingDestinationRequest) =
+          Kleisli(e => eff1(f(e).updateKinesisStreamingDestination(a)))
         override def updateTable(a: UpdateTableRequest) = Kleisli(e => eff1(f(e).updateTable(a)))
         override def updateTableReplicaAutoScaling(a: UpdateTableReplicaAutoScalingRequest) =
           Kleisli(e => eff1(f(e).updateTableReplicaAutoScaling(a)))
@@ -242,6 +254,7 @@ trait Interpreter[M[_]] { outer =>
     override def createTable(a: CreateTableRequest)                     = eff1(client.createTable(a))
     override def deleteBackup(a: DeleteBackupRequest)                   = eff1(client.deleteBackup(a))
     override def deleteItem(a: DeleteItemRequest)                       = eff1(client.deleteItem(a))
+    override def deleteResourcePolicy(a: DeleteResourcePolicyRequest)   = eff1(client.deleteResourcePolicy(a))
     override def deleteTable(a: DeleteTableRequest)                     = eff1(client.deleteTable(a))
     override def describeBackup(a: DescribeBackupRequest)               = eff1(client.describeBackup(a))
     override def describeContinuousBackups(a: DescribeContinuousBackupsRequest) = eff1(
@@ -278,6 +291,7 @@ trait Interpreter[M[_]] { outer =>
     override def executeTransaction(a: ExecuteTransactionRequest)             = eff1(client.executeTransaction(a))
     override def exportTableToPointInTime(a: ExportTableToPointInTimeRequest) = eff1(client.exportTableToPointInTime(a))
     override def getItem(a: GetItemRequest)                                   = eff1(client.getItem(a))
+    override def getResourcePolicy(a: GetResourcePolicyRequest)               = eff1(client.getResourcePolicy(a))
     override def importTable(a: ImportTableRequest)                           = eff1(client.importTable(a))
     override def listBackups                                                  = eff1(client.listBackups)
     override def listBackups(a: ListBackupsRequest)                           = eff1(client.listBackups(a))
@@ -297,6 +311,7 @@ trait Interpreter[M[_]] { outer =>
     override def listTablesPaginator(a: ListTablesRequest)                = primitive1(client.listTablesPaginator(a))
     override def listTagsOfResource(a: ListTagsOfResourceRequest)         = eff1(client.listTagsOfResource(a))
     override def putItem(a: PutItemRequest)                               = eff1(client.putItem(a))
+    override def putResourcePolicy(a: PutResourcePolicyRequest)           = eff1(client.putResourcePolicy(a))
     override def query(a: QueryRequest)                                   = eff1(client.query(a))
     override def queryPaginator(a: QueryRequest)                          = primitive1(client.queryPaginator(a))
     override def restoreTableFromBackup(a: RestoreTableFromBackupRequest) = eff1(client.restoreTableFromBackup(a))
@@ -319,7 +334,10 @@ trait Interpreter[M[_]] { outer =>
     override def updateGlobalTableSettings(a: UpdateGlobalTableSettingsRequest) = eff1(
       client.updateGlobalTableSettings(a)
     )
-    override def updateItem(a: UpdateItemRequest)   = eff1(client.updateItem(a))
+    override def updateItem(a: UpdateItemRequest) = eff1(client.updateItem(a))
+    override def updateKinesisStreamingDestination(a: UpdateKinesisStreamingDestinationRequest) = eff1(
+      client.updateKinesisStreamingDestination(a)
+    )
     override def updateTable(a: UpdateTableRequest) = eff1(client.updateTable(a))
     override def updateTableReplicaAutoScaling(a: UpdateTableReplicaAutoScalingRequest) = eff1(
       client.updateTableReplicaAutoScaling(a)

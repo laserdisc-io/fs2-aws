@@ -49,6 +49,7 @@ trait Interpreter[M[_]] { outer =>
     override def decreaseStreamRetentionPeriod(a: DecreaseStreamRetentionPeriodRequest) = eff(
       _.decreaseStreamRetentionPeriod(a)
     )
+    override def deleteResourcePolicy(a: DeleteResourcePolicyRequest)           = eff(_.deleteResourcePolicy(a))
     override def deleteStream(a: DeleteStreamRequest)                           = eff(_.deleteStream(a))
     override def deregisterStreamConsumer(a: DeregisterStreamConsumerRequest)   = eff(_.deregisterStreamConsumer(a))
     override def describeLimits                                                 = eff(_.describeLimits)
@@ -59,6 +60,7 @@ trait Interpreter[M[_]] { outer =>
     override def disableEnhancedMonitoring(a: DisableEnhancedMonitoringRequest) = eff(_.disableEnhancedMonitoring(a))
     override def enableEnhancedMonitoring(a: EnableEnhancedMonitoringRequest)   = eff(_.enableEnhancedMonitoring(a))
     override def getRecords(a: GetRecordsRequest)                               = eff(_.getRecords(a))
+    override def getResourcePolicy(a: GetResourcePolicyRequest)                 = eff(_.getResourcePolicy(a))
     override def getShardIterator(a: GetShardIteratorRequest)                   = eff(_.getShardIterator(a))
     override def increaseStreamRetentionPeriod(a: IncreaseStreamRetentionPeriodRequest) = eff(
       _.increaseStreamRetentionPeriod(a)
@@ -76,6 +78,7 @@ trait Interpreter[M[_]] { outer =>
     override def mergeShards(a: MergeShardsRequest)                       = eff(_.mergeShards(a))
     override def putRecord(a: PutRecordRequest)                           = eff(_.putRecord(a))
     override def putRecords(a: PutRecordsRequest)                         = eff(_.putRecords(a))
+    override def putResourcePolicy(a: PutResourcePolicyRequest)           = eff(_.putResourcePolicy(a))
     override def registerStreamConsumer(a: RegisterStreamConsumerRequest) = eff(_.registerStreamConsumer(a))
     override def removeTagsFromStream(a: RemoveTagsFromStreamRequest)     = eff(_.removeTagsFromStream(a))
     override def serviceClientConfiguration                               = primitive(_.serviceClientConfiguration)
@@ -96,6 +99,8 @@ trait Interpreter[M[_]] { outer =>
         override def createStream(a: CreateStreamRequest)       = Kleisli(e => eff1(f(e).createStream(a)))
         override def decreaseStreamRetentionPeriod(a: DecreaseStreamRetentionPeriodRequest) =
           Kleisli(e => eff1(f(e).decreaseStreamRetentionPeriod(a)))
+        override def deleteResourcePolicy(a: DeleteResourcePolicyRequest) =
+          Kleisli(e => eff1(f(e).deleteResourcePolicy(a)))
         override def deleteStream(a: DeleteStreamRequest) = Kleisli(e => eff1(f(e).deleteStream(a)))
         override def deregisterStreamConsumer(a: DeregisterStreamConsumerRequest) =
           Kleisli(e => eff1(f(e).deregisterStreamConsumer(a)))
@@ -110,8 +115,9 @@ trait Interpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).disableEnhancedMonitoring(a)))
         override def enableEnhancedMonitoring(a: EnableEnhancedMonitoringRequest) =
           Kleisli(e => eff1(f(e).enableEnhancedMonitoring(a)))
-        override def getRecords(a: GetRecordsRequest)             = Kleisli(e => eff1(f(e).getRecords(a)))
-        override def getShardIterator(a: GetShardIteratorRequest) = Kleisli(e => eff1(f(e).getShardIterator(a)))
+        override def getRecords(a: GetRecordsRequest)               = Kleisli(e => eff1(f(e).getRecords(a)))
+        override def getResourcePolicy(a: GetResourcePolicyRequest) = Kleisli(e => eff1(f(e).getResourcePolicy(a)))
+        override def getShardIterator(a: GetShardIteratorRequest)   = Kleisli(e => eff1(f(e).getShardIterator(a)))
         override def increaseStreamRetentionPeriod(a: IncreaseStreamRetentionPeriodRequest) =
           Kleisli(e => eff1(f(e).increaseStreamRetentionPeriod(a)))
         override def listShards(a: ListShardsRequest) = Kleisli(e => eff1(f(e).listShards(a)))
@@ -128,6 +134,7 @@ trait Interpreter[M[_]] { outer =>
         override def mergeShards(a: MergeShardsRequest)             = Kleisli(e => eff1(f(e).mergeShards(a)))
         override def putRecord(a: PutRecordRequest)                 = Kleisli(e => eff1(f(e).putRecord(a)))
         override def putRecords(a: PutRecordsRequest)               = Kleisli(e => eff1(f(e).putRecords(a)))
+        override def putResourcePolicy(a: PutResourcePolicyRequest) = Kleisli(e => eff1(f(e).putResourcePolicy(a)))
         override def registerStreamConsumer(a: RegisterStreamConsumerRequest) =
           Kleisli(e => eff1(f(e).registerStreamConsumer(a)))
         override def removeTagsFromStream(a: RemoveTagsFromStreamRequest) =
@@ -159,6 +166,7 @@ trait Interpreter[M[_]] { outer =>
     override def decreaseStreamRetentionPeriod(a: DecreaseStreamRetentionPeriodRequest) = eff1(
       client.decreaseStreamRetentionPeriod(a)
     )
+    override def deleteResourcePolicy(a: DeleteResourcePolicyRequest)         = eff1(client.deleteResourcePolicy(a))
     override def deleteStream(a: DeleteStreamRequest)                         = eff1(client.deleteStream(a))
     override def deregisterStreamConsumer(a: DeregisterStreamConsumerRequest) = eff1(client.deregisterStreamConsumer(a))
     override def describeLimits                                               = eff1(client.describeLimits)
@@ -171,6 +179,7 @@ trait Interpreter[M[_]] { outer =>
     )
     override def enableEnhancedMonitoring(a: EnableEnhancedMonitoringRequest) = eff1(client.enableEnhancedMonitoring(a))
     override def getRecords(a: GetRecordsRequest)                             = eff1(client.getRecords(a))
+    override def getResourcePolicy(a: GetResourcePolicyRequest)               = eff1(client.getResourcePolicy(a))
     override def getShardIterator(a: GetShardIteratorRequest)                 = eff1(client.getShardIterator(a))
     override def increaseStreamRetentionPeriod(a: IncreaseStreamRetentionPeriodRequest) = eff1(
       client.increaseStreamRetentionPeriod(a)
@@ -188,6 +197,7 @@ trait Interpreter[M[_]] { outer =>
     override def mergeShards(a: MergeShardsRequest)                       = eff1(client.mergeShards(a))
     override def putRecord(a: PutRecordRequest)                           = eff1(client.putRecord(a))
     override def putRecords(a: PutRecordsRequest)                         = eff1(client.putRecords(a))
+    override def putResourcePolicy(a: PutResourcePolicyRequest)           = eff1(client.putResourcePolicy(a))
     override def registerStreamConsumer(a: RegisterStreamConsumerRequest) = eff1(client.registerStreamConsumer(a))
     override def removeTagsFromStream(a: RemoveTagsFromStreamRequest)     = eff1(client.removeTagsFromStream(a))
     override def serviceClientConfiguration                             = primitive1(client.serviceClientConfiguration)
