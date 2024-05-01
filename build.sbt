@@ -10,7 +10,7 @@ organization := "io.laserdisc"
 name         := "fs2-aws"
 
 lazy val scala213 = "2.13.13"
-lazy val scala3   = "3.3.1"
+lazy val scala3   = "3.3.3"
 
 lazy val supportedScalaVersions = List(scala213, scala3)
 
@@ -291,7 +291,7 @@ lazy val commonSettings = Def.settings(
   Test / console / scalacOptions := (Compile / console / scalacOptions).value,
   Test / scalacOptions           := (Compile / scalacOptions).value,
   Test / scalacOptions += "-Wconf:msg=is not declared infix:s,msg=is declared 'open':s",
-  libraryDependencies += "org.scala-lang.modules" %% "scala-collection-compat" % "2.11.0",
+  libraryDependencies += "org.scala-lang.modules" %% "scala-collection-compat" % "2.12.0",
   libraryDependencies ++= Seq(
     compilerPlugin(("org.typelevel" %% "kind-projector" % "0.13.3").cross(CrossVersion.full)),
     compilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1")
