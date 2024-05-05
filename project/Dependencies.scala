@@ -16,7 +16,7 @@ object Dependencies {
     val CE               = "3.5.4"
     val Logback          = "1.5.6"
     val SLF4J            = "2.0.13"
-    val Log4Cats         = "2.6.0"
+    val Log4Cats         = "2.7.0"
   }
 
   val Fs2Core = libraryDependencies ++= Seq(
