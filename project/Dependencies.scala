@@ -6,7 +6,7 @@ object Dependencies {
 
   object V {
     val AwsSdk           = "2.25.36"
-    val Circe            = "0.14.5"
+    val Circe            = "0.14.7"
     val Munit            = "0.7.29"
     val Fs2              = "3.10.2"
     val Refined          = "0.11.1"
