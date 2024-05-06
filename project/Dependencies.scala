@@ -6,7 +6,7 @@ object Dependencies {
 
   object V {
     val AwsSdk           = "2.25.45"
-    val Circe            = "0.14.5"
+    val Circe            = "0.14.7"
     val Munit            = "0.7.29"
     val Fs2              = "3.10.2"
     val Refined          = "0.11.1"
@@ -16,7 +16,7 @@ object Dependencies {
     val CE               = "3.5.4"
     val Logback          = "1.5.6"
     val SLF4J            = "2.0.13"
-    val Log4Cats         = "2.6.0"
+    val Log4Cats         = "2.7.0"
   }
 
   val Fs2Core = libraryDependencies ++= Seq(
