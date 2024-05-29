@@ -39,12 +39,12 @@ object Dependencies {
 
   val Testing = libraryDependencies ++= (
     Seq(
-      "org.scalameta" %% "munit"               % V.Munit,
-      "org.typelevel" %% "munit-cats-effect-3" % "1.0.7",
-      "org.scalatest" %% "scalatest"           % V.ScalaTest,
-      "org.mockito"    % "mockito-core"        % V.MockitoCore,
-      "org.typelevel" %% "cats-effect"         % V.CE,
-      "javax.xml.bind" % "jaxb-api"            % "2.3.1"
+      "org.scalameta" %% "munit"             % V.Munit,
+      "org.typelevel" %% "munit-cats-effect" % "2.0.0",
+      "org.scalatest" %% "scalatest"         % V.ScalaTest,
+      "org.mockito"    % "mockito-core"      % V.MockitoCore,
+      "org.typelevel" %% "cats-effect"       % V.CE,
+      "javax.xml.bind" % "jaxb-api"          % "2.3.1"
     )
       ++ LogModules.LogBack
       ++ LogModules.LogImpl
