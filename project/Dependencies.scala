@@ -5,11 +5,11 @@ import sbt.{Def, _}
 object Dependencies {
 
   object V {
-    val AwsSdk           = "2.25.50"
+    val AwsSdk           = "2.25.70"
     val Circe            = "0.14.7"
-    val Munit            = "0.7.29"
+    val Munit            = "1.0.0"
     val Fs2              = "3.10.2"
-    val Refined          = "0.11.1"
+    val Refined          = "0.11.2"
     val ScalaTest        = "3.2.18"
     val MockitoScalaTest = "1.17.5"
     val MockitoCore      = "5.12.0"
@@ -39,12 +39,12 @@ object Dependencies {
 
   val Testing = libraryDependencies ++= (
     Seq(
-      "org.scalameta" %% "munit"               % V.Munit,
-      "org.typelevel" %% "munit-cats-effect-3" % "1.0.7",
-      "org.scalatest" %% "scalatest"           % V.ScalaTest,
-      "org.mockito"    % "mockito-core"        % V.MockitoCore,
-      "org.typelevel" %% "cats-effect"         % V.CE,
-      "javax.xml.bind" % "jaxb-api"            % "2.3.1"
+      "org.scalameta" %% "munit"             % V.Munit,
+      "org.typelevel" %% "munit-cats-effect" % "2.0.0",
+      "org.scalatest" %% "scalatest"         % V.ScalaTest,
+      "org.mockito"    % "mockito-core"      % V.MockitoCore,
+      "org.typelevel" %% "cats-effect"       % V.CE,
+      "javax.xml.bind" % "jaxb-api"          % "2.3.1"
     )
       ++ LogModules.LogBack
       ++ LogModules.LogImpl
