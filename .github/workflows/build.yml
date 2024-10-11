@@ -23,11 +23,11 @@ jobs:
             ~/.sbt
           key: sbt-${{ hashFiles('**/build.sbt') }}
       - name: "Starting up MinIO 🐳"
-        run: docker-compose up -d
+        run: docker compose up -d
       - name: Run tests
         run: sbt +clean +test +doc
         env:
           AWS_ACCESS_KEY_ID: dummy
           AWS_SECRET_ACCESS_KEY: dummy
       - name: "Shutting down MinIO 🐳"
-        run: docker-compose down
+        run: docker compose down
