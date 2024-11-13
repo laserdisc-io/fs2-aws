@@ -324,20 +324,11 @@ object S3 {
             .last
             .flatMap {
               case Some(resp) =>
-                Pull.pure {
-                  val bs = resp.asByteArrayUnsafe
-                  Option.when(bs.length >= 0)(Chunk.array(bs))
-                }
+                val chunk = Chunk.array(resp.asByteArrayUnsafe)
+                Pull.output(chunk) >> (if (chunk.size < chunkSizeBytes) Pull.done else go(offset + chunk.size))
               case None =>
-                Pull.pure(none)
+                Pull.done
             }
-            .flatMap {
-              case Some(o) =>
-                if (o.size < chunkSizeBytes) Pull.output(o)
-                else Pull.output(o) >> go(offset + o.size)
-              case None => Pull.done
-            }
-
         go(0).stream
       }
 
