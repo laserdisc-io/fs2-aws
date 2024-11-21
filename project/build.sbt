@@ -1,5 +1,5 @@
 // Required for the freegen definition in ../build.sbt
-val AwsSdk = "2.29.11"
+val AwsSdk = "2.29.18"
 
 libraryDependencies += "software.amazon.awssdk" % "sqs"        % AwsSdk
 libraryDependencies += "software.amazon.awssdk" % "s3"         % AwsSdk
