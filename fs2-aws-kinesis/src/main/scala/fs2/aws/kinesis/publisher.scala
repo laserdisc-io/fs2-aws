@@ -1,13 +1,12 @@
 package fs2.aws.kinesis
 
 import java.nio.ByteBuffer
-
 import cats.effect.{Async, Sync}
-import com.amazonaws.services.kinesis.producer.UserRecordResult
 import com.google.common.util.concurrent.{FutureCallback, Futures, ListenableFuture}
 import fs2.aws.internal.*
 import fs2.{Pipe, Stream}
 import cats.implicits.*
+import software.amazon.kinesis.producer.UserRecordResult
 
 import scala.concurrent.ExecutionContext
 
