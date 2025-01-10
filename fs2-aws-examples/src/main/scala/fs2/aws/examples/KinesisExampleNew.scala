@@ -3,7 +3,7 @@ package fs2.aws.examples
 import cats.NonEmptyParallel
 import cats.effect.*
 import cats.implicits.*
-import com.amazonaws.services.kinesis.producer.KinesisProducerConfiguration
+import software.amazon.kinesis.producer.KinesisProducerConfiguration
 import fs2.Stream
 import fs2.aws.examples.KinesisAppConfig.syntax.*
 import fs2.aws.internal.KinesisProducerClientImpl
