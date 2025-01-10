@@ -5,16 +5,16 @@ import sbt.{Def, _}
 object Dependencies {
 
   object V {
-    val AwsSdk           = "2.29.43"
-    val Circe            = "0.14.9"
-    val Munit            = "1.0.3"
+    val AwsSdk           = "2.29.49"
+    val Circe            = "0.14.10"
+    val Munit            = "1.0.4"
     val Fs2              = "3.11.0"
     val Refined          = "0.11.3"
     val ScalaTest        = "3.2.19"
     val MockitoScalaTest = "1.17.5"
-    val MockitoCore      = "5.14.2"
+    val MockitoCore      = "5.15.2"
     val CE               = "3.5.7"
-    val Logback          = "1.5.15"
+    val Logback          = "1.5.16"
     val SLF4J            = "2.0.16"
     val Log4Cats         = "2.7.0"
   }
@@ -26,9 +26,9 @@ object Dependencies {
 
   val CatsEffect = libraryDependencies += "org.typelevel" %% "cats-effect" % V.CE
 
-  val KinesisClient = libraryDependencies += "software.amazon.kinesis" % "amazon-kinesis-client" % "2.6.0"
+  val KinesisClient = libraryDependencies += "software.amazon.kinesis" % "amazon-kinesis-client" % "3.0.1"
 
-  val KinesisProducer = libraryDependencies += "com.amazonaws" % "amazon-kinesis-producer" % "0.15.12"
+  val KinesisProducer = libraryDependencies += "software.amazon.kinesis" % "amazon-kinesis-producer" % "1.0.0"
 
   val newTypes = libraryDependencies += "io.monix" %% "newtypes-core" % "0.3.0"
 
@@ -61,13 +61,8 @@ object Dependencies {
   val Mockito = libraryDependencies += "org.mockito" % "mockito-core" % V.MockitoCore
 
   // TODO: it seems that different modules require different versions - look into this
-  def ScanamoCirce(version: String) = libraryDependencies ++= Seq(
-    "io.laserdisc" %% "scanamo-circe"
-      % version
-  ).filterNot(_ => scalaVersion.value.startsWith("3."))
-
-  val DynamoStreamAdapter =
-    libraryDependencies += "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.6.0"
+  def ScanamoCirce(version: String) = libraryDependencies ++=
+    Seq("io.laserdisc" %% "scanamo-circe" % version).filterNot(_ => scalaVersion.value.startsWith("3."))
 
   val Logging = libraryDependencies ++= Seq(
     "org.typelevel" %% "log4cats-slf4j" % V.Log4Cats
