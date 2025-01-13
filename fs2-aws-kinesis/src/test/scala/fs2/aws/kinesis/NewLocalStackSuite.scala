@@ -16,12 +16,7 @@ import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, AwsCredenti
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.cloudwatch.{CloudWatchAsyncClient, CloudWatchAsyncClientBuilder}
 import software.amazon.awssdk.services.dynamodb.{DynamoDbAsyncClient, DynamoDbAsyncClientBuilder}
-import software.amazon.awssdk.services.kinesis.model.{
-  CreateStreamRequest,
-  DeleteStreamRequest,
-  DescribeStreamRequest,
-  UpdateShardCountRequest
-}
+import software.amazon.awssdk.services.kinesis.model.{CreateStreamRequest, DeleteStreamRequest, DescribeStreamRequest, UpdateShardCountRequest}
 import software.amazon.awssdk.services.kinesis.{KinesisAsyncClient, KinesisAsyncClientBuilder}
 import software.amazon.kinesis.common.InitialPositionInStream
 import software.amazon.kinesis.producer.KinesisProducerConfiguration
@@ -89,10 +84,11 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
 
     val data = List("foo", "bar", "baz")
 
-    val test = kAlgebraResource(kac, dac, cac).use { case (ki, kAlgebra) =>
+    val test = kAlgebraResource(kac, dac, cac).use { case (_, kAlgebra) =>
       for {
         _ <- Stream
           .emits(data)
+          .evalTap(_ => IO.println(s"AAAAAAAAAAAA: $data"))
           .map(d => (partitionKey, ByteBuffer.wrap(d.getBytes)))
           .through(
             writeToKinesis[IO](
@@ -102,11 +98,16 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
           )
           .compile
           .drain
+        _ <- IO.println("sleeping for 10")
+        _ <- IO.sleep(10.seconds)
+        _ <- IO.println("off we go")
         record <- kAlgebra
           .readFromKinesisStream(consumerConfig)
+          .evalTap(v => IO.println(s"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC => ${v}"))
           .take(data.length.toLong)
           .compile
           .toList
+        _ <- IO.println("DDDDDDDDDDDDDDDDDDDDD")
       } yield record
 
     }
