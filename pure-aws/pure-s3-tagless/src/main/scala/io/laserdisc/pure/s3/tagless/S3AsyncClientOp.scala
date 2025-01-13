@@ -1,10 +1,10 @@
 package io.laserdisc.pure.s3.tagless
 
 import software.amazon.awssdk.core.async.{AsyncRequestBody, AsyncResponseTransformer}
+import software.amazon.awssdk.services.s3.{S3ServiceClientConfiguration, S3Utilities}
 import software.amazon.awssdk.services.s3.model.*
 import software.amazon.awssdk.services.s3.paginators.*
 import software.amazon.awssdk.services.s3.waiters.S3AsyncWaiter
-import software.amazon.awssdk.services.s3.{S3ServiceClientConfiguration, S3Utilities}
 
 import java.nio.file.Path
 
@@ -15,6 +15,9 @@ trait S3AsyncClientOp[F[_]] {
   def completeMultipartUpload(a: CompleteMultipartUploadRequest): F[CompleteMultipartUploadResponse]
   def copyObject(a: CopyObjectRequest): F[CopyObjectResponse]
   def createBucket(a: CreateBucketRequest): F[CreateBucketResponse]
+  def createBucketMetadataTableConfiguration(
+      a: CreateBucketMetadataTableConfigurationRequest
+  ): F[CreateBucketMetadataTableConfigurationResponse]
   def createMultipartUpload(a: CreateMultipartUploadRequest): F[CreateMultipartUploadResponse]
   def createSession(a: CreateSessionRequest): F[CreateSessionResponse]
   def deleteBucket(a: DeleteBucketRequest): F[DeleteBucketResponse]
@@ -30,6 +33,9 @@ trait S3AsyncClientOp[F[_]] {
       a: DeleteBucketInventoryConfigurationRequest
   ): F[DeleteBucketInventoryConfigurationResponse]
   def deleteBucketLifecycle(a: DeleteBucketLifecycleRequest): F[DeleteBucketLifecycleResponse]
+  def deleteBucketMetadataTableConfiguration(
+      a: DeleteBucketMetadataTableConfigurationRequest
+  ): F[DeleteBucketMetadataTableConfigurationResponse]
   def deleteBucketMetricsConfiguration(
       a: DeleteBucketMetricsConfigurationRequest
   ): F[DeleteBucketMetricsConfigurationResponse]
@@ -62,6 +68,9 @@ trait S3AsyncClientOp[F[_]] {
   ): F[GetBucketLifecycleConfigurationResponse]
   def getBucketLocation(a: GetBucketLocationRequest): F[GetBucketLocationResponse]
   def getBucketLogging(a: GetBucketLoggingRequest): F[GetBucketLoggingResponse]
+  def getBucketMetadataTableConfiguration(
+      a: GetBucketMetadataTableConfigurationRequest
+  ): F[GetBucketMetadataTableConfigurationResponse]
   def getBucketMetricsConfiguration(a: GetBucketMetricsConfigurationRequest): F[GetBucketMetricsConfigurationResponse]
   def getBucketNotificationConfiguration(
       a: GetBucketNotificationConfigurationRequest
@@ -104,6 +113,8 @@ trait S3AsyncClientOp[F[_]] {
   ): F[ListBucketMetricsConfigurationsResponse]
   def listBuckets: F[ListBucketsResponse]
   def listBuckets(a: ListBucketsRequest): F[ListBucketsResponse]
+  def listBucketsPaginator: F[ListBucketsPublisher]
+  def listBucketsPaginator(a: ListBucketsRequest): F[ListBucketsPublisher]
   def listDirectoryBuckets(a: ListDirectoryBucketsRequest): F[ListDirectoryBucketsResponse]
   def listDirectoryBucketsPaginator(a: ListDirectoryBucketsRequest): F[ListDirectoryBucketsPublisher]
   def listMultipartUploads(a: ListMultipartUploadsRequest): F[ListMultipartUploadsResponse]
