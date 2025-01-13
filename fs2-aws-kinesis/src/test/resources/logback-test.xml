@@ -2,7 +2,7 @@
 <configuration>
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%date |-%level %logger [%thread] %message%n%xException</pattern>
+            <pattern>%r |-%level %logger [%thread] %message%n%xException</pattern>
         </encoder>
     </appender>
 
@@ -10,7 +10,7 @@
         <appender-ref ref="STDOUT" />
     </appender>
 
-    <root level="ERROR">
+    <root level="WARN">
         <appender-ref ref="ASYNCSTDOUT" />
     </root>
 

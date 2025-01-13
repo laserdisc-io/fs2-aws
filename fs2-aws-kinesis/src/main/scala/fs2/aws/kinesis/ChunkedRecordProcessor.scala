@@ -29,20 +29,29 @@ private[aws] class ChunkedRecordProcessor(cb: Chunk[CommittableRecord] => Unit) 
   override def initialize(initializationInput: InitializationInput): Unit = {
     shardId = initializationInput.shardId()
     extendedSequenceNumber = initializationInput.extendedSequenceNumber()
+    println(s" ----------------------------------  initialize($initializationInput)")
   }
 
-  override def leaseLost(leaseLostInput: LeaseLostInput): Unit = {}
+  override def leaseLost(leaseLostInput: LeaseLostInput): Unit = {
+    println(s" ----------------------------------  leaserLost($leaseLostInput)")
+  }
 
   override def shardEnded(shardEndedInput: ShardEndedInput): Unit = {
+    println(s" ----------------------------------  shardEnded($shardEndedInput)")
     isShutdown = true
     lastRecordSemaphore.acquire()
     shardEndedInput.checkpointer().checkpoint()
   }
 
-  override def shutdownRequested(shutdownRequestedInput: ShutdownRequestedInput): Unit =
+  override def shutdownRequested(shutdownRequestedInput: ShutdownRequestedInput): Unit = {
+    println(s" ----------------------------------  shutdownRequested($shutdownRequestedInput")
     isShutdown = true
+    // https://docs.aws.amazon.com/streams/latest/dev/kcl-migration-from-2-3.html
+    shutdownRequestedInput.checkpointer().checkpoint()
+  }
 
   override def processRecords(processRecordsInput: ProcessRecordsInput): Unit = {
+    println(s" ----------------------------------  processRecords($processRecordsInput")
     if (processRecordsInput.isAtShardEnd)
       lastRecordSemaphore.acquire()
     val batch = processRecordsInput
