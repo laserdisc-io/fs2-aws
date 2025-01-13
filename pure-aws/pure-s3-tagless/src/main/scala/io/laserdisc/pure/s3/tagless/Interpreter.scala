@@ -9,6 +9,107 @@ import software.amazon.awssdk.services.s3.model.*
 // Types referenced
 import software.amazon.awssdk.core.async.{AsyncRequestBody, AsyncResponseTransformer}
 import software.amazon.awssdk.services.s3.S3AsyncClient
+import software.amazon.awssdk.services.s3.model.{
+  AbortMultipartUploadRequest,
+  CompleteMultipartUploadRequest,
+  CopyObjectRequest,
+  CreateBucketMetadataTableConfigurationRequest,
+  CreateBucketRequest,
+  CreateMultipartUploadRequest,
+  CreateSessionRequest,
+  DeleteBucketAnalyticsConfigurationRequest,
+  DeleteBucketCorsRequest,
+  DeleteBucketEncryptionRequest,
+  DeleteBucketIntelligentTieringConfigurationRequest,
+  DeleteBucketInventoryConfigurationRequest,
+  DeleteBucketLifecycleRequest,
+  DeleteBucketMetadataTableConfigurationRequest,
+  DeleteBucketMetricsConfigurationRequest,
+  DeleteBucketOwnershipControlsRequest,
+  DeleteBucketPolicyRequest,
+  DeleteBucketReplicationRequest,
+  DeleteBucketRequest,
+  DeleteBucketTaggingRequest,
+  DeleteBucketWebsiteRequest,
+  DeleteObjectRequest,
+  DeleteObjectTaggingRequest,
+  DeleteObjectsRequest,
+  DeletePublicAccessBlockRequest,
+  GetBucketAccelerateConfigurationRequest,
+  GetBucketAclRequest,
+  GetBucketAnalyticsConfigurationRequest,
+  GetBucketCorsRequest,
+  GetBucketEncryptionRequest,
+  GetBucketIntelligentTieringConfigurationRequest,
+  GetBucketInventoryConfigurationRequest,
+  GetBucketLifecycleConfigurationRequest,
+  GetBucketLocationRequest,
+  GetBucketLoggingRequest,
+  GetBucketMetadataTableConfigurationRequest,
+  GetBucketMetricsConfigurationRequest,
+  GetBucketNotificationConfigurationRequest,
+  GetBucketOwnershipControlsRequest,
+  GetBucketPolicyRequest,
+  GetBucketPolicyStatusRequest,
+  GetBucketReplicationRequest,
+  GetBucketRequestPaymentRequest,
+  GetBucketTaggingRequest,
+  GetBucketVersioningRequest,
+  GetBucketWebsiteRequest,
+  GetObjectAclRequest,
+  GetObjectAttributesRequest,
+  GetObjectLegalHoldRequest,
+  GetObjectLockConfigurationRequest,
+  GetObjectRequest,
+  GetObjectRetentionRequest,
+  GetObjectTaggingRequest,
+  GetObjectTorrentRequest,
+  GetPublicAccessBlockRequest,
+  HeadBucketRequest,
+  HeadObjectRequest,
+  ListBucketAnalyticsConfigurationsRequest,
+  ListBucketIntelligentTieringConfigurationsRequest,
+  ListBucketInventoryConfigurationsRequest,
+  ListBucketMetricsConfigurationsRequest,
+  ListBucketsRequest,
+  ListDirectoryBucketsRequest,
+  ListMultipartUploadsRequest,
+  ListObjectVersionsRequest,
+  ListObjectsRequest,
+  ListObjectsV2Request,
+  ListPartsRequest,
+  PutBucketAccelerateConfigurationRequest,
+  PutBucketAclRequest,
+  PutBucketAnalyticsConfigurationRequest,
+  PutBucketCorsRequest,
+  PutBucketEncryptionRequest,
+  PutBucketIntelligentTieringConfigurationRequest,
+  PutBucketInventoryConfigurationRequest,
+  PutBucketLifecycleConfigurationRequest,
+  PutBucketLoggingRequest,
+  PutBucketMetricsConfigurationRequest,
+  PutBucketNotificationConfigurationRequest,
+  PutBucketOwnershipControlsRequest,
+  PutBucketPolicyRequest,
+  PutBucketReplicationRequest,
+  PutBucketRequestPaymentRequest,
+  PutBucketTaggingRequest,
+  PutBucketVersioningRequest,
+  PutBucketWebsiteRequest,
+  PutObjectAclRequest,
+  PutObjectLegalHoldRequest,
+  PutObjectLockConfigurationRequest,
+  PutObjectRequest,
+  PutObjectRetentionRequest,
+  PutObjectTaggingRequest,
+  PutPublicAccessBlockRequest,
+  RestoreObjectRequest,
+  SelectObjectContentRequest,
+  SelectObjectContentResponseHandler,
+  UploadPartCopyRequest,
+  UploadPartRequest,
+  WriteGetObjectResponseRequest
+}
 
 import java.nio.file.Path
 import java.util.concurrent.CompletableFuture
@@ -50,9 +151,12 @@ trait Interpreter[M[_]] { outer =>
     override def completeMultipartUpload(a: CompleteMultipartUploadRequest) = eff(_.completeMultipartUpload(a))
     override def copyObject(a: CopyObjectRequest)                           = eff(_.copyObject(a))
     override def createBucket(a: CreateBucketRequest)                       = eff(_.createBucket(a))
-    override def createMultipartUpload(a: CreateMultipartUploadRequest)     = eff(_.createMultipartUpload(a))
-    override def createSession(a: CreateSessionRequest)                     = eff(_.createSession(a))
-    override def deleteBucket(a: DeleteBucketRequest)                       = eff(_.deleteBucket(a))
+    override def createBucketMetadataTableConfiguration(a: CreateBucketMetadataTableConfigurationRequest) = eff(
+      _.createBucketMetadataTableConfiguration(a)
+    )
+    override def createMultipartUpload(a: CreateMultipartUploadRequest) = eff(_.createMultipartUpload(a))
+    override def createSession(a: CreateSessionRequest)                 = eff(_.createSession(a))
+    override def deleteBucket(a: DeleteBucketRequest)                   = eff(_.deleteBucket(a))
     override def deleteBucketAnalyticsConfiguration(a: DeleteBucketAnalyticsConfigurationRequest) = eff(
       _.deleteBucketAnalyticsConfiguration(a)
     )
@@ -64,6 +168,9 @@ trait Interpreter[M[_]] { outer =>
       _.deleteBucketInventoryConfiguration(a)
     )
     override def deleteBucketLifecycle(a: DeleteBucketLifecycleRequest) = eff(_.deleteBucketLifecycle(a))
+    override def deleteBucketMetadataTableConfiguration(a: DeleteBucketMetadataTableConfigurationRequest) = eff(
+      _.deleteBucketMetadataTableConfiguration(a)
+    )
     override def deleteBucketMetricsConfiguration(a: DeleteBucketMetricsConfigurationRequest) = eff(
       _.deleteBucketMetricsConfiguration(a)
     )
@@ -98,6 +205,9 @@ trait Interpreter[M[_]] { outer =>
     )
     override def getBucketLocation(a: GetBucketLocationRequest) = eff(_.getBucketLocation(a))
     override def getBucketLogging(a: GetBucketLoggingRequest)   = eff(_.getBucketLogging(a))
+    override def getBucketMetadataTableConfiguration(a: GetBucketMetadataTableConfigurationRequest) = eff(
+      _.getBucketMetadataTableConfiguration(a)
+    )
     override def getBucketMetricsConfiguration(a: GetBucketMetricsConfigurationRequest) = eff(
       _.getBucketMetricsConfiguration(a)
     )
@@ -144,6 +254,8 @@ trait Interpreter[M[_]] { outer =>
     )
     override def listBuckets                                          = eff(_.listBuckets)
     override def listBuckets(a: ListBucketsRequest)                   = eff(_.listBuckets(a))
+    override def listBucketsPaginator                                 = primitive(_.listBucketsPaginator)
+    override def listBucketsPaginator(a: ListBucketsRequest)          = primitive(_.listBucketsPaginator(a))
     override def listDirectoryBuckets(a: ListDirectoryBucketsRequest) = eff(_.listDirectoryBuckets(a))
     override def listDirectoryBucketsPaginator(a: ListDirectoryBucketsRequest) = primitive(
       _.listDirectoryBucketsPaginator(a)
@@ -223,6 +335,8 @@ trait Interpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).completeMultipartUpload(a)))
         override def copyObject(a: CopyObjectRequest)     = Kleisli(e => eff1(f(e).copyObject(a)))
         override def createBucket(a: CreateBucketRequest) = Kleisli(e => eff1(f(e).createBucket(a)))
+        override def createBucketMetadataTableConfiguration(a: CreateBucketMetadataTableConfigurationRequest) =
+          Kleisli(e => eff1(f(e).createBucketMetadataTableConfiguration(a)))
         override def createMultipartUpload(a: CreateMultipartUploadRequest) =
           Kleisli(e => eff1(f(e).createMultipartUpload(a)))
         override def createSession(a: CreateSessionRequest) = Kleisli(e => eff1(f(e).createSession(a)))
@@ -239,6 +353,8 @@ trait Interpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).deleteBucketInventoryConfiguration(a)))
         override def deleteBucketLifecycle(a: DeleteBucketLifecycleRequest) =
           Kleisli(e => eff1(f(e).deleteBucketLifecycle(a)))
+        override def deleteBucketMetadataTableConfiguration(a: DeleteBucketMetadataTableConfigurationRequest) =
+          Kleisli(e => eff1(f(e).deleteBucketMetadataTableConfiguration(a)))
         override def deleteBucketMetricsConfiguration(a: DeleteBucketMetricsConfigurationRequest) =
           Kleisli(e => eff1(f(e).deleteBucketMetricsConfiguration(a)))
         override def deleteBucketOwnershipControls(a: DeleteBucketOwnershipControlsRequest) =
@@ -272,6 +388,8 @@ trait Interpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).getBucketLifecycleConfiguration(a)))
         override def getBucketLocation(a: GetBucketLocationRequest) = Kleisli(e => eff1(f(e).getBucketLocation(a)))
         override def getBucketLogging(a: GetBucketLoggingRequest)   = Kleisli(e => eff1(f(e).getBucketLogging(a)))
+        override def getBucketMetadataTableConfiguration(a: GetBucketMetadataTableConfigurationRequest) =
+          Kleisli(e => eff1(f(e).getBucketMetadataTableConfiguration(a)))
         override def getBucketMetricsConfiguration(a: GetBucketMetricsConfigurationRequest) =
           Kleisli(e => eff1(f(e).getBucketMetricsConfiguration(a)))
         override def getBucketNotificationConfiguration(a: GetBucketNotificationConfigurationRequest) =
@@ -320,6 +438,9 @@ trait Interpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).listBucketMetricsConfigurations(a)))
         override def listBuckets                        = Kleisli(e => eff1(f(e).listBuckets))
         override def listBuckets(a: ListBucketsRequest) = Kleisli(e => eff1(f(e).listBuckets(a)))
+        override def listBucketsPaginator               = Kleisli(e => primitive1(f(e).listBucketsPaginator))
+        override def listBucketsPaginator(a: ListBucketsRequest) =
+          Kleisli(e => primitive1(f(e).listBucketsPaginator(a)))
         override def listDirectoryBuckets(a: ListDirectoryBucketsRequest) =
           Kleisli(e => eff1(f(e).listDirectoryBuckets(a)))
         override def listDirectoryBucketsPaginator(a: ListDirectoryBucketsRequest) =
@@ -405,9 +526,12 @@ trait Interpreter[M[_]] { outer =>
     override def completeMultipartUpload(a: CompleteMultipartUploadRequest) = eff1(client.completeMultipartUpload(a))
     override def copyObject(a: CopyObjectRequest)                           = eff1(client.copyObject(a))
     override def createBucket(a: CreateBucketRequest)                       = eff1(client.createBucket(a))
-    override def createMultipartUpload(a: CreateMultipartUploadRequest)     = eff1(client.createMultipartUpload(a))
-    override def createSession(a: CreateSessionRequest)                     = eff1(client.createSession(a))
-    override def deleteBucket(a: DeleteBucketRequest)                       = eff1(client.deleteBucket(a))
+    override def createBucketMetadataTableConfiguration(a: CreateBucketMetadataTableConfigurationRequest) = eff1(
+      client.createBucketMetadataTableConfiguration(a)
+    )
+    override def createMultipartUpload(a: CreateMultipartUploadRequest) = eff1(client.createMultipartUpload(a))
+    override def createSession(a: CreateSessionRequest)                 = eff1(client.createSession(a))
+    override def deleteBucket(a: DeleteBucketRequest)                   = eff1(client.deleteBucket(a))
     override def deleteBucketAnalyticsConfiguration(a: DeleteBucketAnalyticsConfigurationRequest) = eff1(
       client.deleteBucketAnalyticsConfiguration(a)
     )
@@ -419,6 +543,9 @@ trait Interpreter[M[_]] { outer =>
       client.deleteBucketInventoryConfiguration(a)
     )
     override def deleteBucketLifecycle(a: DeleteBucketLifecycleRequest) = eff1(client.deleteBucketLifecycle(a))
+    override def deleteBucketMetadataTableConfiguration(a: DeleteBucketMetadataTableConfigurationRequest) = eff1(
+      client.deleteBucketMetadataTableConfiguration(a)
+    )
     override def deleteBucketMetricsConfiguration(a: DeleteBucketMetricsConfigurationRequest) = eff1(
       client.deleteBucketMetricsConfiguration(a)
     )
@@ -453,6 +580,9 @@ trait Interpreter[M[_]] { outer =>
     )
     override def getBucketLocation(a: GetBucketLocationRequest) = eff1(client.getBucketLocation(a))
     override def getBucketLogging(a: GetBucketLoggingRequest)   = eff1(client.getBucketLogging(a))
+    override def getBucketMetadataTableConfiguration(a: GetBucketMetadataTableConfigurationRequest) = eff1(
+      client.getBucketMetadataTableConfiguration(a)
+    )
     override def getBucketMetricsConfiguration(a: GetBucketMetricsConfigurationRequest) = eff1(
       client.getBucketMetricsConfiguration(a)
     )
@@ -501,6 +631,8 @@ trait Interpreter[M[_]] { outer =>
     )
     override def listBuckets                                          = eff1(client.listBuckets)
     override def listBuckets(a: ListBucketsRequest)                   = eff1(client.listBuckets(a))
+    override def listBucketsPaginator                                 = primitive1(client.listBucketsPaginator)
+    override def listBucketsPaginator(a: ListBucketsRequest)          = primitive1(client.listBucketsPaginator(a))
     override def listDirectoryBuckets(a: ListDirectoryBucketsRequest) = eff1(client.listDirectoryBuckets(a))
     override def listDirectoryBucketsPaginator(a: ListDirectoryBucketsRequest) = primitive1(
       client.listDirectoryBucketsPaginator(a)
