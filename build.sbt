@@ -297,7 +297,7 @@ lazy val commonSettings = Def.settings(
     compilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1")
   ).filterNot(_ => scalaVersion.value.startsWith("3.")),
   Seq(Compile, Test).map { config =>
-    (config / unmanagedSourceDirectories) ++= {
+    (config / unmanagedSourceDirectories) ++=
       (config / unmanagedSourceDirectories).value.flatMap { dir: File =>
         dir.getName match {
           case "scala" =>
@@ -312,6 +312,5 @@ lazy val commonSettings = Def.settings(
           case _ => Seq(dir)
         }
       }
-    }
   }
 )

@@ -79,7 +79,7 @@ object KinesisExampleNew extends IOApp {
   ): F[Unit] =
     (
       Stream
-        .awakeEvery[F](5 seconds)
+        .awakeEvery[F](5.seconds)
         .take(15)
         .map(_.toString())
         .evalTap(d => Sync[F].delay(println(s"Producing $d")))
