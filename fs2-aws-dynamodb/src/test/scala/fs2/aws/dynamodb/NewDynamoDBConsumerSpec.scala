@@ -202,7 +202,7 @@ class NewDynamoDBConsumerSpec
           .take(nRecords)
           // emulate message processing latency to reproduce the situation when End of Shard arrives BEFORE
           // all in-flight records are done
-          .parEvalMap(3)(msg => IO.sleep(200 millis) >> IO.pure(msg))
+          .parEvalMap(3)(msg => IO.sleep(200.millis) >> IO.pure(msg))
           .through(
             k.checkpointRecords(
               KinesisCheckpointSettings(maxBatchSize = Int.MaxValue, maxBatchWait = 500.millis)
@@ -442,7 +442,7 @@ class NewDynamoDBConsumerSpec
       .build
       .map(stream =>
         stream
-          .evalTap(_ => IO.sleep(100 millis))
+          .evalTap(_ => IO.sleep(100.millis))
           .map(i => if (errorStream) throw new Exception("boom") else i)
           .onFinalize(IO.delay(latch.countDown()))
       )

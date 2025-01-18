@@ -44,6 +44,7 @@ trait Interpreter[M[_]] { outer =>
 
     // domain-specific operations are implemented in terms of `primitive`
     override def addPermission(a: AddPermissionRequest)                     = eff(_.addPermission(a))
+    override def batchManager                                               = primitive(_.batchManager)
     override def cancelMessageMoveTask(a: CancelMessageMoveTaskRequest)     = eff(_.cancelMessageMoveTask(a))
     override def changeMessageVisibility(a: ChangeMessageVisibilityRequest) = eff(_.changeMessageVisibility(a))
     override def changeMessageVisibilityBatch(a: ChangeMessageVisibilityBatchRequest) = eff(
@@ -80,6 +81,7 @@ trait Interpreter[M[_]] { outer =>
     def lens[E](f: E => SqsAsyncClient): SqsAsyncClientOp[Kleisli[M, E, *]] =
       new SqsAsyncClientOp[Kleisli[M, E, *]] {
         override def addPermission(a: AddPermissionRequest) = Kleisli(e => eff1(f(e).addPermission(a)))
+        override def batchManager                           = Kleisli(e => primitive1(f(e).batchManager))
         override def cancelMessageMoveTask(a: CancelMessageMoveTaskRequest) =
           Kleisli(e => eff1(f(e).cancelMessageMoveTask(a)))
         override def changeMessageVisibility(a: ChangeMessageVisibilityRequest) =
@@ -126,6 +128,7 @@ trait Interpreter[M[_]] { outer =>
 
     // domain-specific operations are implemented in terms of `primitive`
     override def addPermission(a: AddPermissionRequest)                     = eff1(client.addPermission(a))
+    override def batchManager                                               = primitive1(client.batchManager)
     override def cancelMessageMoveTask(a: CancelMessageMoveTaskRequest)     = eff1(client.cancelMessageMoveTask(a))
     override def changeMessageVisibility(a: ChangeMessageVisibilityRequest) = eff1(client.changeMessageVisibility(a))
     override def changeMessageVisibilityBatch(a: ChangeMessageVisibilityBatchRequest) = eff1(

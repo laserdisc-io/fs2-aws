@@ -310,4 +310,20 @@ class S3OpsStub extends S3AsyncClientOp[IO] {
   override def listDirectoryBuckets(a: ListDirectoryBucketsRequest): IO[ListDirectoryBucketsResponse] = ???
 
   override def listDirectoryBucketsPaginator(a: ListDirectoryBucketsRequest): IO[ListDirectoryBucketsPublisher] = ???
+
+  override def createBucketMetadataTableConfiguration(
+      a: CreateBucketMetadataTableConfigurationRequest
+  ): IO[CreateBucketMetadataTableConfigurationResponse] = ???
+
+  override def deleteBucketMetadataTableConfiguration(
+      a: DeleteBucketMetadataTableConfigurationRequest
+  ): IO[DeleteBucketMetadataTableConfigurationResponse] = ???
+
+  override def getBucketMetadataTableConfiguration(
+      a: GetBucketMetadataTableConfigurationRequest
+  ): IO[GetBucketMetadataTableConfigurationResponse] = ???
+
+  override def listBucketsPaginator: IO[ListBucketsPublisher] = ???
+
+  override def listBucketsPaginator(a: ListBucketsRequest): IO[ListBucketsPublisher] = ???
 }

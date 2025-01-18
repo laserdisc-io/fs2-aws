@@ -9,7 +9,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 organization := "io.laserdisc"
 name         := "fs2-aws"
 
-lazy val scala213 = "2.13.15"
+lazy val scala213 = "2.13.16"
 lazy val scala3   = "3.3.4"
 
 lazy val supportedScalaVersions = List(scala213, scala3)
@@ -297,7 +297,7 @@ lazy val commonSettings = Def.settings(
     compilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1")
   ).filterNot(_ => scalaVersion.value.startsWith("3.")),
   Seq(Compile, Test).map { config =>
-    (config / unmanagedSourceDirectories) ++= {
+    (config / unmanagedSourceDirectories) ++=
       (config / unmanagedSourceDirectories).value.flatMap { dir: File =>
         dir.getName match {
           case "scala" =>
@@ -312,6 +312,5 @@ lazy val commonSettings = Def.settings(
           case _ => Seq(dir)
         }
       }
-    }
   }
 )

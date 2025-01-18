@@ -1,12 +1,14 @@
 package io.laserdisc.pure.sqs.tagless
 
 import software.amazon.awssdk.services.sqs.SqsServiceClientConfiguration
+import software.amazon.awssdk.services.sqs.batchmanager.SqsAsyncBatchManager
 import software.amazon.awssdk.services.sqs.model.*
 import software.amazon.awssdk.services.sqs.paginators.*
 
 trait SqsAsyncClientOp[F[_]] {
   // SqsAsyncClient
   def addPermission(a: AddPermissionRequest): F[AddPermissionResponse]
+  def batchManager: F[SqsAsyncBatchManager]
   def cancelMessageMoveTask(a: CancelMessageMoveTaskRequest): F[CancelMessageMoveTaskResponse]
   def changeMessageVisibility(a: ChangeMessageVisibilityRequest): F[ChangeMessageVisibilityResponse]
   def changeMessageVisibilityBatch(a: ChangeMessageVisibilityBatchRequest): F[ChangeMessageVisibilityBatchResponse]
