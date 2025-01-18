@@ -162,7 +162,7 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
                   IO.raiseError(new RuntimeException("Expected 2 shards"))
                 else IO.unit
               },
-            2 seconds,
+            2.seconds,
             _.*(2),
             5,
             _.getMessage == "Expected 2 shards"

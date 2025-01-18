@@ -24,7 +24,7 @@ class StreamScanSpec extends AnyWordSpec with Matchers with ScalaFutures {
     PatienceConfig(timeout = scaled(Span(2, Minutes)), interval = scaled(Span(1, Second)))
 
   "DynamoDB scan" should {
-    "produce fs2 Stream form DDB scan operation" in {
+    "produce fs2 Stream form DDB scan operation" in
       resourcesF
         .use { case (tableName, ddb) =>
           for {
@@ -54,9 +54,8 @@ class StreamScanSpec extends AnyWordSpec with Matchers with ScalaFutures {
         }
         .unsafeToFuture()
         .futureValue
-    }
 
-    "fails stream on error" in {
+    "fails stream on error" in
       resourcesF
         .use { case (_, ddb) =>
           StreamScan[IO](ddb)
@@ -71,7 +70,6 @@ class StreamScanSpec extends AnyWordSpec with Matchers with ScalaFutures {
         }
         .unsafeToFuture()
         .futureValue
-    }
   }
   def resourcesF: Resource[IO, (String, DynamoDbAsyncClientOp[IO])] =
     for {

@@ -42,7 +42,7 @@ class SqsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
       .unsafeRunSync()
 
   "SQS" should {
-    "publish messages" in {
+    "publish messages" in
       sqsOpResource
         .use { sqsOp =>
           (for {
@@ -50,7 +50,7 @@ class SqsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
             sqs <- fs2.Stream.eval(
               SQS
                 .create[IO](
-                  SqsConfig(queueUrl = queueUrl, pollRate = 10 milliseconds),
+                  SqsConfig(queueUrl = queueUrl, pollRate = 10.milliseconds),
                   sqsOp
                 )
             )
@@ -62,8 +62,6 @@ class SqsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
         }
         .unsafeRunSync()
 
-    }
-
     "stream messages" in {
       val r = sqsOpResource
         .use { sqsOp =>
@@ -73,7 +71,7 @@ class SqsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
                 .create[IO](
                   SqsConfig(
                     queueUrl = queueUrl,
-                    pollRate = 10 milliseconds,
+                    pollRate = 10.milliseconds,
                     fetchMessageCount = 1
                   ),
                   sqsOp
