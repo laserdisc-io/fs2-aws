@@ -119,7 +119,7 @@ object S3 {
           bucket: BucketName,
           key: FileKey,
           uploadEmptyFiles: UploadEmptyFiles,
-          modifier: AwsRequestModifier.Upload1
+          awsRequestModifier: AwsRequestModifier.Upload1
       ): Pipe[F, Byte, Option[ETag]] =
         in =>
           fs2.Stream.eval {
@@ -127,7 +127,7 @@ object S3 {
               if (uploadEmptyFiles || chunks.nonEmpty) {
                 val bs = chunks.toByteBuffer
                 s3.putObject(
-                  modifier.putObject(PutObjectRequest.builder().bucket(bucket.value).key(key.value)).build(),
+                  awsRequestModifier.putObject(PutObjectRequest.builder().bucket(bucket.value).key(key.value)).build(),
                   AsyncRequestBody.fromByteBuffer(bs)
                 ).map(response => Option(response.eTag()))
               } else {
@@ -164,14 +164,14 @@ object S3 {
           partSize: PartSizeMB,
           uploadEmptyFiles: UploadEmptyFiles,
           multiPartConcurrency: MultiPartConcurrency,
-          requestModifier: AwsRequestModifier.MultipartUpload,
+          awsRequestModifier: AwsRequestModifier.MultipartUpload,
           multipartETagValidation: Option[MultipartETagValidation[F]]
       ): Pipe[F, Byte, Option[ETag]] = {
         val chunkSizeBytes = partSize * 1048576
 
         def initiateMultipartUpload: F[UploadId] =
           s3.createMultipartUpload(
-            requestModifier
+            awsRequestModifier
               .createMultipartUpload(CreateMultipartUploadRequest.builder().bucket(bucket.value).key(key.value))
               .build()
           ).map(_.uploadId())
@@ -180,7 +180,7 @@ object S3 {
           _.parEvalMap(multiPartConcurrency) { case (c, i) =>
             val bytes = c.toArray
             s3.uploadPart(
-              requestModifier
+              awsRequestModifier
                 .uploadPart(
                   UploadPartRequest
                     .builder()
@@ -219,7 +219,7 @@ object S3 {
               val maxPartId = getMaxPartId(tags)
               for {
                 resp <- s3.completeMultipartUpload(
-                  requestModifier
+                  awsRequestModifier
                     .completeMultipartUpload(
                       CompleteMultipartUploadRequest
                         .builder()
@@ -237,7 +237,7 @@ object S3 {
 
         def cancelUpload(uploadId: UploadId): F[Unit] =
           s3.abortMultipartUpload(
-            requestModifier
+            awsRequestModifier
               .abortMultipartUpload(
                 AbortMultipartUploadRequest
                   .builder()
@@ -373,10 +373,10 @@ object S3 {
           bucket: BucketName,
           key: FileKey,
           uploadEmptyFiles: UploadEmptyFiles,
-          modifier: AwsRequestModifier.Upload1
+          awsRequestModifier: AwsRequestModifier.Upload1
       ): Pipe[G, Byte, Option[ETag]] =
         _.translate(gToF)
-          .through(s3.uploadFile(bucket, key, uploadEmptyFiles, modifier))
+          .through(s3.uploadFile(bucket, key, uploadEmptyFiles, awsRequestModifier))
           .translate(fToG)
 
       override def uploadFileMultipart(
@@ -385,7 +385,7 @@ object S3 {
           partSize: PartSizeMB,
           uploadEmptyFiles: UploadEmptyFiles,
           multiPartConcurrency: MultiPartConcurrency = 10,
-          requestModifier: AwsRequestModifier.MultipartUpload,
+          awsRequestModifier: AwsRequestModifier.MultipartUpload,
           multipartETagValidation: Option[MultipartETagValidation[G]]
       ): Pipe[G, Byte, Option[ETag]] =
         _.translate(gToF)
@@ -396,7 +396,7 @@ object S3 {
               partSize,
               uploadEmptyFiles,
               multiPartConcurrency,
-              requestModifier,
+              awsRequestModifier,
               multipartETagValidation.map { validator =>
                 new MultipartETagValidation[F] {
                   override def validateETag(eTag: ETag, maxPartNumber: PartNumber, checksum: Checksum)
