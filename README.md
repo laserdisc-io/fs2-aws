@@ -28,8 +28,8 @@ The module `fs2-aws-s3` provides a purely functional API to operate with the AWS
 ```scala
 trait S3[F[_]] {
   def delete(bucket: BucketName, key: FileKey): F[Unit]
-  def uploadFile(bucket: BucketName, key: FileKey): Pipe[F, Byte, ETag]
-  def uploadFileMultipart(bucket: BucketName, key: FileKey, partSize: PartSizeMB): Pipe[F, Byte, ETag]
+  def uploadFile(bucket: BucketName, key: FileKey): Pipe[F, Byte, Option[ETag]]
+  def uploadFileMultipart(bucket: BucketName, key: FileKey, partSize: PartSizeMB): Pipe[F, Byte, Option[ETag]]
   def readFile(bucket: BucketName, key: FileKey): Stream[F, Byte]
   def readFileMultipart(bucket: BucketName, key: FileKey, partSize: PartSizeMB): Stream[F, Byte]
 }
