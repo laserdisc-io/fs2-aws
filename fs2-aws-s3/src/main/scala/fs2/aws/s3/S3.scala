@@ -21,11 +21,13 @@ import scala.util.control.NoStackTrace
 /* A purely functional abstraction over the S3 API based on fs2.Stream */
 trait S3[F[_]] {
   def delete(bucket: BucketName, key: FileKey): F[Unit]
+
   def uploadFile(
       bucket: BucketName,
       key: FileKey,
+      uploadEmptyFiles: UploadEmptyFiles = false,
       awsRequestModifier: AwsRequestModifier.Upload1 = AwsRequestModifier.Upload1.identity
-  ): Pipe[F, Byte, ETag]
+  ): Pipe[F, Byte, Option[ETag]]
 
   def uploadFileMultipart(
       bucket: BucketName,
@@ -36,6 +38,7 @@ trait S3[F[_]] {
       requestModifier: AwsRequestModifier.MultipartUpload = AwsRequestModifier.MultipartUpload.identity,
       multipartETagValidation: Option[MultipartETagValidation[F]] = None
   ): Pipe[F, Byte, Option[ETag]]
+
   def readFile(bucket: BucketName, key: FileKey): fs2.Stream[F, Byte]
 
   def readFileMultipart(
@@ -112,15 +115,24 @@ object S3 {
         *
         * For big files, consider using [[uploadFileMultipart]] instead.
         */
-      def uploadFile(bucket: BucketName, key: FileKey, modifier: AwsRequestModifier.Upload1): Pipe[F, Byte, ETag] =
+      def uploadFile(
+          bucket: BucketName,
+          key: FileKey,
+          uploadEmptyFiles: UploadEmptyFiles,
+          modifier: AwsRequestModifier.Upload1
+      ): Pipe[F, Byte, Option[ETag]] =
         in =>
           fs2.Stream.eval {
             in.compile.to(Chunk).flatMap { chunks =>
-              val bs = chunks.toByteBuffer
-              s3.putObject(
-                modifier.putObject(PutObjectRequest.builder().bucket(bucket.value).key(key.value)).build(),
-                AsyncRequestBody.fromByteBuffer(bs)
-              ).map(_.eTag())
+              if (uploadEmptyFiles || chunks.nonEmpty) {
+                val bs = chunks.toByteBuffer
+                s3.putObject(
+                  modifier.putObject(PutObjectRequest.builder().bucket(bucket.value).key(key.value)).build(),
+                  AsyncRequestBody.fromByteBuffer(bs)
+                ).map(response => Option(response.eTag()))
+              } else {
+                Async[F].pure(Option.empty[ETag])
+              }
             }
           }
 
@@ -360,10 +372,11 @@ object S3 {
       override def uploadFile(
           bucket: BucketName,
           key: FileKey,
+          uploadEmptyFiles: UploadEmptyFiles,
           modifier: AwsRequestModifier.Upload1
-      ): Pipe[G, Byte, ETag] =
+      ): Pipe[G, Byte, Option[ETag]] =
         _.translate(gToF)
-          .through(s3.uploadFile(bucket, key, modifier))
+          .through(s3.uploadFile(bucket, key, uploadEmptyFiles, modifier))
           .translate(fToG)
 
       override def uploadFileMultipart(
