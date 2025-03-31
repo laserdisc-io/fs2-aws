@@ -40,7 +40,7 @@ object Dependencies {
   val Testing = libraryDependencies ++= (
     Seq(
       "org.scalameta" %% "munit"             % V.Munit,
-      "org.typelevel" %% "munit-cats-effect" % "2.0.0",
+      "org.typelevel" %% "munit-cats-effect" % "2.1.0",
       "org.scalatest" %% "scalatest"         % V.ScalaTest,
       "org.mockito"    % "mockito-core"      % V.MockitoCore,
       "org.typelevel" %% "cats-effect"       % V.CE,
