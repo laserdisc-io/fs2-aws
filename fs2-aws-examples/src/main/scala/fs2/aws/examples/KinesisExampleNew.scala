@@ -51,7 +51,7 @@ object KinesisExampleNew extends IOApp {
       k       <- KinesisInterpreter[F].KinesisAsyncClientResource(kac)
       _       <- disposableStream(KinesisInterpreter[F].create(k), streamName)
       appName <- Resource.eval(Sync[F].fromEither(AppName("test").leftMap(new Throwable(_))))
-      stream <- DefaultKinesisStreamBuilder[F]()
+      stream  <- DefaultKinesisStreamBuilder[F]()
         .withAppName(appName)
         .withKinesisClient(k)
         .withDynamoDBClient(DynamoDbInterpreter[F].DynamoDbAsyncClientResource(dac))

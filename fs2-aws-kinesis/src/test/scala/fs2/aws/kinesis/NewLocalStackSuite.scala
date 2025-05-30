@@ -121,8 +121,8 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
 
   ("The Kinesis fs2 Stream" should "seamlessly consume from re-sharded stream ").ignore {
 
-    val data = List("foo", "bar", "baz")
-    val sn   = "resharding_test"
+    val data           = List("foo", "bar", "baz")
+    val sn             = "resharding_test"
     val consumerConfig = KinesisConsumerSettings(
       sn,
       "test-app",
@@ -139,7 +139,7 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
     } yield r
 
     val producer = new KinesisProducerClientImpl[IO](Some(producerConfig))
-    val test = resource.use { case (kAsyncInterpreter, kStreamInterpreter) =>
+    val test     = resource.use { case (kAsyncInterpreter, kStreamInterpreter) =>
       for {
 
         _ <- Stream
