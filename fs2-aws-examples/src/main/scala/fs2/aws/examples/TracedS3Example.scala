@@ -18,7 +18,7 @@ import java.net.URI
 object TracedS3Example extends IOApp {
   val credentials: AwsBasicCredentials = AwsBasicCredentials
     .create("AKIAIOSFODNN7EXAMPLE", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
-  val port = 9000
+  val port                                           = 9000
   override def run(args: List[String]): IO[ExitCode] =
     s3StreamResource.map(S3.create[IO]).use(s3 => program(s3).as(ExitCode.Success))
 

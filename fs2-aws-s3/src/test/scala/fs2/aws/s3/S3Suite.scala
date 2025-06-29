@@ -78,7 +78,7 @@ class S3Suite extends CatsEffectSuite {
     s3R.use { s3 =>
       s3R.map(S3.create[IO](_)).use { s3 =>
         val fileKeyMix = FileKey(NonEmptyString.unsafeFrom("jsontest-mix.json"))
-        val upload =
+        val upload     =
           Files[IO]
             .readAll(Path(testFile.getPath), 4096, Flags.Read)
             .through(
@@ -157,7 +157,7 @@ class S3Suite extends CatsEffectSuite {
 
     s3R.map(s3 => s3 -> S3.create[IO](s3)).use { case (s3Ops, s3) =>
       for {
-        fileKey <- IO.delay(UUID.randomUUID().toString).map(k => FileKey(NonEmptyString.unsafeFrom(k)))
+        fileKey      <- IO.delay(UUID.randomUUID().toString).map(k => FileKey(NonEmptyString.unsafeFrom(k)))
         uploadedTags <- fs2.Stream.empty
           .through(
             s3.uploadFileMultipart(bucket, fileKey, partSize, multipartETagValidation = multipartETagValidation.some)
@@ -187,7 +187,7 @@ class S3Suite extends CatsEffectSuite {
 
     s3R.map(s3 => s3 -> S3.create[IO](s3)).use { case (s3Ops, s3) =>
       for {
-        fileKey <- IO.delay(UUID.randomUUID().toString).map(k => FileKey(NonEmptyString.unsafeFrom(k)))
+        fileKey      <- IO.delay(UUID.randomUUID().toString).map(k => FileKey(NonEmptyString.unsafeFrom(k)))
         uploadedTags <- fs2.Stream.empty
           .through(
             s3.uploadFileMultipart(

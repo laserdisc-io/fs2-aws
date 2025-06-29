@@ -252,7 +252,7 @@ class DefaultKinesisStreamBuilder[F[_]: Async: Concurrent] extends KinesisStream
         bufferSize       <- bufferSizeRes
         queue            <- Resource.eval(Queue.bounded[F, Chunk[CommittableRecord]](bufferSize))
         streamTracker    <- streamTracker
-        cb <- schedulerConfigs(
+        cb               <- schedulerConfigs(
           kinesisClient,
           dynamoDBClient,
           cloudWatchClient,
