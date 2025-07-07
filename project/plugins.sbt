@@ -1,5 +1,5 @@
 // scala format
-addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.5.4")
+addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.5.5")
 
 // coverage
 addSbtPlugin("org.scoverage" % "sbt-scoverage" % "2.3.1")
