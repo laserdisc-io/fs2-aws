@@ -50,7 +50,7 @@ object KinesisMultistreamExample extends IOApp {
       k <- KinesisInterpreter[F].KinesisAsyncClientResource(kac)
       _ <- streamNames.map(streamName => disposableStream(KinesisInterpreter[F].create(k), streamName)).parSequence_
       appName <- Resource.eval(Sync[F].fromEither(AppName("kinesis-multistream-example").leftMap(new Throwable(_))))
-      stream <- DefaultKinesisStreamBuilder[F]()
+      stream  <- DefaultKinesisStreamBuilder[F]()
         .withAppName(appName)
         .withKinesisClient(k)
         .withDynamoDBClient(DynamoDbInterpreter[F].DynamoDbAsyncClientResource(dac))

@@ -13,7 +13,7 @@ class InternalSpec extends AnyFlatSpec with Matchers {
   implicit val runtime: IORuntime   = IORuntime.global
 
   "groupBy" should "create K substreams based on K selector outputs" in {
-    val k = 30
+    val k       = 30
     val streams = Stream
       .emits(1 to 100000)
       .covary[IO]

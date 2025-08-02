@@ -27,7 +27,7 @@ case class CommittableRecord(
 ) {
   val sequenceNumber: String = record.getSequenceNumber
 
-  def canCheckpoint(): Boolean = !recordProcessor.isShutdown
+  def canCheckpoint(): Boolean                = !recordProcessor.isShutdown
   def checkpoint[F[_]: Sync](n: Int): F[Unit] = Sync[F].delay {
     checkpointer.checkpoint(record)
     // de-register all records in checkpoint batch individually
