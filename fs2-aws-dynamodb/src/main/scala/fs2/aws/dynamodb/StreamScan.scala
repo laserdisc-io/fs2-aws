@@ -38,7 +38,7 @@ object StreamScan {
           queue      <- Stream.eval(Queue.bounded[F, Option[Chunk[JMap[String, AttributeValue]]]](1))
           sub        <- Stream.eval(Ref[F].of[Option[Subscription]](None))
           error      <- Stream.eval(Deferred[F, Throwable])
-          _ <- Stream.eval(
+          _          <- Stream.eval(
             ddb
               .scanPaginator(scanRequest)
               .map { publisher =>

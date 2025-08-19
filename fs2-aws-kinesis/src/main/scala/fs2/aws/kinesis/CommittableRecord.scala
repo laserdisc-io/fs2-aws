@@ -29,7 +29,7 @@ case class CommittableRecord(
   val sequenceNumber: String                = record.sequenceNumber()
   val subSequenceNumber: Long               = record.subSequenceNumber()
   def canCheckpoint[F[_]: Sync]: F[Boolean] = Sync[F].delay(!recordProcessor.isShutdown)
-  def checkpoint[F[_]: Sync]: F[Unit] =
+  def checkpoint[F[_]: Sync]: F[Unit]       =
     Sync[F].delay {
       checkpointer.checkpoint(record.sequenceNumber(), record.subSequenceNumber())
       if (isLastInShard) lastRecordSemaphore.release()

@@ -415,7 +415,7 @@ class NewKinesisConsumerSpec
     val config: KinesisConsumerSettings =
       KinesisConsumerSettings("testStream", "testApp")
 
-    val appNameRes = Resource.eval(IO.fromEither(AppName(config.appName).leftMap(new IllegalArgumentException(_))))
+    val appNameRes    = Resource.eval(IO.fromEither(AppName(config.appName).leftMap(new IllegalArgumentException(_))))
     val streamNameRes =
       Resource.eval(IO.fromEither(StreamName(config.streamName).leftMap(new IllegalArgumentException(_))))
 

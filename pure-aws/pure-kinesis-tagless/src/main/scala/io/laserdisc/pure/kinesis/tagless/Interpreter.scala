@@ -43,9 +43,9 @@ trait Interpreter[M[_]] { outer =>
   trait KinesisAsyncClientInterpreter extends KinesisAsyncClientOp[Kleisli[M, KinesisAsyncClient, *]] {
 
     // domain-specific operations are implemented in terms of `primitive`
-    override def addTagsToStream(a: AddTagsToStreamRequest) = eff(_.addTagsToStream(a))
-    override def close                                      = primitive(_.close)
-    override def createStream(a: CreateStreamRequest)       = eff(_.createStream(a))
+    override def addTagsToStream(a: AddTagsToStreamRequest)                             = eff(_.addTagsToStream(a))
+    override def close                                                                  = primitive(_.close)
+    override def createStream(a: CreateStreamRequest)                                   = eff(_.createStream(a))
     override def decreaseStreamRetentionPeriod(a: DecreaseStreamRetentionPeriodRequest) = eff(
       _.decreaseStreamRetentionPeriod(a)
     )
@@ -65,8 +65,8 @@ trait Interpreter[M[_]] { outer =>
     override def increaseStreamRetentionPeriod(a: IncreaseStreamRetentionPeriodRequest) = eff(
       _.increaseStreamRetentionPeriod(a)
     )
-    override def listShards(a: ListShardsRequest)                   = eff(_.listShards(a))
-    override def listStreamConsumers(a: ListStreamConsumersRequest) = eff(_.listStreamConsumers(a))
+    override def listShards(a: ListShardsRequest)                            = eff(_.listShards(a))
+    override def listStreamConsumers(a: ListStreamConsumersRequest)          = eff(_.listStreamConsumers(a))
     override def listStreamConsumersPaginator(a: ListStreamConsumersRequest) = primitive(
       _.listStreamConsumersPaginator(a)
     )
@@ -89,9 +89,9 @@ trait Interpreter[M[_]] { outer =>
     override def subscribeToShard(a: SubscribeToShardRequest, b: SubscribeToShardResponseHandler) = eff(
       _.subscribeToShard(a, b)
     )
-    override def updateShardCount(a: UpdateShardCountRequest) = eff(_.updateShardCount(a))
-    override def updateStreamMode(a: UpdateStreamModeRequest) = eff(_.updateStreamMode(a))
-    override def waiter                                       = primitive(_.waiter)
+    override def updateShardCount(a: UpdateShardCountRequest)                       = eff(_.updateShardCount(a))
+    override def updateStreamMode(a: UpdateStreamModeRequest)                       = eff(_.updateStreamMode(a))
+    override def waiter                                                             = primitive(_.waiter)
     def lens[E](f: E => KinesisAsyncClient): KinesisAsyncClientOp[Kleisli[M, E, *]] =
       new KinesisAsyncClientOp[Kleisli[M, E, *]] {
         override def addTagsToStream(a: AddTagsToStreamRequest) = Kleisli(e => eff1(f(e).addTagsToStream(a)))
@@ -120,14 +120,14 @@ trait Interpreter[M[_]] { outer =>
         override def getShardIterator(a: GetShardIteratorRequest)   = Kleisli(e => eff1(f(e).getShardIterator(a)))
         override def increaseStreamRetentionPeriod(a: IncreaseStreamRetentionPeriodRequest) =
           Kleisli(e => eff1(f(e).increaseStreamRetentionPeriod(a)))
-        override def listShards(a: ListShardsRequest) = Kleisli(e => eff1(f(e).listShards(a)))
+        override def listShards(a: ListShardsRequest)                   = Kleisli(e => eff1(f(e).listShards(a)))
         override def listStreamConsumers(a: ListStreamConsumersRequest) =
           Kleisli(e => eff1(f(e).listStreamConsumers(a)))
         override def listStreamConsumersPaginator(a: ListStreamConsumersRequest) =
           Kleisli(e => primitive1(f(e).listStreamConsumersPaginator(a)))
-        override def listStreams                        = Kleisli(e => eff1(f(e).listStreams))
-        override def listStreams(a: ListStreamsRequest) = Kleisli(e => eff1(f(e).listStreams(a)))
-        override def listStreamsPaginator               = Kleisli(e => primitive1(f(e).listStreamsPaginator))
+        override def listStreams                                 = Kleisli(e => eff1(f(e).listStreams))
+        override def listStreams(a: ListStreamsRequest)          = Kleisli(e => eff1(f(e).listStreams(a)))
+        override def listStreamsPaginator                        = Kleisli(e => primitive1(f(e).listStreamsPaginator))
         override def listStreamsPaginator(a: ListStreamsRequest) =
           Kleisli(e => primitive1(f(e).listStreamsPaginator(a)))
         override def listTagsForStream(a: ListTagsForStreamRequest) = Kleisli(e => eff1(f(e).listTagsForStream(a)))
@@ -157,7 +157,7 @@ trait Interpreter[M[_]] { outer =>
   def KinesisAsyncClientResource(builder: KinesisAsyncClientBuilder): Resource[M, KinesisAsyncClient] =
     Resource.fromAutoCloseable(asyncM.delay(builder.build()))
   def KinesisAsyncClientOpResource(builder: KinesisAsyncClientBuilder) = KinesisAsyncClientResource(builder).map(create)
-  def create(client: KinesisAsyncClient): KinesisAsyncClientOp[M] = new KinesisAsyncClientOp[M] {
+  def create(client: KinesisAsyncClient): KinesisAsyncClientOp[M]      = new KinesisAsyncClientOp[M] {
 
     // domain-specific operations are implemented in terms of `primitive`
     override def addTagsToStream(a: AddTagsToStreamRequest) = eff1(client.addTagsToStream(a))
@@ -184,8 +184,8 @@ trait Interpreter[M[_]] { outer =>
     override def increaseStreamRetentionPeriod(a: IncreaseStreamRetentionPeriodRequest) = eff1(
       client.increaseStreamRetentionPeriod(a)
     )
-    override def listShards(a: ListShardsRequest)                   = eff1(client.listShards(a))
-    override def listStreamConsumers(a: ListStreamConsumersRequest) = eff1(client.listStreamConsumers(a))
+    override def listShards(a: ListShardsRequest)                            = eff1(client.listShards(a))
+    override def listStreamConsumers(a: ListStreamConsumersRequest)          = eff1(client.listStreamConsumers(a))
     override def listStreamConsumersPaginator(a: ListStreamConsumersRequest) = primitive1(
       client.listStreamConsumersPaginator(a)
     )
