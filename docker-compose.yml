@@ -1,4 +1,3 @@
-version: "2"
 services:
   minio:
     image: minio/minio
@@ -16,7 +15,7 @@ services:
       - minio
     entrypoint: >
       /bin/sh -c "
-      /usr/bin/mc config host add testminio http://minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY --api S3v4;
+      /usr/bin/mc alias set testminio http://minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY --api S3v4;
       /usr/bin/mc mb testminio/resources;
       /usr/bin/mc policy download testminio/resources;
       exit 0;
