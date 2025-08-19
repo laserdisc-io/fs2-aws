@@ -60,10 +60,10 @@ trait Interpreter[M[_]] { outer =>
     override def describeContributorInsights(a: DescribeContributorInsightsRequest) = eff(
       _.describeContributorInsights(a)
     )
-    override def describeEndpoints                                  = eff(_.describeEndpoints)
-    override def describeEndpoints(a: DescribeEndpointsRequest)     = eff(_.describeEndpoints(a))
-    override def describeExport(a: DescribeExportRequest)           = eff(_.describeExport(a))
-    override def describeGlobalTable(a: DescribeGlobalTableRequest) = eff(_.describeGlobalTable(a))
+    override def describeEndpoints                                                  = eff(_.describeEndpoints)
+    override def describeEndpoints(a: DescribeEndpointsRequest)                     = eff(_.describeEndpoints(a))
+    override def describeExport(a: DescribeExportRequest)                           = eff(_.describeExport(a))
+    override def describeGlobalTable(a: DescribeGlobalTableRequest)                 = eff(_.describeGlobalTable(a))
     override def describeGlobalTableSettings(a: DescribeGlobalTableSettingsRequest) = eff(
       _.describeGlobalTableSettings(a)
     )
@@ -71,9 +71,9 @@ trait Interpreter[M[_]] { outer =>
     override def describeKinesisStreamingDestination(a: DescribeKinesisStreamingDestinationRequest) = eff(
       _.describeKinesisStreamingDestination(a)
     )
-    override def describeLimits                           = eff(_.describeLimits)
-    override def describeLimits(a: DescribeLimitsRequest) = eff(_.describeLimits(a))
-    override def describeTable(a: DescribeTableRequest)   = eff(_.describeTable(a))
+    override def describeLimits                                                             = eff(_.describeLimits)
+    override def describeLimits(a: DescribeLimitsRequest)                                   = eff(_.describeLimits(a))
+    override def describeTable(a: DescribeTableRequest)                                     = eff(_.describeTable(a))
     override def describeTableReplicaAutoScaling(a: DescribeTableReplicaAutoScalingRequest) = eff(
       _.describeTableReplicaAutoScaling(a)
     )
@@ -129,17 +129,17 @@ trait Interpreter[M[_]] { outer =>
     override def updateKinesisStreamingDestination(a: UpdateKinesisStreamingDestinationRequest) = eff(
       _.updateKinesisStreamingDestination(a)
     )
-    override def updateTable(a: UpdateTableRequest) = eff(_.updateTable(a))
+    override def updateTable(a: UpdateTableRequest)                                     = eff(_.updateTable(a))
     override def updateTableReplicaAutoScaling(a: UpdateTableReplicaAutoScalingRequest) = eff(
       _.updateTableReplicaAutoScaling(a)
     )
-    override def updateTimeToLive(a: UpdateTimeToLiveRequest) = eff(_.updateTimeToLive(a))
-    override def waiter                                       = primitive(_.waiter)
+    override def updateTimeToLive(a: UpdateTimeToLiveRequest)                         = eff(_.updateTimeToLive(a))
+    override def waiter                                                               = primitive(_.waiter)
     def lens[E](f: E => DynamoDbAsyncClient): DynamoDbAsyncClientOp[Kleisli[M, E, *]] =
       new DynamoDbAsyncClientOp[Kleisli[M, E, *]] {
         override def batchExecuteStatement(a: BatchExecuteStatementRequest) =
           Kleisli(e => eff1(f(e).batchExecuteStatement(a)))
-        override def batchGetItem(a: BatchGetItemRequest) = Kleisli(e => eff1(f(e).batchGetItem(a)))
+        override def batchGetItem(a: BatchGetItemRequest)          = Kleisli(e => eff1(f(e).batchGetItem(a)))
         override def batchGetItemPaginator(a: BatchGetItemRequest) =
           Kleisli(e => primitive1(f(e).batchGetItemPaginator(a)))
         override def batchWriteItem(a: BatchWriteItemRequest)       = Kleisli(e => eff1(f(e).batchWriteItem(a)))
@@ -157,9 +157,9 @@ trait Interpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).describeContinuousBackups(a)))
         override def describeContributorInsights(a: DescribeContributorInsightsRequest) =
           Kleisli(e => eff1(f(e).describeContributorInsights(a)))
-        override def describeEndpoints                              = Kleisli(e => eff1(f(e).describeEndpoints))
-        override def describeEndpoints(a: DescribeEndpointsRequest) = Kleisli(e => eff1(f(e).describeEndpoints(a)))
-        override def describeExport(a: DescribeExportRequest)       = Kleisli(e => eff1(f(e).describeExport(a)))
+        override def describeEndpoints                                  = Kleisli(e => eff1(f(e).describeEndpoints))
+        override def describeEndpoints(a: DescribeEndpointsRequest)     = Kleisli(e => eff1(f(e).describeEndpoints(a)))
+        override def describeExport(a: DescribeExportRequest)           = Kleisli(e => eff1(f(e).describeExport(a)))
         override def describeGlobalTable(a: DescribeGlobalTableRequest) =
           Kleisli(e => eff1(f(e).describeGlobalTable(a)))
         override def describeGlobalTableSettings(a: DescribeGlobalTableSettingsRequest) =
@@ -190,13 +190,13 @@ trait Interpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).listContributorInsights(a)))
         override def listContributorInsightsPaginator(a: ListContributorInsightsRequest) =
           Kleisli(e => primitive1(f(e).listContributorInsightsPaginator(a)))
-        override def listExports(a: ListExportsRequest) = Kleisli(e => eff1(f(e).listExports(a)))
+        override def listExports(a: ListExportsRequest)          = Kleisli(e => eff1(f(e).listExports(a)))
         override def listExportsPaginator(a: ListExportsRequest) =
           Kleisli(e => primitive1(f(e).listExportsPaginator(a)))
         override def listGlobalTables                             = Kleisli(e => eff1(f(e).listGlobalTables))
         override def listGlobalTables(a: ListGlobalTablesRequest) = Kleisli(e => eff1(f(e).listGlobalTables(a)))
         override def listImports(a: ListImportsRequest)           = Kleisli(e => eff1(f(e).listImports(a)))
-        override def listImportsPaginator(a: ListImportsRequest) =
+        override def listImportsPaginator(a: ListImportsRequest)  =
           Kleisli(e => primitive1(f(e).listImportsPaginator(a)))
         override def listTables                                = Kleisli(e => eff1(f(e).listTables))
         override def listTables(a: ListTablesRequest)          = Kleisli(e => eff1(f(e).listTables(a)))
@@ -330,7 +330,7 @@ trait Interpreter[M[_]] { outer =>
     override def updateContributorInsights(a: UpdateContributorInsightsRequest) = eff1(
       client.updateContributorInsights(a)
     )
-    override def updateGlobalTable(a: UpdateGlobalTableRequest) = eff1(client.updateGlobalTable(a))
+    override def updateGlobalTable(a: UpdateGlobalTableRequest)                 = eff1(client.updateGlobalTable(a))
     override def updateGlobalTableSettings(a: UpdateGlobalTableSettingsRequest) = eff1(
       client.updateGlobalTableSettings(a)
     )
@@ -338,7 +338,7 @@ trait Interpreter[M[_]] { outer =>
     override def updateKinesisStreamingDestination(a: UpdateKinesisStreamingDestinationRequest) = eff1(
       client.updateKinesisStreamingDestination(a)
     )
-    override def updateTable(a: UpdateTableRequest) = eff1(client.updateTable(a))
+    override def updateTable(a: UpdateTableRequest)                                     = eff1(client.updateTable(a))
     override def updateTableReplicaAutoScaling(a: UpdateTableReplicaAutoScalingRequest) = eff1(
       client.updateTableReplicaAutoScaling(a)
     )

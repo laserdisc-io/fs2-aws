@@ -236,7 +236,7 @@ addCommandAlias("build", ";checkFormat;clean;+test;coverage")
 
 lazy val commonSettings = Def.settings(
   organization := "io.laserdisc",
-  developers := List(
+  developers   := List(
     Developer(
       "semenodm",
       "Dmytro Semenov",

@@ -7,7 +7,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v5
       - uses: olafurpg/setup-scala@v11
         with:
           java-version: adopt@1.11

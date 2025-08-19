@@ -5,18 +5,18 @@ import sbt.{Def, _}
 object Dependencies {
 
   object V {
-    val AwsSdk           = "2.30.29"
-    val Circe            = "0.14.10"
-    val Munit            = "1.1.0"
-    val Fs2              = "3.11.0"
+    val AwsSdk           = "2.32.26"
+    val Circe            = "0.14.14"
+    val Munit            = "1.1.1"
+    val Fs2              = "3.12.0"
     val Refined          = "0.11.3"
     val ScalaTest        = "3.2.19"
     val MockitoScalaTest = "1.17.5"
-    val MockitoCore      = "5.15.2"
-    val CE               = "3.5.7"
-    val Logback          = "1.5.17"
+    val MockitoCore      = "5.19.0"
+    val CE               = "3.6.3"
+    val Logback          = "1.5.18"
     val SLF4J            = "2.0.17"
-    val Log4Cats         = "2.7.0"
+    val Log4Cats         = "2.7.1"
   }
 
   val Fs2Core = libraryDependencies ++= Seq(
@@ -26,7 +26,7 @@ object Dependencies {
 
   val CatsEffect = libraryDependencies += "org.typelevel" %% "cats-effect" % V.CE
 
-  val KinesisClient = libraryDependencies += "software.amazon.kinesis" % "amazon-kinesis-client" % "2.6.0"
+  val KinesisClient = libraryDependencies += "software.amazon.kinesis" % "amazon-kinesis-client" % "2.7.1"
 
   val KinesisProducer = libraryDependencies += "com.amazonaws" % "amazon-kinesis-producer" % "0.15.12"
 
@@ -40,7 +40,7 @@ object Dependencies {
   val Testing = libraryDependencies ++= (
     Seq(
       "org.scalameta" %% "munit"             % V.Munit,
-      "org.typelevel" %% "munit-cats-effect" % "2.0.0",
+      "org.typelevel" %% "munit-cats-effect" % "2.1.0",
       "org.scalatest" %% "scalatest"         % V.ScalaTest,
       "org.mockito"    % "mockito-core"      % V.MockitoCore,
       "org.typelevel" %% "cats-effect"       % V.CE,
@@ -62,12 +62,12 @@ object Dependencies {
 
   // TODO: it seems that different modules require different versions - look into this
   def ScanamoCirce(version: String) = libraryDependencies ++= Seq(
-    "io.laserdisc" %% "scanamo-circe"
-      % version
+    "io.laserdisc" %% "scanamo-circe" % version
   ).filterNot(_ => scalaVersion.value.startsWith("3."))
 
+  // TODO; 2.0.1 requires a major refactor
   val DynamoStreamAdapter =
-    libraryDependencies += "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.6.0"
+    libraryDependencies += "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.6.1"
 
   val Logging = libraryDependencies ++= Seq(
     "org.typelevel" %% "log4cats-slf4j" % V.Log4Cats
