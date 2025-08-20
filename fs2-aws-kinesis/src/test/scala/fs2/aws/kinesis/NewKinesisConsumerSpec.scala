@@ -7,12 +7,11 @@ import fs2.Chunk
 import fs2.aws.kinesis.models.KinesisModels.{AppName, StreamName}
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.*
-import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.*
-import org.slf4j.LoggerFactory
+import org.slf4j.{Logger, LoggerFactory}
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient
@@ -26,21 +25,13 @@ import software.amazon.kinesis.retrieval.kpl.ExtendedSequenceNumber
 import java.nio.ByteBuffer
 import java.time.Instant
 import java.util.concurrent.{CountDownLatch, Semaphore}
-import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.*
 import scala.jdk.CollectionConverters.*
 
-class NewKinesisConsumerSpec
-    extends AnyFlatSpec
-    with Matchers
-    with BeforeAndAfterEach
-    with Eventually
-    with ScalaFutures {
+class NewKinesisConsumerSpec extends AnyFlatSpec with Matchers with Eventually with ScalaFutures {
 
-  implicit val ec: ExecutionContext = ExecutionContext.global
-  implicit val runtime: IORuntime   = IORuntime.global
-
-  val logger = LoggerFactory.getLogger(getClass)
+  implicit val runtime: IORuntime = IORuntime.global
+  val logger: Logger              = LoggerFactory.getLogger(getClass)
 
   implicit def sList2jList[A](sList: List[A]): java.util.List[A] = sList.asJava
 
@@ -49,7 +40,7 @@ class NewKinesisConsumerSpec
 
   "KinesisWorker source" should "successfully read data from the Kinesis stream" in new WorkerContext with TestData {
 
-    val res =
+    val res: Seq[CommittableRecord] =
       streamResource
         .use(stream =>
           (
@@ -393,18 +384,13 @@ class NewKinesisConsumerSpec
     val latch                              = new CountDownLatch(1)
     protected val mockScheduler: Scheduler = mock(classOf[Scheduler])
 
-//    var recordProcessorFactory: ShardRecordProcessorFactory = _
     var recordProcessor: ShardRecordProcessor  = _
     var recordProcessor2: ShardRecordProcessor = _
     val chunkedRecordProcessor                 = new ChunkedRecordProcessor(_ => ())
 
     doAnswer(_ => latch.await()).when(mockScheduler).run()
-//    doThrow(new RuntimeException("boom"))
-//      .when(mockScheduler)
-//      .run()
 
     val builder: ShardRecordProcessorFactory => IO[Scheduler] = { (x: ShardRecordProcessorFactory) =>
-//      recordProcessorFactory = x
       recordProcessor = x.shardRecordProcessor()
       shard1Guard.countDown()
       recordProcessor2 = x.shardRecordProcessor()
@@ -412,8 +398,7 @@ class NewKinesisConsumerSpec
       mockScheduler.pure[IO]
     }
 
-    val config: KinesisConsumerSettings =
-      KinesisConsumerSettings("testStream", "testApp")
+    val config: KinesisConsumerSettings = KinesisConsumerSettings("testStream", "testApp")
 
     val appNameRes = Resource.eval(IO.fromEither(AppName(config.appName).leftMap(new IllegalArgumentException(_))))
     val streamNameRes =

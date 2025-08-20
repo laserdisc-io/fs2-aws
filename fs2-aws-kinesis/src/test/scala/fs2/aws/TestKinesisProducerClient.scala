@@ -1,12 +1,11 @@
 package fs2.aws
 
 import java.nio.ByteBuffer
-
 import cats.effect.Sync
-import com.amazonaws.services.kinesis.producer.UserRecordResult
 import com.google.common.util.concurrent.ListenableFuture
 import fs2.aws.internal.KinesisProducerClient
 import fs2.aws.utils.KinesisStub
+import software.amazon.kinesis.producer.UserRecordResult
 
 case class TestKinesisProducerClient[F[_]](
     respondWith: UserRecordResult,

@@ -22,10 +22,9 @@ lazy val root = (project in file("."))
     `fs2-aws-s3`,
     `fs2-aws-sqs`,
     `fs2-aws-testkit`,
-    `fs2-aws-dynamodb`,
+//    `fs2-aws-dynamodb`,
     `fs2-aws-sns`,
     `fs2-aws-core`,
-    `fs2-aws-examples`,
     `fs2-aws-benchmarks`,
     `pure-sqs-tagless`,
     `pure-sns-tagless`,
@@ -49,42 +48,18 @@ lazy val `fs2-aws-core` = (project in file("fs2-aws-core"))
   )
   .settings(commonSettings)
 
-lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb"))
-  .dependsOn(`fs2-aws-core`, `pure-dynamodb-tagless`)
-  .settings(
-    name                     := "fs2-aws-dynamodb",
-    coverageMinimumStmtTotal := 40,
-    coverageFailOnMinimum    := true,
-    Dependencies.Fs2Core,
-    Dependencies.DynamoStreamAdapter,
-    Dependencies.newTypes,
-    Dependencies.Testing
-  )
-  .settings(commonSettings)
-
-lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
-  .dependsOn(
-    `fs2-aws-dynamodb`,
-    `pure-s3-tagless`,
-    `pure-sns-tagless`,
-    `pure-sqs-tagless`,
-    `pure-kinesis-tagless`,
-    `pure-dynamodb-tagless`,
-    `pure-cloudwatch-tagless`,
-    `fs2-aws-kinesis`,
-    `fs2-aws-s3`
-  )
-  .settings(
-    name                     := "fs2-aws-examples",
-    coverageMinimumStmtTotal := 0,
-    Dependencies.Logging,
-    Dependencies.Trace4Cats,
-    Dependencies.ScanamoCirce("3.5.1")
-  )
-  .settings(commonSettings)
-  .settings(
-    publish / skip := true
-  )
+//lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb"))
+//  .dependsOn(`fs2-aws-core`, `pure-dynamodb-tagless`)
+//  .settings(
+//    name                     := "fs2-aws-dynamodb",
+//    coverageMinimumStmtTotal := 40,
+//    coverageFailOnMinimum    := true,
+//    Dependencies.Fs2Core,
+//    Dependencies.DynamoStreamAdapter,
+//    Dependencies.newTypes,
+//    Dependencies.Testing
+//  )
+//  .settings(commonSettings)
 
 lazy val `fs2-aws-s3` = (project in file("fs2-aws-s3"))
   .settings(
