@@ -8,13 +8,13 @@ jobs:
   benchmarks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v5
       - name: Set up JDK
         uses: olafurpg/setup-scala@v11
         with:
           java-version: adopt@1.11
       - name: Cache SBT
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cache/coursier/v1
@@ -23,7 +23,7 @@ jobs:
       - name: Run Benchmarks
         run: sbt "project fs2-aws-benchmarks" "jmh:run -i 10 -wi 10 -f1 -t1 -rf json -rff kinesis_bench.json"
       - name: Upload Benchmark Results
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: benchmarks
           path: fs2-aws-benchmarks/kinesis_bench.json
