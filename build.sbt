@@ -1,22 +1,20 @@
 import TaglessGen.taglessGenSettings
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
+import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
+import software.amazon.awssdk.services.kinesis.KinesisAsyncClient
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.sns.SnsAsyncClient
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
-import software.amazon.awssdk.services.kinesis.KinesisAsyncClient
-import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 
 organization := "io.laserdisc"
 name         := "fs2-aws"
 
-lazy val scala213 = "2.13.16"
-lazy val scala3   = "3.3.5"
-
+lazy val scala213               = "2.13.16"
+lazy val scala3                 = "3.3.5"
 lazy val supportedScalaVersions = List(scala213, scala3)
-
 ThisBuild / crossScalaVersions := supportedScalaVersions
-
-ThisBuild / scalaVersion := scala3
+ThisBuild / scalaVersion       := scala3
+ThisBuild / versionScheme      := Some("early-semver")
 
 lazy val root = (project in file("."))
   .aggregate(
