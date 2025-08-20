@@ -109,8 +109,8 @@ object PureAWSKleisli extends IOApp {
           .topicArn(topicArn)
           .build()
       )
-      _   <- snsOp.publish(PublishRequest.builder().message("Barry").topicArn(topicArn).build())
-      _   <- Temporal[F].sleep(5.seconds)
+      _ <- snsOp.publish(PublishRequest.builder().message("Barry").topicArn(topicArn).build())
+      _ <- Temporal[F].sleep(5.seconds)
       msg <- sqsOp
         .receiveMessage(
           ReceiveMessageRequest

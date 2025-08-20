@@ -188,7 +188,7 @@ trait Interpreter[M[_]] { outer =>
     override def getBucketAccelerateConfiguration(a: GetBucketAccelerateConfigurationRequest) = eff(
       _.getBucketAccelerateConfiguration(a)
     )
-    override def getBucketAcl(a: GetBucketAclRequest)                                       = eff(_.getBucketAcl(a))
+    override def getBucketAcl(a: GetBucketAclRequest) = eff(_.getBucketAcl(a))
     override def getBucketAnalyticsConfiguration(a: GetBucketAnalyticsConfigurationRequest) = eff(
       _.getBucketAnalyticsConfiguration(a)
     )
@@ -252,15 +252,15 @@ trait Interpreter[M[_]] { outer =>
     override def listBucketMetricsConfigurations(a: ListBucketMetricsConfigurationsRequest) = eff(
       _.listBucketMetricsConfigurations(a)
     )
-    override def listBuckets                                                   = eff(_.listBuckets)
-    override def listBuckets(a: ListBucketsRequest)                            = eff(_.listBuckets(a))
-    override def listBucketsPaginator                                          = primitive(_.listBucketsPaginator)
-    override def listBucketsPaginator(a: ListBucketsRequest)                   = primitive(_.listBucketsPaginator(a))
-    override def listDirectoryBuckets(a: ListDirectoryBucketsRequest)          = eff(_.listDirectoryBuckets(a))
+    override def listBuckets                                          = eff(_.listBuckets)
+    override def listBuckets(a: ListBucketsRequest)                   = eff(_.listBuckets(a))
+    override def listBucketsPaginator                                 = primitive(_.listBucketsPaginator)
+    override def listBucketsPaginator(a: ListBucketsRequest)          = primitive(_.listBucketsPaginator(a))
+    override def listDirectoryBuckets(a: ListDirectoryBucketsRequest) = eff(_.listDirectoryBuckets(a))
     override def listDirectoryBucketsPaginator(a: ListDirectoryBucketsRequest) = primitive(
       _.listDirectoryBucketsPaginator(a)
     )
-    override def listMultipartUploads(a: ListMultipartUploadsRequest)          = eff(_.listMultipartUploads(a))
+    override def listMultipartUploads(a: ListMultipartUploadsRequest) = eff(_.listMultipartUploads(a))
     override def listMultipartUploadsPaginator(a: ListMultipartUploadsRequest) = primitive(
       _.listMultipartUploadsPaginator(a)
     )
@@ -274,7 +274,7 @@ trait Interpreter[M[_]] { outer =>
     override def putBucketAccelerateConfiguration(a: PutBucketAccelerateConfigurationRequest) = eff(
       _.putBucketAccelerateConfiguration(a)
     )
-    override def putBucketAcl(a: PutBucketAclRequest)                                       = eff(_.putBucketAcl(a))
+    override def putBucketAcl(a: PutBucketAclRequest) = eff(_.putBucketAcl(a))
     override def putBucketAnalyticsConfiguration(a: PutBucketAnalyticsConfigurationRequest) = eff(
       _.putBucketAnalyticsConfiguration(a)
     )
@@ -289,7 +289,7 @@ trait Interpreter[M[_]] { outer =>
     override def putBucketLifecycleConfiguration(a: PutBucketLifecycleConfigurationRequest) = eff(
       _.putBucketLifecycleConfiguration(a)
     )
-    override def putBucketLogging(a: PutBucketLoggingRequest)                           = eff(_.putBucketLogging(a))
+    override def putBucketLogging(a: PutBucketLoggingRequest) = eff(_.putBucketLogging(a))
     override def putBucketMetricsConfiguration(a: PutBucketMetricsConfigurationRequest) = eff(
       _.putBucketMetricsConfiguration(a)
     )
@@ -326,11 +326,11 @@ trait Interpreter[M[_]] { outer =>
       _.writeGetObjectResponse(a, b)
     )
     override def writeGetObjectResponse(a: WriteGetObjectResponseRequest, b: Path) = eff(_.writeGetObjectResponse(a, b))
-    def lens[E](f: E => S3AsyncClient): S3AsyncClientOp[Kleisli[M, E, *]]          =
+    def lens[E](f: E => S3AsyncClient): S3AsyncClientOp[Kleisli[M, E, *]] =
       new S3AsyncClientOp[Kleisli[M, E, *]] {
         override def abortMultipartUpload(a: AbortMultipartUploadRequest) =
           Kleisli(e => eff1(f(e).abortMultipartUpload(a)))
-        override def close                                                      = Kleisli(e => primitive1(f(e).close))
+        override def close = Kleisli(e => primitive1(f(e).close))
         override def completeMultipartUpload(a: CompleteMultipartUploadRequest) =
           Kleisli(e => eff1(f(e).completeMultipartUpload(a)))
         override def copyObject(a: CopyObjectRequest)     = Kleisli(e => eff1(f(e).copyObject(a)))
@@ -366,7 +366,7 @@ trait Interpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).deleteBucketTagging(a)))
         override def deleteBucketWebsite(a: DeleteBucketWebsiteRequest) =
           Kleisli(e => eff1(f(e).deleteBucketWebsite(a)))
-        override def deleteObject(a: DeleteObjectRequest)               = Kleisli(e => eff1(f(e).deleteObject(a)))
+        override def deleteObject(a: DeleteObjectRequest) = Kleisli(e => eff1(f(e).deleteObject(a)))
         override def deleteObjectTagging(a: DeleteObjectTaggingRequest) =
           Kleisli(e => eff1(f(e).deleteObjectTagging(a)))
         override def deleteObjects(a: DeleteObjectsRequest) = Kleisli(e => eff1(f(e).deleteObjects(a)))
@@ -377,7 +377,7 @@ trait Interpreter[M[_]] { outer =>
         override def getBucketAcl(a: GetBucketAclRequest) = Kleisli(e => eff1(f(e).getBucketAcl(a)))
         override def getBucketAnalyticsConfiguration(a: GetBucketAnalyticsConfigurationRequest) =
           Kleisli(e => eff1(f(e).getBucketAnalyticsConfiguration(a)))
-        override def getBucketCors(a: GetBucketCorsRequest)             = Kleisli(e => eff1(f(e).getBucketCors(a)))
+        override def getBucketCors(a: GetBucketCorsRequest) = Kleisli(e => eff1(f(e).getBucketCors(a)))
         override def getBucketEncryption(a: GetBucketEncryptionRequest) =
           Kleisli(e => eff1(f(e).getBucketEncryption(a)))
         override def getBucketIntelligentTieringConfiguration(a: GetBucketIntelligentTieringConfigurationRequest) =
@@ -403,14 +403,14 @@ trait Interpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).getBucketReplication(a)))
         override def getBucketRequestPayment(a: GetBucketRequestPaymentRequest) =
           Kleisli(e => eff1(f(e).getBucketRequestPayment(a)))
-        override def getBucketTagging(a: GetBucketTaggingRequest)       = Kleisli(e => eff1(f(e).getBucketTagging(a)))
+        override def getBucketTagging(a: GetBucketTaggingRequest) = Kleisli(e => eff1(f(e).getBucketTagging(a)))
         override def getBucketVersioning(a: GetBucketVersioningRequest) =
           Kleisli(e => eff1(f(e).getBucketVersioning(a)))
         override def getBucketWebsite(a: GetBucketWebsiteRequest) = Kleisli(e => eff1(f(e).getBucketWebsite(a)))
         override def getObject[ReturnT](a: GetObjectRequest, b: AsyncResponseTransformer[GetObjectResponse, ReturnT]) =
           Kleisli(e => eff1(f(e).getObject(a, b)))
-        override def getObject(a: GetObjectRequest, b: Path)            = Kleisli(e => eff1(f(e).getObject(a, b)))
-        override def getObjectAcl(a: GetObjectAclRequest)               = Kleisli(e => eff1(f(e).getObjectAcl(a)))
+        override def getObject(a: GetObjectRequest, b: Path) = Kleisli(e => eff1(f(e).getObject(a, b)))
+        override def getObjectAcl(a: GetObjectAclRequest)    = Kleisli(e => eff1(f(e).getObjectAcl(a)))
         override def getObjectAttributes(a: GetObjectAttributesRequest) =
           Kleisli(e => eff1(f(e).getObjectAttributes(a)))
         override def getObjectLegalHold(a: GetObjectLegalHoldRequest) = Kleisli(e => eff1(f(e).getObjectLegalHold(a)))
@@ -436,9 +436,9 @@ trait Interpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).listBucketInventoryConfigurations(a)))
         override def listBucketMetricsConfigurations(a: ListBucketMetricsConfigurationsRequest) =
           Kleisli(e => eff1(f(e).listBucketMetricsConfigurations(a)))
-        override def listBuckets                                 = Kleisli(e => eff1(f(e).listBuckets))
-        override def listBuckets(a: ListBucketsRequest)          = Kleisli(e => eff1(f(e).listBuckets(a)))
-        override def listBucketsPaginator                        = Kleisli(e => primitive1(f(e).listBucketsPaginator))
+        override def listBuckets                        = Kleisli(e => eff1(f(e).listBuckets))
+        override def listBuckets(a: ListBucketsRequest) = Kleisli(e => eff1(f(e).listBuckets(a)))
+        override def listBucketsPaginator               = Kleisli(e => primitive1(f(e).listBucketsPaginator))
         override def listBucketsPaginator(a: ListBucketsRequest) =
           Kleisli(e => primitive1(f(e).listBucketsPaginator(a)))
         override def listDirectoryBuckets(a: ListDirectoryBucketsRequest) =
@@ -452,8 +452,8 @@ trait Interpreter[M[_]] { outer =>
         override def listObjectVersions(a: ListObjectVersionsRequest) = Kleisli(e => eff1(f(e).listObjectVersions(a)))
         override def listObjectVersionsPaginator(a: ListObjectVersionsRequest) =
           Kleisli(e => primitive1(f(e).listObjectVersionsPaginator(a)))
-        override def listObjects(a: ListObjectsRequest)              = Kleisli(e => eff1(f(e).listObjects(a)))
-        override def listObjectsV2(a: ListObjectsV2Request)          = Kleisli(e => eff1(f(e).listObjectsV2(a)))
+        override def listObjects(a: ListObjectsRequest)     = Kleisli(e => eff1(f(e).listObjects(a)))
+        override def listObjectsV2(a: ListObjectsV2Request) = Kleisli(e => eff1(f(e).listObjectsV2(a)))
         override def listObjectsV2Paginator(a: ListObjectsV2Request) =
           Kleisli(e => primitive1(f(e).listObjectsV2Paginator(a)))
         override def listParts(a: ListPartsRequest)          = Kleisli(e => eff1(f(e).listParts(a)))
@@ -463,7 +463,7 @@ trait Interpreter[M[_]] { outer =>
         override def putBucketAcl(a: PutBucketAclRequest) = Kleisli(e => eff1(f(e).putBucketAcl(a)))
         override def putBucketAnalyticsConfiguration(a: PutBucketAnalyticsConfigurationRequest) =
           Kleisli(e => eff1(f(e).putBucketAnalyticsConfiguration(a)))
-        override def putBucketCors(a: PutBucketCorsRequest)             = Kleisli(e => eff1(f(e).putBucketCors(a)))
+        override def putBucketCors(a: PutBucketCorsRequest) = Kleisli(e => eff1(f(e).putBucketCors(a)))
         override def putBucketEncryption(a: PutBucketEncryptionRequest) =
           Kleisli(e => eff1(f(e).putBucketEncryption(a)))
         override def putBucketIntelligentTieringConfiguration(a: PutBucketIntelligentTieringConfigurationRequest) =
@@ -479,12 +479,12 @@ trait Interpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).putBucketNotificationConfiguration(a)))
         override def putBucketOwnershipControls(a: PutBucketOwnershipControlsRequest) =
           Kleisli(e => eff1(f(e).putBucketOwnershipControls(a)))
-        override def putBucketPolicy(a: PutBucketPolicyRequest)           = Kleisli(e => eff1(f(e).putBucketPolicy(a)))
+        override def putBucketPolicy(a: PutBucketPolicyRequest) = Kleisli(e => eff1(f(e).putBucketPolicy(a)))
         override def putBucketReplication(a: PutBucketReplicationRequest) =
           Kleisli(e => eff1(f(e).putBucketReplication(a)))
         override def putBucketRequestPayment(a: PutBucketRequestPaymentRequest) =
           Kleisli(e => eff1(f(e).putBucketRequestPayment(a)))
-        override def putBucketTagging(a: PutBucketTaggingRequest)       = Kleisli(e => eff1(f(e).putBucketTagging(a)))
+        override def putBucketTagging(a: PutBucketTaggingRequest) = Kleisli(e => eff1(f(e).putBucketTagging(a)))
         override def putBucketVersioning(a: PutBucketVersioningRequest) =
           Kleisli(e => eff1(f(e).putBucketVersioning(a)))
         override def putBucketWebsite(a: PutBucketWebsiteRequest)        = Kleisli(e => eff1(f(e).putBucketWebsite(a)))
@@ -518,7 +518,7 @@ trait Interpreter[M[_]] { outer =>
   def S3AsyncClientResource(builder: S3AsyncClientBuilder): Resource[M, S3AsyncClient] =
     Resource.fromAutoCloseable(asyncM.delay(builder.build()))
   def S3AsyncClientOpResource(builder: S3AsyncClientBuilder) = S3AsyncClientResource(builder).map(create)
-  def create(client: S3AsyncClient): S3AsyncClientOp[M]      = new S3AsyncClientOp[M] {
+  def create(client: S3AsyncClient): S3AsyncClientOp[M] = new S3AsyncClientOp[M] {
 
     // domain-specific operations are implemented in terms of `primitive`
     override def abortMultipartUpload(a: AbortMultipartUploadRequest)       = eff1(client.abortMultipartUpload(a))
@@ -601,10 +601,10 @@ trait Interpreter[M[_]] { outer =>
     override def getBucketWebsite(a: GetBucketWebsiteRequest)               = eff1(client.getBucketWebsite(a))
     override def getObject[ReturnT](a: GetObjectRequest, b: AsyncResponseTransformer[GetObjectResponse, ReturnT]) =
       eff1(client.getObject(a, b))
-    override def getObject(a: GetObjectRequest, b: Path)                          = eff1(client.getObject(a, b))
-    override def getObjectAcl(a: GetObjectAclRequest)                             = eff1(client.getObjectAcl(a))
-    override def getObjectAttributes(a: GetObjectAttributesRequest)               = eff1(client.getObjectAttributes(a))
-    override def getObjectLegalHold(a: GetObjectLegalHoldRequest)                 = eff1(client.getObjectLegalHold(a))
+    override def getObject(a: GetObjectRequest, b: Path)            = eff1(client.getObject(a, b))
+    override def getObjectAcl(a: GetObjectAclRequest)               = eff1(client.getObjectAcl(a))
+    override def getObjectAttributes(a: GetObjectAttributesRequest) = eff1(client.getObjectAttributes(a))
+    override def getObjectLegalHold(a: GetObjectLegalHoldRequest)   = eff1(client.getObjectLegalHold(a))
     override def getObjectLockConfiguration(a: GetObjectLockConfigurationRequest) = eff1(
       client.getObjectLockConfiguration(a)
     )
@@ -637,11 +637,11 @@ trait Interpreter[M[_]] { outer =>
     override def listDirectoryBucketsPaginator(a: ListDirectoryBucketsRequest) = primitive1(
       client.listDirectoryBucketsPaginator(a)
     )
-    override def listMultipartUploads(a: ListMultipartUploadsRequest)          = eff1(client.listMultipartUploads(a))
+    override def listMultipartUploads(a: ListMultipartUploadsRequest) = eff1(client.listMultipartUploads(a))
     override def listMultipartUploadsPaginator(a: ListMultipartUploadsRequest) = primitive1(
       client.listMultipartUploadsPaginator(a)
     )
-    override def listObjectVersions(a: ListObjectVersionsRequest)          = eff1(client.listObjectVersions(a))
+    override def listObjectVersions(a: ListObjectVersionsRequest) = eff1(client.listObjectVersions(a))
     override def listObjectVersionsPaginator(a: ListObjectVersionsRequest) = primitive1(
       client.listObjectVersionsPaginator(a)
     )

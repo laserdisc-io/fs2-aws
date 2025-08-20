@@ -68,7 +68,7 @@ class SnsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
         awsClientsResource
           .use { case (sns, sqs) =>
             (for {
-              sns_   <- fs2.Stream.eval(SNS.create[IO](sns))
+              sns_ <- fs2.Stream.eval(SNS.create[IO](sns))
               sqsArn <- fs2.Stream.eval(
                 sqs
                   .getQueueAttributes(
