@@ -23,7 +23,7 @@ object FreeGen2 {
     freeGen2Dir     := (Compile / sourceManaged).value,
     freeGen2Package := "doobie.free",
     freeGen2Renames := Map(classOf[java.sql.Array] -> "SqlArray"),
-    freeGen2        :=
+    freeGen2 :=
       new FreeGen2(
         freeGen2Classes.value,
         freeGen2Package.value,
@@ -57,7 +57,7 @@ class FreeGen2(managed: List[Class[_]], pkg: String, renames: Map[Class[_], Stri
 
   def toScalaType(t: Type): String =
     t match {
-      case t: GenericArrayType  => s"Array[${toScalaType(t.getGenericComponentType)}]"
+      case t: GenericArrayType => s"Array[${toScalaType(t.getGenericComponentType)}]"
       case t: ParameterizedType =>
         s"${toScalaType(t.getRawType)}${t.getActualTypeArguments.map(toScalaType).mkString("[", ", ", "]")}"
       case t: WildcardType =>

@@ -64,7 +64,7 @@ trait Interpreter[M[_]] { outer =>
     override def describeAnomalyDetectorsPaginator(a: DescribeAnomalyDetectorsRequest) = primitive(
       _.describeAnomalyDetectorsPaginator(a)
     )
-    override def describeInsightRules(a: DescribeInsightRulesRequest)          = eff(_.describeInsightRules(a))
+    override def describeInsightRules(a: DescribeInsightRulesRequest) = eff(_.describeInsightRules(a))
     override def describeInsightRulesPaginator(a: DescribeInsightRulesRequest) = primitive(
       _.describeInsightRulesPaginator(a)
     )
@@ -112,8 +112,8 @@ trait Interpreter[M[_]] { outer =>
     override def waiter                                                   = primitive(_.waiter)
     def lens[E](f: E => CloudWatchAsyncClient): CloudWatchAsyncClientOp[Kleisli[M, E, *]] =
       new CloudWatchAsyncClientOp[Kleisli[M, E, *]] {
-        override def close                                                  = Kleisli(e => primitive1(f(e).close))
-        override def deleteAlarms(a: DeleteAlarmsRequest)                   = Kleisli(e => eff1(f(e).deleteAlarms(a)))
+        override def close                                = Kleisli(e => primitive1(f(e).close))
+        override def deleteAlarms(a: DeleteAlarmsRequest) = Kleisli(e => eff1(f(e).deleteAlarms(a)))
         override def deleteAnomalyDetector(a: DeleteAnomalyDetectorRequest) =
           Kleisli(e => eff1(f(e).deleteAnomalyDetector(a)))
         override def deleteDashboards(a: DeleteDashboardsRequest)     = Kleisli(e => eff1(f(e).deleteDashboards(a)))
@@ -149,12 +149,12 @@ trait Interpreter[M[_]] { outer =>
         override def getDashboard(a: GetDashboardRequest)             = Kleisli(e => eff1(f(e).getDashboard(a)))
         override def getInsightRuleReport(a: GetInsightRuleReportRequest) =
           Kleisli(e => eff1(f(e).getInsightRuleReport(a)))
-        override def getMetricData(a: GetMetricDataRequest)          = Kleisli(e => eff1(f(e).getMetricData(a)))
+        override def getMetricData(a: GetMetricDataRequest) = Kleisli(e => eff1(f(e).getMetricData(a)))
         override def getMetricDataPaginator(a: GetMetricDataRequest) =
           Kleisli(e => primitive1(f(e).getMetricDataPaginator(a)))
         override def getMetricStatistics(a: GetMetricStatisticsRequest) =
           Kleisli(e => eff1(f(e).getMetricStatistics(a)))
-        override def getMetricStream(a: GetMetricStreamRequest)           = Kleisli(e => eff1(f(e).getMetricStream(a)))
+        override def getMetricStream(a: GetMetricStreamRequest) = Kleisli(e => eff1(f(e).getMetricStream(a)))
         override def getMetricWidgetImage(a: GetMetricWidgetImageRequest) =
           Kleisli(e => eff1(f(e).getMetricWidgetImage(a)))
         override def listDashboards                           = Kleisli(e => eff1(f(e).listDashboards))
@@ -169,9 +169,9 @@ trait Interpreter[M[_]] { outer =>
         override def listMetricStreams(a: ListMetricStreamsRequest) = Kleisli(e => eff1(f(e).listMetricStreams(a)))
         override def listMetricStreamsPaginator(a: ListMetricStreamsRequest) =
           Kleisli(e => primitive1(f(e).listMetricStreamsPaginator(a)))
-        override def listMetrics                                 = Kleisli(e => eff1(f(e).listMetrics))
-        override def listMetrics(a: ListMetricsRequest)          = Kleisli(e => eff1(f(e).listMetrics(a)))
-        override def listMetricsPaginator                        = Kleisli(e => primitive1(f(e).listMetricsPaginator))
+        override def listMetrics                        = Kleisli(e => eff1(f(e).listMetrics))
+        override def listMetrics(a: ListMetricsRequest) = Kleisli(e => eff1(f(e).listMetrics(a)))
+        override def listMetricsPaginator               = Kleisli(e => primitive1(f(e).listMetricsPaginator))
         override def listMetricsPaginator(a: ListMetricsRequest) =
           Kleisli(e => primitive1(f(e).listMetricsPaginator(a)))
         override def listTagsForResource(a: ListTagsForResourceRequest) =
@@ -224,7 +224,7 @@ trait Interpreter[M[_]] { outer =>
     override def describeAnomalyDetectorsPaginator(a: DescribeAnomalyDetectorsRequest) = primitive1(
       client.describeAnomalyDetectorsPaginator(a)
     )
-    override def describeInsightRules(a: DescribeInsightRulesRequest)          = eff1(client.describeInsightRules(a))
+    override def describeInsightRules(a: DescribeInsightRulesRequest) = eff1(client.describeInsightRules(a))
     override def describeInsightRulesPaginator(a: DescribeInsightRulesRequest) = primitive1(
       client.describeInsightRulesPaginator(a)
     )
@@ -247,7 +247,7 @@ trait Interpreter[M[_]] { outer =>
     override def listManagedInsightRulesPaginator(a: ListManagedInsightRulesRequest) = primitive1(
       client.listManagedInsightRulesPaginator(a)
     )
-    override def listMetricStreams(a: ListMetricStreamsRequest)          = eff1(client.listMetricStreams(a))
+    override def listMetricStreams(a: ListMetricStreamsRequest) = eff1(client.listMetricStreams(a))
     override def listMetricStreamsPaginator(a: ListMetricStreamsRequest) = primitive1(
       client.listMetricStreamsPaginator(a)
     )

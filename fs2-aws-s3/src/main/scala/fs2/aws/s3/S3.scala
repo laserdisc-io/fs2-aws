@@ -265,7 +265,7 @@ object S3 {
 
         in =>
           for {
-            uploadId                     <- fs2.Stream.eval(initiateMultipartUpload)
+            uploadId <- fs2.Stream.eval(initiateMultipartUpload)
             (eTag, checksum, maxPartNum) <- in
               .chunkN(chunkSizeBytes)
               .zip(fs2.Stream.iterate(1L)(_ + 1))

@@ -153,7 +153,7 @@ object DynamoDB {
         for {
           provider <- Stream.eval(Sync[F].delay(DefaultAWSCredentialsProviderChain.getInstance()))
           workerId <- Stream.eval(Sync[F].delay(java.util.UUID.randomUUID().toString))
-          conf     <- Stream.eval(
+          conf <- Stream.eval(
             Sync[F].delay(
               new KinesisClientLibConfiguration(
                 appName,

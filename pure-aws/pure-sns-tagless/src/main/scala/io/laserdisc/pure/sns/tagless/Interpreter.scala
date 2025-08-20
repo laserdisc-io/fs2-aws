@@ -43,7 +43,7 @@ trait Interpreter[M[_]] { outer =>
   trait SnsAsyncClientInterpreter extends SnsAsyncClientOp[Kleisli[M, SnsAsyncClient, *]] {
 
     // domain-specific operations are implemented in terms of `primitive`
-    override def addPermission(a: AddPermissionRequest)                               = eff(_.addPermission(a))
+    override def addPermission(a: AddPermissionRequest) = eff(_.addPermission(a))
     override def checkIfPhoneNumberIsOptedOut(a: CheckIfPhoneNumberIsOptedOutRequest) = eff(
       _.checkIfPhoneNumberIsOptedOut(a)
     )
@@ -77,7 +77,7 @@ trait Interpreter[M[_]] { outer =>
     override def listEndpointsByPlatformApplicationPaginator(a: ListEndpointsByPlatformApplicationRequest) = primitive(
       _.listEndpointsByPlatformApplicationPaginator(a)
     )
-    override def listOriginationNumbers(a: ListOriginationNumbersRequest)          = eff(_.listOriginationNumbers(a))
+    override def listOriginationNumbers(a: ListOriginationNumbersRequest) = eff(_.listOriginationNumbers(a))
     override def listOriginationNumbersPaginator(a: ListOriginationNumbersRequest) = primitive(
       _.listOriginationNumbersPaginator(a)
     )
@@ -136,7 +136,7 @@ trait Interpreter[M[_]] { outer =>
         override def addPermission(a: AddPermissionRequest) = Kleisli(e => eff1(f(e).addPermission(a)))
         override def checkIfPhoneNumberIsOptedOut(a: CheckIfPhoneNumberIsOptedOutRequest) =
           Kleisli(e => eff1(f(e).checkIfPhoneNumberIsOptedOut(a)))
-        override def close                                              = Kleisli(e => primitive1(f(e).close))
+        override def close = Kleisli(e => primitive1(f(e).close))
         override def confirmSubscription(a: ConfirmSubscriptionRequest) =
           Kleisli(e => eff1(f(e).confirmSubscription(a)))
         override def createPlatformApplication(a: CreatePlatformApplicationRequest) =
@@ -234,15 +234,15 @@ trait Interpreter[M[_]] { outer =>
   def SnsAsyncClientResource(builder: SnsAsyncClientBuilder): Resource[M, SnsAsyncClient] =
     Resource.fromAutoCloseable(asyncM.delay(builder.build()))
   def SnsAsyncClientOpResource(builder: SnsAsyncClientBuilder) = SnsAsyncClientResource(builder).map(create)
-  def create(client: SnsAsyncClient): SnsAsyncClientOp[M]      = new SnsAsyncClientOp[M] {
+  def create(client: SnsAsyncClient): SnsAsyncClientOp[M] = new SnsAsyncClientOp[M] {
 
     // domain-specific operations are implemented in terms of `primitive`
-    override def addPermission(a: AddPermissionRequest)                               = eff1(client.addPermission(a))
+    override def addPermission(a: AddPermissionRequest) = eff1(client.addPermission(a))
     override def checkIfPhoneNumberIsOptedOut(a: CheckIfPhoneNumberIsOptedOutRequest) = eff1(
       client.checkIfPhoneNumberIsOptedOut(a)
     )
-    override def close                                                          = primitive1(client.close)
-    override def confirmSubscription(a: ConfirmSubscriptionRequest)             = eff1(client.confirmSubscription(a))
+    override def close                                              = primitive1(client.close)
+    override def confirmSubscription(a: ConfirmSubscriptionRequest) = eff1(client.confirmSubscription(a))
     override def createPlatformApplication(a: CreatePlatformApplicationRequest) = eff1(
       client.createPlatformApplication(a)
     )
@@ -250,8 +250,8 @@ trait Interpreter[M[_]] { outer =>
     override def createSMSSandboxPhoneNumber(a: CreateSmsSandboxPhoneNumberRequest) = eff1(
       client.createSMSSandboxPhoneNumber(a)
     )
-    override def createTopic(a: CreateTopicRequest)                             = eff1(client.createTopic(a))
-    override def deleteEndpoint(a: DeleteEndpointRequest)                       = eff1(client.deleteEndpoint(a))
+    override def createTopic(a: CreateTopicRequest)       = eff1(client.createTopic(a))
+    override def deleteEndpoint(a: DeleteEndpointRequest) = eff1(client.deleteEndpoint(a))
     override def deletePlatformApplication(a: DeletePlatformApplicationRequest) = eff1(
       client.deletePlatformApplication(a)
     )
@@ -264,8 +264,8 @@ trait Interpreter[M[_]] { outer =>
     override def getPlatformApplicationAttributes(a: GetPlatformApplicationAttributesRequest) = eff1(
       client.getPlatformApplicationAttributes(a)
     )
-    override def getSMSAttributes                                                 = eff1(client.getSMSAttributes)
-    override def getSMSAttributes(a: GetSmsAttributesRequest)                     = eff1(client.getSMSAttributes(a))
+    override def getSMSAttributes                             = eff1(client.getSMSAttributes)
+    override def getSMSAttributes(a: GetSmsAttributesRequest) = eff1(client.getSMSAttributes(a))
     override def getSMSSandboxAccountStatus(a: GetSmsSandboxAccountStatusRequest) = eff1(
       client.getSMSSandboxAccountStatus(a)
     )
@@ -307,7 +307,7 @@ trait Interpreter[M[_]] { outer =>
     override def listSubscriptionsByTopicPaginator(a: ListSubscriptionsByTopicRequest) = primitive1(
       client.listSubscriptionsByTopicPaginator(a)
     )
-    override def listSubscriptionsPaginator                              = primitive1(client.listSubscriptionsPaginator)
+    override def listSubscriptionsPaginator = primitive1(client.listSubscriptionsPaginator)
     override def listSubscriptionsPaginator(a: ListSubscriptionsRequest) = primitive1(
       client.listSubscriptionsPaginator(a)
     )
@@ -327,15 +327,15 @@ trait Interpreter[M[_]] { outer =>
     override def setPlatformApplicationAttributes(a: SetPlatformApplicationAttributesRequest) = eff1(
       client.setPlatformApplicationAttributes(a)
     )
-    override def setSMSAttributes(a: SetSmsAttributesRequest)                   = eff1(client.setSMSAttributes(a))
+    override def setSMSAttributes(a: SetSmsAttributesRequest) = eff1(client.setSMSAttributes(a))
     override def setSubscriptionAttributes(a: SetSubscriptionAttributesRequest) = eff1(
       client.setSubscriptionAttributes(a)
     )
-    override def setTopicAttributes(a: SetTopicAttributesRequest)                   = eff1(client.setTopicAttributes(a))
-    override def subscribe(a: SubscribeRequest)                                     = eff1(client.subscribe(a))
-    override def tagResource(a: TagResourceRequest)                                 = eff1(client.tagResource(a))
-    override def unsubscribe(a: UnsubscribeRequest)                                 = eff1(client.unsubscribe(a))
-    override def untagResource(a: UntagResourceRequest)                             = eff1(client.untagResource(a))
+    override def setTopicAttributes(a: SetTopicAttributesRequest) = eff1(client.setTopicAttributes(a))
+    override def subscribe(a: SubscribeRequest)                   = eff1(client.subscribe(a))
+    override def tagResource(a: TagResourceRequest)               = eff1(client.tagResource(a))
+    override def unsubscribe(a: UnsubscribeRequest)               = eff1(client.unsubscribe(a))
+    override def untagResource(a: UntagResourceRequest)           = eff1(client.untagResource(a))
     override def verifySMSSandboxPhoneNumber(a: VerifySmsSandboxPhoneNumberRequest) = eff1(
       client.verifySMSSandboxPhoneNumber(a)
     )
