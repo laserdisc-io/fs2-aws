@@ -2,19 +2,21 @@ package fs2.aws.sqs
 
 import cats.effect.Async
 import cats.syntax.applicative.*
-import fs2.Pipe
-import fs2.aws.sqs.SQS.MsgBody
+import fs2.{Pipe, Stream}
 import io.laserdisc.pure.sqs.tagless.SqsAsyncClientOp
 import software.amazon.awssdk.services.sqs.model.*
 
+import scala.concurrent.duration.FiniteDuration
 import scala.jdk.CollectionConverters.*
 
 trait SQS[F[_]] {
-  def sqsStream: fs2.Stream[F, Message]
+  def sqsStream: Stream[F, Message]
 
-  def deleteMessagePipe: fs2.Pipe[F, Message, DeleteMessageResponse]
+  def changeMessageVisibilityPipe(timeout: FiniteDuration): Pipe[F, Message, Message]
 
-  def sendMessagePipe: fs2.Pipe[F, MsgBody, SendMessageResponse]
+  def deleteMessagePipe: Pipe[F, Message, DeleteMessageResponse]
+
+  def sendMessagePipe: Pipe[F, SQS.MsgBody, SendMessageResponse]
 }
 
 object SQS {
@@ -26,7 +28,7 @@ object SQS {
   ): F[SQS[F]] =
     new SQS[F] {
       override def sqsStream: fs2.Stream[F, Message] =
-        fs2.Stream
+        Stream
           .awakeEvery[F](sqsConfig.pollRate)
           .evalMap(_ =>
             sqs
@@ -38,11 +40,28 @@ object SQS {
                   .build()
               )
           )
-          .flatMap(response => fs2.Stream.emits(response.messages().asScala))
+          .flatMap(response => Stream.emits(response.messages().asScala))
+
+      def changeMessageVisibilityPipe(timeout: FiniteDuration): Pipe[F, Message, Message] =
+        _.flatMap(msg =>
+          Stream
+            .eval(
+              sqs
+                .changeMessageVisibility(
+                  ChangeMessageVisibilityRequest
+                    .builder()
+                    .queueUrl(sqsConfig.queueUrl)
+                    .receiptHandle(msg.receiptHandle())
+                    .visibilityTimeout(timeout.toSeconds.toInt)
+                    .build()
+                )
+            )
+            .as(msg)
+        )
 
       override def deleteMessagePipe: Pipe[F, Message, DeleteMessageResponse] =
         _.flatMap(msg =>
-          fs2.Stream.eval(
+          Stream.eval(
             sqs
               .deleteMessage(
                 DeleteMessageRequest
@@ -56,7 +75,7 @@ object SQS {
 
       override def sendMessagePipe: Pipe[F, MsgBody, SendMessageResponse] =
         _.flatMap(msg =>
-          fs2.Stream.eval(
+          Stream.eval(
             sqs
               .sendMessage(
                 SendMessageRequest.builder().queueUrl(sqsConfig.queueUrl).messageBody(msg).build()
