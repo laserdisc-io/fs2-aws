@@ -2,12 +2,12 @@ package fs2.aws.testkit
 
 import java.nio.ByteBuffer
 import cats.effect.{Ref, Sync}
-import com.amazonaws.services.kinesis.producer.{Attempt, UserRecordResult}
 import com.google.common.util.concurrent.{ListenableFuture, SettableFuture}
 import fs2.aws.internal.KinesisProducerClient
 import cats.implicits.*
 import io.circe.Decoder
 import io.circe.jawn.CirceSupportParser
+import software.amazon.kinesis.producer.{Attempt, UserRecordResult}
 
 import scala.jdk.CollectionConverters.*
 

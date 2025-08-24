@@ -4,13 +4,13 @@ package aws
 
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
-import com.amazonaws.services.kinesis.producer.{Attempt, UserRecordResult}
 import com.google.common.util.concurrent.SettableFuture
 import fs2.aws.kinesis.publisher.*
 import fs2.aws.utils.KinesisStub
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
+import software.amazon.kinesis.producer.{Attempt, UserRecordResult}
 
 import java.nio.ByteBuffer
 import scala.concurrent.ExecutionContext

@@ -11,6 +11,8 @@ import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient
 import software.amazon.kinesis.common.{ConfigsBuilder, StreamIdentifier}
+import software.amazon.kinesis.coordinator.CoordinatorConfig.ClientVersionConfig
+import software.amazon.kinesis.coordinator.CoordinatorConfig.ClientVersionConfig.CLIENT_VERSION_CONFIG_COMPATIBLE_WITH_2X
 import software.amazon.kinesis.coordinator.Scheduler
 import software.amazon.kinesis.processor.*
 
@@ -275,7 +277,7 @@ class DefaultKinesisStreamBuilder[F[_]: Async: Concurrent] extends KinesisStream
       Resource.pure(
         new Scheduler(
           cb.checkpointConfig(),
-          cb.coordinatorConfig(),
+          cb.coordinatorConfig().clientVersionConfig(CLIENT_VERSION_CONFIG_COMPATIBLE_WITH_2X),
           cb.leaseManagementConfig(),
           cb.lifecycleConfig(),
           cb.metricsConfig(),

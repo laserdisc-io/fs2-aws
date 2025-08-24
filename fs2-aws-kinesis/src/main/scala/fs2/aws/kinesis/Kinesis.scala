@@ -11,6 +11,8 @@ import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient
 import software.amazon.kinesis.common.{ConfigsBuilder, InitialPositionInStreamExtended}
+import software.amazon.kinesis.coordinator.CoordinatorConfig.ClientVersionConfig
+import software.amazon.kinesis.coordinator.CoordinatorConfig.ClientVersionConfig.CLIENT_VERSION_CONFIG_COMPATIBLE_WITH_2X
 import software.amazon.kinesis.coordinator.Scheduler
 import software.amazon.kinesis.processor.ShardRecordProcessorFactory
 import software.amazon.kinesis.retrieval.KinesisClientRecord
@@ -168,7 +170,7 @@ object Kinesis {
 
       new Scheduler(
         configsBuilder.checkpointConfig(),
-        configsBuilder.coordinatorConfig(),
+        configsBuilder.coordinatorConfig().clientVersionConfig(CLIENT_VERSION_CONFIG_COMPATIBLE_WITH_2X),
         configsBuilder.leaseManagementConfig(),
         configsBuilder.lifecycleConfig(),
         configsBuilder.metricsConfig(),
