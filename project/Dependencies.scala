@@ -26,9 +26,9 @@ object Dependencies {
 
   val CatsEffect = libraryDependencies += "org.typelevel" %% "cats-effect" % V.CE
 
-  val KinesisClient = libraryDependencies += "software.amazon.kinesis" % "amazon-kinesis-client" % "2.6.0"
+  val KinesisClient = libraryDependencies += "software.amazon.kinesis" % "amazon-kinesis-client" % "3.1.1"
 
-  val KinesisProducer = libraryDependencies += "com.amazonaws" % "amazon-kinesis-producer" % "0.15.12"
+  val KinesisProducer = libraryDependencies += "software.amazon.kinesis" % "amazon-kinesis-producer" % "1.0.4"
 
   val newTypes = libraryDependencies += "io.monix" %% "newtypes-core" % "0.3.0"
 
@@ -39,12 +39,13 @@ object Dependencies {
 
   val Testing = libraryDependencies ++= (
     Seq(
-      "org.scalameta" %% "munit"             % V.Munit,
-      "org.typelevel" %% "munit-cats-effect" % "2.1.0",
-      "org.scalatest" %% "scalatest"         % V.ScalaTest,
-      "org.mockito"    % "mockito-core"      % V.MockitoCore,
-      "org.typelevel" %% "cats-effect"       % V.CE,
-      "javax.xml.bind" % "jaxb-api"          % "2.3.1"
+      "org.scalameta"    %% "munit"             % V.Munit,
+      "org.typelevel"    %% "munit-cats-effect" % "2.1.0",
+      "org.scalatest"    %% "scalatest"         % V.ScalaTest,
+      "org.mockito"       % "mockito-core"      % V.MockitoCore,
+      "org.typelevel"    %% "cats-effect"       % V.CE,
+      "javax.xml.bind"    % "jaxb-api"          % "2.3.1",
+      "com.github.cb372" %% "cats-retry"        % "4.0.0"
     )
       ++ LogModules.LogBack
       ++ LogModules.LogImpl
@@ -67,7 +68,7 @@ object Dependencies {
 
   // TODO; 2.0.1 requires a major refactor
   val DynamoStreamAdapter =
-    libraryDependencies += "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.6.1"
+    libraryDependencies += "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "2.0.1"
 
   val Logging = libraryDependencies ++= Seq(
     "org.typelevel" %% "log4cats-slf4j" % V.Log4Cats

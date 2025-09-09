@@ -14,4 +14,8 @@
         <appender-ref ref="ASYNCSTDOUT" />
     </root>
 
+    <!-- suppress 'Unable to retrieve instance metadata' noise -->
+    <logger name="software.amazon.kinesis.worker.platform.Ec2Resource" level="OFF"/>
+
+
 </configuration>

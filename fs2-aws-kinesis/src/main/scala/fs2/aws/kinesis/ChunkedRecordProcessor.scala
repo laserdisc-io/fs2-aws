@@ -39,8 +39,10 @@ private[aws] class ChunkedRecordProcessor(cb: Chunk[CommittableRecord] => Unit) 
     shardEndedInput.checkpointer().checkpoint()
   }
 
-  override def shutdownRequested(shutdownRequestedInput: ShutdownRequestedInput): Unit =
+  override def shutdownRequested(shutdownRequestedInput: ShutdownRequestedInput): Unit = {
+    shutdownRequestedInput.checkpointer().checkpoint();
     isShutdown = true
+  }
 
   override def processRecords(processRecordsInput: ProcessRecordsInput): Unit = {
     if (processRecordsInput.isAtShardEnd)
