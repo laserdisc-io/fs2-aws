@@ -17,7 +17,7 @@ object TaglessGen {
   lazy val taglessGenPackage = settingKey[String]("package where tagless-final algebras go")
   lazy val taglessGenRenames =
     settingKey[Map[Class[_], String]]("map of imports that must be renamed")
-  lazy val taglessGen = taskKey[Seq[File]]("generate tagless-final algebras")
+  lazy val taglessGen        = taskKey[Seq[File]]("generate tagless-final algebras")
   lazy val taglessAwsService = taskKey[String](
     "What aws service generate algebras, must match the package name  ex [s3, sqs, sns, kinesis]"
   )
@@ -28,7 +28,7 @@ object TaglessGen {
     taglessAwsService := awsSvcId,
     taglessGenClasses := List[Class[_]](ct.runtimeClass),
     taglessGenRenames := Map(classOf[java.sql.Array] -> "SqlArray"),
-    taglessGen :=
+    taglessGen        :=
       new TaglessGen(
         taglessGenClasses.value,
         taglessGenPackage.value,
@@ -69,7 +69,7 @@ class TaglessGen(
 
   def toScalaType(t: Type): String =
     t match {
-      case t: GenericArrayType => s"Array[${toScalaType(t.getGenericComponentType)}]"
+      case t: GenericArrayType  => s"Array[${toScalaType(t.getGenericComponentType)}]"
       case t: ParameterizedType =>
         s"${toScalaType(t.getRawType)}${t.getActualTypeArguments.map(toScalaType).mkString("[", ", ", "]")}"
       case t: WildcardType =>
