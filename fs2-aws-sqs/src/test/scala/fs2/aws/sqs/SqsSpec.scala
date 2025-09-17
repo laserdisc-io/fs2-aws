@@ -103,7 +103,7 @@ class SqsSpec extends AnyWordSpec with Matchers {
 
     for {
       queueUrl <- mkQueue(streamPrefix, defaultQueueVisibility)
-      t <- SQS.create[IO](
+      t        <- SQS.create[IO](
         SqsConfig(queueUrl = queueUrl, pollRate = 500.milliseconds, fetchMessageCount = 5),
         sqsOp
       )
