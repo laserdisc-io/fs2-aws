@@ -16,7 +16,7 @@ trait KinesisProducerClient[F[_]] {
 class KinesisProducerClientImpl[F[_]](config: Option[KinesisProducerConfiguration] = None)
     extends KinesisProducerClient[F] {
 
-  val credentials: AwsCredentialsProvider = DefaultCredentialsProvider.create()
+  val credentials: AwsCredentialsProvider = DefaultCredentialsProvider.builder().build()
   val region: Option[String]              = None
 
   private lazy val defaultConfig: KinesisProducerConfiguration = {
