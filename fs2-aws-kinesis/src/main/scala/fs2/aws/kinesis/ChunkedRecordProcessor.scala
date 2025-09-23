@@ -32,9 +32,8 @@ private[aws] class ChunkedRecordProcessor(cb: Chunk[CommittableRecord] => Unit) 
     println(s" ----------------------------------  initialize($initializationInput)")
   }
 
-  override def leaseLost(leaseLostInput: LeaseLostInput): Unit = {
+  override def leaseLost(leaseLostInput: LeaseLostInput): Unit =
     println(s" ----------------------------------  leaserLost($leaseLostInput)")
-  }
 
   override def shardEnded(shardEndedInput: ShardEndedInput): Unit = {
     println(s" ----------------------------------  shardEnded($shardEndedInput)")
