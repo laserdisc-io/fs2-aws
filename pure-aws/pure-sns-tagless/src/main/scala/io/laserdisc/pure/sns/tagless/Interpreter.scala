@@ -3,13 +3,20 @@ package io.laserdisc.pure.sns.tagless
 // Library imports
 import cats.data.Kleisli
 import cats.effect.{Async, Resource}
-import software.amazon.awssdk.services.sns.SnsAsyncClientBuilder
-
-// Types referenced
-import software.amazon.awssdk.services.sns.SnsAsyncClient
+import software.amazon.awssdk.services.sns.*
 import software.amazon.awssdk.services.sns.model.*
 
+// Types referenced
+import java.lang.String
 import java.util.concurrent.CompletableFuture
+import software.amazon.awssdk.services.sns.paginators.ListEndpointsByPlatformApplicationPublisher
+import software.amazon.awssdk.services.sns.paginators.ListOriginationNumbersPublisher
+import software.amazon.awssdk.services.sns.paginators.ListPhoneNumbersOptedOutPublisher
+import software.amazon.awssdk.services.sns.paginators.ListPlatformApplicationsPublisher
+import software.amazon.awssdk.services.sns.paginators.ListSMSSandboxPhoneNumbersPublisher
+import software.amazon.awssdk.services.sns.paginators.ListSubscriptionsByTopicPublisher
+import software.amazon.awssdk.services.sns.paginators.ListSubscriptionsPublisher
+import software.amazon.awssdk.services.sns.paginators.ListTopicsPublisher
 
 object Interpreter {
 
@@ -115,7 +122,6 @@ trait Interpreter[M[_]] { outer =>
     override def publishBatch(a: PublishBatchRequest)                       = eff(_.publishBatch(a))
     override def putDataProtectionPolicy(a: PutDataProtectionPolicyRequest) = eff(_.putDataProtectionPolicy(a))
     override def removePermission(a: RemovePermissionRequest)               = eff(_.removePermission(a))
-    override def serviceClientConfiguration                                 = primitive(_.serviceClientConfiguration)
     override def serviceName                                                = primitive(_.serviceName)
     override def setEndpointAttributes(a: SetEndpointAttributesRequest)     = eff(_.setEndpointAttributes(a))
     override def setPlatformApplicationAttributes(a: SetPlatformApplicationAttributesRequest) = eff(
@@ -212,8 +218,7 @@ trait Interpreter[M[_]] { outer =>
         override def putDataProtectionPolicy(a: PutDataProtectionPolicyRequest) =
           Kleisli(e => eff1(f(e).putDataProtectionPolicy(a)))
         override def removePermission(a: RemovePermissionRequest) = Kleisli(e => eff1(f(e).removePermission(a)))
-        override def serviceClientConfiguration = Kleisli(e => primitive1(f(e).serviceClientConfiguration))
-        override def serviceName                = Kleisli(e => primitive1(f(e).serviceName))
+        override def serviceName                                  = Kleisli(e => primitive1(f(e).serviceName))
         override def setEndpointAttributes(a: SetEndpointAttributesRequest) =
           Kleisli(e => eff1(f(e).setEndpointAttributes(a)))
         override def setPlatformApplicationAttributes(a: SetPlatformApplicationAttributesRequest) =
@@ -321,9 +326,8 @@ trait Interpreter[M[_]] { outer =>
     override def publishBatch(a: PublishBatchRequest)                       = eff1(client.publishBatch(a))
     override def putDataProtectionPolicy(a: PutDataProtectionPolicyRequest) = eff1(client.putDataProtectionPolicy(a))
     override def removePermission(a: RemovePermissionRequest)               = eff1(client.removePermission(a))
-    override def serviceClientConfiguration                             = primitive1(client.serviceClientConfiguration)
-    override def serviceName                                            = primitive1(client.serviceName)
-    override def setEndpointAttributes(a: SetEndpointAttributesRequest) = eff1(client.setEndpointAttributes(a))
+    override def serviceName                                                = primitive1(client.serviceName)
+    override def setEndpointAttributes(a: SetEndpointAttributesRequest)     = eff1(client.setEndpointAttributes(a))
     override def setPlatformApplicationAttributes(a: SetPlatformApplicationAttributesRequest) = eff1(
       client.setPlatformApplicationAttributes(a)
     )

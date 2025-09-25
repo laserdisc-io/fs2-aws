@@ -1,32 +1,27 @@
-import sbt._
-import Keys._
+import sbt.*
+import sbt.Keys.*
+import software.amazon.awssdk.services.sqs.SqsAsyncClient
 
-import java.lang.reflect._
+import java.lang.reflect.*
 import java.util.concurrent.CompletableFuture
 import java.util.function.Consumer
 import scala.reflect.ClassTag
-import Predef._
-import scala.collection.immutable
-import scala.util.Try
 
 object TaglessGen {
 
-  lazy val taglessGenClasses =
-    settingKey[List[Class[_]]]("classes for which tagless-final algebras should be generated")
+  lazy val taglessGenClasses = settingKey[List[Class[?]]]("classes for which tagless-final algebras should generate")
   lazy val taglessGenDir     = settingKey[File]("directory where tagless-final algebras go")
   lazy val taglessGenPackage = settingKey[String]("package where tagless-final algebras go")
-  lazy val taglessGenRenames =
-    settingKey[Map[Class[_], String]]("map of imports that must be renamed")
+  lazy val taglessGenRenames = settingKey[Map[Class[?], String]]("map of imports that must be renamed")
   lazy val taglessGen        = taskKey[Seq[File]]("generate tagless-final algebras")
-  lazy val taglessAwsService = taskKey[String](
-    "What aws service generate algebras, must match the package name  ex [s3, sqs, sns, kinesis]"
-  )
+  lazy val taglessAwsService =
+    taskKey[String]("What aws service generate algebras, must match the package name  ex [s3, sqs, sns, kinesis]")
 
   def taglessGenSettings[T](awsSvcId: String)(implicit ct: ClassTag[T]) = Seq(
     taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / awsSvcId / "tagless",
     taglessGenPackage := s"io.laserdisc.pure.$awsSvcId.tagless",
     taglessAwsService := awsSvcId,
-    taglessGenClasses := List[Class[_]](ct.runtimeClass),
+    taglessGenClasses := List[Class[?]](ct.runtimeClass),
     taglessGenRenames := Map(classOf[java.sql.Array] -> "SqlArray"),
     taglessGen        :=
       new TaglessGen(
@@ -41,23 +36,23 @@ object TaglessGen {
 }
 
 class TaglessGen(
-    managed: List[Class[_]],
+    managed: List[Class[?]],
     pkg: String,
-    renames: Map[Class[_], String],
+    renames: Map[Class[?], String],
     log: Logger,
     awsService: String
 ) {
 
   // These Java classes will have non-Java names in our generated code
-  val ClassBoolean = classOf[Boolean]
-  val ClassByte    = classOf[Byte]
-  val ClassShort   = classOf[Short]
-  val ClassInt     = classOf[Int]
-  val ClassLong    = classOf[Long]
-  val ClassFloat   = classOf[Float]
-  val ClassDouble  = classOf[Double]
-  val ClassObject  = classOf[Object]
-  val ClassVoid    = Void.TYPE
+  val ClassBoolean: Class[Boolean] = classOf
+  val ClassByte: Class[Byte]       = classOf
+  val ClassShort: Class[Short]     = classOf
+  val ClassInt: Class[Int]         = classOf
+  val ClassLong: Class[Long]       = classOf
+  val ClassFloat: Class[Float]     = classOf
+  val ClassDouble: Class[Double]   = classOf
+  val ClassObject: Class[Object]   = classOf
+  val ClassVoid: Class[Void]       = Void.TYPE
 
   def tparams(t: Type): List[String] =
     t match {
@@ -126,15 +121,14 @@ class TaglessGen(
     // Return type name
     def ret: String =
       method.getGenericReturnType match {
-        case t: ParameterizedType if t.getRawType == classOf[CompletableFuture[_]] =>
+        case t: ParameterizedType if t.getRawType == classOf[CompletableFuture[?]] =>
           toScalaType(t.getActualTypeArguments.toList.head)
         case t => toScalaType(t)
       }
     def isRetFuture: Boolean =
       method.getGenericReturnType match {
-        case t: ParameterizedType if t.getRawType == classOf[CompletableFuture[_]] =>
-          true
-        case t => false
+        case t: ParameterizedType if t.getRawType == classOf[CompletableFuture[?]] => true
+        case t                                                                     => false
       }
     // Case class/object declaration
     def ctor(opname: String): String =
@@ -142,8 +136,8 @@ class TaglessGen(
         case Nil => s"|case object $cname"
         case ps  => s"|final case class $cname$ctparams(${cargs.mkString(", ")})"
       }) + s""" extends $opname[$ret] {
-        |      def visit[F[_]](v: Visitor[F]) = v.$mname${if (args.isEmpty) "" else s"($args)"}
-        |    }""").trim.stripMargin
+              |      def visit[F[_]](v: Visitor[F]) = v.$mname${if (args.isEmpty) "" else s"($args)"}
+              |    }""").trim.stripMargin
 
     // Argument list: a, b, c, ... up to the proper arity
     def args: String =
@@ -207,7 +201,7 @@ class TaglessGen(
   }
 
   // This class, plus any superclasses and interfaces, "all the way up"
-  def closure(c: Class[_]): List[Class[_]] =
+  def closure(c: Class[?]): List[Class[?]] =
     (c :: (Option(c.getSuperclass).toList ++ c.getInterfaces.toList).flatMap(closure)).distinct
       .filterNot(_.getName == "java.lang.AutoCloseable") // not available in jdk1.6
       .filterNot(_.getName == "java.lang.Object")        // we don't want .equals, etc.
@@ -218,13 +212,13 @@ class TaglessGen(
   }
 
   // All non-deprecated methods for this class and any superclasses/interfaces
-  def methods(c: Class[_]): List[Method] =
+  def methods(c: Class[?]): List[Method] =
     closure(c)
       .flatMap(_.getDeclaredMethods.toList)
       .distinct
       .filterNot(_.isStatic)
       .filter(_.getAnnotation(classOf[Deprecated]) == null)
-      .filterNot(_.getParameterTypes.contains(classOf[Consumer[_]]))
+      .filterNot(_.getParameterTypes.contains(classOf[Consumer[?]]))
 
   // Ctor values for all methods in of A plus superclasses, interfaces, etc.
   def ctors[A](implicit ev: ClassTag[A]): List[Ctor] =
@@ -232,17 +226,18 @@ class TaglessGen(
       .groupBy(_.getName)
       .toList
       .flatMap { case (n, ms) =>
-        ms.toList
+        ms
           .sortBy(_.getGenericParameterTypes.map(toScalaType).mkString(","))
           .zipWithIndex
           .map { case (m, i) =>
             Ctor(m, i)
           }
       }
+      .filter(_.mname != "serviceClientConfiguration") // multiple instances with varying return signatures
       .sortBy(c => (c.mname, c.index))
 
   // Fully qualified rename, if any
-  def renameImport(c: Class[_]): String = {
+  def renameImport(c: Class[?]): String = {
     val sn = c.getSimpleName
     val an = renames.getOrElse(c, sn)
     if (sn == an) s"import ${c.getName}"
@@ -251,17 +246,25 @@ class TaglessGen(
 
   // All types referenced by all methods on A, superclasses, interfaces, etc.
   def imports[A](implicit ev: ClassTag[A]): List[String] = {
-    def extractGenericTypes(m: Method): List[Class[_]] = m.getGenericReturnType match {
-      case t: ParameterizedType if t.getRawType == classOf[CompletableFuture[_]] =>
+    def extractGenericTypes(m: Method): List[Class[?]] = m.getGenericReturnType match {
+      case t: ParameterizedType if t.getRawType == classOf[CompletableFuture[?]] =>
         m.getReturnType :: Nil // t.getActualTypeArguments.toList.map(tt => Class.forName(tt.getTypeName))
       case _ => m.getReturnType :: Nil
     }
-    (renameImport(ev.runtimeClass) :: ctors
+    (List(
+      renameImport(ev.runtimeClass),
+      s"import software.amazon.awssdk.services.$awsService.*",
+      s"import software.amazon.awssdk.services.$awsService.model.*"
+    ) ++ ctors
       .map(_.method)
       .flatMap(m => m.getReturnType :: m.getParameterTypes.toList)
       .map(t => if (t.isArray) t.getComponentType else t)
       .filterNot(t => t.isPrimitive || t == classOf[Object])
       .map(c => renameImport(c))).distinct.sorted
+      .filterNot(c =>
+        // Filter out imports covered by the wildcard imports above
+        c.matches(s"^import\\s+software\\.amazon\\.awssdk\\.services\\.$awsService(\\.model)?\\.[^.]+$$")
+      )
   }
 
   // The algebra module for A
@@ -274,7 +277,8 @@ class TaglessGen(
     s"""
     |package $pkg
     |
-    |import software.amazon.awssdk.services.$awsService.model._
+    |import software.amazon.awssdk.services.$awsService.*
+    |import software.amazon.awssdk.services.$awsService.model.*
     |
     |${imports[A].mkString("\n")}
     |
@@ -289,7 +293,7 @@ class TaglessGen(
   }
 
   // Import for the IO type for a carrer type, with renaming
-  def ioImport(c: Class[_]): String = {
+  def ioImport(c: Class[?]): String = {
     val sn = c.getSimpleName
     s"import ${sn.toLowerCase}.${sn}IO"
   }
@@ -324,7 +328,7 @@ class TaglessGen(
        |""".trim.stripMargin
   }
 
-  def interpreterDef(c: Class[_]): String = {
+  def interpreterDef(c: Class[?]): String = {
     val oname  = c.getSimpleName // original name, without name mapping
     val sname  = toScalaType(c)
     val opname = s"${oname}Op"
@@ -336,55 +340,55 @@ class TaglessGen(
   // template for a kleisli interpreter
   def kleisliInterpreter: String =
     s"""
-      |package $pkg
-      |
-      |// Library imports
-      |import cats.data.Kleisli
-      |import cats.effect.{ Async,  Resource }
-      |import java.util.concurrent.CompletionException
-      |import software.amazon.awssdk.services.$awsService.model._
-      |
-      |// Types referenced
-      |${managed.map(ClassTag(_)).flatMap(imports(_)).distinct.sorted.mkString("\n")}
-      |
-      |
-      |object Interpreter {
-      |
-      |  def apply[M[_]](
-      |    implicit am: Async[M]
-      |  ): Interpreter[M] =
-      |    new Interpreter[M] {
-      |      val asyncM = am
-      |    }
-      |
-      |}
-      |
-      |// Family of interpreters into Kleisli arrows for some monad M.
-      |trait Interpreter[M[_]] { outer =>
-      |
-      |  implicit val asyncM: Async[M]
-      |
-      | ${managed.map(interpreterDef).mkString("\n  ")}
-      |  // Some methods are common to all interpreters and can be overridden to change behavior globally.
-      |
-      |  def primitive[J, A](f: J => A): Kleisli[M, J, A] = Kleisli(j => asyncM.blocking(f(j)))
-      |  def primitive1[J, A](f: => A): M[A]              = asyncM.blocking(f)
-      |
-      |  def eff[J, A](fut: J => CompletableFuture[A]): Kleisli[M, J, A] = Kleisli { j =>
-      |    asyncM.fromCompletableFuture(asyncM.delay(fut(j)))
-      |  }
-      |  def eff1[J, A](fut: => CompletableFuture[A]): M[A] =
-      |    asyncM.fromCompletableFuture(asyncM.delay(fut))
-      |
-      |  // Interpreters
-      |${managed.map(ClassTag(_)).map(kleisliInterp(_)).mkString("\n")}
-      |${managed.map(ClassTag(_)).map(fInterp(_)).mkString("\n")}
-      |
-      |}
-      |""".trim.stripMargin
+       |package $pkg
+       |
+       |// Library imports
+       |import cats.data.Kleisli
+       |import cats.effect.{ Async,  Resource }
+       |import software.amazon.awssdk.services.$awsService.*
+       |import software.amazon.awssdk.services.$awsService.model.*
+       |
+       |// Types referenced
+       |${managed.map(ClassTag(_)).flatMap(imports(_)).distinct.sorted.mkString("\n")}
+       |
+       |
+       |object Interpreter {
+       |
+       |  def apply[M[_]](
+       |    implicit am: Async[M]
+       |  ): Interpreter[M] =
+       |    new Interpreter[M] {
+       |      val asyncM = am
+       |    }
+       |
+       |}
+       |
+       |// Family of interpreters into Kleisli arrows for some monad M.
+       |trait Interpreter[M[_]] { outer =>
+       |
+       |  implicit val asyncM: Async[M]
+       |
+       | ${managed.map(interpreterDef).mkString("\n  ")}
+       |  // Some methods are common to all interpreters and can be overridden to change behavior globally.
+       |
+       |  def primitive[J, A](f: J => A): Kleisli[M, J, A] = Kleisli(j => asyncM.blocking(f(j)))
+       |  def primitive1[J, A](f: => A): M[A]              = asyncM.blocking(f)
+       |
+       |  def eff[J, A](fut: J => CompletableFuture[A]): Kleisli[M, J, A] = Kleisli { j =>
+       |    asyncM.fromCompletableFuture(asyncM.delay(fut(j)))
+       |  }
+       |  def eff1[J, A](fut: => CompletableFuture[A]): M[A] =
+       |    asyncM.fromCompletableFuture(asyncM.delay(fut))
+       |
+       |  // Interpreters
+       |${managed.map(ClassTag(_)).map(kleisliInterp(_)).mkString("\n")}
+       |${managed.map(ClassTag(_)).map(fInterp(_)).mkString("\n")}
+       |
+       |}
+       |""".trim.stripMargin
 
   def gen(base: File): Seq[java.io.File] = {
-    import java.io._
+    import java.io.*
     log.info("Generating tagless algebras into " + base)
     val fs = managed.map { c =>
       base.mkdirs

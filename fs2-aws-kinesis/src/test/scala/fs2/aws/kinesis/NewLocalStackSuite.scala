@@ -103,9 +103,9 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
           )
           .compile
           .drain
-        _ <- IO.println("sleeping for 10")
-        _ <- IO.sleep(10.seconds)
-        _ <- IO.println("off we go")
+        _      <- IO.println("sleeping for 10")
+        _      <- IO.sleep(10.seconds)
+        _      <- IO.println("off we go")
         record <- kAlgebra
           .readFromKinesisStream(consumerConfig)
           .evalTap(v => IO.println(s"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC => ${v}"))
