@@ -67,7 +67,7 @@ object Dependencies {
 
   // TODO; 2.0.1 requires a major refactor
   val DynamoStreamAdapter =
-    libraryDependencies += "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.6.1"
+    libraryDependencies += "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "2.0.1"
 
   val Logging = libraryDependencies ++= Seq(
     "org.typelevel" %% "log4cats-slf4j" % V.Log4Cats
