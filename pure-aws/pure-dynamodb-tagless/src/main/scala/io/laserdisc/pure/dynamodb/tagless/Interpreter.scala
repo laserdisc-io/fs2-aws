@@ -3,13 +3,20 @@ package io.laserdisc.pure.dynamodb.tagless
 // Library imports
 import cats.data.Kleisli
 import cats.effect.{Async, Resource}
-import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClientBuilder
-
-// Types referenced
-import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
+import software.amazon.awssdk.services.dynamodb.*
 import software.amazon.awssdk.services.dynamodb.model.*
 
+// Types referenced
+import java.lang.String
 import java.util.concurrent.CompletableFuture
+import software.amazon.awssdk.services.dynamodb.paginators.BatchGetItemPublisher
+import software.amazon.awssdk.services.dynamodb.paginators.ListContributorInsightsPublisher
+import software.amazon.awssdk.services.dynamodb.paginators.ListExportsPublisher
+import software.amazon.awssdk.services.dynamodb.paginators.ListImportsPublisher
+import software.amazon.awssdk.services.dynamodb.paginators.ListTablesPublisher
+import software.amazon.awssdk.services.dynamodb.paginators.QueryPublisher
+import software.amazon.awssdk.services.dynamodb.paginators.ScanPublisher
+import software.amazon.awssdk.services.dynamodb.waiters.DynamoDbAsyncWaiter
 
 object Interpreter {
 
@@ -115,13 +122,12 @@ trait Interpreter[M[_]] { outer =>
     override def restoreTableToPointInTime(a: RestoreTableToPointInTimeRequest) = eff(_.restoreTableToPointInTime(a))
     override def scan(a: ScanRequest)                                           = eff(_.scan(a))
     override def scanPaginator(a: ScanRequest)                                  = primitive(_.scanPaginator(a))
-    override def serviceClientConfiguration                                 = primitive(_.serviceClientConfiguration)
-    override def serviceName                                                = primitive(_.serviceName)
-    override def tagResource(a: TagResourceRequest)                         = eff(_.tagResource(a))
-    override def transactGetItems(a: TransactGetItemsRequest)               = eff(_.transactGetItems(a))
-    override def transactWriteItems(a: TransactWriteItemsRequest)           = eff(_.transactWriteItems(a))
-    override def untagResource(a: UntagResourceRequest)                     = eff(_.untagResource(a))
-    override def updateContinuousBackups(a: UpdateContinuousBackupsRequest) = eff(_.updateContinuousBackups(a))
+    override def serviceName                                                    = primitive(_.serviceName)
+    override def tagResource(a: TagResourceRequest)                             = eff(_.tagResource(a))
+    override def transactGetItems(a: TransactGetItemsRequest)                   = eff(_.transactGetItems(a))
+    override def transactWriteItems(a: TransactWriteItemsRequest)               = eff(_.transactWriteItems(a))
+    override def untagResource(a: UntagResourceRequest)                         = eff(_.untagResource(a))
+    override def updateContinuousBackups(a: UpdateContinuousBackupsRequest)     = eff(_.updateContinuousBackups(a))
     override def updateContributorInsights(a: UpdateContributorInsightsRequest) = eff(_.updateContributorInsights(a))
     override def updateGlobalTable(a: UpdateGlobalTableRequest)                 = eff(_.updateGlobalTable(a))
     override def updateGlobalTableSettings(a: UpdateGlobalTableSettingsRequest) = eff(_.updateGlobalTableSettings(a))
@@ -211,11 +217,10 @@ trait Interpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).restoreTableFromBackup(a)))
         override def restoreTableToPointInTime(a: RestoreTableToPointInTimeRequest) =
           Kleisli(e => eff1(f(e).restoreTableToPointInTime(a)))
-        override def scan(a: ScanRequest)               = Kleisli(e => eff1(f(e).scan(a)))
-        override def scanPaginator(a: ScanRequest)      = Kleisli(e => primitive1(f(e).scanPaginator(a)))
-        override def serviceClientConfiguration         = Kleisli(e => primitive1(f(e).serviceClientConfiguration))
-        override def serviceName                        = Kleisli(e => primitive1(f(e).serviceName))
-        override def tagResource(a: TagResourceRequest) = Kleisli(e => eff1(f(e).tagResource(a)))
+        override def scan(a: ScanRequest)                             = Kleisli(e => eff1(f(e).scan(a)))
+        override def scanPaginator(a: ScanRequest)                    = Kleisli(e => primitive1(f(e).scanPaginator(a)))
+        override def serviceName                                      = Kleisli(e => primitive1(f(e).serviceName))
+        override def tagResource(a: TagResourceRequest)               = Kleisli(e => eff1(f(e).tagResource(a)))
         override def transactGetItems(a: TransactGetItemsRequest)     = Kleisli(e => eff1(f(e).transactGetItems(a)))
         override def transactWriteItems(a: TransactWriteItemsRequest) = Kleisli(e => eff1(f(e).transactWriteItems(a)))
         override def untagResource(a: UntagResourceRequest)           = Kleisli(e => eff1(f(e).untagResource(a)))
@@ -318,14 +323,13 @@ trait Interpreter[M[_]] { outer =>
     override def restoreTableToPointInTime(a: RestoreTableToPointInTimeRequest) = eff1(
       client.restoreTableToPointInTime(a)
     )
-    override def scan(a: ScanRequest)                             = eff1(client.scan(a))
-    override def scanPaginator(a: ScanRequest)                    = primitive1(client.scanPaginator(a))
-    override def serviceClientConfiguration                       = primitive1(client.serviceClientConfiguration)
-    override def serviceName                                      = primitive1(client.serviceName)
-    override def tagResource(a: TagResourceRequest)               = eff1(client.tagResource(a))
-    override def transactGetItems(a: TransactGetItemsRequest)     = eff1(client.transactGetItems(a))
-    override def transactWriteItems(a: TransactWriteItemsRequest) = eff1(client.transactWriteItems(a))
-    override def untagResource(a: UntagResourceRequest)           = eff1(client.untagResource(a))
+    override def scan(a: ScanRequest)                                       = eff1(client.scan(a))
+    override def scanPaginator(a: ScanRequest)                              = primitive1(client.scanPaginator(a))
+    override def serviceName                                                = primitive1(client.serviceName)
+    override def tagResource(a: TagResourceRequest)                         = eff1(client.tagResource(a))
+    override def transactGetItems(a: TransactGetItemsRequest)               = eff1(client.transactGetItems(a))
+    override def transactWriteItems(a: TransactWriteItemsRequest)           = eff1(client.transactWriteItems(a))
+    override def untagResource(a: UntagResourceRequest)                     = eff1(client.untagResource(a))
     override def updateContinuousBackups(a: UpdateContinuousBackupsRequest) = eff1(client.updateContinuousBackups(a))
     override def updateContributorInsights(a: UpdateContributorInsightsRequest) = eff1(
       client.updateContributorInsights(a)

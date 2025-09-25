@@ -3,13 +3,22 @@ package io.laserdisc.pure.cloudwatch.tagless
 // Library imports
 import cats.data.Kleisli
 import cats.effect.{Async, Resource}
-import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClientBuilder
-
-// Types referenced
-import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
+import software.amazon.awssdk.services.cloudwatch.*
 import software.amazon.awssdk.services.cloudwatch.model.*
 
+// Types referenced
+import java.lang.String
 import java.util.concurrent.CompletableFuture
+import software.amazon.awssdk.services.cloudwatch.paginators.DescribeAlarmHistoryPublisher
+import software.amazon.awssdk.services.cloudwatch.paginators.DescribeAlarmsPublisher
+import software.amazon.awssdk.services.cloudwatch.paginators.DescribeAnomalyDetectorsPublisher
+import software.amazon.awssdk.services.cloudwatch.paginators.DescribeInsightRulesPublisher
+import software.amazon.awssdk.services.cloudwatch.paginators.GetMetricDataPublisher
+import software.amazon.awssdk.services.cloudwatch.paginators.ListDashboardsPublisher
+import software.amazon.awssdk.services.cloudwatch.paginators.ListManagedInsightRulesPublisher
+import software.amazon.awssdk.services.cloudwatch.paginators.ListMetricStreamsPublisher
+import software.amazon.awssdk.services.cloudwatch.paginators.ListMetricsPublisher
+import software.amazon.awssdk.services.cloudwatch.waiters.CloudWatchAsyncWaiter
 
 object Interpreter {
 
@@ -102,7 +111,6 @@ trait Interpreter[M[_]] { outer =>
     override def putMetricAlarm(a: PutMetricAlarmRequest)                 = eff(_.putMetricAlarm(a))
     override def putMetricData(a: PutMetricDataRequest)                   = eff(_.putMetricData(a))
     override def putMetricStream(a: PutMetricStreamRequest)               = eff(_.putMetricStream(a))
-    override def serviceClientConfiguration                               = primitive(_.serviceClientConfiguration)
     override def serviceName                                              = primitive(_.serviceName)
     override def setAlarmState(a: SetAlarmStateRequest)                   = eff(_.setAlarmState(a))
     override def startMetricStreams(a: StartMetricStreamsRequest)         = eff(_.startMetricStreams(a))
@@ -182,12 +190,11 @@ trait Interpreter[M[_]] { outer =>
         override def putInsightRule(a: PutInsightRuleRequest)         = Kleisli(e => eff1(f(e).putInsightRule(a)))
         override def putManagedInsightRules(a: PutManagedInsightRulesRequest) =
           Kleisli(e => eff1(f(e).putManagedInsightRules(a)))
-        override def putMetricAlarm(a: PutMetricAlarmRequest)   = Kleisli(e => eff1(f(e).putMetricAlarm(a)))
-        override def putMetricData(a: PutMetricDataRequest)     = Kleisli(e => eff1(f(e).putMetricData(a)))
-        override def putMetricStream(a: PutMetricStreamRequest) = Kleisli(e => eff1(f(e).putMetricStream(a)))
-        override def serviceClientConfiguration             = Kleisli(e => primitive1(f(e).serviceClientConfiguration))
-        override def serviceName                            = Kleisli(e => primitive1(f(e).serviceName))
-        override def setAlarmState(a: SetAlarmStateRequest) = Kleisli(e => eff1(f(e).setAlarmState(a)))
+        override def putMetricAlarm(a: PutMetricAlarmRequest)         = Kleisli(e => eff1(f(e).putMetricAlarm(a)))
+        override def putMetricData(a: PutMetricDataRequest)           = Kleisli(e => eff1(f(e).putMetricData(a)))
+        override def putMetricStream(a: PutMetricStreamRequest)       = Kleisli(e => eff1(f(e).putMetricStream(a)))
+        override def serviceName                                      = Kleisli(e => primitive1(f(e).serviceName))
+        override def setAlarmState(a: SetAlarmStateRequest)           = Kleisli(e => eff1(f(e).setAlarmState(a)))
         override def startMetricStreams(a: StartMetricStreamsRequest) = Kleisli(e => eff1(f(e).startMetricStreams(a)))
         override def stopMetricStreams(a: StopMetricStreamsRequest)   = Kleisli(e => eff1(f(e).stopMetricStreams(a)))
         override def tagResource(a: TagResourceRequest)               = Kleisli(e => eff1(f(e).tagResource(a)))
@@ -264,14 +271,13 @@ trait Interpreter[M[_]] { outer =>
     override def putMetricAlarm(a: PutMetricAlarmRequest)                 = eff1(client.putMetricAlarm(a))
     override def putMetricData(a: PutMetricDataRequest)                   = eff1(client.putMetricData(a))
     override def putMetricStream(a: PutMetricStreamRequest)               = eff1(client.putMetricStream(a))
-    override def serviceClientConfiguration                       = primitive1(client.serviceClientConfiguration)
-    override def serviceName                                      = primitive1(client.serviceName)
-    override def setAlarmState(a: SetAlarmStateRequest)           = eff1(client.setAlarmState(a))
-    override def startMetricStreams(a: StartMetricStreamsRequest) = eff1(client.startMetricStreams(a))
-    override def stopMetricStreams(a: StopMetricStreamsRequest)   = eff1(client.stopMetricStreams(a))
-    override def tagResource(a: TagResourceRequest)               = eff1(client.tagResource(a))
-    override def untagResource(a: UntagResourceRequest)           = eff1(client.untagResource(a))
-    override def waiter                                           = primitive1(client.waiter)
+    override def serviceName                                              = primitive1(client.serviceName)
+    override def setAlarmState(a: SetAlarmStateRequest)                   = eff1(client.setAlarmState(a))
+    override def startMetricStreams(a: StartMetricStreamsRequest)         = eff1(client.startMetricStreams(a))
+    override def stopMetricStreams(a: StopMetricStreamsRequest)           = eff1(client.stopMetricStreams(a))
+    override def tagResource(a: TagResourceRequest)                       = eff1(client.tagResource(a))
+    override def untagResource(a: UntagResourceRequest)                   = eff1(client.untagResource(a))
+    override def waiter                                                   = primitive1(client.waiter)
 
   }
 
