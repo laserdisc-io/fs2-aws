@@ -5,3 +5,4 @@ generate-pure-aws:
 	sbt "project pure-s3-tagless" taglessGen
 	sbt "project pure-sns-tagless" taglessGen
 	sbt "project pure-sqs-tagless" taglessGen
+	sbt format

@@ -1,8 +1,18 @@
 package io.laserdisc.pure.sns.tagless
 
-import software.amazon.awssdk.services.sns.SnsServiceClientConfiguration
+import software.amazon.awssdk.services.sns.*
 import software.amazon.awssdk.services.sns.model.*
-import software.amazon.awssdk.services.sns.paginators.*
+
+import java.lang.String
+import java.util.concurrent.CompletableFuture
+import software.amazon.awssdk.services.sns.paginators.ListEndpointsByPlatformApplicationPublisher
+import software.amazon.awssdk.services.sns.paginators.ListOriginationNumbersPublisher
+import software.amazon.awssdk.services.sns.paginators.ListPhoneNumbersOptedOutPublisher
+import software.amazon.awssdk.services.sns.paginators.ListPlatformApplicationsPublisher
+import software.amazon.awssdk.services.sns.paginators.ListSMSSandboxPhoneNumbersPublisher
+import software.amazon.awssdk.services.sns.paginators.ListSubscriptionsByTopicPublisher
+import software.amazon.awssdk.services.sns.paginators.ListSubscriptionsPublisher
+import software.amazon.awssdk.services.sns.paginators.ListTopicsPublisher
 
 trait SnsAsyncClientOp[F[_]] {
   // SnsAsyncClient
@@ -62,7 +72,6 @@ trait SnsAsyncClientOp[F[_]] {
   def publishBatch(a: PublishBatchRequest): F[PublishBatchResponse]
   def putDataProtectionPolicy(a: PutDataProtectionPolicyRequest): F[PutDataProtectionPolicyResponse]
   def removePermission(a: RemovePermissionRequest): F[RemovePermissionResponse]
-  def serviceClientConfiguration: F[SnsServiceClientConfiguration]
   def serviceName: F[String]
   def setEndpointAttributes(a: SetEndpointAttributesRequest): F[SetEndpointAttributesResponse]
   def setPlatformApplicationAttributes(

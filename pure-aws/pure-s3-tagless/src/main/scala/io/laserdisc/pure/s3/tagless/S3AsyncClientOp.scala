@@ -1,12 +1,20 @@
 package io.laserdisc.pure.s3.tagless
 
-import software.amazon.awssdk.core.async.{AsyncRequestBody, AsyncResponseTransformer}
-import software.amazon.awssdk.services.s3.{S3ServiceClientConfiguration, S3Utilities}
+import software.amazon.awssdk.services.s3.*
 import software.amazon.awssdk.services.s3.model.*
-import software.amazon.awssdk.services.s3.paginators.*
-import software.amazon.awssdk.services.s3.waiters.S3AsyncWaiter
 
+import java.lang.String
 import java.nio.file.Path
+import java.util.concurrent.CompletableFuture
+import software.amazon.awssdk.core.async.AsyncRequestBody
+import software.amazon.awssdk.core.async.AsyncResponseTransformer
+import software.amazon.awssdk.services.s3.paginators.ListBucketsPublisher
+import software.amazon.awssdk.services.s3.paginators.ListDirectoryBucketsPublisher
+import software.amazon.awssdk.services.s3.paginators.ListMultipartUploadsPublisher
+import software.amazon.awssdk.services.s3.paginators.ListObjectVersionsPublisher
+import software.amazon.awssdk.services.s3.paginators.ListObjectsV2Publisher
+import software.amazon.awssdk.services.s3.paginators.ListPartsPublisher
+import software.amazon.awssdk.services.s3.waiters.S3AsyncWaiter
 
 trait S3AsyncClientOp[F[_]] {
   // S3AsyncClient
@@ -15,6 +23,9 @@ trait S3AsyncClientOp[F[_]] {
   def completeMultipartUpload(a: CompleteMultipartUploadRequest): F[CompleteMultipartUploadResponse]
   def copyObject(a: CopyObjectRequest): F[CopyObjectResponse]
   def createBucket(a: CreateBucketRequest): F[CreateBucketResponse]
+  def createBucketMetadataConfiguration(
+      a: CreateBucketMetadataConfigurationRequest
+  ): F[CreateBucketMetadataConfigurationResponse]
   def createBucketMetadataTableConfiguration(
       a: CreateBucketMetadataTableConfigurationRequest
   ): F[CreateBucketMetadataTableConfigurationResponse]
@@ -33,6 +44,9 @@ trait S3AsyncClientOp[F[_]] {
       a: DeleteBucketInventoryConfigurationRequest
   ): F[DeleteBucketInventoryConfigurationResponse]
   def deleteBucketLifecycle(a: DeleteBucketLifecycleRequest): F[DeleteBucketLifecycleResponse]
+  def deleteBucketMetadataConfiguration(
+      a: DeleteBucketMetadataConfigurationRequest
+  ): F[DeleteBucketMetadataConfigurationResponse]
   def deleteBucketMetadataTableConfiguration(
       a: DeleteBucketMetadataTableConfigurationRequest
   ): F[DeleteBucketMetadataTableConfigurationResponse]
@@ -68,6 +82,9 @@ trait S3AsyncClientOp[F[_]] {
   ): F[GetBucketLifecycleConfigurationResponse]
   def getBucketLocation(a: GetBucketLocationRequest): F[GetBucketLocationResponse]
   def getBucketLogging(a: GetBucketLoggingRequest): F[GetBucketLoggingResponse]
+  def getBucketMetadataConfiguration(
+      a: GetBucketMetadataConfigurationRequest
+  ): F[GetBucketMetadataConfigurationResponse]
   def getBucketMetadataTableConfiguration(
       a: GetBucketMetadataTableConfigurationRequest
   ): F[GetBucketMetadataTableConfigurationResponse]
@@ -164,10 +181,16 @@ trait S3AsyncClientOp[F[_]] {
   def putObjectRetention(a: PutObjectRetentionRequest): F[PutObjectRetentionResponse]
   def putObjectTagging(a: PutObjectTaggingRequest): F[PutObjectTaggingResponse]
   def putPublicAccessBlock(a: PutPublicAccessBlockRequest): F[PutPublicAccessBlockResponse]
+  def renameObject(a: RenameObjectRequest): F[RenameObjectResponse]
   def restoreObject(a: RestoreObjectRequest): F[RestoreObjectResponse]
   def selectObjectContent(a: SelectObjectContentRequest, b: SelectObjectContentResponseHandler): F[Void]
-  def serviceClientConfiguration: F[S3ServiceClientConfiguration]
   def serviceName: F[String]
+  def updateBucketMetadataInventoryTableConfiguration(
+      a: UpdateBucketMetadataInventoryTableConfigurationRequest
+  ): F[UpdateBucketMetadataInventoryTableConfigurationResponse]
+  def updateBucketMetadataJournalTableConfiguration(
+      a: UpdateBucketMetadataJournalTableConfigurationRequest
+  ): F[UpdateBucketMetadataJournalTableConfigurationResponse]
   def uploadPart(a: UploadPartRequest, b: AsyncRequestBody): F[UploadPartResponse]
   def uploadPart(a: UploadPartRequest, b: Path): F[UploadPartResponse]
   def uploadPartCopy(a: UploadPartCopyRequest): F[UploadPartCopyResponse]

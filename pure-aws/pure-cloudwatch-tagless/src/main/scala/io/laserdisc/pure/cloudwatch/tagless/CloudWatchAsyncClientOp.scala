@@ -1,8 +1,19 @@
 package io.laserdisc.pure.cloudwatch.tagless
 
-import software.amazon.awssdk.services.cloudwatch.CloudWatchServiceClientConfiguration
+import software.amazon.awssdk.services.cloudwatch.*
 import software.amazon.awssdk.services.cloudwatch.model.*
-import software.amazon.awssdk.services.cloudwatch.paginators.*
+
+import java.lang.String
+import java.util.concurrent.CompletableFuture
+import software.amazon.awssdk.services.cloudwatch.paginators.DescribeAlarmHistoryPublisher
+import software.amazon.awssdk.services.cloudwatch.paginators.DescribeAlarmsPublisher
+import software.amazon.awssdk.services.cloudwatch.paginators.DescribeAnomalyDetectorsPublisher
+import software.amazon.awssdk.services.cloudwatch.paginators.DescribeInsightRulesPublisher
+import software.amazon.awssdk.services.cloudwatch.paginators.GetMetricDataPublisher
+import software.amazon.awssdk.services.cloudwatch.paginators.ListDashboardsPublisher
+import software.amazon.awssdk.services.cloudwatch.paginators.ListManagedInsightRulesPublisher
+import software.amazon.awssdk.services.cloudwatch.paginators.ListMetricStreamsPublisher
+import software.amazon.awssdk.services.cloudwatch.paginators.ListMetricsPublisher
 import software.amazon.awssdk.services.cloudwatch.waiters.CloudWatchAsyncWaiter
 
 trait CloudWatchAsyncClientOp[F[_]] {
@@ -58,7 +69,6 @@ trait CloudWatchAsyncClientOp[F[_]] {
   def putMetricAlarm(a: PutMetricAlarmRequest): F[PutMetricAlarmResponse]
   def putMetricData(a: PutMetricDataRequest): F[PutMetricDataResponse]
   def putMetricStream(a: PutMetricStreamRequest): F[PutMetricStreamResponse]
-  def serviceClientConfiguration: F[CloudWatchServiceClientConfiguration]
   def serviceName: F[String]
   def setAlarmState(a: SetAlarmStateRequest): F[SetAlarmStateResponse]
   def startMetricStreams(a: StartMetricStreamsRequest): F[StartMetricStreamsResponse]

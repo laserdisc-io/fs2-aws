@@ -3,13 +3,15 @@ package io.laserdisc.pure.sqs.tagless
 // Library imports
 import cats.data.Kleisli
 import cats.effect.{Async, Resource}
-import software.amazon.awssdk.services.sqs.SqsAsyncClientBuilder
-
-// Types referenced
-import software.amazon.awssdk.services.sqs.SqsAsyncClient
+import software.amazon.awssdk.services.sqs.*
 import software.amazon.awssdk.services.sqs.model.*
 
+// Types referenced
+import java.lang.String
 import java.util.concurrent.CompletableFuture
+import software.amazon.awssdk.services.sqs.batchmanager.SqsAsyncBatchManager
+import software.amazon.awssdk.services.sqs.paginators.ListDeadLetterSourceQueuesPublisher
+import software.amazon.awssdk.services.sqs.paginators.ListQueuesPublisher
 
 object Interpreter {
 
@@ -72,7 +74,6 @@ trait Interpreter[M[_]] { outer =>
     override def removePermission(a: RemovePermissionRequest)               = eff(_.removePermission(a))
     override def sendMessage(a: SendMessageRequest)                         = eff(_.sendMessage(a))
     override def sendMessageBatch(a: SendMessageBatchRequest)               = eff(_.sendMessageBatch(a))
-    override def serviceClientConfiguration                                 = primitive(_.serviceClientConfiguration)
     override def serviceName                                                = primitive(_.serviceName)
     override def setQueueAttributes(a: SetQueueAttributesRequest)           = eff(_.setQueueAttributes(a))
     override def startMessageMoveTask(a: StartMessageMoveTaskRequest)       = eff(_.startMessageMoveTask(a))
@@ -108,11 +109,10 @@ trait Interpreter[M[_]] { outer =>
         override def listQueuesPaginator(a: ListQueuesRequest) = Kleisli(e => primitive1(f(e).listQueuesPaginator(a)))
         override def purgeQueue(a: PurgeQueueRequest)          = Kleisli(e => eff1(f(e).purgeQueue(a)))
         override def receiveMessage(a: ReceiveMessageRequest)  = Kleisli(e => eff1(f(e).receiveMessage(a)))
-        override def removePermission(a: RemovePermissionRequest) = Kleisli(e => eff1(f(e).removePermission(a)))
-        override def sendMessage(a: SendMessageRequest)           = Kleisli(e => eff1(f(e).sendMessage(a)))
-        override def sendMessageBatch(a: SendMessageBatchRequest) = Kleisli(e => eff1(f(e).sendMessageBatch(a)))
-        override def serviceClientConfiguration = Kleisli(e => primitive1(f(e).serviceClientConfiguration))
-        override def serviceName                = Kleisli(e => primitive1(f(e).serviceName))
+        override def removePermission(a: RemovePermissionRequest)     = Kleisli(e => eff1(f(e).removePermission(a)))
+        override def sendMessage(a: SendMessageRequest)               = Kleisli(e => eff1(f(e).sendMessage(a)))
+        override def sendMessageBatch(a: SendMessageBatchRequest)     = Kleisli(e => eff1(f(e).sendMessageBatch(a)))
+        override def serviceName                                      = Kleisli(e => primitive1(f(e).serviceName))
         override def setQueueAttributes(a: SetQueueAttributesRequest) = Kleisli(e => eff1(f(e).setQueueAttributes(a)))
         override def startMessageMoveTask(a: StartMessageMoveTaskRequest) =
           Kleisli(e => eff1(f(e).startMessageMoveTask(a)))
@@ -158,7 +158,6 @@ trait Interpreter[M[_]] { outer =>
     override def removePermission(a: RemovePermissionRequest)         = eff1(client.removePermission(a))
     override def sendMessage(a: SendMessageRequest)                   = eff1(client.sendMessage(a))
     override def sendMessageBatch(a: SendMessageBatchRequest)         = eff1(client.sendMessageBatch(a))
-    override def serviceClientConfiguration                           = primitive1(client.serviceClientConfiguration)
     override def serviceName                                          = primitive1(client.serviceName)
     override def setQueueAttributes(a: SetQueueAttributesRequest)     = eff1(client.setQueueAttributes(a))
     override def startMessageMoveTask(a: StartMessageMoveTaskRequest) = eff1(client.startMessageMoveTask(a))
