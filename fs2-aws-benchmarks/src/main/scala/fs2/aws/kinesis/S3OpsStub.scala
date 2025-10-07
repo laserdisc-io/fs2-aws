@@ -10,6 +10,7 @@ import software.amazon.awssdk.services.s3.waiters.S3AsyncWaiter
 
 import java.nio.file.Path
 
+//noinspection NotImplementedCode
 class S3OpsStub extends S3AsyncClientOp[IO] {
   override def abortMultipartUpload(a: AbortMultipartUploadRequest): IO[AbortMultipartUploadResponse] =
     IO.pure(AbortMultipartUploadResponse.builder().build())

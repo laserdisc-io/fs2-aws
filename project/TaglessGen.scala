@@ -1,7 +1,7 @@
 import sbt.*
 import sbt.Keys.*
-import software.amazon.awssdk.services.sqs.SqsAsyncClient
 
+import java.io.*
 import java.lang.reflect.*
 import java.util.concurrent.CompletableFuture
 import java.util.function.Consumer
@@ -9,7 +9,6 @@ import scala.reflect.ClassTag
 
 object TaglessGen {
 
-  lazy val taglessGenClasses = settingKey[List[Class[?]]]("classes for which tagless-final algebras should generate")
   lazy val taglessGenDir     = settingKey[File]("directory where tagless-final algebras go")
   lazy val taglessGenPackage = settingKey[String]("package where tagless-final algebras go")
   lazy val taglessGenRenames = settingKey[Map[Class[?], String]]("map of imports that must be renamed")
@@ -21,27 +20,27 @@ object TaglessGen {
     taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / awsSvcId / "tagless",
     taglessGenPackage := s"io.laserdisc.pure.$awsSvcId.tagless",
     taglessAwsService := awsSvcId,
-    taglessGenClasses := List[Class[?]](ct.runtimeClass),
     taglessGenRenames := Map(classOf[java.sql.Array] -> "SqlArray"),
     taglessGen        :=
-      new TaglessGen(
-        taglessGenClasses.value,
+      new TaglessGen[T](
         taglessGenPackage.value,
         taglessGenRenames.value,
         state.value.log,
         taglessAwsService.value
-      ).gen(taglessGenDir.value)
+      ).gen(baseDirectory.value, taglessGenDir.value)
   )
 
 }
 
-class TaglessGen(
-    managed: List[Class[?]],
+class TaglessGen[T](
     pkg: String,
     renames: Map[Class[?], String],
     log: Logger,
     awsService: String
-) {
+)(implicit ct: ClassTag[T]) {
+
+  val clientFQDN: String       = ct.runtimeClass.getCanonicalName
+  val clientSimpleName: String = ct.runtimeClass.getSimpleName
 
   // These Java classes will have non-Java names in our generated code
   val ClassBoolean: Class[Boolean] = classOf
@@ -125,16 +124,21 @@ class TaglessGen(
           toScalaType(t.getActualTypeArguments.toList.head)
         case t => toScalaType(t)
       }
+
+    def kleisliRet(ret: String): String =
+      s"Kleisli[M, $clientSimpleName, $ret]"
+
     def isRetFuture: Boolean =
       method.getGenericReturnType match {
         case t: ParameterizedType if t.getRawType == classOf[CompletableFuture[?]] => true
         case t                                                                     => false
       }
+
     // Case class/object declaration
     def ctor(opname: String): String =
       ((cparams match {
-        case Nil => s"|case object $cname"
-        case ps  => s"|final case class $cname$ctparams(${cargs.mkString(", ")})"
+        case Nil => s"case object $cname"
+        case ps  => s"final case class $cname$ctparams(${cargs.mkString(", ")})"
       }) + s""" extends $opname[$ret] {
               |      def visit[F[_]](v: Visitor[F]) = v.$mname${if (args.isEmpty) "" else s"($args)"}
               |    }""").trim.stripMargin
@@ -166,36 +170,37 @@ class TaglessGen(
       }
 
     def visitor: String =
-      if (cargs.isEmpty) s"|      def $mname: F[$ret]"
-      else s"|      def $mname$ctparams(${cargs.mkString(", ")}): F[$ret]"
+      if (cargs.isEmpty) s"def $mname: F[$ret]"
+      else s"def $mname$ctparams(${cargs.mkString(", ")}): F[$ret]"
 
     def stub: String =
-      if (cargs.isEmpty) s"""|      def $mname: F[$ret] = sys.error("Not implemented: $mname")"""
+      if (cargs.isEmpty) s"""def $mname: F[$ret] = sys.error("Not implemented: $mname")"""
       else
-        s"""|      def $mname$ctparams(${cargs.mkString(
+        s"""def $mname$ctparams(${cargs.mkString(
             ", "
           )}): F[$ret] = sys.error("Not implemented: $mname$ctparams(${cparams
             .mkString(", ")})")"""
 
+    // Kleisli[M, KinesisAsyncClient, CreateStreamResponse]
     def kleisliImpl: String = {
       val ep = if (isRetFuture) "eff" else "primitive"
-      if (cargs.isEmpty) s"|    override def $mname = $ep(_.$mname)"
+      if (cargs.isEmpty) s"override def $mname : ${kleisliRet(ret)} = $ep(_.$mname) // A"
       else
-        s"|    override def $mname$ctparams(${cargs.mkString(", ")}) = $ep(_.$mname($args))"
+        s"override def $mname$ctparams(${cargs.mkString(", ")}): ${kleisliRet(ret)} = $ep(_.$mname($args)) // B"
     }
 
     def kleisliLensImpl: String = {
       val ep = if (isRetFuture) "eff1" else "primitive1"
-      if (cargs.isEmpty) s"|    override def $mname = Kleisli(e => $ep(f(e).$mname))"
+      if (cargs.isEmpty) s"override def $mname = Kleisli(e => $ep(f(e).$mname))"
       else
-        s"|    override def $mname$ctparams(${cargs.mkString(", ")}) = Kleisli(e => $ep(f(e).$mname($args)))"
+        s"override def $mname$ctparams(${cargs.mkString(", ")}) = Kleisli(e => $ep(f(e).$mname($args)))"
     }
 
     def fImpl: String = {
       val ep = if (isRetFuture) "eff1" else "primitive1"
-      if (cargs.isEmpty) s"|    override def $mname = $ep(client.$mname)"
+      if (cargs.isEmpty) s"override def $mname = $ep(client.$mname)"
       else
-        s"|    override def $mname$ctparams(${cargs.mkString(", ")}) = $ep(client.$mname($args))"
+        s"override def $mname$ctparams(${cargs.mkString(", ")}) = $ep(client.$mname($args))"
     }
 
   }
@@ -221,8 +226,8 @@ class TaglessGen(
       .filterNot(_.getParameterTypes.contains(classOf[Consumer[?]]))
 
   // Ctor values for all methods in of A plus superclasses, interfaces, etc.
-  def ctors[A](implicit ev: ClassTag[A]): List[Ctor] =
-    methods(ev.runtimeClass)
+  def ctors: List[Ctor] =
+    methods(ct.runtimeClass)
       .groupBy(_.getName)
       .toList
       .flatMap { case (n, ms) =>
@@ -240,53 +245,53 @@ class TaglessGen(
   def renameImport(c: Class[?]): String = {
     val sn = c.getSimpleName
     val an = renames.getOrElse(c, sn)
-    if (sn == an) s"import ${c.getName}"
-    else s"import ${c.getPackage.getName}.{ $sn => $an }"
+    if (sn == an) c.getName
+    else s"${c.getPackage.getName}.{ $sn => $an }"
   }
 
   // All types referenced by all methods on A, superclasses, interfaces, etc.
-  def imports[A](implicit ev: ClassTag[A]): List[String] = {
+  def referenceImports: List[String] = {
+
     def extractGenericTypes(m: Method): List[Class[?]] = m.getGenericReturnType match {
       case t: ParameterizedType if t.getRawType == classOf[CompletableFuture[?]] =>
         m.getReturnType :: Nil // t.getActualTypeArguments.toList.map(tt => Class.forName(tt.getTypeName))
       case _ => m.getReturnType :: Nil
     }
-    (List(
-      renameImport(ev.runtimeClass),
-      s"import software.amazon.awssdk.services.$awsService.*",
-      s"import software.amazon.awssdk.services.$awsService.model.*"
-    ) ++ ctors
+
+    ctors
       .map(_.method)
       .flatMap(m => m.getReturnType :: m.getParameterTypes.toList)
       .map(t => if (t.isArray) t.getComponentType else t)
       .filterNot(t => t.isPrimitive || t == classOf[Object])
-      .map(c => renameImport(c))).distinct.sorted
+      .map(c => renameImport(c))
       .filterNot(c =>
-        // Filter out imports covered by the wildcard imports above
-        c.matches(s"^import\\s+software\\.amazon\\.awssdk\\.services\\.$awsService(\\.model)?\\.[^.]+$$")
+          c.matches("java.lang.*") ||
+          c.matches("java.util.concurrent.CompletableFuture") ||
+          c.matches(s"software\\.amazon\\.awssdk\\.services\\.$awsService\\.model\\.[^.]+$$")
       )
+      .distinct.sorted
+      .map(c => s"import $c")
+
   }
 
-  // The algebra module for A
-  def module[A](implicit ev: ClassTag[A]): String = {
-    val oname  = ev.runtimeClass.getSimpleName // original name, without name mapping
-    val sname  = toScalaType(ev.runtimeClass)
+  // The algebra module for T
+  val module: String = {
+    val oname  = ct.runtimeClass.getSimpleName // original name, without name mapping
+    val sname  = toScalaType(ct.runtimeClass)
     val opname = s"${oname}Op"
-    val ioname = s"${oname}IO"
-    val mname  = oname.toLowerCase
     s"""
     |package $pkg
     |
-    |import software.amazon.awssdk.services.$awsService.*
     |import software.amazon.awssdk.services.$awsService.model.*
     |
-    |${imports[A].mkString("\n")}
+    |${referenceImports.mkString("\n")}
     |
+    |/**
+    | * The effectful equivalents for operations detected from [[$clientFQDN]]
+    | */
+    |trait $opname[F[_]] {
     |
-    |    trait $opname[F[_]] {
-    |      // $sname
-         ${ctors[A].map(_.visitor).mkString("\n    ")}
-    |
+    |${ctors.map(_.visitor).mkString("\t", "\n\t", "\n")}
     |
     |}
     |""".trim.stripMargin
@@ -298,58 +303,60 @@ class TaglessGen(
     s"import ${sn.toLowerCase}.${sn}IO"
   }
 
-  def kleisliInterp[A](implicit ev: ClassTag[A]): String = {
-    val oname = ev.runtimeClass.getSimpleName // original name, without name mapping
-    val sname = toScalaType(ev.runtimeClass)
+  val kleisliInterp: String = {
+    val oname = ct.runtimeClass.getSimpleName // original name, without name mapping
+    val sname = toScalaType(ct.runtimeClass)
     s"""
-       |  trait ${oname}Interpreter extends ${oname}Op[Kleisli[M, $sname, *]] {
+       |trait ${oname}Interpreter extends ${oname}Op[Kleisli[M, $sname, *]] {
        |
-       |    // domain-specific operations are implemented in terms of `primitive`
-       |${ctors[A].map(_.kleisliImpl).mkString("\n")}
-       |      def lens[E](f: E => $oname): ${oname}Op[Kleisli[M, E, *]] =
-       |          new ${oname}Op[Kleisli[M, E, *]] {
-       |${ctors[A].map(_.kleisliLensImpl).mkString("\n")}
-       |      }
+       |  // domain-specific operations are implemented in terms of `primitive`
+       |${ctors.map(_.kleisliImpl).mkString("\n").indent(2)}
+       |
+       |  def lens[E](f: E => $oname): ${oname}Op[Kleisli[M, E, *]] =
+       |    new ${oname}Op[Kleisli[M, E, *]] {
+       |${ctors.map(_.kleisliLensImpl).mkString("\n").indent(4)}
+       |    }
        |  }
        |""".trim.stripMargin
   }
 
-  def fInterp[A](implicit ev: ClassTag[A]): String = {
-    val oname = ev.runtimeClass.getSimpleName // original name, without name mapping
+  val fInterp: String = {
+    val oname = ct.runtimeClass.getSimpleName // original name, without name mapping
     s"""
        |  def ${oname}Resource(builder : ${oname}Builder) : Resource[M, $oname] = Resource.fromAutoCloseable(asyncM.delay(builder.build()))
-       |  def ${oname}OpResource(builder: ${oname}Builder) =${oname}Resource(builder).map(create)
+       |  def ${oname}OpResource(builder: ${oname}Builder) = ${oname}Resource(builder).map(create)
+       |
        |  def create(client : $oname) : ${oname}Op[M] = new ${oname}Op[M] {
        |
        |    // domain-specific operations are implemented in terms of `primitive`
-       |${ctors[A].map(_.fImpl).mkString("\n")}
+       |${ctors.map(_.fImpl).mkString("\n").indent(4)}
        |
        |  }
        |""".trim.stripMargin
   }
 
-  def interpreterDef(c: Class[?]): String = {
-    val oname  = c.getSimpleName // original name, without name mapping
-    val sname  = toScalaType(c)
-    val opname = s"${oname}Op"
+  val interpreterDef: String = {
+    val oname  = ct.runtimeClass.getSimpleName // original name, without name mapping
+    val sname  = toScalaType(ct.runtimeClass)
     val ioname = s"${oname}IO"
     val mname  = oname.toLowerCase
     s"lazy val ${oname}Interpreter: ${oname}Interpreter = new ${oname}Interpreter { }"
   }
 
   // template for a kleisli interpreter
-  def kleisliInterpreter: String =
+  val kleisliInterpreter: String =
     s"""
        |package $pkg
        |
        |// Library imports
        |import cats.data.Kleisli
        |import cats.effect.{ Async,  Resource }
+       |
        |import software.amazon.awssdk.services.$awsService.*
        |import software.amazon.awssdk.services.$awsService.model.*
        |
        |// Types referenced
-       |${managed.map(ClassTag(_)).flatMap(imports(_)).distinct.sorted.mkString("\n")}
+       |${referenceImports.distinct.sorted.mkString("\n")}
        |
        |
        |object Interpreter {
@@ -366,9 +373,11 @@ class TaglessGen(
        |// Family of interpreters into Kleisli arrows for some monad M.
        |trait Interpreter[M[_]] { outer =>
        |
+       |  import java.util.concurrent.CompletableFuture
+       |
        |  implicit val asyncM: Async[M]
        |
-       | ${managed.map(interpreterDef).mkString("\n  ")}
+       |  $interpreterDef
        |  // Some methods are common to all interpreters and can be overridden to change behavior globally.
        |
        |  def primitive[J, A](f: J => A): Kleisli[M, J, A] = Kleisli(j => asyncM.blocking(f(j)))
@@ -381,34 +390,37 @@ class TaglessGen(
        |    asyncM.fromCompletableFuture(asyncM.delay(fut))
        |
        |  // Interpreters
-       |${managed.map(ClassTag(_)).map(kleisliInterp(_)).mkString("\n")}
-       |${managed.map(ClassTag(_)).map(fInterp(_)).mkString("\n")}
+       |${kleisliInterp.indent(2)}
+       |  // end interpreters
+       |
+       |$fInterp
        |
        |}
        |""".trim.stripMargin
 
-  def gen(base: File): Seq[java.io.File] = {
-    import java.io.*
-    log.info("Generating tagless algebras into " + base)
-    val fs = managed.map { c =>
-      base.mkdirs
-      val mod  = module(ClassTag(c))
-      val file = new File(base, s"${c.getSimpleName}Op.scala")
+  def gen(projectbase: File, base: File): Seq[java.io.File] = {
+
+    def writeFile(fileName: String, content: String): File = {
+      val file = new File(base, fileName)
       val pw   = new PrintWriter(file)
-      pw.println(mod)
+      pw.println(content)
       pw.close()
-      log.info(s"${c.getName} -> ${file.getName}")
       file
     }
-    val ki = {
-      val file = new File(base, s"Interpreter.scala")
-      val pw   = new PrintWriter(file)
-      pw.println(kleisliInterpreter)
-      pw.close()
-      log.info(s"... -> ${file.getName}")
-      file
-    }
-    ki :: fs
+
+    base.mkdirs()
+
+    val op = writeFile(s"${clientSimpleName}Op.scala", module);
+    val ki = writeFile(s"Interpreter.scala", kleisliInterpreter);
+
+    log.info(s"""Generating Tagless Algebra for $awsService:
+        |   SDK Client: $clientSimpleName
+        |       Output: ${base.relativeTo(projectbase).getOrElse(base)}
+        |    Generated: ${op.getName}, impl:${ki.getName}
+        |
+        |""".stripMargin)
+
+    List(op, ki)
   }
 
 }
