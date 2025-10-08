@@ -6,6 +6,7 @@ import java.lang.reflect.*
 import java.util.concurrent.CompletableFuture
 import java.util.function.Consumer
 import scala.reflect.ClassTag
+import StringOps.*
 
 object TaglessGen {
 
@@ -184,23 +185,23 @@ class TaglessGen[T](
     // Kleisli[M, KinesisAsyncClient, CreateStreamResponse]
     def kleisliImpl: String = {
       val ep = if (isRetFuture) "eff" else "primitive"
-      if (cargs.isEmpty) s"override def $mname : ${kleisliRet(ret)} = $ep(_.$mname) // A"
+      if (cargs.isEmpty) s"override def $mname : ${kleisliRet(ret)} = $ep(_.$mname)"
       else
-        s"override def $mname$ctparams(${cargs.mkString(", ")}): ${kleisliRet(ret)} = $ep(_.$mname($args)) // B"
+        s"override def $mname$ctparams(${cargs.mkString(", ")}): ${kleisliRet(ret)} = $ep(_.$mname($args))"
     }
 
     def kleisliLensImpl: String = {
       val ep = if (isRetFuture) "eff1" else "primitive1"
-      if (cargs.isEmpty) s"override def $mname = Kleisli(e => $ep(f(e).$mname))"
+      if (cargs.isEmpty) s"override def $mname : Kleisli[M, E, $ret] = Kleisli(e => $ep(f(e).$mname))"
       else
-        s"override def $mname$ctparams(${cargs.mkString(", ")}) = Kleisli(e => $ep(f(e).$mname($args)))"
+        s"override def $mname$ctparams(${cargs.mkString(", ")}) : Kleisli[M, E, $ret] = Kleisli(e => $ep(f(e).$mname($args)))"
     }
 
     def fImpl: String = {
       val ep = if (isRetFuture) "eff1" else "primitive1"
-      if (cargs.isEmpty) s"override def $mname = $ep(client.$mname)"
+      if (cargs.isEmpty) s"override def $mname : M[$ret] = $ep(client.$mname)"
       else
-        s"override def $mname$ctparams(${cargs.mkString(", ")}) = $ep(client.$mname($args))"
+        s"override def $mname$ctparams(${cargs.mkString(", ")}) : M[$ret] = $ep(client.$mname($args))"
     }
 
   }
@@ -265,11 +266,12 @@ class TaglessGen[T](
       .filterNot(t => t.isPrimitive || t == classOf[Object])
       .map(c => renameImport(c))
       .filterNot(c =>
-          c.matches("java.lang.*") ||
+        c.matches("java.lang.*") ||
           c.matches("java.util.concurrent.CompletableFuture") ||
           c.matches(s"software\\.amazon\\.awssdk\\.services\\.$awsService\\.model\\.[^.]+$$")
       )
-      .distinct.sorted
+      .distinct
+      .sorted
       .map(c => s"import $c")
 
   }
@@ -310,11 +312,11 @@ class TaglessGen[T](
        |trait ${oname}Interpreter extends ${oname}Op[Kleisli[M, $sname, *]] {
        |
        |  // domain-specific operations are implemented in terms of `primitive`
-       |${ctors.map(_.kleisliImpl).mkString("\n").indent(2)}
+       |${ctors.map(_.kleisliImpl).mkString("\n").indentLevels(1)}
        |
        |  def lens[E](f: E => $oname): ${oname}Op[Kleisli[M, E, *]] =
        |    new ${oname}Op[Kleisli[M, E, *]] {
-       |${ctors.map(_.kleisliLensImpl).mkString("\n").indent(4)}
+       |${ctors.map(_.kleisliLensImpl).mkString("\n").indentLevels(2)}
        |    }
        |  }
        |""".trim.stripMargin
@@ -324,12 +326,12 @@ class TaglessGen[T](
     val oname = ct.runtimeClass.getSimpleName // original name, without name mapping
     s"""
        |  def ${oname}Resource(builder : ${oname}Builder) : Resource[M, $oname] = Resource.fromAutoCloseable(asyncM.delay(builder.build()))
-       |  def ${oname}OpResource(builder: ${oname}Builder) = ${oname}Resource(builder).map(create)
+       |  def ${oname}OpResource(builder: ${oname}Builder) : Resource[M, ${oname}Op[M]] = ${oname}Resource(builder).map(create)
        |
        |  def create(client : $oname) : ${oname}Op[M] = new ${oname}Op[M] {
        |
        |    // domain-specific operations are implemented in terms of `primitive`
-       |${ctors.map(_.fImpl).mkString("\n").indent(4)}
+       |${ctors.map(_.fImpl).mkString("\n").indentLevels(2)}
        |
        |  }
        |""".trim.stripMargin
@@ -365,7 +367,7 @@ class TaglessGen[T](
        |    implicit am: Async[M]
        |  ): Interpreter[M] =
        |    new Interpreter[M] {
-       |      val asyncM = am
+       |      val asyncM: Async[M] = am
        |    }
        |
        |}
@@ -380,17 +382,17 @@ class TaglessGen[T](
        |  $interpreterDef
        |  // Some methods are common to all interpreters and can be overridden to change behavior globally.
        |
-       |  def primitive[J, A](f: J => A): Kleisli[M, J, A] = Kleisli(j => asyncM.blocking(f(j)))
-       |  def primitive1[J, A](f: => A): M[A]              = asyncM.blocking(f)
+       |  private def primitive[J, A](f: J => A): Kleisli[M, J, A] = Kleisli(j => asyncM.blocking(f(j)))
+       |  private def primitive1[J, A](f: => A): M[A]              = asyncM.blocking(f)
        |
-       |  def eff[J, A](fut: J => CompletableFuture[A]): Kleisli[M, J, A] = Kleisli { j =>
+       |  private def eff[J, A](fut: J => CompletableFuture[A]): Kleisli[M, J, A] = Kleisli { j =>
        |    asyncM.fromCompletableFuture(asyncM.delay(fut(j)))
        |  }
-       |  def eff1[J, A](fut: => CompletableFuture[A]): M[A] =
+       |  private def eff1[J, A](fut: => CompletableFuture[A]): M[A] =
        |    asyncM.fromCompletableFuture(asyncM.delay(fut))
        |
        |  // Interpreters
-       |${kleisliInterp.indent(2)}
+       |${kleisliInterp.indentLevels(1)}
        |  // end interpreters
        |
        |$fInterp
