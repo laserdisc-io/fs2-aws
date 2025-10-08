@@ -5,8 +5,9 @@ package aws
 package kinesis
 
 import java.util.concurrent.Semaphore
-
-import fs2.Chunk
+import org.slf4j.{Logger, LoggerFactory}
+import software.amazon.kinesis.exceptions.ShutdownException
+import software.amazon.kinesis.leases.exceptions.InvalidStateException
 import software.amazon.kinesis.lifecycle.events.*
 import software.amazon.kinesis.processor.ShardRecordProcessor
 import software.amazon.kinesis.retrieval.kpl.ExtendedSequenceNumber
@@ -21,6 +22,9 @@ import scala.jdk.CollectionConverters.*
   *  @param cb callback function to run on record receive, passing the new CommittableRecord
   */
 private[aws] class ChunkedRecordProcessor(cb: Chunk[CommittableRecord] => Unit) extends ShardRecordProcessor {
+
+  val logger: Logger = LoggerFactory.getLogger(classOf[ChunkedRecordProcessor]);
+
   private[kinesis] var shardId: String                                = _
   private[kinesis] var extendedSequenceNumber: ExtendedSequenceNumber = _
   private[kinesis] var isShutdown: Boolean                            = false
@@ -29,28 +33,37 @@ private[aws] class ChunkedRecordProcessor(cb: Chunk[CommittableRecord] => Unit) 
   override def initialize(initializationInput: InitializationInput): Unit = {
     shardId = initializationInput.shardId()
     extendedSequenceNumber = initializationInput.extendedSequenceNumber()
-    println(s" ----------------------------------  initialize($initializationInput)")
+    logger.info(s"initializing chunked record processor (shardId:$shardId, extendedSeq#:$extendedSequenceNumber")
   }
 
-  override def leaseLost(leaseLostInput: LeaseLostInput): Unit =
-    println(s" ----------------------------------  leaserLost($leaseLostInput)")
+  override def leaseLost(leaseLostInput: LeaseLostInput): Unit = {
+    logger.info(s"lease lost on shard $shardId: leaseLostInput:$leaseLostInput")
+  }
 
   override def shardEnded(shardEndedInput: ShardEndedInput): Unit = {
-    println(s" ----------------------------------  shardEnded($shardEndedInput)")
+    logger.info(s"shard $shardId ended, checkpointing")
     isShutdown = true
     lastRecordSemaphore.acquire()
     shardEndedInput.checkpointer().checkpoint()
   }
 
   override def shutdownRequested(shutdownRequestedInput: ShutdownRequestedInput): Unit = {
-    println(s" ----------------------------------  shutdownRequested($shutdownRequestedInput")
+
+    logger.info(s"Shutting down processor for shard $shardId, attempting one last checkpoint");
+
     isShutdown = true
+
     // https://docs.aws.amazon.com/streams/latest/dev/kcl-migration-from-2-3.html
-    shutdownRequestedInput.checkpointer().checkpoint()
+    try {
+      shutdownRequestedInput.checkpointer().checkpoint();
+    } catch {
+      case e @ (_ : ShutdownException | _ : InvalidStateException) =>
+        logger.error(s"Unable to checkpoint shard $shardId before shutdown", e);
+    }
   }
 
+
   override def processRecords(processRecordsInput: ProcessRecordsInput): Unit = {
-    println(s" ----------------------------------  processRecords($processRecordsInput")
     if (processRecordsInput.isAtShardEnd)
       lastRecordSemaphore.acquire()
     val batch = processRecordsInput
