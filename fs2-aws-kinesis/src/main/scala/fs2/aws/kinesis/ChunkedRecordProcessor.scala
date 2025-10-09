@@ -36,9 +36,8 @@ private[aws] class ChunkedRecordProcessor(cb: Chunk[CommittableRecord] => Unit) 
     logger.info(s"initializing chunked record processor (shardId:$shardId, extendedSeq#:$extendedSequenceNumber")
   }
 
-  override def leaseLost(leaseLostInput: LeaseLostInput): Unit = {
+  override def leaseLost(leaseLostInput: LeaseLostInput): Unit =
     logger.info(s"lease lost on shard $shardId: leaseLostInput:$leaseLostInput")
-  }
 
   override def shardEnded(shardEndedInput: ShardEndedInput): Unit = {
     logger.info(s"shard $shardId ended, checkpointing")
@@ -54,14 +53,13 @@ private[aws] class ChunkedRecordProcessor(cb: Chunk[CommittableRecord] => Unit) 
     isShutdown = true
 
     // https://docs.aws.amazon.com/streams/latest/dev/kcl-migration-from-2-3.html
-    try {
+    try
       shutdownRequestedInput.checkpointer().checkpoint();
-    } catch {
-      case e @ (_ : ShutdownException | _ : InvalidStateException) =>
+    catch {
+      case e @ (_: ShutdownException | _: InvalidStateException) =>
         logger.error(s"Unable to checkpoint shard $shardId before shutdown", e);
     }
   }
-
 
   override def processRecords(processRecordsInput: ProcessRecordsInput): Unit = {
     if (processRecordsInput.isAtShardEnd)
