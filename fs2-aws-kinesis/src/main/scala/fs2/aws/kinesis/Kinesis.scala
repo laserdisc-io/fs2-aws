@@ -86,7 +86,6 @@ object Kinesis {
       // Instantiate a new bounded queue and concurrently run the queue populator
       // Expose the elements by dequeuing the internal buffer
       for {
-        _               <- Stream.eval(Async[F].delay(println(s"streamConfig: ${streamConfig}")))
         dispatcher      <- Stream.resource(Dispatcher.parallel[F])
         buffer          <- Stream.eval(Queue.bounded[F, Chunk[CommittableRecord]](streamConfig.bufferSize))
         interruptSignal <- Stream.eval(SignallingRef[F, Boolean](false))

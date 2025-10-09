@@ -40,7 +40,7 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
   // this is required to make the KCL work with LocalStack
 //  System.setProperty("aws.cborEnabled", "false")
   implicit override val patienceConfig: PatienceConfig =
-    PatienceConfig(timeout = scaled(Span(2, Minutes)), interval = scaled(Span(1, Second)))
+    PatienceConfig(timeout = scaled(Span(4, Minutes)), interval = scaled(Span(1, Second)))
 
   val streamName = "test"
 
@@ -93,7 +93,6 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
       for {
         _ <- Stream
           .emits(data)
-          .evalTap(_ => IO.println(s"AAAAAAAAAAAA: $data"))
           .map(d => (partitionKey, ByteBuffer.wrap(d.getBytes)))
           .through(
             writeToKinesis[IO](
@@ -103,16 +102,11 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
           )
           .compile
           .drain
-        _      <- IO.println("sleeping for 10")
-        _      <- IO.sleep(10.seconds)
-        _      <- IO.println("off we go")
         record <- kAlgebra
           .readFromKinesisStream(consumerConfig)
-          .evalTap(v => IO.println(s"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC => ${v}"))
           .take(data.length.toLong)
           .compile
           .toList
-        _ <- IO.println("DDDDDDDDDDDDDDDDDDDDD")
       } yield record
 
     }

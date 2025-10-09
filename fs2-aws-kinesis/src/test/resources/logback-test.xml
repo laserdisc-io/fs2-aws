@@ -2,7 +2,7 @@
 <configuration>
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%r |-%level %logger [%thread] %message%n%xException</pattern>
+            <pattern>%d{HH:mm:ss.SSS} %highlight(%level) %logger{3} [%thread{3}][%X] %message%n%xException</pattern>
         </encoder>
     </appender>
 
@@ -10,8 +10,15 @@
         <appender-ref ref="STDOUT" />
     </appender>
 
-    <root level="WARN">
+    <root level="INFO">
         <appender-ref ref="ASYNCSTDOUT" />
     </root>
+
+    <!-- if you turn root to INFO, these turn a few off that make the logs too verbose -->
+    <logger name="io.netty" level="OFF"/>
+    <logger name="software.amazon.awssdk.http" level="OFF"/>
+    <logger name="software.amazon.kinesis.producer.LogInputStreamReader" level="OFF"/>
+    <logger name="software.amazon.kinesis.coordinator.Scheduler" level="OFF"/>
+    <logger name="software.amazon.kinesis.worker.platform.Ec2Resource" level="OFF"/>
 
 </configuration>
