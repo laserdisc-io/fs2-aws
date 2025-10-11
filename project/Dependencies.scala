@@ -1,11 +1,11 @@
-import sbt.Keys._
-import sbt.{Def, _}
+import sbt.Keys.*
+import sbt.{Def, *}
 
 //noinspection TypeAnnotation
 object Dependencies {
 
   object V {
-    val AwsSdk           = "2.33.13"
+    val AwsSdk           = "2.35.0"
     val Circe            = "0.14.15"
     val Munit            = "1.2.0"
     val Fs2              = "3.12.2"
@@ -26,15 +26,16 @@ object Dependencies {
 
   val CatsEffect = libraryDependencies += "org.typelevel" %% "cats-effect" % V.CE
 
-  val KinesisClient = libraryDependencies += "software.amazon.kinesis" % "amazon-kinesis-client" % "2.6.0"
+  val KinesisClient = libraryDependencies += "software.amazon.kinesis" % "amazon-kinesis-client" % "3.1.3"
 
-  val KinesisProducer = libraryDependencies += "com.amazonaws" % "amazon-kinesis-producer" % "0.15.12"
+  val KinesisProducer = libraryDependencies += "software.amazon.kinesis" % "amazon-kinesis-producer" % "1.0.5"
 
   val newTypes = libraryDependencies += "io.monix" %% "newtypes-core" % "0.3.0"
 
   def AWS(artifact: String, config: Configuration = Compile): Def.Setting[Seq[ModuleID]] =
     libraryDependencies += "software.amazon.awssdk" % artifact % V.AwsSdk % config
 
+  // TODO: do we get rid of this?
   val Refined = libraryDependencies += "eu.timepit" %% "refined" % V.Refined
 
   val Testing = libraryDependencies ++= (
@@ -45,9 +46,7 @@ object Dependencies {
       "org.mockito"    % "mockito-core"      % V.MockitoCore,
       "org.typelevel" %% "cats-effect"       % V.CE,
       "javax.xml.bind" % "jaxb-api"          % "2.3.1"
-    )
-      ++ LogModules.LogBack
-      ++ LogModules.LogImpl
+    ) ++ LogModules.LogBack ++ LogModules.LogImpl
   ).map(_ % Test)
 
   val Circe = libraryDependencies ++= Seq(
@@ -56,24 +55,18 @@ object Dependencies {
     "io.circe" %% "circe-parser"  % V.Circe
   )
 
-  val ScalaTest = libraryDependencies += "org.scalatest" %% "scalatest" % V.ScalaTest
+  val ScalaTest = libraryDependencies += "org.scalatest" %% "scalatest"    % V.ScalaTest
+  val Mockito   = libraryDependencies += "org.mockito"    % "mockito-core" % V.MockitoCore
 
-  val Mockito = libraryDependencies += "org.mockito" % "mockito-core" % V.MockitoCore
-
-  // TODO: it seems that different modules require different versions - look into this
-  def ScanamoCirce(version: String) = libraryDependencies ++= Seq(
-    "io.laserdisc" %% "scanamo-circe" % version
-  ).filterNot(_ => scalaVersion.value.startsWith("3."))
-
-  // TODO; 2.0.1 requires a major refactor
-  val DynamoStreamAdapter =
-    libraryDependencies += "com.amazonaws" % "dynamodb-streams-kinesis-adapter" % "1.6.1"
-
+//  // TODO: it seems that different modules require different versions - look into this
+//  def ScanamoCirce(version: String) = libraryDependencies ++= Seq(
+//    "io.laserdisc" %% "scanamo-circe" % version
+//  ).filterNot(_ => scalaVersion.value.startsWith("3."))
+//
+//
   val Logging = libraryDependencies ++= Seq(
     "org.typelevel" %% "log4cats-slf4j" % V.Log4Cats
   ) ++ LogModules.LogBack ++ LogModules.LogImpl
-
-  val Logback = libraryDependencies ++= LogModules.LogBack
 
   val Trace4Cats = libraryDependencies +=
     "io.janstenpickle" %% "trace4cats-core" % "0.14.7"

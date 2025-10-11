@@ -2,8 +2,6 @@ package fs2.aws.kinesis
 
 import cats.effect.unsafe.IORuntime
 import cats.effect.{IO, Resource}
-import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
-import com.amazonaws.services.kinesis.producer.KinesisProducerConfiguration
 import fs2.Stream
 import fs2.aws.internal.KinesisProducerClientImpl
 import fs2.aws.kinesis.publisher.writeToKinesis
@@ -14,7 +12,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Minutes, Second, Span}
-import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
+import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, AwsCredentials, StaticCredentialsProvider}
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.cloudwatch.{CloudWatchAsyncClient, CloudWatchAsyncClientBuilder}
 import software.amazon.awssdk.services.dynamodb.{DynamoDbAsyncClient, DynamoDbAsyncClientBuilder}
@@ -26,6 +24,7 @@ import software.amazon.awssdk.services.kinesis.model.{
 }
 import software.amazon.awssdk.services.kinesis.{KinesisAsyncClient, KinesisAsyncClientBuilder}
 import software.amazon.kinesis.common.InitialPositionInStream
+import software.amazon.kinesis.producer.KinesisProducerConfiguration
 
 import java.net.URI
 import java.nio.ByteBuffer
@@ -41,7 +40,7 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
   // this is required to make the KCL work with LocalStack
 //  System.setProperty("aws.cborEnabled", "false")
   implicit override val patienceConfig: PatienceConfig =
-    PatienceConfig(timeout = scaled(Span(2, Minutes)), interval = scaled(Span(1, Second)))
+    PatienceConfig(timeout = scaled(Span(4, Minutes)), interval = scaled(Span(1, Second)))
 
   val streamName = "test"
 
@@ -54,10 +53,10 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
     retrievalMode = Polling
   )
 
-  val credentials =
-    new BasicAWSCredentials("dummy", "dummy")
+  val credentials: AwsCredentials = AwsBasicCredentials.create("dummy", "dummy")
+
   val producerConfig: KinesisProducerConfiguration = new KinesisProducerConfiguration()
-    .setCredentialsProvider(new AWSStaticCredentialsProvider(credentials))
+    .setCredentialsProvider(StaticCredentialsProvider.create(credentials))
     .setStsEndpoint("localhost")
     .setStsPort(4566)
     .setKinesisEndpoint("localhost")
@@ -90,7 +89,7 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
 
     val data = List("foo", "bar", "baz")
 
-    val test = kAlgebraResource(kac, dac, cac).use { case (ki, kAlgebra) =>
+    val test = kAlgebraResource(kac, dac, cac).use { case (_, kAlgebra) =>
       for {
         _ <- Stream
           .emits(data)

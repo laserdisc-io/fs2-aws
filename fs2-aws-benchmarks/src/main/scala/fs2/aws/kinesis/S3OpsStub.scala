@@ -10,6 +10,7 @@ import software.amazon.awssdk.services.s3.waiters.S3AsyncWaiter
 
 import java.nio.file.Path
 
+//noinspection NotImplementedCode
 class S3OpsStub extends S3AsyncClientOp[IO] {
   override def abortMultipartUpload(a: AbortMultipartUploadRequest): IO[AbortMultipartUploadResponse] =
     IO.pure(AbortMultipartUploadResponse.builder().build())
@@ -280,8 +281,6 @@ class S3OpsStub extends S3AsyncClientOp[IO] {
       b: SelectObjectContentResponseHandler
   ): IO[Void] = ???
 
-  override def serviceClientConfiguration: IO[S3ServiceClientConfiguration] = ???
-
   override def serviceName: IO[String] = ???
 
   override def uploadPart(a: UploadPartRequest, b: AsyncRequestBody): IO[UploadPartResponse] =
@@ -326,4 +325,26 @@ class S3OpsStub extends S3AsyncClientOp[IO] {
   override def listBucketsPaginator: IO[ListBucketsPublisher] = ???
 
   override def listBucketsPaginator(a: ListBucketsRequest): IO[ListBucketsPublisher] = ???
+
+  override def createBucketMetadataConfiguration(
+      a: CreateBucketMetadataConfigurationRequest
+  ): IO[CreateBucketMetadataConfigurationResponse] = ???
+
+  override def deleteBucketMetadataConfiguration(
+      a: DeleteBucketMetadataConfigurationRequest
+  ): IO[DeleteBucketMetadataConfigurationResponse] = ???
+
+  override def getBucketMetadataConfiguration(
+      a: GetBucketMetadataConfigurationRequest
+  ): IO[GetBucketMetadataConfigurationResponse] = ???
+
+  override def renameObject(a: RenameObjectRequest): IO[RenameObjectResponse] = ???
+
+  override def updateBucketMetadataInventoryTableConfiguration(
+      a: UpdateBucketMetadataInventoryTableConfigurationRequest
+  ): IO[UpdateBucketMetadataInventoryTableConfigurationResponse] = ???
+
+  override def updateBucketMetadataJournalTableConfiguration(
+      a: UpdateBucketMetadataJournalTableConfigurationRequest
+  ): IO[UpdateBucketMetadataJournalTableConfigurationResponse] = ???
 }

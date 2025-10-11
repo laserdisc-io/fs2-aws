@@ -1,12 +1,20 @@
 package io.laserdisc.pure.dynamodb.tagless
 
-import software.amazon.awssdk.services.dynamodb.DynamoDbServiceClientConfiguration
 import software.amazon.awssdk.services.dynamodb.model.*
-import software.amazon.awssdk.services.dynamodb.paginators.*
+
+import software.amazon.awssdk.services.dynamodb.paginators.BatchGetItemPublisher
+import software.amazon.awssdk.services.dynamodb.paginators.ListContributorInsightsPublisher
+import software.amazon.awssdk.services.dynamodb.paginators.ListExportsPublisher
+import software.amazon.awssdk.services.dynamodb.paginators.ListImportsPublisher
+import software.amazon.awssdk.services.dynamodb.paginators.ListTablesPublisher
+import software.amazon.awssdk.services.dynamodb.paginators.QueryPublisher
+import software.amazon.awssdk.services.dynamodb.paginators.ScanPublisher
 import software.amazon.awssdk.services.dynamodb.waiters.DynamoDbAsyncWaiter
 
+/** The effectful equivalents for operations detected from [[software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient]]
+  */
 trait DynamoDbAsyncClientOp[F[_]] {
-  // DynamoDbAsyncClient
+
   def batchExecuteStatement(a: BatchExecuteStatementRequest): F[BatchExecuteStatementResponse]
   def batchGetItem(a: BatchGetItemRequest): F[BatchGetItemResponse]
   def batchGetItemPaginator(a: BatchGetItemRequest): F[BatchGetItemPublisher]
@@ -73,7 +81,6 @@ trait DynamoDbAsyncClientOp[F[_]] {
   def restoreTableToPointInTime(a: RestoreTableToPointInTimeRequest): F[RestoreTableToPointInTimeResponse]
   def scan(a: ScanRequest): F[ScanResponse]
   def scanPaginator(a: ScanRequest): F[ScanPublisher]
-  def serviceClientConfiguration: F[DynamoDbServiceClientConfiguration]
   def serviceName: F[String]
   def tagResource(a: TagResourceRequest): F[TagResourceResponse]
   def transactGetItems(a: TransactGetItemsRequest): F[TransactGetItemsResponse]

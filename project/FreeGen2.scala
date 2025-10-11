@@ -1,21 +1,19 @@
-import sbt._
-import Keys._
+import sbt.*
+import Keys.*
 
-import java.lang.reflect._
+import java.lang.reflect.*
 import java.util.concurrent.CompletableFuture
 import java.util.function.Consumer
 import scala.reflect.ClassTag
-import Predef._
-import scala.collection.immutable
 
 object FreeGen2 {
 
   lazy val freeGen2Classes =
-    settingKey[List[Class[_]]]("classes for which free algebras should be generated")
+    settingKey[List[Class[?]]]("classes for which free algebras should be generated")
   lazy val freeGen2Dir     = settingKey[File]("directory where free algebras go")
   lazy val freeGen2Package = settingKey[String]("package where free algebras go")
   lazy val freeGen2Renames =
-    settingKey[Map[Class[_], String]]("map of imports that must be renamed")
+    settingKey[Map[Class[?], String]]("map of imports that must be renamed")
   lazy val freeGen2 = taskKey[Seq[File]]("generate free algebras")
 
   lazy val freeGen2Settings = Seq(
@@ -34,18 +32,18 @@ object FreeGen2 {
 
 }
 
-class FreeGen2(managed: List[Class[_]], pkg: String, renames: Map[Class[_], String], log: Logger) {
+class FreeGen2(managed: List[Class[?]], pkg: String, renames: Map[Class[?], String], log: Logger) {
 
   // These Java classes will have non-Java names in our generated code
-  val ClassBoolean = classOf[Boolean]
-  val ClassByte    = classOf[Byte]
-  val ClassShort   = classOf[Short]
-  val ClassInt     = classOf[Int]
-  val ClassLong    = classOf[Long]
-  val ClassFloat   = classOf[Float]
-  val ClassDouble  = classOf[Double]
-  val ClassObject  = classOf[Object]
-  val ClassVoid    = Void.TYPE
+  val ClassBoolean: Class[Boolean] = classOf
+  val ClassByte: Class[Byte]       = classOf
+  val ClassShort: Class[Short]     = classOf
+  val ClassInt: Class[Int]         = classOf
+  val ClassLong: Class[Long]       = classOf
+  val ClassFloat: Class[Float]     = classOf
+  val ClassDouble: Class[Double]   = classOf
+  val ClassObject: Class[Object]   = classOf
+  val ClassVoid: Class[Void]       = Void.TYPE
 
   def tparams(t: Type): List[String] =
     t match {
@@ -114,7 +112,7 @@ class FreeGen2(managed: List[Class[_]], pkg: String, renames: Map[Class[_], Stri
     // Return type name
     def ret: String =
       method.getGenericReturnType match {
-        case t: ParameterizedType if t.getRawType == classOf[CompletableFuture[_]] =>
+        case t: ParameterizedType if t.getRawType == classOf[CompletableFuture[?]] =>
           toScalaType(t.getActualTypeArguments.toList.head)
         case t => toScalaType(t)
       }
@@ -174,7 +172,7 @@ class FreeGen2(managed: List[Class[_]], pkg: String, renames: Map[Class[_], Stri
   }
 
   // This class, plus any superclasses and interfaces, "all the way up"
-  def closure(c: Class[_]): List[Class[_]] =
+  def closure(c: Class[?]): List[Class[?]] =
     (c :: (Option(c.getSuperclass).toList ++ c.getInterfaces.toList).flatMap(closure)).distinct
       .filterNot(_.getName == "java.lang.AutoCloseable") // not available in jdk1.6
       .filterNot(_.getName == "java.lang.Object")        // we don't want .equals, etc.
@@ -185,13 +183,13 @@ class FreeGen2(managed: List[Class[_]], pkg: String, renames: Map[Class[_], Stri
   }
 
   // All non-deprecated methods for this class and any superclasses/interfaces
-  def methods(c: Class[_]): List[Method] =
+  def methods(c: Class[?]): List[Method] =
     closure(c)
       .flatMap(_.getDeclaredMethods.toList)
       .distinct
       .filterNot(_.isStatic)
       .filter(_.getAnnotation(classOf[Deprecated]) == null)
-      .filterNot(_.getParameterTypes.contains(classOf[Consumer[_]]))
+      .filterNot(_.getParameterTypes.contains(classOf[Consumer[?]]))
 
   // Ctor values for all methods in of A plus superclasses, interfaces, etc.
   def ctors[A](implicit ev: ClassTag[A]): List[Ctor] =
@@ -209,7 +207,7 @@ class FreeGen2(managed: List[Class[_]], pkg: String, renames: Map[Class[_], Stri
       .sortBy(c => (c.mname, c.index))
 
   // Fully qualified rename, if any
-  def renameImport(c: Class[_]): String = {
+  def renameImport(c: Class[?]): String = {
     val sn = c.getSimpleName
     val an = renames.getOrElse(c, sn)
     if (sn == an) s"import ${c.getName}"
@@ -218,8 +216,8 @@ class FreeGen2(managed: List[Class[_]], pkg: String, renames: Map[Class[_], Stri
 
   // All types referenced by all methods on A, superclasses, interfaces, etc.
   def imports[A](implicit ev: ClassTag[A]): List[String] = {
-    def extractGenericTypes(m: Method): List[Class[_]] = m.getGenericReturnType match {
-      case t: ParameterizedType if t.getRawType == classOf[CompletableFuture[_]] =>
+    def extractGenericTypes(m: Method): List[Class[?]] = m.getGenericReturnType match {
+      case t: ParameterizedType if t.getRawType == classOf[CompletableFuture[?]] =>
         m.getReturnType :: t.getActualTypeArguments.toList.map(tt => Class.forName(tt.getTypeName))
       case _ => m.getReturnType :: Nil
     }
@@ -325,7 +323,7 @@ class FreeGen2(managed: List[Class[_]], pkg: String, renames: Map[Class[_], Stri
     |    ${ctors[A].map(_.ctor(opname)).mkString("\n    ")}
     |
     |  }
-    |  import $opname._
+    |  import $opname.*
     |
     |  // Smart constructors for operations common to all algebras.
     |  val unit: $ioname[Unit] = FF.pure[$opname, Unit](())
@@ -375,7 +373,7 @@ class FreeGen2(managed: List[Class[_]], pkg: String, renames: Map[Class[_], Stri
   }
 
   // Import for the IO type for a carrer type, with renaming
-  def ioImport(c: Class[_]): String = {
+  def ioImport(c: Class[?]): String = {
     val sn = c.getSimpleName
     s"import ${sn.toLowerCase}.${sn}IO"
   }
@@ -446,7 +444,7 @@ class FreeGen2(managed: List[Class[_]], pkg: String, renames: Map[Class[_], Stri
        |""".trim.stripMargin
   }
 
-  def interpreterDef(c: Class[_]): String = {
+  def interpreterDef(c: Class[?]): String = {
     val oname  = c.getSimpleName // original name, without name mapping
     val sname  = toScalaType(c)
     val opname = s"${oname}Op"
@@ -547,7 +545,7 @@ class FreeGen2(managed: List[Class[_]], pkg: String, renames: Map[Class[_], Stri
       |""".trim.stripMargin
 
   def gen(base: File): Seq[java.io.File] = {
-    import java.io._
+    import java.io.*
     log.info("Generating free algebras into " + base)
     val fs = managed.map { c =>
       base.mkdirs
