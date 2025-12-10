@@ -26,7 +26,9 @@ object Dependencies {
 
   val CatsEffect = libraryDependencies += "org.typelevel" %% "cats-effect" % V.CE
 
-  val KinesisClient = libraryDependencies += "software.amazon.kinesis" % "amazon-kinesis-client" % "2.6.1"
+  // warning - upgrading this past 2.6.0 hits https://github.com/awslabs/amazon-kinesis-producer/issues/608
+  // the fix is to migrate to the AWS SDK v2 based KPL - which is a major change, and coming in fs2-aws 7.x
+  val KinesisClient = libraryDependencies += "software.amazon.kinesis" % "amazon-kinesis-client" % "2.6.0"
 
   val KinesisProducer = libraryDependencies += "com.amazonaws" % "amazon-kinesis-producer" % "0.15.12"
 
