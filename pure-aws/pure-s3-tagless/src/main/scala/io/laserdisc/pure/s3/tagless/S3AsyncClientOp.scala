@@ -6,7 +6,6 @@ import software.amazon.awssdk.services.s3.model.*
 import software.amazon.awssdk.services.s3.paginators.*
 import software.amazon.awssdk.services.s3.waiters.S3AsyncWaiter
 
-import java.lang.String
 import java.nio.file.Path
 
 trait S3AsyncClientOp[F[_]] {
