@@ -98,10 +98,7 @@ object publisher {
       streamName: String,
       parallelism: Int = 10,
       producer: KinesisProducerClient[F] = new KinesisProducerClientImpl[F]
-  )(implicit
-      ec: ExecutionContext,
-      encoder: I => ByteBuffer
-  ): Pipe[F, (String, I), (I, UserRecordResult)] =
+  )(implicit ec: ExecutionContext, encoder: I => ByteBuffer): Pipe[F, (String, I), (I, UserRecordResult)] =
     _.flatMap { case (key, i) =>
       Stream((key, encoder(i)))
         .through(writeToKinesis(streamName, parallelism, producer))
@@ -122,9 +119,7 @@ object publisher {
       streamName: String,
       parallelism: Int = 10,
       producer: KinesisProducerClient[F] = new KinesisProducerClientImpl[F]
-  )(implicit
-      encoder: I => ByteBuffer
-  ): Pipe[F, (String, I), I] =
+  )(implicit encoder: I => ByteBuffer): Pipe[F, (String, I), I] =
     _.through(writeObjectAndBypass(streamName, producer, encoder)).map { case (evt, _) => evt }
 
   /** Writes the bytestream to a Kinesis stream via a Sink

@@ -22,8 +22,8 @@ import software.amazon.awssdk.services.s3.waiters.S3AsyncWaiter
 
 object Interpreter {
 
-  def apply[M[_]](implicit
-      am: Async[M]
+  def apply[M[_]](
+      implicit am: Async[M]
   ): Interpreter[M] =
     new Interpreter[M] {
       val asyncM: Async[M] = am
@@ -50,7 +50,7 @@ trait Interpreter[M[_]] { outer =>
   private def eff1[J, A](fut: => CompletableFuture[A]): M[A] =
     asyncM.fromCompletableFuture(asyncM.delay(fut))
 
-  // Interpreters // scalafmt: off
+  // Interpreters
   trait S3AsyncClientInterpreter extends S3AsyncClientOp[Kleisli[M, S3AsyncClient, *]] {
 
     // domain-specific operations are implemented in terms of `primitive`
@@ -82,6 +82,7 @@ trait Interpreter[M[_]] { outer =>
     override def deleteObjectTagging(a: DeleteObjectTaggingRequest): Kleisli[M, S3AsyncClient, DeleteObjectTaggingResponse]                                                                                     = eff(_.deleteObjectTagging(a))
     override def deleteObjects(a: DeleteObjectsRequest): Kleisli[M, S3AsyncClient, DeleteObjectsResponse]                                                                                                       = eff(_.deleteObjects(a))
     override def deletePublicAccessBlock(a: DeletePublicAccessBlockRequest): Kleisli[M, S3AsyncClient, DeletePublicAccessBlockResponse]                                                                         = eff(_.deletePublicAccessBlock(a))
+    override def getBucketAbac(a: GetBucketAbacRequest): Kleisli[M, S3AsyncClient, GetBucketAbacResponse]                                                                                                       = eff(_.getBucketAbac(a))
     override def getBucketAccelerateConfiguration(a: GetBucketAccelerateConfigurationRequest): Kleisli[M, S3AsyncClient, GetBucketAccelerateConfigurationResponse]                                              = eff(_.getBucketAccelerateConfiguration(a))
     override def getBucketAcl(a: GetBucketAclRequest): Kleisli[M, S3AsyncClient, GetBucketAclResponse]                                                                                                          = eff(_.getBucketAcl(a))
     override def getBucketAnalyticsConfiguration(a: GetBucketAnalyticsConfigurationRequest): Kleisli[M, S3AsyncClient, GetBucketAnalyticsConfigurationResponse]                                                 = eff(_.getBucketAnalyticsConfiguration(a))
@@ -136,6 +137,7 @@ trait Interpreter[M[_]] { outer =>
     override def listObjectsV2Paginator(a: ListObjectsV2Request): Kleisli[M, S3AsyncClient, ListObjectsV2Publisher]                                                                                             = primitive(_.listObjectsV2Paginator(a))
     override def listParts(a: ListPartsRequest): Kleisli[M, S3AsyncClient, ListPartsResponse]                                                                                                                   = eff(_.listParts(a))
     override def listPartsPaginator(a: ListPartsRequest): Kleisli[M, S3AsyncClient, ListPartsPublisher]                                                                                                         = primitive(_.listPartsPaginator(a))
+    override def putBucketAbac(a: PutBucketAbacRequest): Kleisli[M, S3AsyncClient, PutBucketAbacResponse]                                                                                                       = eff(_.putBucketAbac(a))
     override def putBucketAccelerateConfiguration(a: PutBucketAccelerateConfigurationRequest): Kleisli[M, S3AsyncClient, PutBucketAccelerateConfigurationResponse]                                              = eff(_.putBucketAccelerateConfiguration(a))
     override def putBucketAcl(a: PutBucketAclRequest): Kleisli[M, S3AsyncClient, PutBucketAclResponse]                                                                                                          = eff(_.putBucketAcl(a))
     override def putBucketAnalyticsConfiguration(a: PutBucketAnalyticsConfigurationRequest): Kleisli[M, S3AsyncClient, PutBucketAnalyticsConfigurationResponse]                                                 = eff(_.putBucketAnalyticsConfiguration(a))
@@ -206,6 +208,7 @@ trait Interpreter[M[_]] { outer =>
         override def deleteObjectTagging(a: DeleteObjectTaggingRequest): Kleisli[M, E, DeleteObjectTaggingResponse]                                                                                     = Kleisli(e => eff1(f(e).deleteObjectTagging(a)))
         override def deleteObjects(a: DeleteObjectsRequest): Kleisli[M, E, DeleteObjectsResponse]                                                                                                       = Kleisli(e => eff1(f(e).deleteObjects(a)))
         override def deletePublicAccessBlock(a: DeletePublicAccessBlockRequest): Kleisli[M, E, DeletePublicAccessBlockResponse]                                                                         = Kleisli(e => eff1(f(e).deletePublicAccessBlock(a)))
+        override def getBucketAbac(a: GetBucketAbacRequest): Kleisli[M, E, GetBucketAbacResponse]                                                                                                       = Kleisli(e => eff1(f(e).getBucketAbac(a)))
         override def getBucketAccelerateConfiguration(a: GetBucketAccelerateConfigurationRequest): Kleisli[M, E, GetBucketAccelerateConfigurationResponse]                                              = Kleisli(e => eff1(f(e).getBucketAccelerateConfiguration(a)))
         override def getBucketAcl(a: GetBucketAclRequest): Kleisli[M, E, GetBucketAclResponse]                                                                                                          = Kleisli(e => eff1(f(e).getBucketAcl(a)))
         override def getBucketAnalyticsConfiguration(a: GetBucketAnalyticsConfigurationRequest): Kleisli[M, E, GetBucketAnalyticsConfigurationResponse]                                                 = Kleisli(e => eff1(f(e).getBucketAnalyticsConfiguration(a)))
@@ -260,6 +263,7 @@ trait Interpreter[M[_]] { outer =>
         override def listObjectsV2Paginator(a: ListObjectsV2Request): Kleisli[M, E, ListObjectsV2Publisher]                                                                                             = Kleisli(e => primitive1(f(e).listObjectsV2Paginator(a)))
         override def listParts(a: ListPartsRequest): Kleisli[M, E, ListPartsResponse]                                                                                                                   = Kleisli(e => eff1(f(e).listParts(a)))
         override def listPartsPaginator(a: ListPartsRequest): Kleisli[M, E, ListPartsPublisher]                                                                                                         = Kleisli(e => primitive1(f(e).listPartsPaginator(a)))
+        override def putBucketAbac(a: PutBucketAbacRequest): Kleisli[M, E, PutBucketAbacResponse]                                                                                                       = Kleisli(e => eff1(f(e).putBucketAbac(a)))
         override def putBucketAccelerateConfiguration(a: PutBucketAccelerateConfigurationRequest): Kleisli[M, E, PutBucketAccelerateConfigurationResponse]                                              = Kleisli(e => eff1(f(e).putBucketAccelerateConfiguration(a)))
         override def putBucketAcl(a: PutBucketAclRequest): Kleisli[M, E, PutBucketAclResponse]                                                                                                          = Kleisli(e => eff1(f(e).putBucketAcl(a)))
         override def putBucketAnalyticsConfiguration(a: PutBucketAnalyticsConfigurationRequest): Kleisli[M, E, PutBucketAnalyticsConfigurationResponse]                                                 = Kleisli(e => eff1(f(e).putBucketAnalyticsConfiguration(a)))
@@ -337,6 +341,7 @@ trait Interpreter[M[_]] { outer =>
     override def deleteObjectTagging(a: DeleteObjectTaggingRequest): M[DeleteObjectTaggingResponse]                                                                                     = eff1(client.deleteObjectTagging(a))
     override def deleteObjects(a: DeleteObjectsRequest): M[DeleteObjectsResponse]                                                                                                       = eff1(client.deleteObjects(a))
     override def deletePublicAccessBlock(a: DeletePublicAccessBlockRequest): M[DeletePublicAccessBlockResponse]                                                                         = eff1(client.deletePublicAccessBlock(a))
+    override def getBucketAbac(a: GetBucketAbacRequest): M[GetBucketAbacResponse]                                                                                                       = eff1(client.getBucketAbac(a))
     override def getBucketAccelerateConfiguration(a: GetBucketAccelerateConfigurationRequest): M[GetBucketAccelerateConfigurationResponse]                                              = eff1(client.getBucketAccelerateConfiguration(a))
     override def getBucketAcl(a: GetBucketAclRequest): M[GetBucketAclResponse]                                                                                                          = eff1(client.getBucketAcl(a))
     override def getBucketAnalyticsConfiguration(a: GetBucketAnalyticsConfigurationRequest): M[GetBucketAnalyticsConfigurationResponse]                                                 = eff1(client.getBucketAnalyticsConfiguration(a))
@@ -391,6 +396,7 @@ trait Interpreter[M[_]] { outer =>
     override def listObjectsV2Paginator(a: ListObjectsV2Request): M[ListObjectsV2Publisher]                                                                                             = primitive1(client.listObjectsV2Paginator(a))
     override def listParts(a: ListPartsRequest): M[ListPartsResponse]                                                                                                                   = eff1(client.listParts(a))
     override def listPartsPaginator(a: ListPartsRequest): M[ListPartsPublisher]                                                                                                         = primitive1(client.listPartsPaginator(a))
+    override def putBucketAbac(a: PutBucketAbacRequest): M[PutBucketAbacResponse]                                                                                                       = eff1(client.putBucketAbac(a))
     override def putBucketAccelerateConfiguration(a: PutBucketAccelerateConfigurationRequest): M[PutBucketAccelerateConfigurationResponse]                                              = eff1(client.putBucketAccelerateConfiguration(a))
     override def putBucketAcl(a: PutBucketAclRequest): M[PutBucketAclResponse]                                                                                                          = eff1(client.putBucketAcl(a))
     override def putBucketAnalyticsConfiguration(a: PutBucketAnalyticsConfigurationRequest): M[PutBucketAnalyticsConfigurationResponse]                                                 = eff1(client.putBucketAnalyticsConfiguration(a))

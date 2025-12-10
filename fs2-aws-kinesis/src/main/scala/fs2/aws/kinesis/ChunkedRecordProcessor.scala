@@ -54,7 +54,7 @@ private[aws] class ChunkedRecordProcessor(cb: Chunk[CommittableRecord] => Unit) 
 
     // https://docs.aws.amazon.com/streams/latest/dev/kcl-migration-from-2-3.html
     try
-      shutdownRequestedInput.checkpointer().checkpoint();
+      shutdownRequestedInput.checkpointer().checkpoint()
     catch {
       case e @ (_: ShutdownException | _: InvalidStateException) =>
         logger.error(s"Unable to checkpoint shard $shardId before shutdown", e);

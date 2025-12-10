@@ -347,4 +347,8 @@ class S3OpsStub extends S3AsyncClientOp[IO] {
   override def updateBucketMetadataJournalTableConfiguration(
       a: UpdateBucketMetadataJournalTableConfigurationRequest
   ): IO[UpdateBucketMetadataJournalTableConfigurationResponse] = ???
+
+  override def getBucketAbac(a: GetBucketAbacRequest): IO[GetBucketAbacResponse] = ???
+
+  override def putBucketAbac(a: PutBucketAbacRequest): IO[PutBucketAbacResponse] = ???
 }

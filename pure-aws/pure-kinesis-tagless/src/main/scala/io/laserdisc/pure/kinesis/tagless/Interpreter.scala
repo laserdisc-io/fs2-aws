@@ -14,11 +14,11 @@ import software.amazon.awssdk.services.kinesis.waiters.KinesisAsyncWaiter
 
 object Interpreter {
 
-  def apply[M[_]](implicit
-      am: Async[M]
+  def apply[M[_]](
+      implicit am: Async[M]
   ): Interpreter[M] =
     new Interpreter[M] {
-      val asyncM = am
+      val asyncM: Async[M] = am
     }
 
 }
@@ -42,7 +42,7 @@ trait Interpreter[M[_]] { outer =>
   private def eff1[J, A](fut: => CompletableFuture[A]): M[A] =
     asyncM.fromCompletableFuture(asyncM.delay(fut))
 
-  // Interpreters // scalafmt: off
+  // Interpreters
   trait KinesisAsyncClientInterpreter extends KinesisAsyncClientOp[Kleisli[M, KinesisAsyncClient, *]] {
 
     // domain-specific operations are implemented in terms of `primitive`
@@ -53,6 +53,7 @@ trait Interpreter[M[_]] { outer =>
     override def deleteResourcePolicy(a: DeleteResourcePolicyRequest): Kleisli[M, KinesisAsyncClient, DeleteResourcePolicyResponse]                            = eff(_.deleteResourcePolicy(a))
     override def deleteStream(a: DeleteStreamRequest): Kleisli[M, KinesisAsyncClient, DeleteStreamResponse]                                                    = eff(_.deleteStream(a))
     override def deregisterStreamConsumer(a: DeregisterStreamConsumerRequest): Kleisli[M, KinesisAsyncClient, DeregisterStreamConsumerResponse]                = eff(_.deregisterStreamConsumer(a))
+    override def describeAccountSettings(a: DescribeAccountSettingsRequest): Kleisli[M, KinesisAsyncClient, DescribeAccountSettingsResponse]                   = eff(_.describeAccountSettings(a))
     override def describeLimits: Kleisli[M, KinesisAsyncClient, DescribeLimitsResponse]                                                                        = eff(_.describeLimits)
     override def describeLimits(a: DescribeLimitsRequest): Kleisli[M, KinesisAsyncClient, DescribeLimitsResponse]                                              = eff(_.describeLimits(a))
     override def describeStream(a: DescribeStreamRequest): Kleisli[M, KinesisAsyncClient, DescribeStreamResponse]                                              = eff(_.describeStream(a))
@@ -86,8 +87,11 @@ trait Interpreter[M[_]] { outer =>
     override def subscribeToShard(a: SubscribeToShardRequest, b: SubscribeToShardResponseHandler): Kleisli[M, KinesisAsyncClient, Void]                        = eff(_.subscribeToShard(a, b))
     override def tagResource(a: TagResourceRequest): Kleisli[M, KinesisAsyncClient, TagResourceResponse]                                                       = eff(_.tagResource(a))
     override def untagResource(a: UntagResourceRequest): Kleisli[M, KinesisAsyncClient, UntagResourceResponse]                                                 = eff(_.untagResource(a))
+    override def updateAccountSettings(a: UpdateAccountSettingsRequest): Kleisli[M, KinesisAsyncClient, UpdateAccountSettingsResponse]                         = eff(_.updateAccountSettings(a))
+    override def updateMaxRecordSize(a: UpdateMaxRecordSizeRequest): Kleisli[M, KinesisAsyncClient, UpdateMaxRecordSizeResponse]                               = eff(_.updateMaxRecordSize(a))
     override def updateShardCount(a: UpdateShardCountRequest): Kleisli[M, KinesisAsyncClient, UpdateShardCountResponse]                                        = eff(_.updateShardCount(a))
     override def updateStreamMode(a: UpdateStreamModeRequest): Kleisli[M, KinesisAsyncClient, UpdateStreamModeResponse]                                        = eff(_.updateStreamMode(a))
+    override def updateStreamWarmThroughput(a: UpdateStreamWarmThroughputRequest): Kleisli[M, KinesisAsyncClient, UpdateStreamWarmThroughputResponse]          = eff(_.updateStreamWarmThroughput(a))
     override def waiter: Kleisli[M, KinesisAsyncClient, KinesisAsyncWaiter]                                                                                    = primitive(_.waiter)
 
     def lens[E](f: E => KinesisAsyncClient): KinesisAsyncClientOp[Kleisli[M, E, *]] =
@@ -99,6 +103,7 @@ trait Interpreter[M[_]] { outer =>
         override def deleteResourcePolicy(a: DeleteResourcePolicyRequest): Kleisli[M, E, DeleteResourcePolicyResponse]                            = Kleisli(e => eff1(f(e).deleteResourcePolicy(a)))
         override def deleteStream(a: DeleteStreamRequest): Kleisli[M, E, DeleteStreamResponse]                                                    = Kleisli(e => eff1(f(e).deleteStream(a)))
         override def deregisterStreamConsumer(a: DeregisterStreamConsumerRequest): Kleisli[M, E, DeregisterStreamConsumerResponse]                = Kleisli(e => eff1(f(e).deregisterStreamConsumer(a)))
+        override def describeAccountSettings(a: DescribeAccountSettingsRequest): Kleisli[M, E, DescribeAccountSettingsResponse]                   = Kleisli(e => eff1(f(e).describeAccountSettings(a)))
         override def describeLimits: Kleisli[M, E, DescribeLimitsResponse]                                                                        = Kleisli(e => eff1(f(e).describeLimits))
         override def describeLimits(a: DescribeLimitsRequest): Kleisli[M, E, DescribeLimitsResponse]                                              = Kleisli(e => eff1(f(e).describeLimits(a)))
         override def describeStream(a: DescribeStreamRequest): Kleisli[M, E, DescribeStreamResponse]                                              = Kleisli(e => eff1(f(e).describeStream(a)))
@@ -132,8 +137,11 @@ trait Interpreter[M[_]] { outer =>
         override def subscribeToShard(a: SubscribeToShardRequest, b: SubscribeToShardResponseHandler): Kleisli[M, E, Void]                        = Kleisli(e => eff1(f(e).subscribeToShard(a, b)))
         override def tagResource(a: TagResourceRequest): Kleisli[M, E, TagResourceResponse]                                                       = Kleisli(e => eff1(f(e).tagResource(a)))
         override def untagResource(a: UntagResourceRequest): Kleisli[M, E, UntagResourceResponse]                                                 = Kleisli(e => eff1(f(e).untagResource(a)))
+        override def updateAccountSettings(a: UpdateAccountSettingsRequest): Kleisli[M, E, UpdateAccountSettingsResponse]                         = Kleisli(e => eff1(f(e).updateAccountSettings(a)))
+        override def updateMaxRecordSize(a: UpdateMaxRecordSizeRequest): Kleisli[M, E, UpdateMaxRecordSizeResponse]                               = Kleisli(e => eff1(f(e).updateMaxRecordSize(a)))
         override def updateShardCount(a: UpdateShardCountRequest): Kleisli[M, E, UpdateShardCountResponse]                                        = Kleisli(e => eff1(f(e).updateShardCount(a)))
         override def updateStreamMode(a: UpdateStreamModeRequest): Kleisli[M, E, UpdateStreamModeResponse]                                        = Kleisli(e => eff1(f(e).updateStreamMode(a)))
+        override def updateStreamWarmThroughput(a: UpdateStreamWarmThroughputRequest): Kleisli[M, E, UpdateStreamWarmThroughputResponse]          = Kleisli(e => eff1(f(e).updateStreamWarmThroughput(a)))
         override def waiter: Kleisli[M, E, KinesisAsyncWaiter]                                                                                    = Kleisli(e => primitive1(f(e).waiter))
       }
   }
@@ -152,6 +160,7 @@ trait Interpreter[M[_]] { outer =>
     override def deleteResourcePolicy(a: DeleteResourcePolicyRequest): M[DeleteResourcePolicyResponse]                            = eff1(client.deleteResourcePolicy(a))
     override def deleteStream(a: DeleteStreamRequest): M[DeleteStreamResponse]                                                    = eff1(client.deleteStream(a))
     override def deregisterStreamConsumer(a: DeregisterStreamConsumerRequest): M[DeregisterStreamConsumerResponse]                = eff1(client.deregisterStreamConsumer(a))
+    override def describeAccountSettings(a: DescribeAccountSettingsRequest): M[DescribeAccountSettingsResponse]                   = eff1(client.describeAccountSettings(a))
     override def describeLimits: M[DescribeLimitsResponse]                                                                        = eff1(client.describeLimits)
     override def describeLimits(a: DescribeLimitsRequest): M[DescribeLimitsResponse]                                              = eff1(client.describeLimits(a))
     override def describeStream(a: DescribeStreamRequest): M[DescribeStreamResponse]                                              = eff1(client.describeStream(a))
@@ -185,8 +194,11 @@ trait Interpreter[M[_]] { outer =>
     override def subscribeToShard(a: SubscribeToShardRequest, b: SubscribeToShardResponseHandler): M[Void]                        = eff1(client.subscribeToShard(a, b))
     override def tagResource(a: TagResourceRequest): M[TagResourceResponse]                                                       = eff1(client.tagResource(a))
     override def untagResource(a: UntagResourceRequest): M[UntagResourceResponse]                                                 = eff1(client.untagResource(a))
+    override def updateAccountSettings(a: UpdateAccountSettingsRequest): M[UpdateAccountSettingsResponse]                         = eff1(client.updateAccountSettings(a))
+    override def updateMaxRecordSize(a: UpdateMaxRecordSizeRequest): M[UpdateMaxRecordSizeResponse]                               = eff1(client.updateMaxRecordSize(a))
     override def updateShardCount(a: UpdateShardCountRequest): M[UpdateShardCountResponse]                                        = eff1(client.updateShardCount(a))
     override def updateStreamMode(a: UpdateStreamModeRequest): M[UpdateStreamModeResponse]                                        = eff1(client.updateStreamMode(a))
+    override def updateStreamWarmThroughput(a: UpdateStreamWarmThroughputRequest): M[UpdateStreamWarmThroughputResponse]          = eff1(client.updateStreamWarmThroughput(a))
     override def waiter: M[KinesisAsyncWaiter]                                                                                    = primitive1(client.waiter)
 
   }

@@ -19,8 +19,8 @@ import software.amazon.awssdk.services.dynamodb.waiters.DynamoDbAsyncWaiter
 
 object Interpreter {
 
-  def apply[M[_]](implicit
-      am: Async[M]
+  def apply[M[_]](
+      implicit am: Async[M]
   ): Interpreter[M] =
     new Interpreter[M] {
       val asyncM: Async[M] = am
@@ -47,7 +47,7 @@ trait Interpreter[M[_]] { outer =>
   private def eff1[J, A](fut: => CompletableFuture[A]): M[A] =
     asyncM.fromCompletableFuture(asyncM.delay(fut))
 
-  // Interpreters // scalafmt: off
+  // Interpreters
   trait DynamoDbAsyncClientInterpreter extends DynamoDbAsyncClientOp[Kleisli[M, DynamoDbAsyncClient, *]] {
 
     // domain-specific operations are implemented in terms of `primitive`

@@ -62,6 +62,7 @@ trait S3AsyncClientOp[F[_]] {
   def deleteObjectTagging(a: DeleteObjectTaggingRequest): F[DeleteObjectTaggingResponse]
   def deleteObjects(a: DeleteObjectsRequest): F[DeleteObjectsResponse]
   def deletePublicAccessBlock(a: DeletePublicAccessBlockRequest): F[DeletePublicAccessBlockResponse]
+  def getBucketAbac(a: GetBucketAbacRequest): F[GetBucketAbacResponse]
   def getBucketAccelerateConfiguration(
       a: GetBucketAccelerateConfigurationRequest
   ): F[GetBucketAccelerateConfigurationResponse]
@@ -143,6 +144,7 @@ trait S3AsyncClientOp[F[_]] {
   def listObjectsV2Paginator(a: ListObjectsV2Request): F[ListObjectsV2Publisher]
   def listParts(a: ListPartsRequest): F[ListPartsResponse]
   def listPartsPaginator(a: ListPartsRequest): F[ListPartsPublisher]
+  def putBucketAbac(a: PutBucketAbacRequest): F[PutBucketAbacResponse]
   def putBucketAccelerateConfiguration(
       a: PutBucketAccelerateConfigurationRequest
   ): F[PutBucketAccelerateConfigurationResponse]

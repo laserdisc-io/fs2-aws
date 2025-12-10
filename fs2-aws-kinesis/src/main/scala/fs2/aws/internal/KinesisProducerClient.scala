@@ -8,8 +8,8 @@ import software.amazon.kinesis.producer.{KinesisProducer, KinesisProducerConfigu
 import java.nio.ByteBuffer
 
 trait KinesisProducerClient[F[_]] {
-  def putData(streamName: String, partitionKey: String, data: ByteBuffer)(implicit
-      F: Sync[F]
+  def putData(streamName: String, partitionKey: String, data: ByteBuffer)(
+      implicit F: Sync[F]
   ): F[ListenableFuture[UserRecordResult]]
 }
 
@@ -29,8 +29,8 @@ class KinesisProducerClientImpl[F[_]](config: Option[KinesisProducerConfiguratio
 
   private lazy val client = new KinesisProducer(config.getOrElse(defaultConfig))
 
-  override def putData(streamName: String, partitionKey: String, data: ByteBuffer)(implicit
-      F: Sync[F]
+  override def putData(streamName: String, partitionKey: String, data: ByteBuffer)(
+      implicit F: Sync[F]
   ): F[ListenableFuture[UserRecordResult]] =
     F.delay(client.addUserRecord(streamName, partitionKey, data))
 }

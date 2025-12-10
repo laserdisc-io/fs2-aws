@@ -17,6 +17,7 @@ trait KinesisAsyncClientOp[F[_]] {
   def deleteResourcePolicy(a: DeleteResourcePolicyRequest): F[DeleteResourcePolicyResponse]
   def deleteStream(a: DeleteStreamRequest): F[DeleteStreamResponse]
   def deregisterStreamConsumer(a: DeregisterStreamConsumerRequest): F[DeregisterStreamConsumerResponse]
+  def describeAccountSettings(a: DescribeAccountSettingsRequest): F[DescribeAccountSettingsResponse]
   def describeLimits: F[DescribeLimitsResponse]
   def describeLimits(a: DescribeLimitsRequest): F[DescribeLimitsResponse]
   def describeStream(a: DescribeStreamRequest): F[DescribeStreamResponse]
@@ -50,8 +51,11 @@ trait KinesisAsyncClientOp[F[_]] {
   def subscribeToShard(a: SubscribeToShardRequest, b: SubscribeToShardResponseHandler): F[Void]
   def tagResource(a: TagResourceRequest): F[TagResourceResponse]
   def untagResource(a: UntagResourceRequest): F[UntagResourceResponse]
+  def updateAccountSettings(a: UpdateAccountSettingsRequest): F[UpdateAccountSettingsResponse]
+  def updateMaxRecordSize(a: UpdateMaxRecordSizeRequest): F[UpdateMaxRecordSizeResponse]
   def updateShardCount(a: UpdateShardCountRequest): F[UpdateShardCountResponse]
   def updateStreamMode(a: UpdateStreamModeRequest): F[UpdateStreamModeResponse]
+  def updateStreamWarmThroughput(a: UpdateStreamWarmThroughputRequest): F[UpdateStreamWarmThroughputResponse]
   def waiter: F[KinesisAsyncWaiter]
 
 }

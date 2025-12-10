@@ -14,8 +14,8 @@ import software.amazon.awssdk.services.sqs.paginators.ListQueuesPublisher
 
 object Interpreter {
 
-  def apply[M[_]](implicit
-      am: Async[M]
+  def apply[M[_]](
+      implicit am: Async[M]
   ): Interpreter[M] =
     new Interpreter[M] {
       val asyncM: Async[M] = am
@@ -42,7 +42,7 @@ trait Interpreter[M[_]] { outer =>
   private def eff1[J, A](fut: => CompletableFuture[A]): M[A] =
     asyncM.fromCompletableFuture(asyncM.delay(fut))
 
-  // Interpreters // scalafmt: off
+  // Interpreters
   trait SqsAsyncClientInterpreter extends SqsAsyncClientOp[Kleisli[M, SqsAsyncClient, *]] {
 
     // domain-specific operations are implemented in terms of `primitive`

@@ -77,7 +77,7 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
     name                     := "fs2-aws-examples",
     coverageMinimumStmtTotal := 0,
     Dependencies.Logging,
-    Dependencies.Trace4Cats,
+    Dependencies.Trace4Cats
 //    Dependencies.ScanamoCirce("3.7.0")
   )
   .settings(commonSettings)
