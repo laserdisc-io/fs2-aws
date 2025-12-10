@@ -5,6 +5,8 @@ import software.amazon.awssdk.services.kinesis.model.*
 import software.amazon.awssdk.services.kinesis.paginators.{ListStreamConsumersPublisher, ListStreamsPublisher}
 import software.amazon.awssdk.services.kinesis.waiters.KinesisAsyncWaiter
 
+import java.lang.String
+
 trait KinesisAsyncClientOp[F[_]] {
   // KinesisAsyncClient
   def addTagsToStream(a: AddTagsToStreamRequest): F[AddTagsToStreamResponse]
@@ -32,6 +34,7 @@ trait KinesisAsyncClientOp[F[_]] {
   def listStreams(a: ListStreamsRequest): F[ListStreamsResponse]
   def listStreamsPaginator: F[ListStreamsPublisher]
   def listStreamsPaginator(a: ListStreamsRequest): F[ListStreamsPublisher]
+  def listTagsForResource(a: ListTagsForResourceRequest): F[ListTagsForResourceResponse]
   def listTagsForStream(a: ListTagsForStreamRequest): F[ListTagsForStreamResponse]
   def mergeShards(a: MergeShardsRequest): F[MergeShardsResponse]
   def putRecord(a: PutRecordRequest): F[PutRecordResponse]
@@ -45,6 +48,8 @@ trait KinesisAsyncClientOp[F[_]] {
   def startStreamEncryption(a: StartStreamEncryptionRequest): F[StartStreamEncryptionResponse]
   def stopStreamEncryption(a: StopStreamEncryptionRequest): F[StopStreamEncryptionResponse]
   def subscribeToShard(a: SubscribeToShardRequest, b: SubscribeToShardResponseHandler): F[Void]
+  def tagResource(a: TagResourceRequest): F[TagResourceResponse]
+  def untagResource(a: UntagResourceRequest): F[UntagResourceResponse]
   def updateShardCount(a: UpdateShardCountRequest): F[UpdateShardCountResponse]
   def updateStreamMode(a: UpdateStreamModeRequest): F[UpdateStreamModeResponse]
   def waiter: F[KinesisAsyncWaiter]

@@ -4,6 +4,8 @@ import software.amazon.awssdk.services.sns.SnsServiceClientConfiguration
 import software.amazon.awssdk.services.sns.model.*
 import software.amazon.awssdk.services.sns.paginators.*
 
+import java.lang.String
+
 trait SnsAsyncClientOp[F[_]] {
   // SnsAsyncClient
   def addPermission(a: AddPermissionRequest): F[AddPermissionResponse]

@@ -3,7 +3,9 @@ package io.laserdisc.pure.sqs.tagless
 import software.amazon.awssdk.services.sqs.SqsServiceClientConfiguration
 import software.amazon.awssdk.services.sqs.batchmanager.SqsAsyncBatchManager
 import software.amazon.awssdk.services.sqs.model.*
-import software.amazon.awssdk.services.sqs.paginators.*
+import software.amazon.awssdk.services.sqs.paginators.{ListDeadLetterSourceQueuesPublisher, ListQueuesPublisher}
+
+import java.lang.String
 
 trait SqsAsyncClientOp[F[_]] {
   // SqsAsyncClient

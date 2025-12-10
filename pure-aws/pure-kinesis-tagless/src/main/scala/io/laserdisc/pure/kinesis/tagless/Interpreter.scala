@@ -74,6 +74,7 @@ trait Interpreter[M[_]] { outer =>
     override def listStreams(a: ListStreamsRequest)                       = eff(_.listStreams(a))
     override def listStreamsPaginator                                     = primitive(_.listStreamsPaginator)
     override def listStreamsPaginator(a: ListStreamsRequest)              = primitive(_.listStreamsPaginator(a))
+    override def listTagsForResource(a: ListTagsForResourceRequest)       = eff(_.listTagsForResource(a))
     override def listTagsForStream(a: ListTagsForStreamRequest)           = eff(_.listTagsForStream(a))
     override def mergeShards(a: MergeShardsRequest)                       = eff(_.mergeShards(a))
     override def putRecord(a: PutRecordRequest)                           = eff(_.putRecord(a))
@@ -89,6 +90,8 @@ trait Interpreter[M[_]] { outer =>
     override def subscribeToShard(a: SubscribeToShardRequest, b: SubscribeToShardResponseHandler) = eff(
       _.subscribeToShard(a, b)
     )
+    override def tagResource(a: TagResourceRequest)                                 = eff(_.tagResource(a))
+    override def untagResource(a: UntagResourceRequest)                             = eff(_.untagResource(a))
     override def updateShardCount(a: UpdateShardCountRequest)                       = eff(_.updateShardCount(a))
     override def updateStreamMode(a: UpdateStreamModeRequest)                       = eff(_.updateStreamMode(a))
     override def waiter                                                             = primitive(_.waiter)
@@ -130,6 +133,8 @@ trait Interpreter[M[_]] { outer =>
         override def listStreamsPaginator                        = Kleisli(e => primitive1(f(e).listStreamsPaginator))
         override def listStreamsPaginator(a: ListStreamsRequest) =
           Kleisli(e => primitive1(f(e).listStreamsPaginator(a)))
+        override def listTagsForResource(a: ListTagsForResourceRequest) =
+          Kleisli(e => eff1(f(e).listTagsForResource(a)))
         override def listTagsForStream(a: ListTagsForStreamRequest) = Kleisli(e => eff1(f(e).listTagsForStream(a)))
         override def mergeShards(a: MergeShardsRequest)             = Kleisli(e => eff1(f(e).mergeShards(a)))
         override def putRecord(a: PutRecordRequest)                 = Kleisli(e => eff1(f(e).putRecord(a)))
@@ -148,6 +153,8 @@ trait Interpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).stopStreamEncryption(a)))
         override def subscribeToShard(a: SubscribeToShardRequest, b: SubscribeToShardResponseHandler) =
           Kleisli(e => eff1(f(e).subscribeToShard(a, b)))
+        override def tagResource(a: TagResourceRequest)           = Kleisli(e => eff1(f(e).tagResource(a)))
+        override def untagResource(a: UntagResourceRequest)       = Kleisli(e => eff1(f(e).untagResource(a)))
         override def updateShardCount(a: UpdateShardCountRequest) = Kleisli(e => eff1(f(e).updateShardCount(a)))
         override def updateStreamMode(a: UpdateStreamModeRequest) = Kleisli(e => eff1(f(e).updateStreamMode(a)))
         override def waiter                                       = Kleisli(e => primitive1(f(e).waiter))
@@ -193,6 +200,7 @@ trait Interpreter[M[_]] { outer =>
     override def listStreams(a: ListStreamsRequest)                       = eff1(client.listStreams(a))
     override def listStreamsPaginator                                     = primitive1(client.listStreamsPaginator)
     override def listStreamsPaginator(a: ListStreamsRequest)              = primitive1(client.listStreamsPaginator(a))
+    override def listTagsForResource(a: ListTagsForResourceRequest)       = eff1(client.listTagsForResource(a))
     override def listTagsForStream(a: ListTagsForStreamRequest)           = eff1(client.listTagsForStream(a))
     override def mergeShards(a: MergeShardsRequest)                       = eff1(client.mergeShards(a))
     override def putRecord(a: PutRecordRequest)                           = eff1(client.putRecord(a))
@@ -208,6 +216,8 @@ trait Interpreter[M[_]] { outer =>
     override def subscribeToShard(a: SubscribeToShardRequest, b: SubscribeToShardResponseHandler) = eff1(
       client.subscribeToShard(a, b)
     )
+    override def tagResource(a: TagResourceRequest)           = eff1(client.tagResource(a))
+    override def untagResource(a: UntagResourceRequest)       = eff1(client.untagResource(a))
     override def updateShardCount(a: UpdateShardCountRequest) = eff1(client.updateShardCount(a))
     override def updateStreamMode(a: UpdateStreamModeRequest) = eff1(client.updateStreamMode(a))
     override def waiter                                       = primitive1(client.waiter)

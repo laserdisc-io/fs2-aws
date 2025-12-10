@@ -5,6 +5,8 @@ import software.amazon.awssdk.services.cloudwatch.model.*
 import software.amazon.awssdk.services.cloudwatch.paginators.*
 import software.amazon.awssdk.services.cloudwatch.waiters.CloudWatchAsyncWaiter
 
+import java.lang.String
+
 trait CloudWatchAsyncClientOp[F[_]] {
   // CloudWatchAsyncClient
   def close: F[Unit]
@@ -13,6 +15,7 @@ trait CloudWatchAsyncClientOp[F[_]] {
   def deleteDashboards(a: DeleteDashboardsRequest): F[DeleteDashboardsResponse]
   def deleteInsightRules(a: DeleteInsightRulesRequest): F[DeleteInsightRulesResponse]
   def deleteMetricStream(a: DeleteMetricStreamRequest): F[DeleteMetricStreamResponse]
+  def describeAlarmContributors(a: DescribeAlarmContributorsRequest): F[DescribeAlarmContributorsResponse]
   def describeAlarmHistory: F[DescribeAlarmHistoryResponse]
   def describeAlarmHistory(a: DescribeAlarmHistoryRequest): F[DescribeAlarmHistoryResponse]
   def describeAlarmHistoryPaginator: F[DescribeAlarmHistoryPublisher]

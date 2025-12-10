@@ -43,15 +43,16 @@ trait Interpreter[M[_]] { outer =>
   trait CloudWatchAsyncClientInterpreter extends CloudWatchAsyncClientOp[Kleisli[M, CloudWatchAsyncClient, *]] {
 
     // domain-specific operations are implemented in terms of `primitive`
-    override def close                                                  = primitive(_.close)
-    override def deleteAlarms(a: DeleteAlarmsRequest)                   = eff(_.deleteAlarms(a))
-    override def deleteAnomalyDetector(a: DeleteAnomalyDetectorRequest) = eff(_.deleteAnomalyDetector(a))
-    override def deleteDashboards(a: DeleteDashboardsRequest)           = eff(_.deleteDashboards(a))
-    override def deleteInsightRules(a: DeleteInsightRulesRequest)       = eff(_.deleteInsightRules(a))
-    override def deleteMetricStream(a: DeleteMetricStreamRequest)       = eff(_.deleteMetricStream(a))
-    override def describeAlarmHistory                                   = eff(_.describeAlarmHistory)
-    override def describeAlarmHistory(a: DescribeAlarmHistoryRequest)   = eff(_.describeAlarmHistory(a))
-    override def describeAlarmHistoryPaginator                          = primitive(_.describeAlarmHistoryPaginator)
+    override def close                                                          = primitive(_.close)
+    override def deleteAlarms(a: DeleteAlarmsRequest)                           = eff(_.deleteAlarms(a))
+    override def deleteAnomalyDetector(a: DeleteAnomalyDetectorRequest)         = eff(_.deleteAnomalyDetector(a))
+    override def deleteDashboards(a: DeleteDashboardsRequest)                   = eff(_.deleteDashboards(a))
+    override def deleteInsightRules(a: DeleteInsightRulesRequest)               = eff(_.deleteInsightRules(a))
+    override def deleteMetricStream(a: DeleteMetricStreamRequest)               = eff(_.deleteMetricStream(a))
+    override def describeAlarmContributors(a: DescribeAlarmContributorsRequest) = eff(_.describeAlarmContributors(a))
+    override def describeAlarmHistory                                           = eff(_.describeAlarmHistory)
+    override def describeAlarmHistory(a: DescribeAlarmHistoryRequest)           = eff(_.describeAlarmHistory(a))
+    override def describeAlarmHistoryPaginator = primitive(_.describeAlarmHistoryPaginator)
     override def describeAlarmHistoryPaginator(a: DescribeAlarmHistoryRequest) = primitive(
       _.describeAlarmHistoryPaginator(a)
     )
@@ -119,7 +120,9 @@ trait Interpreter[M[_]] { outer =>
         override def deleteDashboards(a: DeleteDashboardsRequest)     = Kleisli(e => eff1(f(e).deleteDashboards(a)))
         override def deleteInsightRules(a: DeleteInsightRulesRequest) = Kleisli(e => eff1(f(e).deleteInsightRules(a)))
         override def deleteMetricStream(a: DeleteMetricStreamRequest) = Kleisli(e => eff1(f(e).deleteMetricStream(a)))
-        override def describeAlarmHistory                             = Kleisli(e => eff1(f(e).describeAlarmHistory))
+        override def describeAlarmContributors(a: DescribeAlarmContributorsRequest) =
+          Kleisli(e => eff1(f(e).describeAlarmContributors(a)))
+        override def describeAlarmHistory = Kleisli(e => eff1(f(e).describeAlarmHistory))
         override def describeAlarmHistory(a: DescribeAlarmHistoryRequest) =
           Kleisli(e => eff1(f(e).describeAlarmHistory(a)))
         override def describeAlarmHistoryPaginator = Kleisli(e => primitive1(f(e).describeAlarmHistoryPaginator))
@@ -203,15 +206,18 @@ trait Interpreter[M[_]] { outer =>
   def create(client: CloudWatchAsyncClient): CloudWatchAsyncClientOp[M] = new CloudWatchAsyncClientOp[M] {
 
     // domain-specific operations are implemented in terms of `primitive`
-    override def close                                                  = primitive1(client.close)
-    override def deleteAlarms(a: DeleteAlarmsRequest)                   = eff1(client.deleteAlarms(a))
-    override def deleteAnomalyDetector(a: DeleteAnomalyDetectorRequest) = eff1(client.deleteAnomalyDetector(a))
-    override def deleteDashboards(a: DeleteDashboardsRequest)           = eff1(client.deleteDashboards(a))
-    override def deleteInsightRules(a: DeleteInsightRulesRequest)       = eff1(client.deleteInsightRules(a))
-    override def deleteMetricStream(a: DeleteMetricStreamRequest)       = eff1(client.deleteMetricStream(a))
-    override def describeAlarmHistory                                   = eff1(client.describeAlarmHistory)
-    override def describeAlarmHistory(a: DescribeAlarmHistoryRequest)   = eff1(client.describeAlarmHistory(a))
-    override def describeAlarmHistoryPaginator = primitive1(client.describeAlarmHistoryPaginator)
+    override def close                                                          = primitive1(client.close)
+    override def deleteAlarms(a: DeleteAlarmsRequest)                           = eff1(client.deleteAlarms(a))
+    override def deleteAnomalyDetector(a: DeleteAnomalyDetectorRequest)         = eff1(client.deleteAnomalyDetector(a))
+    override def deleteDashboards(a: DeleteDashboardsRequest)                   = eff1(client.deleteDashboards(a))
+    override def deleteInsightRules(a: DeleteInsightRulesRequest)               = eff1(client.deleteInsightRules(a))
+    override def deleteMetricStream(a: DeleteMetricStreamRequest)               = eff1(client.deleteMetricStream(a))
+    override def describeAlarmContributors(a: DescribeAlarmContributorsRequest) = eff1(
+      client.describeAlarmContributors(a)
+    )
+    override def describeAlarmHistory                                 = eff1(client.describeAlarmHistory)
+    override def describeAlarmHistory(a: DescribeAlarmHistoryRequest) = eff1(client.describeAlarmHistory(a))
+    override def describeAlarmHistoryPaginator                        = primitive1(client.describeAlarmHistoryPaginator)
     override def describeAlarmHistoryPaginator(a: DescribeAlarmHistoryRequest) = primitive1(
       client.describeAlarmHistoryPaginator(a)
     )
