@@ -5,7 +5,6 @@ import software.amazon.awssdk.services.kinesis.model.*
 import software.amazon.awssdk.services.kinesis.paginators.{ListStreamConsumersPublisher, ListStreamsPublisher}
 import software.amazon.awssdk.services.kinesis.waiters.KinesisAsyncWaiter
 
-import java.lang.String
 
 trait KinesisAsyncClientOp[F[_]] {
   // KinesisAsyncClient
