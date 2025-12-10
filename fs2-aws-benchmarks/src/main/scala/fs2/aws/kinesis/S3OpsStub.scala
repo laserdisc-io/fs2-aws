@@ -326,4 +326,26 @@ class S3OpsStub extends S3AsyncClientOp[IO] {
   override def listBucketsPaginator: IO[ListBucketsPublisher] = ???
 
   override def listBucketsPaginator(a: ListBucketsRequest): IO[ListBucketsPublisher] = ???
+
+  override def createBucketMetadataConfiguration(
+      a: CreateBucketMetadataConfigurationRequest
+  ): IO[CreateBucketMetadataConfigurationResponse] = ???
+
+  override def deleteBucketMetadataConfiguration(
+      a: DeleteBucketMetadataConfigurationRequest
+  ): IO[DeleteBucketMetadataConfigurationResponse] = ???
+
+  override def getBucketMetadataConfiguration(
+      a: GetBucketMetadataConfigurationRequest
+  ): IO[GetBucketMetadataConfigurationResponse] = ???
+
+  override def renameObject(a: RenameObjectRequest): IO[RenameObjectResponse] = ???
+
+  override def updateBucketMetadataInventoryTableConfiguration(
+      a: UpdateBucketMetadataInventoryTableConfigurationRequest
+  ): IO[UpdateBucketMetadataInventoryTableConfigurationResponse] = ???
+
+  override def updateBucketMetadataJournalTableConfiguration(
+      a: UpdateBucketMetadataJournalTableConfigurationRequest
+  ): IO[UpdateBucketMetadataJournalTableConfigurationResponse] = ???
 }

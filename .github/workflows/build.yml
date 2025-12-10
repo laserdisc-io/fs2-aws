@@ -2,19 +2,20 @@ name: Build
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [ main, series/6.x ]
   push:
-    branches: [ main ]
+    branches: [ main, series/6.x ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: Set up JDK
-        uses: olafurpg/setup-scala@v11
+      - uses: actions/setup-java@v5
         with:
-          java-version: adopt@1.11
+          distribution: 'corretto'
+          java-version: '17'
+      - uses: sbt/setup-sbt@v1
       - name: Cache SBT
         uses: actions/cache@v4
         with:

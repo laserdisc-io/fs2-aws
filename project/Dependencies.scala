@@ -5,16 +5,16 @@ import sbt.{Def, _}
 object Dependencies {
 
   object V {
-    val AwsSdk           = "2.33.13"
+    val AwsSdk           = "2.40.5"
     val Circe            = "0.14.15"
-    val Munit            = "1.2.0"
+    val Munit            = "1.2.1"
     val Fs2              = "3.12.2"
     val Refined          = "0.11.3"
     val ScalaTest        = "3.2.19"
     val MockitoScalaTest = "1.17.5"
-    val MockitoCore      = "5.20.0"
+    val MockitoCore      = "5.21.0"
     val CE               = "3.6.3"
-    val Logback          = "1.5.19"
+    val Logback          = "1.5.21"
     val SLF4J            = "2.0.17"
     val Log4Cats         = "2.7.1"
   }
@@ -26,6 +26,8 @@ object Dependencies {
 
   val CatsEffect = libraryDependencies += "org.typelevel" %% "cats-effect" % V.CE
 
+  // warning - upgrading this past 2.6.0 hits https://github.com/awslabs/amazon-kinesis-producer/issues/608
+  // the fix is to migrate to the AWS SDK v2 based KPL - which is a major change, and coming in fs2-aws 7.x
   val KinesisClient = libraryDependencies += "software.amazon.kinesis" % "amazon-kinesis-client" % "2.6.0"
 
   val KinesisProducer = libraryDependencies += "com.amazonaws" % "amazon-kinesis-producer" % "0.15.12"
