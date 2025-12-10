@@ -1,7 +1,7 @@
 name: Release
 on:
   push:
-    branches: [main]
+    branches: [ main, series/6.x ]
     tags: ["*"]
 jobs:
   publish:
