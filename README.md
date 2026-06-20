@@ -1,7 +1,7 @@
 # fs2-aws
 ![Build](https://github.com/laserdisc-io/fs2-aws/workflows/Build/badge.svg)
 ![Release](https://github.com/laserdisc-io/fs2-aws/workflows/Release/badge.svg)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.laserdisc/fs2-aws_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.laserdisc/fs2-aws_2.12)
+[![fs2-aws-core Scala version support](https://index.scala-lang.org/laserdisc-io/fs2-aws/fs2-aws-core/latest-by-scala-version.svg?platform=jvm)](https://index.scala-lang.org/laserdisc-io/fs2-aws/fs2-aws-core)
 [![Coverage Status](https://coveralls.io/repos/github/laserdisc-io/fs2-aws/badge.svg?branch=main)](https://coveralls.io/github/laserdisc-io/fs2-aws?branch=main)
 
 fs2 Streaming utilities for interacting with AWS
