@@ -28,17 +28,16 @@ case class KinesisAppConfig(
 
 object KinesisAppConfig {
 
-  def localstackConfig: Either[String, KinesisAppConfig] = (AppName("test-app"), StreamName("example")).mapN {
-    case (appName, streamName) =>
-      KinesisAppConfig(
-        awsHost = "localhost",
-        awsPort = 4566L,
-        awsRegion = Region.US_EAST_1,
-        awsKeyId = "dummy",
-        awsKey = "dummy",
-        streamName = streamName,
-        appName = appName
-      )
+  def localstackConfig: Either[String, KinesisAppConfig] = (AppName("test-app"), StreamName("example")).mapN { case (appName, streamName) =>
+    KinesisAppConfig(
+      awsHost = "localhost",
+      awsPort = 4566L,
+      awsRegion = Region.US_EAST_1,
+      awsKeyId = "dummy",
+      awsKey = "dummy",
+      streamName = streamName,
+      appName = appName
+    )
   }
 
   object syntax {

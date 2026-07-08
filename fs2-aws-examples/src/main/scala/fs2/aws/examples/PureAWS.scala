@@ -9,12 +9,7 @@ import io.laserdisc.pure.sqs.tagless.{Interpreter as SQSInterpreter, SqsAsyncCli
 import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.sns.SnsAsyncClient
-import software.amazon.awssdk.services.sns.model.{
-  CreateTopicRequest,
-  DeleteTopicRequest,
-  PublishRequest,
-  SubscribeRequest
-}
+import software.amazon.awssdk.services.sns.model.{CreateTopicRequest, DeleteTopicRequest, PublishRequest, SubscribeRequest}
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.*
 
@@ -24,8 +19,8 @@ import scala.jdk.CollectionConverters.*
 
 case class Environment(sqs: SqsAsyncClient, sns: SnsAsyncClient)
 object PureAWSKleisli extends IOApp {
-  private val creds = AwsBasicCredentials.create("accesskey", "secretkey")
-  private val port  = 4566
+  private val creds                                  = AwsBasicCredentials.create("accesskey", "secretkey")
+  private val port                                   = 4566
   override def run(args: List[String]): IO[ExitCode] =
     // Kleisli example
     resourcesK.use { e =>

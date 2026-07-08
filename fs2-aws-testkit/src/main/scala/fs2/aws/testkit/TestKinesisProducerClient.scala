@@ -11,9 +11,7 @@ import io.circe.jawn.CirceSupportParser
 
 import scala.jdk.CollectionConverters.*
 
-case class TestKinesisProducerClient[F[_], T](state: Ref[F, List[T]])(implicit
-    decoder: Decoder[T]
-) extends KinesisProducerClient[F] {
+case class TestKinesisProducerClient[F[_], T](state: Ref[F, List[T]])(implicit decoder: Decoder[T]) extends KinesisProducerClient[F] {
   override def putData(
       streamName: String,
       partitionKey: String,

@@ -5,7 +5,6 @@ import software.amazon.awssdk.services.kinesis.model.*
 import software.amazon.awssdk.services.kinesis.paginators.{ListStreamConsumersPublisher, ListStreamsPublisher}
 import software.amazon.awssdk.services.kinesis.waiters.KinesisAsyncWaiter
 
-
 trait KinesisAsyncClientOp[F[_]] {
   // KinesisAsyncClient
   def addTagsToStream(a: AddTagsToStreamRequest): F[AddTagsToStreamResponse]

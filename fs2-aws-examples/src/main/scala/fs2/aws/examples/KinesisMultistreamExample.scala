@@ -36,9 +36,7 @@ object KinesisMultistreamExample extends IOApp {
       appConfig.dynamoSdkBuilder,
       appConfig.cloudwatchSdkBuilder,
       appConfig.streamNames
-    ).use(stream =>
-      program[IO](stream.flatMap(Stream.chunk), appConfig.producerConfig, appConfig.streamNames).as(ExitCode.Success)
-    )
+    ).use(stream => program[IO](stream.flatMap(Stream.chunk), appConfig.producerConfig, appConfig.streamNames).as(ExitCode.Success))
   }
   private def kAlgebraResource[F[_]: Async: Concurrent](
       kac: KinesisAsyncClientBuilder,
@@ -47,8 +45,8 @@ object KinesisMultistreamExample extends IOApp {
       streamNames: List[String]
   ) =
     for {
-      k <- KinesisInterpreter[F].KinesisAsyncClientResource(kac)
-      _ <- streamNames.map(streamName => disposableStream(KinesisInterpreter[F].create(k), streamName)).parSequence_
+      k       <- KinesisInterpreter[F].KinesisAsyncClientResource(kac)
+      _       <- streamNames.map(streamName => disposableStream(KinesisInterpreter[F].create(k), streamName)).parSequence_
       appName <- Resource.eval(Sync[F].fromEither(AppName("kinesis-multistream-example").leftMap(new Throwable(_))))
       stream  <- DefaultKinesisStreamBuilder[F]()
         .withAppName(appName)
