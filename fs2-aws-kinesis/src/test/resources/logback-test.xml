@@ -14,8 +14,10 @@
         <appender-ref ref="ASYNCSTDOUT" />
     </root>
 
+
     <!-- if you turn root to INFO, these turn a few off that make the logs too verbose -->
     <logger name="io.netty" level="OFF"/>
+    <logger name="software.amazon" level="WARN"/>
     <logger name="software.amazon.awssdk.http" level="OFF"/>
     <logger name="software.amazon.kinesis.producer.LogInputStreamReader" level="OFF"/>
     <logger name="software.amazon.kinesis.coordinator.Scheduler" level="OFF"/>
