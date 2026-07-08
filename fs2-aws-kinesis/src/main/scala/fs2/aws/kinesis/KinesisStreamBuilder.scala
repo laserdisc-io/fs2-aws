@@ -27,7 +27,7 @@ abstract class KinesisStreamBuilder[F[_]] {
     protected def next(build: Resource[F, KinesisAsyncClient]): DynamoDBClientPhase
 
     def withKinesisClient(kinesisClient: Resource[F, KinesisAsyncClient]): DynamoDBClientPhase = next(kinesisClient)
-    def withKinesisClient(kinesisClient: KinesisAsyncClient): DynamoDBClientPhase = next(Resource.pure(kinesisClient))
+    def withKinesisClient(kinesisClient: KinesisAsyncClient): DynamoDBClientPhase              = next(Resource.pure(kinesisClient))
   }
 
   trait DynamoDBClientPhase {
@@ -139,8 +139,8 @@ abstract class KinesisStreamBuilder[F[_]] {
     protected def next(streamName: Resource[F, StreamName]): SingleStreamTrackerPhase
     protected def nextMulti: MultiStreamTrackerPhase
 
-    def withMultiStreamTracker: MultiStreamTrackerPhase                           = nextMulti
-    def withSingleStreamTracker(streamName: StreamName): SingleStreamTrackerPhase = next(Resource.pure(streamName))
+    def withMultiStreamTracker: MultiStreamTrackerPhase                                        = nextMulti
+    def withSingleStreamTracker(streamName: StreamName): SingleStreamTrackerPhase              = next(Resource.pure(streamName))
     def withSingleStreamTracker(streamName: Resource[F, StreamName]): SingleStreamTrackerPhase = next(streamName)
 
   }

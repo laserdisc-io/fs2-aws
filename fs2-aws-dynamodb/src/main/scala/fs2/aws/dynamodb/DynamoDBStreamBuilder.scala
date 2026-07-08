@@ -118,7 +118,7 @@ abstract class DynamoDBStreamBuilder[F[_]] {
             AmazonCloudWatch,
             IRecordProcessorFactory
         ) => Resource[F, Worker]
-    ): FinalPhase = next(scheduler)
+    ): FinalPhase                        = next(scheduler)
     def withDefaultScheduler: FinalPhase = next(defaultScheduler)
   }
 

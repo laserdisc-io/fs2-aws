@@ -12,8 +12,8 @@ case class TestKinesisProducerClient[F[_]](
     respondWith: UserRecordResult,
     ops: F[ListenableFuture[UserRecordResult]]
 ) extends KinesisProducerClient[F] {
-  override def putData(streamName: String, partitionKey: String, data: ByteBuffer)(implicit
-      e: Sync[F]
+  override def putData(streamName: String, partitionKey: String, data: ByteBuffer)(
+      implicit e: Sync[F]
   ): F[ListenableFuture[UserRecordResult]] = {
     KinesisStub.save(data)
     ops

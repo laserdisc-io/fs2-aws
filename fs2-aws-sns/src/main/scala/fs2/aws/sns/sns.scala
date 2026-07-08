@@ -25,9 +25,7 @@ object sns {
     ): F[SNS[F]] =
       new SNS[F] {
         override def publish(topicArn: String): Pipe[F, MsgBody, PublishResponse] =
-          _.mapAsyncUnordered(settings.concurrency)(msg =>
-            sns.publish(PublishRequest.builder().message(msg).topicArn(topicArn).build())
-          )
+          _.mapAsyncUnordered(settings.concurrency)(msg => sns.publish(PublishRequest.builder().message(msg).topicArn(topicArn).build()))
       }.pure[F]
   }
 }

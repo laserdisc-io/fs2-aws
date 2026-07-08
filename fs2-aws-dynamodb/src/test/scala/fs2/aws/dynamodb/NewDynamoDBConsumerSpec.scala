@@ -6,17 +6,12 @@ import cats.implicits.*
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch
 import com.amazonaws.services.dynamodbv2.model.{AttributeValue, StreamRecord}
 import com.amazonaws.services.dynamodbv2.streamsadapter.model.RecordAdapter
-import com.amazonaws.services.dynamodbv2.{AmazonDynamoDB, AmazonDynamoDBStreams, model}
+import com.amazonaws.services.dynamodbv2.{model, AmazonDynamoDB, AmazonDynamoDBStreams}
 import com.amazonaws.services.kinesis.clientlibrary.config.KinesisClientLibConfigurator
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.{IRecordProcessor, IRecordProcessorFactory}
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{ShutdownReason, Worker}
-import com.amazonaws.services.kinesis.clientlibrary.types.{
-  ExtendedSequenceNumber,
-  InitializationInput,
-  ProcessRecordsInput,
-  ShutdownInput
-}
+import com.amazonaws.services.kinesis.clientlibrary.types.{ExtendedSequenceNumber, InitializationInput, ProcessRecordsInput, ShutdownInput}
 import com.amazonaws.services.kinesis.model.Record
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.*
@@ -34,12 +29,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.*
 import scala.jdk.CollectionConverters.*
 
-class NewDynamoDBConsumerSpec
-    extends AnyFlatSpec
-    with Matchers
-    with BeforeAndAfterEach
-    with Eventually
-    with ScalaFutures {
+class NewDynamoDBConsumerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach with Eventually with ScalaFutures {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
   implicit val runtime: IORuntime   = IORuntime.global
@@ -148,8 +138,7 @@ class NewDynamoDBConsumerSpec
     res should have size 60
   }
 
-  it should "not drop messages in case of back-pressure with multiple shard workers" in new WorkerContext
-    with TestData {
+  it should "not drop messages in case of back-pressure with multiple shard workers" in new WorkerContext with TestData {
 
     val res =
       streamResource
@@ -423,7 +412,7 @@ class NewDynamoDBConsumerSpec
         .map(i => if (errorStream) throw new Exception("boom") else i)
         .onFinalize(IO.delay(latch.countDown()))
 
-    private val propertiesInputStream: InputStream = getClass.getResourceAsStream("/kinesis.properties")
+    private val propertiesInputStream: InputStream                      = getClass.getResourceAsStream("/kinesis.properties")
     val streamResource: Resource[IO, fs2.Stream[IO, CommittableRecord]] = DefaultDynamoStreamBuilder[IO]()
       .withKinesisClientConf(new KinesisClientLibConfigurator().getConfiguration(propertiesInputStream))
       .withDynamoDBStreams(mock(classOf[AmazonDynamoDBStreams]))

@@ -10,11 +10,7 @@ import com.amazonaws.services.cloudwatch.AmazonCloudWatch
 import com.amazonaws.services.dynamodbv2.streamsadapter.{AmazonDynamoDBStreamsAdapterClient, StreamsWorkerFactory}
 import com.amazonaws.services.dynamodbv2.{AmazonDynamoDB, AmazonDynamoDBStreams}
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.IRecordProcessorFactory
-import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{
-  InitialPositionInStream,
-  KinesisClientLibConfiguration,
-  Worker
-}
+import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{InitialPositionInStream, KinesisClientLibConfiguration, Worker}
 import com.amazonaws.services.kinesis.model.Record
 import fs2.aws.core
 import fs2.concurrent.SignallingRef

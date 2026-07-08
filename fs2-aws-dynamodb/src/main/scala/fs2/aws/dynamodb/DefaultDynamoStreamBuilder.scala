@@ -139,7 +139,7 @@ class DefaultDynamoStreamBuilder[F[_]: Async: Concurrent] extends DynamoDBStream
         factory     <- processorFactory(dispatcher, queue)
         scheduler   <- s(kinesisConf, ddbStreams, ddb, cw, factory)
         signal      <- Resource.eval(SignallingRef[F, Boolean](false))
-        _ <- Resource.make(Concurrent[F].start(Async[F].blocking(scheduler.run()).flatTap(_ => signal.set(true))))(_ =>
+        _           <- Resource.make(Concurrent[F].start(Async[F].blocking(scheduler.run()).flatTap(_ => signal.set(true))))(_ =>
           Async[F].blocking(scheduler.shutdown())
         )
 

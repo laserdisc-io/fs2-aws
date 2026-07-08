@@ -2,7 +2,7 @@ package fs2.aws.s3
 
 import cats.effect.*
 import cats.implicits.*
-import cats.{Applicative, ApplicativeThrow, ~>}
+import cats.{~>, Applicative, ApplicativeThrow}
 import eu.timepit.refined.auto.*
 import fs2.aws.s3.S3.MultipartETagValidation
 import fs2.aws.s3.S3.MultipartETagValidation.ETagValidated
@@ -180,9 +180,7 @@ object S3 {
                 )
                 .build(),
               AsyncRequestBody.fromBytes(bytes)
-            ).map(resp =>
-              PartProcessingOutcome(resp.eTag(), i.toInt, multipartETagValidation.map(_ => checksumPart(bytes)))
-            )
+            ).map(resp => PartProcessingOutcome(resp.eTag(), i.toInt, multipartETagValidation.map(_ => checksumPart(bytes))))
           }
 
         def uploadEmptyFile = s3.putObject(
@@ -386,8 +384,7 @@ object S3 {
               requestModifier,
               multipartETagValidation.map { validator =>
                 new MultipartETagValidation[F] {
-                  override def validateETag(eTag: ETag, maxPartNumber: PartNumber, checksum: Checksum)
-                      : F[ETagValidated] =
+                  override def validateETag(eTag: ETag, maxPartNumber: PartNumber, checksum: Checksum): F[ETagValidated] =
                     gToF(validator.validateETag(eTag, maxPartNumber, checksum))
                 }
               }

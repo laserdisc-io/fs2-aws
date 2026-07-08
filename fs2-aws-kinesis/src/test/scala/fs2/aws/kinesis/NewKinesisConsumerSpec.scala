@@ -30,12 +30,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.*
 import scala.jdk.CollectionConverters.*
 
-class NewKinesisConsumerSpec
-    extends AnyFlatSpec
-    with Matchers
-    with BeforeAndAfterEach
-    with Eventually
-    with ScalaFutures {
+class NewKinesisConsumerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach with Eventually with ScalaFutures {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
   implicit val runtime: IORuntime   = IORuntime.global
@@ -151,8 +146,7 @@ class NewKinesisConsumerSpec
     res should have size 60
   }
 
-  it should "not drop messages in case of back-pressure with multiple shard workers" in new WorkerContext
-    with TestData {
+  it should "not drop messages in case of back-pressure with multiple shard workers" in new WorkerContext with TestData {
 
     val res = (
       streamResource.use(stream => stream.flatMap(fs2.Stream.chunk).take(10).compile.toList),
