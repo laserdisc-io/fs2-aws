@@ -1,8 +1,6 @@
 package fs2.aws.examples
 
 import cats.implicits.*
-import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
-import com.amazonaws.services.kinesis.producer.KinesisProducerConfiguration
 import fs2.aws.kinesis.{KinesisConsumerSettings, Polling}
 import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import software.amazon.awssdk.awscore.client.builder.AwsClientBuilder
@@ -11,6 +9,7 @@ import software.amazon.awssdk.services.cloudwatch.{CloudWatchAsyncClient, CloudW
 import software.amazon.awssdk.services.dynamodb.{DynamoDbAsyncClient, DynamoDbAsyncClientBuilder}
 import software.amazon.awssdk.services.kinesis.{KinesisAsyncClient, KinesisAsyncClientBuilder}
 import software.amazon.kinesis.common.InitialPositionInStream
+import software.amazon.kinesis.producer.KinesisProducerConfiguration
 
 import java.net.URI
 import java.util.Date
@@ -67,10 +66,10 @@ object KinesisMultistreamAppConfig {
       )
 
       def producerConfig: KinesisProducerConfiguration = {
-        val credentials = new BasicAWSCredentials(kinesisAppConfig.awsKeyId, kinesisAppConfig.awsKey)
+        val credentials = AwsBasicCredentials.create(kinesisAppConfig.awsKeyId, kinesisAppConfig.awsKey)
 
         new KinesisProducerConfiguration()
-          .setCredentialsProvider(new AWSStaticCredentialsProvider(credentials))
+          .setCredentialsProvider(StaticCredentialsProvider.create(credentials))
           .setStsPort(kinesisAppConfig.awsPort)
           .setStsEndpoint(kinesisAppConfig.awsHost)
           .setKinesisEndpoint(kinesisAppConfig.awsHost)

@@ -1,11 +1,20 @@
 package io.laserdisc.pure.sns.tagless
 
-import software.amazon.awssdk.services.sns.SnsServiceClientConfiguration
 import software.amazon.awssdk.services.sns.model.*
-import software.amazon.awssdk.services.sns.paginators.*
 
+import software.amazon.awssdk.services.sns.paginators.ListEndpointsByPlatformApplicationPublisher
+import software.amazon.awssdk.services.sns.paginators.ListOriginationNumbersPublisher
+import software.amazon.awssdk.services.sns.paginators.ListPhoneNumbersOptedOutPublisher
+import software.amazon.awssdk.services.sns.paginators.ListPlatformApplicationsPublisher
+import software.amazon.awssdk.services.sns.paginators.ListSMSSandboxPhoneNumbersPublisher
+import software.amazon.awssdk.services.sns.paginators.ListSubscriptionsByTopicPublisher
+import software.amazon.awssdk.services.sns.paginators.ListSubscriptionsPublisher
+import software.amazon.awssdk.services.sns.paginators.ListTopicsPublisher
+
+/** The effectful equivalents for operations detected from [[software.amazon.awssdk.services.sns.SnsAsyncClient]]
+  */
 trait SnsAsyncClientOp[F[_]] {
-  // SnsAsyncClient
+
   def addPermission(a: AddPermissionRequest): F[AddPermissionResponse]
   def checkIfPhoneNumberIsOptedOut(a: CheckIfPhoneNumberIsOptedOutRequest): F[CheckIfPhoneNumberIsOptedOutResponse]
   def close: F[Unit]
@@ -62,7 +71,6 @@ trait SnsAsyncClientOp[F[_]] {
   def publishBatch(a: PublishBatchRequest): F[PublishBatchResponse]
   def putDataProtectionPolicy(a: PutDataProtectionPolicyRequest): F[PutDataProtectionPolicyResponse]
   def removePermission(a: RemovePermissionRequest): F[RemovePermissionResponse]
-  def serviceClientConfiguration: F[SnsServiceClientConfiguration]
   def serviceName: F[String]
   def setEndpointAttributes(a: SetEndpointAttributesRequest): F[SetEndpointAttributesResponse]
   def setPlatformApplicationAttributes(

@@ -1,12 +1,15 @@
 package io.laserdisc.pure.sqs.tagless
 
-import software.amazon.awssdk.services.sqs.SqsServiceClientConfiguration
-import software.amazon.awssdk.services.sqs.batchmanager.SqsAsyncBatchManager
 import software.amazon.awssdk.services.sqs.model.*
-import software.amazon.awssdk.services.sqs.paginators.*
 
+import software.amazon.awssdk.services.sqs.batchmanager.SqsAsyncBatchManager
+import software.amazon.awssdk.services.sqs.paginators.ListDeadLetterSourceQueuesPublisher
+import software.amazon.awssdk.services.sqs.paginators.ListQueuesPublisher
+
+/** The effectful equivalents for operations detected from [[software.amazon.awssdk.services.sqs.SqsAsyncClient]]
+  */
 trait SqsAsyncClientOp[F[_]] {
-  // SqsAsyncClient
+
   def addPermission(a: AddPermissionRequest): F[AddPermissionResponse]
   def batchManager: F[SqsAsyncBatchManager]
   def cancelMessageMoveTask(a: CancelMessageMoveTaskRequest): F[CancelMessageMoveTaskResponse]
@@ -32,7 +35,6 @@ trait SqsAsyncClientOp[F[_]] {
   def removePermission(a: RemovePermissionRequest): F[RemovePermissionResponse]
   def sendMessage(a: SendMessageRequest): F[SendMessageResponse]
   def sendMessageBatch(a: SendMessageBatchRequest): F[SendMessageBatchResponse]
-  def serviceClientConfiguration: F[SqsServiceClientConfiguration]
   def serviceName: F[String]
   def setQueueAttributes(a: SetQueueAttributesRequest): F[SetQueueAttributesResponse]
   def startMessageMoveTask(a: StartMessageMoveTaskRequest): F[StartMessageMoveTaskResponse]
