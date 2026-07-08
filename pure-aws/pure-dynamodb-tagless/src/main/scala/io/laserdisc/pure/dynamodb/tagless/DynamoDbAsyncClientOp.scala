@@ -5,7 +5,6 @@ import software.amazon.awssdk.services.dynamodb.model.*
 import software.amazon.awssdk.services.dynamodb.paginators.*
 import software.amazon.awssdk.services.dynamodb.waiters.DynamoDbAsyncWaiter
 
-
 trait DynamoDbAsyncClientOp[F[_]] {
   // DynamoDbAsyncClient
   def batchExecuteStatement(a: BatchExecuteStatementRequest): F[BatchExecuteStatementResponse]

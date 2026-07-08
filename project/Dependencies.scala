@@ -5,18 +5,18 @@ import sbt.{Def, _}
 object Dependencies {
 
   object V {
-    val AwsSdk           = "2.40.5"
-    val Circe            = "0.14.15"
-    val Munit            = "1.2.1"
-    val Fs2              = "3.12.2"
-    val Refined          = "0.11.3"
-    val ScalaTest        = "3.2.19"
+    val AwsSdk           = "2.47.1"
+    val Circe            = "0.14.16"
+    val Munit            = "1.3.3"
+    val Fs2              = "3.13.0"
+    val Refined          = "0.11.4"
+    val ScalaTest        = "3.2.20"
     val MockitoScalaTest = "1.17.5"
-    val MockitoCore      = "5.21.0"
-    val CE               = "3.6.3"
-    val Logback          = "1.5.21"
-    val SLF4J            = "2.0.17"
-    val Log4Cats         = "2.7.1"
+    val MockitoCore      = "5.23.0"
+    val CE               = "3.7.0"
+    val Logback          = "1.5.37"
+    val SLF4J            = "2.0.18"
+    val Log4Cats         = "2.8.0"
   }
 
   val Fs2Core = libraryDependencies ++= Seq(
@@ -32,7 +32,7 @@ object Dependencies {
 
   val KinesisProducer = libraryDependencies += "com.amazonaws" % "amazon-kinesis-producer" % "0.15.12"
 
-  val newTypes = libraryDependencies += "io.monix" %% "newtypes-core" % "0.3.0"
+  val newTypes = libraryDependencies += "io.monix" %% "newtypes-core" % "0.4.1"
 
   def AWS(artifact: String, config: Configuration = Compile): Def.Setting[Seq[ModuleID]] =
     libraryDependencies += "software.amazon.awssdk" % artifact % V.AwsSdk % config
@@ -42,7 +42,7 @@ object Dependencies {
   val Testing = libraryDependencies ++= (
     Seq(
       "org.scalameta" %% "munit"             % V.Munit,
-      "org.typelevel" %% "munit-cats-effect" % "2.1.0",
+      "org.typelevel" %% "munit-cats-effect" % "2.2.0",
       "org.scalatest" %% "scalatest"         % V.ScalaTest,
       "org.mockito"    % "mockito-core"      % V.MockitoCore,
       "org.typelevel" %% "cats-effect"       % V.CE,
