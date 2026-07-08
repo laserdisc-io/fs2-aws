@@ -5,7 +5,7 @@ import sbt.{Def, _}
 object Dependencies {
 
   object V {
-    val AwsSdk           = "2.46.15"
+    val AwsSdk           = "2.47.1"
     val Circe            = "0.14.16"
     val Munit            = "1.3.3"
     val Fs2              = "3.13.0"
@@ -32,7 +32,7 @@ object Dependencies {
 
   val KinesisProducer = libraryDependencies += "com.amazonaws" % "amazon-kinesis-producer" % "0.15.12"
 
-  val newTypes = libraryDependencies += "io.monix" %% "newtypes-core" % "0.3.0"
+  val newTypes = libraryDependencies += "io.monix" %% "newtypes-core" % "0.4.1"
 
   def AWS(artifact: String, config: Configuration = Compile): Def.Setting[Seq[ModuleID]] =
     libraryDependencies += "software.amazon.awssdk" % artifact % V.AwsSdk % config
