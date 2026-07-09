@@ -6,8 +6,6 @@ package kinesis
 
 import java.util.concurrent.Semaphore
 import org.slf4j.{Logger, LoggerFactory}
-import software.amazon.kinesis.exceptions.ShutdownException
-import software.amazon.kinesis.leases.exceptions.InvalidStateException
 import software.amazon.kinesis.lifecycle.events.*
 import software.amazon.kinesis.processor.ShardRecordProcessor
 import software.amazon.kinesis.retrieval.kpl.ExtendedSequenceNumber
@@ -48,17 +46,12 @@ private[aws] class ChunkedRecordProcessor(cb: Chunk[CommittableRecord] => Unit) 
 
   override def shutdownRequested(shutdownRequestedInput: ShutdownRequestedInput): Unit = {
 
-    logger.info(s"Shutting down processor for shard $shardId, attempting one last checkpoint");
-
+    logger.info(s"Shutting down processor for shard $shardId.")
     isShutdown = true
 
-    // https://docs.aws.amazon.com/streams/latest/dev/kcl-migration-from-2-3.html
-    try
-      shutdownRequestedInput.checkpointer().checkpoint()
-    catch {
-      case e @ (_: ShutdownException | _: InvalidStateException) =>
-        logger.error(s"Unable to checkpoint shard $shardId before shutdown", e);
-    }
+    /* Note: Don't checkpoint here. Doing that here would checkpoint the last record handed
+     * off to the fs2 stream buffer, which may or may not have processed it yet.  If the
+     * stream hasn't processed it yet, this could result in silent data loss. */
   }
 
   override def processRecords(processRecordsInput: ProcessRecordsInput): Unit = {
