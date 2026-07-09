@@ -2,6 +2,7 @@ package io.laserdisc.pure.kinesis.tagless
 
 import software.amazon.awssdk.services.kinesis.model.*
 
+import software.amazon.awssdk.services.kinesis.KinesisServiceClientConfiguration
 import software.amazon.awssdk.services.kinesis.paginators.ListStreamConsumersPublisher
 import software.amazon.awssdk.services.kinesis.paginators.ListStreamsPublisher
 import software.amazon.awssdk.services.kinesis.waiters.KinesisAsyncWaiter
@@ -44,6 +45,7 @@ trait KinesisAsyncClientOp[F[_]] {
   def putResourcePolicy(a: PutResourcePolicyRequest): F[PutResourcePolicyResponse]
   def registerStreamConsumer(a: RegisterStreamConsumerRequest): F[RegisterStreamConsumerResponse]
   def removeTagsFromStream(a: RemoveTagsFromStreamRequest): F[RemoveTagsFromStreamResponse]
+  def serviceClientConfiguration: F[KinesisServiceClientConfiguration]
   def serviceName: F[String]
   def splitShard(a: SplitShardRequest): F[SplitShardResponse]
   def startStreamEncryption(a: StartStreamEncryptionRequest): F[StartStreamEncryptionResponse]

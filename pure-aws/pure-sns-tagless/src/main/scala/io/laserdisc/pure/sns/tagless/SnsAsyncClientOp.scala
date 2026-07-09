@@ -2,6 +2,7 @@ package io.laserdisc.pure.sns.tagless
 
 import software.amazon.awssdk.services.sns.model.*
 
+import software.amazon.awssdk.services.sns.SnsServiceClientConfiguration
 import software.amazon.awssdk.services.sns.paginators.ListEndpointsByPlatformApplicationPublisher
 import software.amazon.awssdk.services.sns.paginators.ListOriginationNumbersPublisher
 import software.amazon.awssdk.services.sns.paginators.ListPhoneNumbersOptedOutPublisher
@@ -29,20 +30,14 @@ trait SnsAsyncClientOp[F[_]] {
   def deleteTopic(a: DeleteTopicRequest): F[DeleteTopicResponse]
   def getDataProtectionPolicy(a: GetDataProtectionPolicyRequest): F[GetDataProtectionPolicyResponse]
   def getEndpointAttributes(a: GetEndpointAttributesRequest): F[GetEndpointAttributesResponse]
-  def getPlatformApplicationAttributes(
-      a: GetPlatformApplicationAttributesRequest
-  ): F[GetPlatformApplicationAttributesResponse]
+  def getPlatformApplicationAttributes(a: GetPlatformApplicationAttributesRequest): F[GetPlatformApplicationAttributesResponse]
   def getSMSAttributes: F[GetSmsAttributesResponse]
   def getSMSAttributes(a: GetSmsAttributesRequest): F[GetSmsAttributesResponse]
   def getSMSSandboxAccountStatus(a: GetSmsSandboxAccountStatusRequest): F[GetSmsSandboxAccountStatusResponse]
   def getSubscriptionAttributes(a: GetSubscriptionAttributesRequest): F[GetSubscriptionAttributesResponse]
   def getTopicAttributes(a: GetTopicAttributesRequest): F[GetTopicAttributesResponse]
-  def listEndpointsByPlatformApplication(
-      a: ListEndpointsByPlatformApplicationRequest
-  ): F[ListEndpointsByPlatformApplicationResponse]
-  def listEndpointsByPlatformApplicationPaginator(
-      a: ListEndpointsByPlatformApplicationRequest
-  ): F[ListEndpointsByPlatformApplicationPublisher]
+  def listEndpointsByPlatformApplication(a: ListEndpointsByPlatformApplicationRequest): F[ListEndpointsByPlatformApplicationResponse]
+  def listEndpointsByPlatformApplicationPaginator(a: ListEndpointsByPlatformApplicationRequest): F[ListEndpointsByPlatformApplicationPublisher]
   def listOriginationNumbers(a: ListOriginationNumbersRequest): F[ListOriginationNumbersResponse]
   def listOriginationNumbersPaginator(a: ListOriginationNumbersRequest): F[ListOriginationNumbersPublisher]
   def listPhoneNumbersOptedOut: F[ListPhoneNumbersOptedOutResponse]
@@ -71,11 +66,10 @@ trait SnsAsyncClientOp[F[_]] {
   def publishBatch(a: PublishBatchRequest): F[PublishBatchResponse]
   def putDataProtectionPolicy(a: PutDataProtectionPolicyRequest): F[PutDataProtectionPolicyResponse]
   def removePermission(a: RemovePermissionRequest): F[RemovePermissionResponse]
+  def serviceClientConfiguration: F[SnsServiceClientConfiguration]
   def serviceName: F[String]
   def setEndpointAttributes(a: SetEndpointAttributesRequest): F[SetEndpointAttributesResponse]
-  def setPlatformApplicationAttributes(
-      a: SetPlatformApplicationAttributesRequest
-  ): F[SetPlatformApplicationAttributesResponse]
+  def setPlatformApplicationAttributes(a: SetPlatformApplicationAttributesRequest): F[SetPlatformApplicationAttributesResponse]
   def setSMSAttributes(a: SetSmsAttributesRequest): F[SetSmsAttributesResponse]
   def setSubscriptionAttributes(a: SetSubscriptionAttributesRequest): F[SetSubscriptionAttributesResponse]
   def setTopicAttributes(a: SetTopicAttributesRequest): F[SetTopicAttributesResponse]

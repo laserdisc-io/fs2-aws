@@ -1,3 +1,4 @@
+import StringOps.*
 import sbt.*
 import sbt.Keys.*
 
@@ -6,7 +7,6 @@ import java.lang.reflect.*
 import java.util.concurrent.CompletableFuture
 import java.util.function.Consumer
 import scala.reflect.ClassTag
-import StringOps.*
 
 object TaglessGen {
 
@@ -221,10 +221,22 @@ class TaglessGen[T](
   def methods(c: Class[?]): List[Method] =
     closure(c)
       .flatMap(_.getDeclaredMethods.toList)
-      .distinct
       .filterNot(_.isStatic)
       .filter(_.getAnnotation(classOf[Deprecated]) == null)
       .filterNot(_.getParameterTypes.contains(classOf[Consumer[?]]))
+      .groupBy(m => (m.getName, m.getParameterTypes.toList))
+      .values
+      .flatMap { ms =>
+        // dedupe covariant-return overrides, keep the most specific subtype in the returns
+        ms.filter(m =>
+          !ms.exists(other =>
+            other.getReturnType != m.getReturnType &&
+              m.getReturnType.isAssignableFrom(other.getReturnType)
+          )
+        )
+      }
+      .toList
+      .distinct
 
   // Ctor values for all methods in of A plus superclasses, interfaces, etc.
   def ctors: List[Ctor] =
@@ -239,7 +251,6 @@ class TaglessGen[T](
             Ctor(m, i)
           }
       }
-      .filter(_.mname != "serviceClientConfiguration") // multiple instances with varying return signatures
       .sortBy(c => (c.mname, c.index))
 
   // Fully qualified rename, if any

@@ -8,6 +8,7 @@ import software.amazon.awssdk.services.sqs.*
 import software.amazon.awssdk.services.sqs.model.*
 
 // Types referenced
+import software.amazon.awssdk.services.sqs.SqsServiceClientConfiguration
 import software.amazon.awssdk.services.sqs.batchmanager.SqsAsyncBatchManager
 import software.amazon.awssdk.services.sqs.paginators.ListDeadLetterSourceQueuesPublisher
 import software.amazon.awssdk.services.sqs.paginators.ListQueuesPublisher
@@ -71,6 +72,7 @@ trait Interpreter[M[_]] { outer =>
     override def removePermission(a: RemovePermissionRequest): Kleisli[M, SqsAsyncClient, RemovePermissionResponse]                                         = eff(_.removePermission(a))
     override def sendMessage(a: SendMessageRequest): Kleisli[M, SqsAsyncClient, SendMessageResponse]                                                        = eff(_.sendMessage(a))
     override def sendMessageBatch(a: SendMessageBatchRequest): Kleisli[M, SqsAsyncClient, SendMessageBatchResponse]                                         = eff(_.sendMessageBatch(a))
+    override def serviceClientConfiguration: Kleisli[M, SqsAsyncClient, SqsServiceClientConfiguration]                                                      = primitive(_.serviceClientConfiguration)
     override def serviceName: Kleisli[M, SqsAsyncClient, String]                                                                                            = primitive(_.serviceName)
     override def setQueueAttributes(a: SetQueueAttributesRequest): Kleisli[M, SqsAsyncClient, SetQueueAttributesResponse]                                   = eff(_.setQueueAttributes(a))
     override def startMessageMoveTask(a: StartMessageMoveTaskRequest): Kleisli[M, SqsAsyncClient, StartMessageMoveTaskResponse]                             = eff(_.startMessageMoveTask(a))
@@ -104,6 +106,7 @@ trait Interpreter[M[_]] { outer =>
         override def removePermission(a: RemovePermissionRequest): Kleisli[M, E, RemovePermissionResponse]                                         = Kleisli(e => eff1(f(e).removePermission(a)))
         override def sendMessage(a: SendMessageRequest): Kleisli[M, E, SendMessageResponse]                                                        = Kleisli(e => eff1(f(e).sendMessage(a)))
         override def sendMessageBatch(a: SendMessageBatchRequest): Kleisli[M, E, SendMessageBatchResponse]                                         = Kleisli(e => eff1(f(e).sendMessageBatch(a)))
+        override def serviceClientConfiguration: Kleisli[M, E, SqsServiceClientConfiguration]                                                      = Kleisli(e => primitive1(f(e).serviceClientConfiguration))
         override def serviceName: Kleisli[M, E, String]                                                                                            = Kleisli(e => primitive1(f(e).serviceName))
         override def setQueueAttributes(a: SetQueueAttributesRequest): Kleisli[M, E, SetQueueAttributesResponse]                                   = Kleisli(e => eff1(f(e).setQueueAttributes(a)))
         override def startMessageMoveTask(a: StartMessageMoveTaskRequest): Kleisli[M, E, StartMessageMoveTaskResponse]                             = Kleisli(e => eff1(f(e).startMessageMoveTask(a)))
@@ -144,6 +147,7 @@ trait Interpreter[M[_]] { outer =>
     override def removePermission(a: RemovePermissionRequest): M[RemovePermissionResponse]                                         = eff1(client.removePermission(a))
     override def sendMessage(a: SendMessageRequest): M[SendMessageResponse]                                                        = eff1(client.sendMessage(a))
     override def sendMessageBatch(a: SendMessageBatchRequest): M[SendMessageBatchResponse]                                         = eff1(client.sendMessageBatch(a))
+    override def serviceClientConfiguration: M[SqsServiceClientConfiguration]                                                      = primitive1(client.serviceClientConfiguration)
     override def serviceName: M[String]                                                                                            = primitive1(client.serviceName)
     override def setQueueAttributes(a: SetQueueAttributesRequest): M[SetQueueAttributesResponse]                                   = eff1(client.setQueueAttributes(a))
     override def startMessageMoveTask(a: StartMessageMoveTaskRequest): M[StartMessageMoveTaskResponse]                             = eff1(client.startMessageMoveTask(a))

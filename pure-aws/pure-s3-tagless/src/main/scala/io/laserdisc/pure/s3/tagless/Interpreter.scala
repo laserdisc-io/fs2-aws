@@ -11,6 +11,7 @@ import software.amazon.awssdk.services.s3.model.*
 import java.nio.file.Path
 import software.amazon.awssdk.core.async.AsyncRequestBody
 import software.amazon.awssdk.core.async.AsyncResponseTransformer
+import software.amazon.awssdk.services.s3.S3ServiceClientConfiguration
 import software.amazon.awssdk.services.s3.S3Utilities
 import software.amazon.awssdk.services.s3.paginators.ListBucketsPublisher
 import software.amazon.awssdk.services.s3.paginators.ListDirectoryBucketsPublisher
@@ -167,6 +168,7 @@ trait Interpreter[M[_]] { outer =>
     override def renameObject(a: RenameObjectRequest): Kleisli[M, S3AsyncClient, RenameObjectResponse]                                                                                                          = eff(_.renameObject(a))
     override def restoreObject(a: RestoreObjectRequest): Kleisli[M, S3AsyncClient, RestoreObjectResponse]                                                                                                       = eff(_.restoreObject(a))
     override def selectObjectContent(a: SelectObjectContentRequest, b: SelectObjectContentResponseHandler): Kleisli[M, S3AsyncClient, Void]                                                                     = eff(_.selectObjectContent(a, b))
+    override def serviceClientConfiguration: Kleisli[M, S3AsyncClient, S3ServiceClientConfiguration]                                                                                                            = primitive(_.serviceClientConfiguration)
     override def serviceName: Kleisli[M, S3AsyncClient, String]                                                                                                                                                 = primitive(_.serviceName)
     override def updateBucketMetadataInventoryTableConfiguration(a: UpdateBucketMetadataInventoryTableConfigurationRequest): Kleisli[M, S3AsyncClient, UpdateBucketMetadataInventoryTableConfigurationResponse] = eff(_.updateBucketMetadataInventoryTableConfiguration(a))
     override def updateBucketMetadataJournalTableConfiguration(a: UpdateBucketMetadataJournalTableConfigurationRequest): Kleisli[M, S3AsyncClient, UpdateBucketMetadataJournalTableConfigurationResponse]       = eff(_.updateBucketMetadataJournalTableConfiguration(a))
@@ -293,6 +295,7 @@ trait Interpreter[M[_]] { outer =>
         override def renameObject(a: RenameObjectRequest): Kleisli[M, E, RenameObjectResponse]                                                                                                          = Kleisli(e => eff1(f(e).renameObject(a)))
         override def restoreObject(a: RestoreObjectRequest): Kleisli[M, E, RestoreObjectResponse]                                                                                                       = Kleisli(e => eff1(f(e).restoreObject(a)))
         override def selectObjectContent(a: SelectObjectContentRequest, b: SelectObjectContentResponseHandler): Kleisli[M, E, Void]                                                                     = Kleisli(e => eff1(f(e).selectObjectContent(a, b)))
+        override def serviceClientConfiguration: Kleisli[M, E, S3ServiceClientConfiguration]                                                                                                            = Kleisli(e => primitive1(f(e).serviceClientConfiguration))
         override def serviceName: Kleisli[M, E, String]                                                                                                                                                 = Kleisli(e => primitive1(f(e).serviceName))
         override def updateBucketMetadataInventoryTableConfiguration(a: UpdateBucketMetadataInventoryTableConfigurationRequest): Kleisli[M, E, UpdateBucketMetadataInventoryTableConfigurationResponse] = Kleisli(e => eff1(f(e).updateBucketMetadataInventoryTableConfiguration(a)))
         override def updateBucketMetadataJournalTableConfiguration(a: UpdateBucketMetadataJournalTableConfigurationRequest): Kleisli[M, E, UpdateBucketMetadataJournalTableConfigurationResponse]       = Kleisli(e => eff1(f(e).updateBucketMetadataJournalTableConfiguration(a)))
@@ -426,6 +429,7 @@ trait Interpreter[M[_]] { outer =>
     override def renameObject(a: RenameObjectRequest): M[RenameObjectResponse]                                                                                                          = eff1(client.renameObject(a))
     override def restoreObject(a: RestoreObjectRequest): M[RestoreObjectResponse]                                                                                                       = eff1(client.restoreObject(a))
     override def selectObjectContent(a: SelectObjectContentRequest, b: SelectObjectContentResponseHandler): M[Void]                                                                     = eff1(client.selectObjectContent(a, b))
+    override def serviceClientConfiguration: M[S3ServiceClientConfiguration]                                                                                                            = primitive1(client.serviceClientConfiguration)
     override def serviceName: M[String]                                                                                                                                                 = primitive1(client.serviceName)
     override def updateBucketMetadataInventoryTableConfiguration(a: UpdateBucketMetadataInventoryTableConfigurationRequest): M[UpdateBucketMetadataInventoryTableConfigurationResponse] = eff1(client.updateBucketMetadataInventoryTableConfiguration(a))
     override def updateBucketMetadataJournalTableConfiguration(a: UpdateBucketMetadataJournalTableConfigurationRequest): M[UpdateBucketMetadataJournalTableConfigurationResponse]       = eff1(client.updateBucketMetadataJournalTableConfiguration(a))
