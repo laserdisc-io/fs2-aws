@@ -8,6 +8,7 @@ import software.amazon.awssdk.services.cloudwatch.*
 import software.amazon.awssdk.services.cloudwatch.model.*
 
 // Types referenced
+import software.amazon.awssdk.services.cloudwatch.CloudWatchServiceClientConfiguration
 import software.amazon.awssdk.services.cloudwatch.paginators.DescribeAlarmHistoryPublisher
 import software.amazon.awssdk.services.cloudwatch.paginators.DescribeAlarmsPublisher
 import software.amazon.awssdk.services.cloudwatch.paginators.DescribeAnomalyDetectorsPublisher
@@ -105,6 +106,7 @@ trait Interpreter[M[_]] { outer =>
     override def putMetricAlarm(a: PutMetricAlarmRequest): Kleisli[M, CloudWatchAsyncClient, PutMetricAlarmResponse]                                         = eff(_.putMetricAlarm(a))
     override def putMetricData(a: PutMetricDataRequest): Kleisli[M, CloudWatchAsyncClient, PutMetricDataResponse]                                            = eff(_.putMetricData(a))
     override def putMetricStream(a: PutMetricStreamRequest): Kleisli[M, CloudWatchAsyncClient, PutMetricStreamResponse]                                      = eff(_.putMetricStream(a))
+    override def serviceClientConfiguration: Kleisli[M, CloudWatchAsyncClient, CloudWatchServiceClientConfiguration]                                         = primitive(_.serviceClientConfiguration)
     override def serviceName: Kleisli[M, CloudWatchAsyncClient, String]                                                                                      = primitive(_.serviceName)
     override def setAlarmState(a: SetAlarmStateRequest): Kleisli[M, CloudWatchAsyncClient, SetAlarmStateResponse]                                            = eff(_.setAlarmState(a))
     override def startMetricStreams(a: StartMetricStreamsRequest): Kleisli[M, CloudWatchAsyncClient, StartMetricStreamsResponse]                             = eff(_.startMetricStreams(a))
@@ -167,6 +169,7 @@ trait Interpreter[M[_]] { outer =>
         override def putMetricAlarm(a: PutMetricAlarmRequest): Kleisli[M, E, PutMetricAlarmResponse]                                         = Kleisli(e => eff1(f(e).putMetricAlarm(a)))
         override def putMetricData(a: PutMetricDataRequest): Kleisli[M, E, PutMetricDataResponse]                                            = Kleisli(e => eff1(f(e).putMetricData(a)))
         override def putMetricStream(a: PutMetricStreamRequest): Kleisli[M, E, PutMetricStreamResponse]                                      = Kleisli(e => eff1(f(e).putMetricStream(a)))
+        override def serviceClientConfiguration: Kleisli[M, E, CloudWatchServiceClientConfiguration]                                         = Kleisli(e => primitive1(f(e).serviceClientConfiguration))
         override def serviceName: Kleisli[M, E, String]                                                                                      = Kleisli(e => primitive1(f(e).serviceName))
         override def setAlarmState(a: SetAlarmStateRequest): Kleisli[M, E, SetAlarmStateResponse]                                            = Kleisli(e => eff1(f(e).setAlarmState(a)))
         override def startMetricStreams(a: StartMetricStreamsRequest): Kleisli[M, E, StartMetricStreamsResponse]                             = Kleisli(e => eff1(f(e).startMetricStreams(a)))
@@ -236,6 +239,7 @@ trait Interpreter[M[_]] { outer =>
     override def putMetricAlarm(a: PutMetricAlarmRequest): M[PutMetricAlarmResponse]                                         = eff1(client.putMetricAlarm(a))
     override def putMetricData(a: PutMetricDataRequest): M[PutMetricDataResponse]                                            = eff1(client.putMetricData(a))
     override def putMetricStream(a: PutMetricStreamRequest): M[PutMetricStreamResponse]                                      = eff1(client.putMetricStream(a))
+    override def serviceClientConfiguration: M[CloudWatchServiceClientConfiguration]                                         = primitive1(client.serviceClientConfiguration)
     override def serviceName: M[String]                                                                                      = primitive1(client.serviceName)
     override def setAlarmState(a: SetAlarmStateRequest): M[SetAlarmStateResponse]                                            = eff1(client.setAlarmState(a))
     override def startMetricStreams(a: StartMetricStreamsRequest): M[StartMetricStreamsResponse]                             = eff1(client.startMetricStreams(a))

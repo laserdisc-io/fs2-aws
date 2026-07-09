@@ -8,6 +8,7 @@ import software.amazon.awssdk.services.dynamodb.*
 import software.amazon.awssdk.services.dynamodb.model.*
 
 // Types referenced
+import software.amazon.awssdk.services.dynamodb.DynamoDbServiceClientConfiguration
 import software.amazon.awssdk.services.dynamodb.paginators.BatchGetItemPublisher
 import software.amazon.awssdk.services.dynamodb.paginators.ListContributorInsightsPublisher
 import software.amazon.awssdk.services.dynamodb.paginators.ListExportsPublisher
@@ -109,6 +110,7 @@ trait Interpreter[M[_]] { outer =>
     override def restoreTableToPointInTime(a: RestoreTableToPointInTimeRequest): Kleisli[M, DynamoDbAsyncClient, RestoreTableToPointInTimeResponse]                               = eff(_.restoreTableToPointInTime(a))
     override def scan(a: ScanRequest): Kleisli[M, DynamoDbAsyncClient, ScanResponse]                                                                                              = eff(_.scan(a))
     override def scanPaginator(a: ScanRequest): Kleisli[M, DynamoDbAsyncClient, ScanPublisher]                                                                                    = primitive(_.scanPaginator(a))
+    override def serviceClientConfiguration: Kleisli[M, DynamoDbAsyncClient, DynamoDbServiceClientConfiguration]                                                                  = primitive(_.serviceClientConfiguration)
     override def serviceName: Kleisli[M, DynamoDbAsyncClient, String]                                                                                                             = primitive(_.serviceName)
     override def tagResource(a: TagResourceRequest): Kleisli[M, DynamoDbAsyncClient, TagResourceResponse]                                                                         = eff(_.tagResource(a))
     override def transactGetItems(a: TransactGetItemsRequest): Kleisli[M, DynamoDbAsyncClient, TransactGetItemsResponse]                                                          = eff(_.transactGetItems(a))
@@ -185,6 +187,7 @@ trait Interpreter[M[_]] { outer =>
         override def restoreTableToPointInTime(a: RestoreTableToPointInTimeRequest): Kleisli[M, E, RestoreTableToPointInTimeResponse]                               = Kleisli(e => eff1(f(e).restoreTableToPointInTime(a)))
         override def scan(a: ScanRequest): Kleisli[M, E, ScanResponse]                                                                                              = Kleisli(e => eff1(f(e).scan(a)))
         override def scanPaginator(a: ScanRequest): Kleisli[M, E, ScanPublisher]                                                                                    = Kleisli(e => primitive1(f(e).scanPaginator(a)))
+        override def serviceClientConfiguration: Kleisli[M, E, DynamoDbServiceClientConfiguration]                                                                  = Kleisli(e => primitive1(f(e).serviceClientConfiguration))
         override def serviceName: Kleisli[M, E, String]                                                                                                             = Kleisli(e => primitive1(f(e).serviceName))
         override def tagResource(a: TagResourceRequest): Kleisli[M, E, TagResourceResponse]                                                                         = Kleisli(e => eff1(f(e).tagResource(a)))
         override def transactGetItems(a: TransactGetItemsRequest): Kleisli[M, E, TransactGetItemsResponse]                                                          = Kleisli(e => eff1(f(e).transactGetItems(a)))
@@ -268,6 +271,7 @@ trait Interpreter[M[_]] { outer =>
     override def restoreTableToPointInTime(a: RestoreTableToPointInTimeRequest): M[RestoreTableToPointInTimeResponse]                               = eff1(client.restoreTableToPointInTime(a))
     override def scan(a: ScanRequest): M[ScanResponse]                                                                                              = eff1(client.scan(a))
     override def scanPaginator(a: ScanRequest): M[ScanPublisher]                                                                                    = primitive1(client.scanPaginator(a))
+    override def serviceClientConfiguration: M[DynamoDbServiceClientConfiguration]                                                                  = primitive1(client.serviceClientConfiguration)
     override def serviceName: M[String]                                                                                                             = primitive1(client.serviceName)
     override def tagResource(a: TagResourceRequest): M[TagResourceResponse]                                                                         = eff1(client.tagResource(a))
     override def transactGetItems(a: TransactGetItemsRequest): M[TransactGetItemsResponse]                                                          = eff1(client.transactGetItems(a))

@@ -2,6 +2,7 @@ package io.laserdisc.pure.dynamodb.tagless
 
 import software.amazon.awssdk.services.dynamodb.model.*
 
+import software.amazon.awssdk.services.dynamodb.DynamoDbServiceClientConfiguration
 import software.amazon.awssdk.services.dynamodb.paginators.BatchGetItemPublisher
 import software.amazon.awssdk.services.dynamodb.paginators.ListContributorInsightsPublisher
 import software.amazon.awssdk.services.dynamodb.paginators.ListExportsPublisher
@@ -36,22 +37,14 @@ trait DynamoDbAsyncClientOp[F[_]] {
   def describeGlobalTable(a: DescribeGlobalTableRequest): F[DescribeGlobalTableResponse]
   def describeGlobalTableSettings(a: DescribeGlobalTableSettingsRequest): F[DescribeGlobalTableSettingsResponse]
   def describeImport(a: DescribeImportRequest): F[DescribeImportResponse]
-  def describeKinesisStreamingDestination(
-      a: DescribeKinesisStreamingDestinationRequest
-  ): F[DescribeKinesisStreamingDestinationResponse]
+  def describeKinesisStreamingDestination(a: DescribeKinesisStreamingDestinationRequest): F[DescribeKinesisStreamingDestinationResponse]
   def describeLimits: F[DescribeLimitsResponse]
   def describeLimits(a: DescribeLimitsRequest): F[DescribeLimitsResponse]
   def describeTable(a: DescribeTableRequest): F[DescribeTableResponse]
-  def describeTableReplicaAutoScaling(
-      a: DescribeTableReplicaAutoScalingRequest
-  ): F[DescribeTableReplicaAutoScalingResponse]
+  def describeTableReplicaAutoScaling(a: DescribeTableReplicaAutoScalingRequest): F[DescribeTableReplicaAutoScalingResponse]
   def describeTimeToLive(a: DescribeTimeToLiveRequest): F[DescribeTimeToLiveResponse]
-  def disableKinesisStreamingDestination(
-      a: DisableKinesisStreamingDestinationRequest
-  ): F[DisableKinesisStreamingDestinationResponse]
-  def enableKinesisStreamingDestination(
-      a: EnableKinesisStreamingDestinationRequest
-  ): F[EnableKinesisStreamingDestinationResponse]
+  def disableKinesisStreamingDestination(a: DisableKinesisStreamingDestinationRequest): F[DisableKinesisStreamingDestinationResponse]
+  def enableKinesisStreamingDestination(a: EnableKinesisStreamingDestinationRequest): F[EnableKinesisStreamingDestinationResponse]
   def executeStatement(a: ExecuteStatementRequest): F[ExecuteStatementResponse]
   def executeTransaction(a: ExecuteTransactionRequest): F[ExecuteTransactionResponse]
   def exportTableToPointInTime(a: ExportTableToPointInTimeRequest): F[ExportTableToPointInTimeResponse]
@@ -81,6 +74,7 @@ trait DynamoDbAsyncClientOp[F[_]] {
   def restoreTableToPointInTime(a: RestoreTableToPointInTimeRequest): F[RestoreTableToPointInTimeResponse]
   def scan(a: ScanRequest): F[ScanResponse]
   def scanPaginator(a: ScanRequest): F[ScanPublisher]
+  def serviceClientConfiguration: F[DynamoDbServiceClientConfiguration]
   def serviceName: F[String]
   def tagResource(a: TagResourceRequest): F[TagResourceResponse]
   def transactGetItems(a: TransactGetItemsRequest): F[TransactGetItemsResponse]
@@ -91,9 +85,7 @@ trait DynamoDbAsyncClientOp[F[_]] {
   def updateGlobalTable(a: UpdateGlobalTableRequest): F[UpdateGlobalTableResponse]
   def updateGlobalTableSettings(a: UpdateGlobalTableSettingsRequest): F[UpdateGlobalTableSettingsResponse]
   def updateItem(a: UpdateItemRequest): F[UpdateItemResponse]
-  def updateKinesisStreamingDestination(
-      a: UpdateKinesisStreamingDestinationRequest
-  ): F[UpdateKinesisStreamingDestinationResponse]
+  def updateKinesisStreamingDestination(a: UpdateKinesisStreamingDestinationRequest): F[UpdateKinesisStreamingDestinationResponse]
   def updateTable(a: UpdateTableRequest): F[UpdateTableResponse]
   def updateTableReplicaAutoScaling(a: UpdateTableReplicaAutoScalingRequest): F[UpdateTableReplicaAutoScalingResponse]
   def updateTimeToLive(a: UpdateTimeToLiveRequest): F[UpdateTimeToLiveResponse]

@@ -8,6 +8,7 @@ import software.amazon.awssdk.services.kinesis.*
 import software.amazon.awssdk.services.kinesis.model.*
 
 // Types referenced
+import software.amazon.awssdk.services.kinesis.KinesisServiceClientConfiguration
 import software.amazon.awssdk.services.kinesis.paginators.ListStreamConsumersPublisher
 import software.amazon.awssdk.services.kinesis.paginators.ListStreamsPublisher
 import software.amazon.awssdk.services.kinesis.waiters.KinesisAsyncWaiter
@@ -80,6 +81,7 @@ trait Interpreter[M[_]] { outer =>
     override def putResourcePolicy(a: PutResourcePolicyRequest): Kleisli[M, KinesisAsyncClient, PutResourcePolicyResponse]                                     = eff(_.putResourcePolicy(a))
     override def registerStreamConsumer(a: RegisterStreamConsumerRequest): Kleisli[M, KinesisAsyncClient, RegisterStreamConsumerResponse]                      = eff(_.registerStreamConsumer(a))
     override def removeTagsFromStream(a: RemoveTagsFromStreamRequest): Kleisli[M, KinesisAsyncClient, RemoveTagsFromStreamResponse]                            = eff(_.removeTagsFromStream(a))
+    override def serviceClientConfiguration: Kleisli[M, KinesisAsyncClient, KinesisServiceClientConfiguration]                                                 = primitive(_.serviceClientConfiguration)
     override def serviceName: Kleisli[M, KinesisAsyncClient, String]                                                                                           = primitive(_.serviceName)
     override def splitShard(a: SplitShardRequest): Kleisli[M, KinesisAsyncClient, SplitShardResponse]                                                          = eff(_.splitShard(a))
     override def startStreamEncryption(a: StartStreamEncryptionRequest): Kleisli[M, KinesisAsyncClient, StartStreamEncryptionResponse]                         = eff(_.startStreamEncryption(a))
@@ -130,6 +132,7 @@ trait Interpreter[M[_]] { outer =>
         override def putResourcePolicy(a: PutResourcePolicyRequest): Kleisli[M, E, PutResourcePolicyResponse]                                     = Kleisli(e => eff1(f(e).putResourcePolicy(a)))
         override def registerStreamConsumer(a: RegisterStreamConsumerRequest): Kleisli[M, E, RegisterStreamConsumerResponse]                      = Kleisli(e => eff1(f(e).registerStreamConsumer(a)))
         override def removeTagsFromStream(a: RemoveTagsFromStreamRequest): Kleisli[M, E, RemoveTagsFromStreamResponse]                            = Kleisli(e => eff1(f(e).removeTagsFromStream(a)))
+        override def serviceClientConfiguration: Kleisli[M, E, KinesisServiceClientConfiguration]                                                 = Kleisli(e => primitive1(f(e).serviceClientConfiguration))
         override def serviceName: Kleisli[M, E, String]                                                                                           = Kleisli(e => primitive1(f(e).serviceName))
         override def splitShard(a: SplitShardRequest): Kleisli[M, E, SplitShardResponse]                                                          = Kleisli(e => eff1(f(e).splitShard(a)))
         override def startStreamEncryption(a: StartStreamEncryptionRequest): Kleisli[M, E, StartStreamEncryptionResponse]                         = Kleisli(e => eff1(f(e).startStreamEncryption(a)))
@@ -187,6 +190,7 @@ trait Interpreter[M[_]] { outer =>
     override def putResourcePolicy(a: PutResourcePolicyRequest): M[PutResourcePolicyResponse]                                     = eff1(client.putResourcePolicy(a))
     override def registerStreamConsumer(a: RegisterStreamConsumerRequest): M[RegisterStreamConsumerResponse]                      = eff1(client.registerStreamConsumer(a))
     override def removeTagsFromStream(a: RemoveTagsFromStreamRequest): M[RemoveTagsFromStreamResponse]                            = eff1(client.removeTagsFromStream(a))
+    override def serviceClientConfiguration: M[KinesisServiceClientConfiguration]                                                 = primitive1(client.serviceClientConfiguration)
     override def serviceName: M[String]                                                                                           = primitive1(client.serviceName)
     override def splitShard(a: SplitShardRequest): M[SplitShardResponse]                                                          = eff1(client.splitShard(a))
     override def startStreamEncryption(a: StartStreamEncryptionRequest): M[StartStreamEncryptionResponse]                         = eff1(client.startStreamEncryption(a))
