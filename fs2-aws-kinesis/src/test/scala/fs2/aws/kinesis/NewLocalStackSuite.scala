@@ -24,6 +24,8 @@ import software.amazon.awssdk.services.kinesis.model.{
 }
 import software.amazon.awssdk.services.kinesis.{KinesisAsyncClient, KinesisAsyncClientBuilder}
 import software.amazon.kinesis.common.InitialPositionInStream
+import software.amazon.kinesis.coordinator.CoordinatorConfig.ClientVersionConfig.CLIENT_VERSION_CONFIG_3X
+import software.amazon.kinesis.metrics.NullMetricsFactory
 import software.amazon.kinesis.producer.KinesisProducerConfiguration
 
 import java.net.URI
@@ -37,10 +39,8 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
   implicit val ec: ExecutionContext = ExecutionContext.global
   implicit val runtime: IORuntime   = IORuntime.global
 
-  // this is required to make the KCL work with LocalStack
-//  System.setProperty("aws.cborEnabled", "false")
   implicit override val patienceConfig: PatienceConfig =
-    PatienceConfig(timeout = scaled(Span(4, Minutes)), interval = scaled(Span(1, Second)))
+    PatienceConfig(timeout = scaled(Span(2, Minutes)), interval = scaled(Span(1, Second)))
 
   val streamName = "test"
 
@@ -205,7 +205,9 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
       i = KinesisInterpreter[IO]
       k <- i.KinesisAsyncClientResource(kac)
       kinesisInterpreter = i.create(k)
-      kAlgebra           = Kinesis.create[IO](k, d, c)
+      // Use native KCL 3.x mode in tests (no compat migration state-machine overhead).
+      // NullMetricsFactory suppresses CloudWatch publishing — LocalStack returns 500 for putMetricData.
+      kAlgebra = Kinesis.create[IO](k, d, c, CLIENT_VERSION_CONFIG_3X, Some(new NullMetricsFactory()))
       _ <- Resource.make(
         kinesisInterpreter.createStream(CreateStreamRequest.builder().streamName("test").build())
       )(_ => kinesisInterpreter.deleteStream(DeleteStreamRequest.builder().streamName("test").build()).void)
