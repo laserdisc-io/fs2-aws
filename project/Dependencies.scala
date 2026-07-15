@@ -5,16 +5,16 @@ import sbt.{Def, *}
 object Dependencies {
 
   object V {
-    val AwsSdk           = "2.47.1"
+    val AwsSdk           = "2.48.0"
     val Circe            = "0.14.16"
-    val Munit            = "1.3.3"
+    val Munit            = "1.3.4"
     val Fs2              = "3.13.0"
     val Refined          = "0.11.4"
     val ScalaTest        = "3.2.20"
     val MockitoScalaTest = "1.17.5"
     val MockitoCore      = "5.23.0"
     val CE               = "3.7.0"
-    val Logback          = "1.5.37"
+    val Logback          = "1.5.38"
     val SLF4J            = "2.0.18"
     val Log4Cats         = "2.8.0"
   }
