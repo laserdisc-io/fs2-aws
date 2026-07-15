@@ -18,6 +18,7 @@ import software.amazon.kinesis.retrieval.polling.PollingConfig
 
 import java.util.UUID
 import scala.annotation.nowarn
+import scala.concurrent.duration.DurationInt
 
 trait Kinesis[F[_]] {
 
@@ -78,10 +79,23 @@ object Kinesis {
           queue: Queue[F, Chunk[CommittableRecord]],
           signal: SignallingRef[F, Boolean]
       ): fs2.Stream[F, Scheduler] =
-        Stream.bracket {
-          schedulerFactory(() => new ChunkedRecordProcessor(records => dispatcher.unsafeRunSync(queue.offer(records))))
-            .flatTap(s => Concurrent[F].start(Async[F].blocking(s.run()).flatTap(_ => signal.set(true))))
-        }(s => Async[F].blocking(s.shutdown()))
+        Stream
+          .bracket {
+            schedulerFactory(() =>
+              new ChunkedRecordProcessor(records => dispatcher.unsafeRunSync(queue.offer(records)))
+            )
+              .flatMap(s =>
+                Concurrent[F]
+                  .start(Async[F].blocking(s.run()).flatTap(_ => signal.set(true)))
+                  .map(fiber => (s, fiber))
+              )
+          } { case (s, fiber) =>
+            Async[F].fromCompletableFuture(Async[F].delay(s.startGracefulShutdown())).void >>
+              // Shutdown only signals the KCL; join the fiber so run() has fully returned before the
+              // dispatcher/AWS clients are released to avoid any race conditions
+              Async[F].timeoutTo(fiber.join.void, 30.seconds, Async[F].unit)
+          }
+          .map(_._1)
 
       // Instantiate a new bounded queue and concurrently run the queue populator
       // Expose the elements by dequeuing the internal buffer

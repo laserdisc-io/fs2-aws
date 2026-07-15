@@ -4,6 +4,7 @@ import cats.effect.std.{Dispatcher, Queue}
 import cats.effect.{Async, Concurrent, Sync}
 import cats.syntax.either.*
 import cats.syntax.flatMap.*
+import cats.syntax.functor.*
 import fs2.aws.kinesis.models.KinesisModels.{AppName, BufferSize, SchedulerId, StreamName}
 import fs2.concurrent.SignallingRef
 import fs2.{Chunk, Stream}
@@ -16,6 +17,7 @@ import software.amazon.kinesis.coordinator.Scheduler
 import software.amazon.kinesis.processor.*
 
 import java.util.UUID
+import scala.concurrent.duration.DurationInt
 object DefaultKinesisStreamBuilder {
 
   def apply[F[_]: Async: Concurrent](): KinesisStreamBuilder[F]#InitialPhase = {
@@ -266,8 +268,15 @@ class DefaultKinesisStreamBuilder[F[_]: Async: Concurrent] extends KinesisStream
         scheduler <- s(cb)
         signal    <- Resource.eval(SignallingRef[F, Boolean](false))
 
-        _ <- Resource.make(Concurrent[F].start(Async[F].blocking(scheduler.run()).flatTap(_ => signal.set(true))))(_ =>
-          Async[F].blocking(scheduler.shutdown())
+        _ <- Resource.make(
+          Concurrent[F].start(
+            Async[F].blocking(scheduler.run()).flatTap(_ => signal.set(true))
+          )
+        )(fiber =>
+          Async[F].fromCompletableFuture(Async[F].delay(scheduler.startGracefulShutdown())).void >>
+            // Shutdown only signals the KCL; join the fiber so run() has fully returned before the
+            // AWS clients are released to avoid any race conditions
+            Async[F].timeoutTo(fiber.join.void, 30.seconds, Async[F].unit)
         )
 
       } yield (scheduler, queue, signal))
