@@ -89,7 +89,7 @@ class NewKinesisConsumerSpec
       }
     ).parMapN { case (_, _) => () }.unsafeToFuture().futureValue
 
-    verify(mockScheduler, times(1)).shutdown()
+    verify(mockScheduler, times(1)).startGracefulShutdown()
   }
 
   it should "shutdown the worker if the stream terminates" in new WorkerContext(errorStream = true) with TestData {
@@ -111,7 +111,7 @@ class NewKinesisConsumerSpec
       ).parMapN { case (_, _) => () }.unsafeToFuture().futureValue
     }
 
-    verify(mockScheduler, times(1)).shutdown()
+    verify(mockScheduler, times(1)).startGracefulShutdown()
   }
 
   it should "not drop messages in case of back-pressure" in new WorkerContext with TestData {
