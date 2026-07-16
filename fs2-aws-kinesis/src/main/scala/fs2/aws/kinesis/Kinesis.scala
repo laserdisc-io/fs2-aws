@@ -138,13 +138,13 @@ object Kinesis {
       readChunksFromKinesisStream(consumerConfig, schedulerFactory)
   }
 
-  /** Creates a [[Kinesis]] backed by the default KCL scheduler.
+  /** Creates a [[fs2.aws.kinesis.Kinesis]] backed by the default KCL scheduler.
     *
-    * The [[ClientVersionConfig]] is deliberately required rather than defaulted: KCL 3.x changes the
+    * The [[software.amazon.kinesis.coordinator.CoordinatorConfig.ClientVersionConfig]] is deliberately required rather than defaulted: KCL 3.x changes the
     * lease-coordination protocol, and the safe value depends on your deployment. Use
-    * [[ClientVersionConfig.CLIENT_VERSION_CONFIG_COMPATIBLE_WITH_2X]] while workers built against KCL 2.x
+    * [[software.amazon.kinesis.coordinator.CoordinatorConfig.ClientVersionConfig.CLIENT_VERSION_CONFIG_COMPATIBLE_WITH_2X]] while workers built against KCL 2.x
     * are still running against the same lease table, then switch to
-    * [[ClientVersionConfig.CLIENT_VERSION_CONFIG_3X]] once the migration is complete (also correct for
+    * [[software.amazon.kinesis.coordinator.CoordinatorConfig.ClientVersionConfig.CLIENT_VERSION_CONFIG_3X]] once the migration is complete (also correct for
     * brand-new applications). See
     * [[https://docs.aws.amazon.com/streams/latest/dev/kcl-migration-from-2-3.html the KCL 2.x-to-3.x migration guide]].
     */
