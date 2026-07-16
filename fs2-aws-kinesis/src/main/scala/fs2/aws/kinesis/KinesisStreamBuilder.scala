@@ -8,6 +8,7 @@ import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient
 import software.amazon.kinesis.common.ConfigsBuilder
+import software.amazon.kinesis.coordinator.CoordinatorConfig.ClientVersionConfig
 import software.amazon.kinesis.coordinator.Scheduler
 import software.amazon.kinesis.processor.{MultiStreamTracker, SingleStreamTracker, StreamTracker}
 
@@ -103,9 +104,21 @@ abstract class KinesisStreamBuilder[F[_]] {
   trait SchedulerPhase {
 
     protected def next(scheduler: ConfigsBuilder => Resource[F, Scheduler]): FinalPhase
-    protected def defaultScheduler: ConfigsBuilder => Resource[F, Scheduler]
+    protected def defaultScheduler(clientVersionConfig: ClientVersionConfig): ConfigsBuilder => Resource[F, Scheduler]
     def withScheduler(scheduler: ConfigsBuilder => Resource[F, Scheduler]): FinalPhase = next(scheduler)
-    def withDefaultScheduler: FinalPhase                                               = next(defaultScheduler)
+
+    /** Builds the KCL [[Scheduler]] with default configuration.
+      *
+      * The [[ClientVersionConfig]] is deliberately required rather than defaulted: KCL 3.x changes the
+      * lease-coordination protocol, and the safe value depends on your deployment. Use
+      * [[ClientVersionConfig.CLIENT_VERSION_CONFIG_COMPATIBLE_WITH_2X]] while workers built against KCL 2.x
+      * are still running against the same lease table, then switch to
+      * [[ClientVersionConfig.CLIENT_VERSION_CONFIG_3X]] once the migration is complete (also correct for
+      * brand-new applications). See
+      * [[https://docs.aws.amazon.com/streams/latest/dev/kcl-migration-from-2-3.html the KCL 2.x-to-3.x migration guide]].
+      */
+    def withDefaultScheduler(clientVersionConfig: ClientVersionConfig): FinalPhase =
+      next(defaultScheduler(clientVersionConfig))
   }
 
   trait ConfigsBuilderPhase {

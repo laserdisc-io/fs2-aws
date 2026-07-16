@@ -12,6 +12,7 @@ import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClientBuilder
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClientBuilder
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClientBuilder
 import software.amazon.awssdk.services.kinesis.model.{CreateStreamRequest, DeleteStreamRequest}
+import software.amazon.kinesis.coordinator.CoordinatorConfig.ClientVersionConfig
 import fs2.aws.examples.KinesisAppConfig.syntax.*
 import cats.implicits.*
 import io.laserdisc.pure.cloudwatch.tagless.Interpreter as CloudwatchInterpreter
@@ -50,7 +51,7 @@ object KinesisExample extends IOApp {
       c <- CloudwatchInterpreter[F].CloudWatchAsyncClientResource(cac)
       kinesisInterpreter = KinesisInterpreter[F].create(k)
       _ <- disposableStream(kinesisInterpreter, streamName)
-    } yield Kinesis.create[F](k, d, c)
+    } yield Kinesis.create[F](k, d, c, ClientVersionConfig.CLIENT_VERSION_CONFIG_3X)
 
   def program[F[_]: Async: Concurrent: Temporal: NonEmptyParallel](
       kinesis: Kinesis[F],

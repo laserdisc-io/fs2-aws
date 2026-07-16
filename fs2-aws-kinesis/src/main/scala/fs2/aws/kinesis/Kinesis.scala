@@ -11,6 +11,7 @@ import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient
 import software.amazon.kinesis.common.{ConfigsBuilder, InitialPositionInStreamExtended}
+import software.amazon.kinesis.coordinator.CoordinatorConfig.ClientVersionConfig
 import software.amazon.kinesis.coordinator.Scheduler
 import software.amazon.kinesis.processor.ShardRecordProcessorFactory
 import software.amazon.kinesis.retrieval.KinesisClientRecord
@@ -137,10 +138,21 @@ object Kinesis {
       readChunksFromKinesisStream(consumerConfig, schedulerFactory)
   }
 
+  /** Creates a [[Kinesis]] backed by the default KCL scheduler.
+    *
+    * The [[ClientVersionConfig]] is deliberately required rather than defaulted: KCL 3.x changes the
+    * lease-coordination protocol, and the safe value depends on your deployment. Use
+    * [[ClientVersionConfig.CLIENT_VERSION_CONFIG_COMPATIBLE_WITH_2X]] while workers built against KCL 2.x
+    * are still running against the same lease table, then switch to
+    * [[ClientVersionConfig.CLIENT_VERSION_CONFIG_3X]] once the migration is complete (also correct for
+    * brand-new applications). See
+    * [[https://docs.aws.amazon.com/streams/latest/dev/kcl-migration-from-2-3.html the KCL 2.x-to-3.x migration guide]].
+    */
   def create[F[_]: Async: Concurrent](
       kinesisAsyncClient: KinesisAsyncClient,
       dynamoDbAsyncClient: DynamoDbAsyncClient,
-      cloudWatchAsyncClient: CloudWatchAsyncClient
+      cloudWatchAsyncClient: CloudWatchAsyncClient,
+      clientVersionConfig: ClientVersionConfig
   ): Kinesis[F] = {
 
     @nowarn("msg=deprecated")
@@ -182,7 +194,7 @@ object Kinesis {
 
       new Scheduler(
         configsBuilder.checkpointConfig(),
-        configsBuilder.coordinatorConfig(),
+        configsBuilder.coordinatorConfig().clientVersionConfig(clientVersionConfig),
         configsBuilder.leaseManagementConfig(),
         configsBuilder.lifecycleConfig(),
         configsBuilder.metricsConfig(),

@@ -18,6 +18,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClientBuilder
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClientBuilder
 import software.amazon.awssdk.services.kinesis.model.{CreateStreamRequest, DeleteStreamRequest}
 import software.amazon.kinesis.common.{StreamConfig, StreamIdentifier}
+import software.amazon.kinesis.coordinator.CoordinatorConfig.ClientVersionConfig
 import software.amazon.kinesis.processor.{FormerStreamsLeasesDeletionStrategy, MultiStreamTracker}
 
 import java.nio.ByteBuffer
@@ -73,7 +74,7 @@ object KinesisMultistreamExample extends IOApp {
         )
         .withDefaultSchedulerConfigs
         .withDefaultBufferSize
-        .withDefaultScheduler
+        .withDefaultScheduler(ClientVersionConfig.CLIENT_VERSION_CONFIG_3X)
         .build
     } yield stream
 

@@ -6,6 +6,46 @@
 
 fs2 Streaming utilities for interacting with AWS
 
+## :warning: What's new in 7.x (unreleased)
+
+This branch contains the next major release. It is a breaking change from the released 6.x series
+(see [`series/6.x`](https://github.com/laserdisc-io/fs2-aws/tree/series/6.x) for the currently published library).
+
+### AWS SDK v1 removed ([#1284](https://github.com/laserdisc-io/fs2-aws/issues/1284))
+
+All remaining dependencies on the legacy `com.amazonaws` SDK are gone:
+
+* **The DynamoDB Streams consumer has been removed.** It was built on the SDK v1-only
+  `dynamodb-streams-kinesis-adapter`, which has no SDK v2 equivalent. `fs2-aws-dynamodb` now provides
+  only the `StreamScan` table-scanning API. If you consume DynamoDB Streams, stay on 6.x or migrate
+  to [Kinesis Data Streams for DynamoDB](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/kds.html).
+* **The Kinesis Producer Library is now the SDK v2-based release** (`software.amazon.kinesis:amazon-kinesis-producer:1.0.7`,
+  previously `com.amazonaws:amazon-kinesis-producer:0.15.12`). If you reference KPL types directly
+  (e.g. `KinesisProducerConfiguration`, `UserRecordResult`), update imports from
+  `com.amazonaws.services.kinesis.producer.*` to `software.amazon.kinesis.producer.*`.
+  `KinesisProducerClientImpl` now exposes SDK v2 credentials types (`AwsCredentialsProvider`).
+
+### KCL 2.6.0 → 3.5.0
+
+The Kinesis consumer is now built on KCL 3.x, which changes how workers coordinate leases and
+rebalance load. Consequences:
+
+* **You must now choose a `ClientVersionConfig`** when using the default scheduler — both
+  `withDefaultScheduler(...)` (stream builder) and `Kinesis.create(kinesisClient, dynamoClient, cloudWatchClient, ...)`
+  require it. There is deliberately no default: upgrading a live KCL 2.x application requires a
+  coordinated migration, and silently picking a mode for you could either break lease coordination
+  mid-migration (`CLIENT_VERSION_CONFIG_3X` too early) or permanently disable KCL 3's improved
+  rebalancing (`CLIENT_VERSION_CONFIG_COMPATIBLE_WITH_2X` forever). Pick
+  `CLIENT_VERSION_CONFIG_COMPATIBLE_WITH_2X` while workers built against KCL 2.x still share the
+  lease table, then switch to `CLIENT_VERSION_CONFIG_3X` once migration completes; new applications
+  should use `CLIENT_VERSION_CONFIG_3X` from the start. Read the
+  [KCL 2.x-to-3.x migration guide](https://docs.aws.amazon.com/streams/latest/dev/kcl-migration-from-2-3.html)
+  before upgrading — KCL 3.x also needs additional DynamoDB/CloudWatch IAM permissions for its new
+  coordination tables.
+* **Shutdown is now graceful.** Releasing the consumer resource calls `startGracefulShutdown()` and
+  waits (up to 30 seconds) for the scheduler's run loop to complete before the underlying AWS
+  clients are released, instead of the previous abrupt `shutdown()`.
+
 ## Scope of the project
 
 fs2-aws provides an [fs2](https://github.com/functional-streams-for-scala/fs2) interface to AWS services
