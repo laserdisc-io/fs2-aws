@@ -1,0 +1,127 @@
+import laika.ast.LengthUnit.px
+import laika.ast.Path.Root
+import laika.ast.{Image, InlineSVGIcon}
+import laika.config.SyntaxHighlighting
+import laika.helium.config.*
+import laika.sbt.LaikaPlugin.autoImport.*
+import laika.theme.config.Color
+import org.typelevel.sbt.TypelevelSitePlugin.autoImport.*
+import sbt.*
+import sbt.Keys.{isSnapshot, version}
+import sbtdynver.DynVerPlugin.autoImport.previousStableVersion
+
+//noinspection TypeAnnotation
+object DocConfig {
+
+  // latest stable release, from git tags via sbt-ci-release
+  private val latestStableRelease = Def.setting {
+    val current = version.value
+    if (!isSnapshot.value && current.matches("""\d+\.\d+\.\d+""")) Some(current)
+    else previousStableVersion.value
+  }
+
+  // maybe see if the laika project wants this
+  private val mavenCentralIcon = InlineSVGIcon(
+    """<svg class="svg-icon" width="100%" height="100%" viewBox="0 0 100 100" version="1.1" xmlns="http://www.w3.org/2000/svg">
+      |  <g class="svg-shape">
+      |    <path fill-rule="evenodd" d="M50 4 L89.8 27 L89.8 73 L50 96 L10.2 73 L10.2 27 Z M50 18 L77.7 34 L77.7 66 L50 82 L22.3 66 L22.3 34 Z"/>
+      |  </g>
+      |</svg>""".stripMargin,
+    title = Some("Maven Central")
+  )
+
+  val FS2AWS = Seq(
+    tlSiteApiUrl := Some(url("https://fs2aws.laserdisc.io/")),
+    laikaExtensions += SyntaxHighlighting,
+    tlSiteIsTypelevelProject := None,
+    tlSiteHelium             :=
+      tlSiteHelium.value.all
+        .themeColors(
+          primary = Color.hex("cc6600"),
+          primaryLight = Color.hex("fdf4ea"),
+          primaryMedium = Color.hex("fbe9d6"),
+          secondary = Color.hex("5b7980"),
+          text = Color.hex("5f5f5f"),
+          background = Color.hex("ffffff"),
+          bgGradient = (Color.hex("77420d"), Color.hex("b85c00"))
+        )
+        .site
+        .internalCSS(Root / "landing.css")
+        .site
+        .darkMode
+        .disabled
+        .site
+        .topNavigationBar(
+          homeLink = IconLink.external("https://fs2aws.laserdisc.io/", HeliumIcon.home)
+        )
+        .site
+        .pageNavigation(enabled = true, depth = 1, keepOnSmallScreens = false)
+        .site
+        .mainNavigation(
+          appendLinks = Seq(
+            ThemeNavigationSection(
+              "Related Projects",
+              TextLink.external("https://github.com/aws/aws-sdk-java-v2", "aws-sdk-java-v2"),
+              TextLink.external("https://github.com/awslabs/amazon-kinesis-client", "amazon-kinesis-client"),
+              TextLink.external("https://github.com/awslabs/amazon-kinesis-producer", "amazon-kinesis-producer"),
+              TextLink.external("https://fs2.io", "fs2")
+            )
+          )
+        )
+        .site
+        .footer(
+          """fs2-aws is a <a href="https://github.com/laserdisc-io">LaserDisc</a> project released under the <a href="https://opensource.org/licenses/MIT">MIT licence</a>."""
+        )
+        .site
+        .landingPage(
+          logo = Some(Image.internal(Root / "fs2-aws-logo.png", alt = Some("fs2-aws logo"), height = Some(px(150)))),
+          title = Some("fs2-aws"),
+          subtitle = Some("fs2 streaming wrappers for the AWS Async SDK"),
+          latestReleases = latestStableRelease.value.map { v =>
+            ReleaseInfo(
+              "Latest Release",
+              s"""<a href="https://github.com/laserdisc-io/fs2-aws/releases/tag/v$v">$v</a>"""
+            )
+          }.toSeq,
+          license = Some("""<a href="https://github.com/laserdisc-io/fs2-aws/blob/main/LICENSE">MIT</a>"""),
+          titleLinks = Seq(
+            VersionMenu.create(unversionedLabel = "Getting Started"),
+            LinkGroup.create(
+              IconLink.external("https://github.com/laserdisc-io/fs2-aws", HeliumIcon.github),
+              IconLink.external("https://central.sonatype.com/search?q=io.laserdisc.fs2-aws", mavenCentralIcon)
+            )
+          ),
+          linkPanel = Some(
+            LinkPanel(
+              "Modules",
+              TextLink.internal(Root / "modules" / "fs2-aws-s3.md", "fs2-aws-s3"),
+              TextLink.internal(Root / "modules" / "fs2-aws-kinesis.md", "fs2-aws-kinesis"),
+              TextLink.internal(Root / "modules" / "fs2-aws-sqs.md", "fs2-aws-sqs"),
+              TextLink.internal(Root / "modules" / "fs2-aws-sns.md", "fs2-aws-sns"),
+              TextLink.internal(Root / "modules" / "fs2-aws-dynamodb.md", "fs2-aws-dynamodb"),
+              TextLink.internal(Root / "modules" / "fs2-aws-testkit.md", "fs2-aws-testkit"),
+              TextLink.internal(Root / "modules" / "pure-aws.md", "pure-aws")
+            )
+          ),
+          teasers = Seq(
+            Teaser(
+              "Purely Functional",
+              "fs2-aws wraps the AWS SDK v2 async clients (and, for Kinesis, the KCL/KPL) in purely " +
+                "functional, resource-safe APIs built on cats-effect and fs2, sharing fs2's design goals: " +
+                "compositionality, expressiveness, resource safety, and speed."
+            ),
+            Teaser(
+              "Streaming",
+              "Read and write S3 objects, consume Kinesis and SQS, publish to SNS, and scan DynamoDB " +
+                "tables as back-pressured fs2 streams and pipes — processing large payloads in constant space."
+            ),
+            Teaser(
+              "Batteries Included",
+              "Modules are published per service for Scala 2.13 and Scala 3, alongside a testkit for the " +
+                "Kinesis consumer/producer and generated tagless-final wrappers for the raw SDK v2 async clients."
+            )
+          )
+        )
+  )
+
+}

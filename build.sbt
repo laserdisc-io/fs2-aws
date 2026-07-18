@@ -32,9 +32,18 @@ lazy val root = (project in file("."))
     `pure-s3-tagless`,
     `pure-cloudwatch-tagless`,
     `pure-dynamodb-tagless`,
-    `pure-kinesis-tagless`
+    `pure-kinesis-tagless`,
+    siteDocs
   )
   .settings(
+    publishArtifact    := false,
+    crossScalaVersions := Nil
+  )
+
+lazy val siteDocs = (project in file("site"))
+  .enablePlugins(TypelevelSitePlugin)
+  .settings(
+    DocConfig.FS2AWS,
     publishArtifact    := false,
     crossScalaVersions := Nil
   )
@@ -77,7 +86,6 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
     coverageMinimumStmtTotal := 0,
     Dependencies.Logging,
     Dependencies.Trace4Cats
-//    Dependencies.ScanamoCirce("3.7.0")
   )
   .settings(commonSettings)
   .settings(
