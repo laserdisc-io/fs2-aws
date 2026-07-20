@@ -17,5 +17,11 @@ object Models {
   object PartSizeMB extends RefinedTypeOps.Numeric[PartSizeMB, Int]
 
   final case class BucketName(value: NonEmptyString)
+  object BucketName {
+    def unsafeFrom(value: String) = BucketName(NonEmptyString.unsafeFrom(value))
+  }
   final case class FileKey(value: NonEmptyString)
+  object FileKey {
+    def unsafeFrom(value: String) = FileKey(NonEmptyString.unsafeFrom(value))
+  }
 }

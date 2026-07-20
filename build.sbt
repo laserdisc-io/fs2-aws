@@ -42,6 +42,7 @@ lazy val root = (project in file("."))
 
 lazy val siteDocs = (project in file("site"))
   .enablePlugins(TypelevelSitePlugin)
+  .dependsOn(`fs2-aws-examples`)
   .settings(
     DocConfig.FS2AWS,
     publishArtifact    := false,
