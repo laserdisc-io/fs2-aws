@@ -46,7 +46,12 @@ object DocConfig {
           bgGradient = (Color.hex("77420d"), Color.hex("b85c00"))
         )
         .site
+        // fit 140 chars in code blocks: 140 * 8.4px (Fira Mono @ 14px) + 24px pre padding + 2*45px content padding
+        .layout(contentWidth = px(1300))
+        .site
         .internalCSS(Root / "landing.css")
+        .site
+        .internalCSS(Root / "site.css")
         .site
         .darkMode
         .disabled
@@ -76,7 +81,7 @@ object DocConfig {
         .landingPage(
           logo = Some(Image.internal(Root / "fs2-aws-logo.png", alt = Some("fs2-aws logo"), height = Some(px(150)))),
           title = Some("fs2-aws"),
-          subtitle = Some("fs2 streaming wrappers for the AWS Async SDK"),
+          subtitle = Some("FS2 streaming wrappers for the AWS SDK"),
           latestReleases = latestStableRelease.value.map { v =>
             ReleaseInfo(
               "Latest Release",
@@ -107,18 +112,18 @@ object DocConfig {
             Teaser(
               "Purely Functional",
               "fs2-aws wraps the AWS SDK v2 async clients (and, for Kinesis, the KCL/KPL) in purely " +
-                "functional, resource-safe APIs built on cats-effect and fs2, sharing fs2's design goals: " +
+                "functional, resource-safe APIs built on cats-effect and FS2, sharing FS2's design goals: " +
                 "compositionality, expressiveness, resource safety, and speed."
             ),
             Teaser(
               "Streaming",
               "Read and write S3 objects, consume Kinesis and SQS, publish to SNS, and scan DynamoDB " +
-                "tables as back-pressured fs2 streams and pipes — processing large payloads in constant space."
+                "tables as back-pressured FS2 streams and pipes — processing large payloads in constant space."
             ),
             Teaser(
               "Batteries Included",
-              "Modules are published per service for Scala 2.13 and Scala 3, alongside a testkit for the " +
-                "Kinesis consumer/producer and generated tagless-final wrappers for the raw SDK v2 async clients."
+              "Modules are published for Scala 2.13 and 3, alongside generated tagless-final wrappers " +
+                "for the AWS SDK v2 async clients."
             )
           )
         )

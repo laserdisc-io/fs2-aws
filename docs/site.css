@@ -1,0 +1,9 @@
+/* Helium defaults to some a pretty narrow content width, whitespace _everywhere_ */
+@media (min-width: 1450px) {
+  main.content {
+    max-width: var(--content-width);
+  }
+  #page-nav + main.content {
+    max-width: calc(var(--content-width) + 265px);
+  }
+}
