@@ -77,7 +77,7 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
     `fs2-aws-sqs`,
     `fs2-aws-sns`,
     `fs2-aws-kinesis`,
-    `fs2-aws-dynamodb`,
+    `fs2-aws-dynamodb`
   )
   .settings(
     name                     := "fs2-aws-examples",

@@ -3,7 +3,7 @@ package fs2.aws.examples
 import cats.effect.{IO, IOApp, Resource}
 import fs2.aws.s3.S3
 import fs2.aws.s3.models.Models.{BucketName, FileKey}
-import io.laserdisc.pure.s3.tagless.{Interpreter as S3Interpreter, S3AsyncClientOp}
+import io.laserdisc.pure.s3.tagless.Interpreter as S3Interpreter
 import software.amazon.awssdk.services.s3.S3AsyncClient
 
 object S3Example extends IOApp.Simple {
