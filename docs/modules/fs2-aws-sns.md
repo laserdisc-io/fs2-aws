@@ -1,44 +1,88 @@
 # fs2-aws-sns
 
-Publish messages to AWS SNS topics through an fs2 pipe.
+An FS2 Streams-based API for publishing messages to AWS SNS topics.
+
+### Import:
 
 ```sbt
 libraryDependencies += "io.laserdisc" %% "fs2-aws-sns" % "@VERSION@"
 ```
 
-The module exposes a single algebra:
+This module provides the `SNS[F]` algebra:
 
 ```scala
 trait SNS[F[_]] {
-  def publish(topicArn: String): Pipe[F, MsgBody, PublishResponse]
+    def publish(topicArn: String): Pipe[F, MsgBody, PublishResponse]
 }
 ```
 
-Messages are published concurrently; the concurrency level is set via `SnsSettings`
-(default 10).
+### Usage
 
-## Usage
+To use `SNS[F]`, you need an instance of `SnsAsyncClientOp[F]`:
+* This is a Tagless-Final wrapper around the `SnsAsyncClient`
+* You get this automatically as `fs2-aws-sns` has a transitive dependency on `pure-sns-tagless` (see [pure-aws](pure-aws.md)).
 
-Create an `SNS[F]` from an `SnsAsyncClientOp` (provided by
-[`pure-sns-tagless`](pure-aws.md), a dependency of this module):
+The general usage pattern is as follows:
 
 ```scala
-import cats.effect.*
-import fs2.aws.sns.sns.*
-import io.laserdisc.pure.sns.tagless.{Interpreter as SnsInterpreter, SnsAsyncClientOp}
-import software.amazon.awssdk.services.sns.SnsAsyncClient
+// first, get your SNS builder from the AWS SDK (configure credentials, region, etc.)
+val snsBuilder = SnsAsyncClient.builder()
 
-val snsResource: Resource[IO, SnsAsyncClientOp[IO]] =
-  SnsInterpreter[IO].SnsAsyncClientOpResource(SnsAsyncClient.builder()) // configure credentials/region/endpoint as needed
+// now create the tagless-final wrapper resource around it
+val snsInterpreter = SnsInterpreter[IO].SnsAsyncClientOpResource(snsBuilder)
 
-snsResource.use { snsOp =>
+// use the interpreter directly for effectful AWS SDK calls
+snsInterpreter.use { snsOp =>
   SNS.create[IO](snsOp).flatMap { sns =>
-    fs2.Stream("hello", "world")
-      .through(sns.publish("arn:aws:sns:us-east-1:123456789012:my-topic"))
-      .evalTap(resp => IO.println(s"published: ${resp.messageId()}"))
-      .compile
-      .drain
+    stream.through(sns.publish(topicArn))
+    .. etc ..
   }
 }
 ```
 
+### Full Example
+
+```scala mdoc:compile-only
+import cats.effect.*
+import fs2.aws.sns.sns.*
+import io.laserdisc.pure.sns.tagless.{SnsAsyncClientOp, Interpreter as SnsInterpreter}
+import software.amazon.awssdk.services.sns.SnsAsyncClient
+import software.amazon.awssdk.services.sns.model.ListTopicsResponse
+
+val topicArn = "arn:aws:sns:us-east-1:123456789012:my-topic"
+
+object SNSExample {
+
+  def mkSnsResource: Resource[IO, SnsAsyncClientOp[IO]] =
+    SnsInterpreter[IO].SnsAsyncClientOpResource(SnsAsyncClient.builder())
+
+  // use the tagless-final wrapper directly for effectful AWS SDK calls
+  def simpleTaglessFinalCall: IO[ListTopicsResponse] =
+    mkSnsResource.use { client =>
+      client.listTopics
+    }
+
+  // or make use of the streaming API for publishing messages
+  def fs2StreamingExample: IO[Unit] =
+    mkSnsResource.use { snsOp =>
+      SNS.create[IO](snsOp).flatMap { sns =>
+        fs2.Stream("hello", "world")
+          .through(sns.publish(topicArn))
+          .evalMap(resp => IO.println(s"published: ${resp.messageId()}"))
+          .compile
+          .drain
+      }
+    }
+}
+
+```
+
+### Notes
+
+Messages are published concurrently; the concurrency level is set via `SnsSettings` (default 10):
+
+```scala
+SNS.create[IO](snsOp, SnsSettings(concurrency = PosInt.unsafeFrom(20)))
+```
+
+Because publishing is concurrent, responses may be emitted in a different order than the incoming message bodies.
