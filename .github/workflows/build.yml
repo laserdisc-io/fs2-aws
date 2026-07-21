@@ -11,10 +11,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: Set up JDK
-        uses: olafurpg/setup-scala@v11
+      - name: Setup JDK
+        uses: actions/setup-java@v4
         with:
-          java-version: adopt@1.11
+          distribution: corretto
+          java-version: 21
+      - name: Setup sbt
+        uses: sbt/setup-sbt@v1
       - name: Cache SBT
         uses: actions/cache@v4
         with:
