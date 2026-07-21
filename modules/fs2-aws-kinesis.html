@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="generator" content="Typelevel Laika + Helium Theme" />
+  <title>fs2-aws-kinesis</title>
+  
+  <meta name="author" content="fs2-aws contributors"/>
+  
+  
+  <meta name="description" content="siteDocs"/>
+  
+  
+  
+  
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700">
+  
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Fira+Mono:500">
+  
+  <link rel="stylesheet" type="text/css" href="../helium/site/icofont.min.css" />
+    <link rel="stylesheet" type="text/css" href="../helium/site/laika-helium.css" />
+    <link rel="stylesheet" type="text/css" href="../landing.css" />
+    <link rel="stylesheet" type="text/css" href="../site.css" />
+  <script src="../helium/site/laika-helium.js"></script>
+  
+  
+  <script> /* for avoiding page load transitions */ </script>
+</head>
+
+  <body>
+
+    <header id="top-bar" class="light-default dark-default">
+
+  <div class="row">
+    <a id="nav-icon">
+      <i class="icofont-laika navigationMenu" title="Navigation">&#xefa2;</i>
+    </a>
+    
+    
+  </div>
+
+  <a class="icon-link glyph-link" href="https://fs2aws.laserdisc.io/"><i class="icofont-laika home" title="Home">&#xef47;</i></a>
+
+  <div class="row links">
+    
+    <a class="icon-link svg-link" href="https://fs2aws.laserdisc.io/"><span class="api" title="API"><svg class="svg-icon" width="100%" height="100%" viewBox="0 0 100 100" version="1.1" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+  <g class="svg-shape">
+    <path d="M75,47.5c13.246,0 24,10.754 24,24c0,13.246 -10.754,24 -24,24c-13.246,0 -24,-10.754 -24,-24c0,-13.246 10.754,-24 24,-24Zm-50,-0c13.246,-0 24,10.754 24,24c0,13.246 -10.754,24 -24,24c-13.246,-0 -24,-10.754 -24,-24c0,-13.246 10.754,-24 24,-24Zm2.705,16.735l7.239,0l0.622,-4.904l-21.833,0l-0,4.904l7.589,0l0,22.067l6.383,0l-0,-22.067Zm58.076,7.265c-0,-8.757 -3.698,-14.166 -10.781,-14.166c-7.083,-0 -10.781,5.604 -10.781,14.166c0,8.757 3.698,14.166 10.781,14.166c7.083,0 10.781,-5.604 10.781,-14.166Zm-6.539,0c0,6.538 -1.128,9.496 -4.242,9.496c-2.997,0 -4.242,-2.88 -4.242,-9.496c-0,-6.616 1.206,-9.496 4.242,-9.496c3.036,-0 4.242,2.88 4.242,9.496Zm-29.242,-67c13.246,0 24,10.754 24,24c0,13.246 -10.754,24 -24,24c-13.246,0 -24,-10.754 -24,-24c0,-13.246 10.754,-24 24,-24Zm0.512,9.834c-7.122,-0 -12.609,5.098 -12.609,14.127c-0,9.263 5.215,14.205 12.532,14.205c4.164,0 7.083,-1.634 9.068,-3.658l-2.88,-3.697c-1.518,1.206 -3.153,2.413 -5.838,2.413c-3.697,-0 -6.266,-2.763 -6.266,-9.263c-0,-6.616 2.724,-9.379 6.149,-9.379c2.102,-0 3.892,0.778 5.371,1.984l3.113,-3.775c-2.257,-1.868 -4.748,-2.957 -8.64,-2.957Z"/>
+  </g>
+</svg></span></a>
+    
+    <a class="icon-link svg-link" href="https://github.com/laserdisc-io/fs2-aws"><span class="github" title="Source Code"><svg class="svg-icon" width="100%" height="100%" viewBox="0 0 100 100" version="1.1" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+  <g class="svg-shape">
+    <path d="M49.995,1c-27.609,-0 -49.995,22.386 -49.995,50.002c-0,22.09 14.325,40.83 34.194,47.444c2.501,0.458 3.413,-1.086 3.413,-2.412c0,-1.185 -0.043,-4.331 -0.067,-8.503c-13.908,3.021 -16.843,-6.704 -16.843,-6.704c-2.274,-5.773 -5.552,-7.311 -5.552,-7.311c-4.54,-3.103 0.344,-3.042 0.344,-3.042c5.018,0.356 7.658,5.154 7.658,5.154c4.46,7.64 11.704,5.433 14.552,4.156c0.454,-3.232 1.744,-5.436 3.174,-6.685c-11.102,-1.262 -22.775,-5.553 -22.775,-24.713c-0,-5.457 1.949,-9.92 5.147,-13.416c-0.516,-1.265 -2.231,-6.348 0.488,-13.233c0,0 4.199,-1.344 13.751,5.126c3.988,-1.108 8.266,-1.663 12.518,-1.682c4.245,0.019 8.523,0.574 12.517,1.682c9.546,-6.47 13.736,-5.126 13.736,-5.126c2.728,6.885 1.013,11.968 0.497,13.233c3.204,3.496 5.141,7.959 5.141,13.416c0,19.209 -11.691,23.436 -22.83,24.673c1.795,1.544 3.394,4.595 3.394,9.26c0,6.682 -0.061,12.076 -0.061,13.715c0,1.338 0.899,2.894 3.438,2.406c19.853,-6.627 34.166,-25.354 34.166,-47.438c-0,-27.616 -22.389,-50.002 -50.005,-50.002"/>
+  </g>
+</svg></span></a>
+    
+  </div>  
+
+</header>
+    
+    <nav id="sidebar">
+
+  <div class="row">
+    
+    <a class="icon-link svg-link" href="https://fs2aws.laserdisc.io/"><span class="api" title="API"><svg class="svg-icon" width="100%" height="100%" viewBox="0 0 100 100" version="1.1" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+  <g class="svg-shape">
+    <path d="M75,47.5c13.246,0 24,10.754 24,24c0,13.246 -10.754,24 -24,24c-13.246,0 -24,-10.754 -24,-24c0,-13.246 10.754,-24 24,-24Zm-50,-0c13.246,-0 24,10.754 24,24c0,13.246 -10.754,24 -24,24c-13.246,-0 -24,-10.754 -24,-24c0,-13.246 10.754,-24 24,-24Zm2.705,16.735l7.239,0l0.622,-4.904l-21.833,0l-0,4.904l7.589,0l0,22.067l6.383,0l-0,-22.067Zm58.076,7.265c-0,-8.757 -3.698,-14.166 -10.781,-14.166c-7.083,-0 -10.781,5.604 -10.781,14.166c0,8.757 3.698,14.166 10.781,14.166c7.083,0 10.781,-5.604 10.781,-14.166Zm-6.539,0c0,6.538 -1.128,9.496 -4.242,9.496c-2.997,0 -4.242,-2.88 -4.242,-9.496c-0,-6.616 1.206,-9.496 4.242,-9.496c3.036,-0 4.242,2.88 4.242,9.496Zm-29.242,-67c13.246,0 24,10.754 24,24c0,13.246 -10.754,24 -24,24c-13.246,0 -24,-10.754 -24,-24c0,-13.246 10.754,-24 24,-24Zm0.512,9.834c-7.122,-0 -12.609,5.098 -12.609,14.127c-0,9.263 5.215,14.205 12.532,14.205c4.164,0 7.083,-1.634 9.068,-3.658l-2.88,-3.697c-1.518,1.206 -3.153,2.413 -5.838,2.413c-3.697,-0 -6.266,-2.763 -6.266,-9.263c-0,-6.616 2.724,-9.379 6.149,-9.379c2.102,-0 3.892,0.778 5.371,1.984l3.113,-3.775c-2.257,-1.868 -4.748,-2.957 -8.64,-2.957Z"/>
+  </g>
+</svg></span></a>
+    
+    <a class="icon-link svg-link" href="https://github.com/laserdisc-io/fs2-aws"><span class="github" title="Source Code"><svg class="svg-icon" width="100%" height="100%" viewBox="0 0 100 100" version="1.1" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+  <g class="svg-shape">
+    <path d="M49.995,1c-27.609,-0 -49.995,22.386 -49.995,50.002c-0,22.09 14.325,40.83 34.194,47.444c2.501,0.458 3.413,-1.086 3.413,-2.412c0,-1.185 -0.043,-4.331 -0.067,-8.503c-13.908,3.021 -16.843,-6.704 -16.843,-6.704c-2.274,-5.773 -5.552,-7.311 -5.552,-7.311c-4.54,-3.103 0.344,-3.042 0.344,-3.042c5.018,0.356 7.658,5.154 7.658,5.154c4.46,7.64 11.704,5.433 14.552,4.156c0.454,-3.232 1.744,-5.436 3.174,-6.685c-11.102,-1.262 -22.775,-5.553 -22.775,-24.713c-0,-5.457 1.949,-9.92 5.147,-13.416c-0.516,-1.265 -2.231,-6.348 0.488,-13.233c0,0 4.199,-1.344 13.751,5.126c3.988,-1.108 8.266,-1.663 12.518,-1.682c4.245,0.019 8.523,0.574 12.517,1.682c9.546,-6.47 13.736,-5.126 13.736,-5.126c2.728,6.885 1.013,11.968 0.497,13.233c3.204,3.496 5.141,7.959 5.141,13.416c0,19.209 -11.691,23.436 -22.83,24.673c1.795,1.544 3.394,4.595 3.394,9.26c0,6.682 -0.061,12.076 -0.061,13.715c0,1.338 0.899,2.894 3.438,2.406c19.853,-6.627 34.166,-25.354 34.166,-47.438c-0,-27.616 -22.389,-50.002 -50.005,-50.002"/>
+  </g>
+</svg></span></a>
+    
+  </div>
+
+  <ul class="nav-list">
+    <li class="level1 nav-header">modules</li>
+    <li class="level2 nav-leaf"><a href="fs2-aws-dynamodb.html">fs2-aws-dynamodb</a></li>
+    <li class="level2 active nav-leaf"><a href="#">fs2-aws-kinesis</a></li>
+    <li class="level2 nav-leaf"><a href="fs2-aws-s3.html">fs2-aws-s3</a></li>
+    <li class="level2 nav-leaf"><a href="fs2-aws-sns.html">fs2-aws-sns</a></li>
+    <li class="level2 nav-leaf"><a href="fs2-aws-sqs.html">fs2-aws-sqs</a></li>
+    <li class="level2 nav-leaf"><a href="fs2-aws-testkit.html">fs2-aws-testkit</a></li>
+    <li class="level2 nav-leaf"><a href="pure-aws.html">pure-aws</a></li>
+    <li class="level1 nav-header">Related Projects</li>
+    <li class="level2 nav-leaf"><a href="https://github.com/aws/aws-sdk-java-v2">aws-sdk-java-v2</a></li>
+    <li class="level2 nav-leaf"><a href="https://github.com/awslabs/amazon-kinesis-client">amazon-kinesis-client</a></li>
+    <li class="level2 nav-leaf"><a href="https://github.com/awslabs/amazon-kinesis-producer">amazon-kinesis-producer</a></li>
+    <li class="level2 nav-leaf"><a href="https://fs2.io">fs2</a></li>
+  </ul>
+
+</nav>
+
+    <div id="container">
+
+      
+<nav id="page-nav">
+  <p class="header"><a href="#">fs2-aws-kinesis</a></p>
+
+  <ul class="nav-list">
+    <li class="level1 nav-leaf"><a href="#consuming-records">Consuming records</a></li>
+    <li class="level1 nav-leaf"><a href="#publishing-records">Publishing records</a></li>
+    <li class="level1 nav-leaf"><a href="#use-with-localstack">Use with LocalStack</a></li>
+    <li class="level1 nav-leaf"><a href="#testing">Testing</a></li>
+  </ul>
+
+  <p class="footer"></p>
+</nav>
+
+
+      <main class="content">
+
+        <h1 id="fs2-aws-kinesis" class="title">fs2-aws-kinesis</h1>
+        <p>Consume AWS Kinesis streams as fs2 streams via the <a href="https://docs.aws.amazon.com/streams/latest/dev/shared-throughput-kcl-consumers.html">Kinesis Client Library (KCL)</a>,
+        and publish to Kinesis via the <a href="https://docs.aws.amazon.com/streams/latest/dev/developing-producers-with-kpl.html">Kinesis Producer Library (KPL)</a>.</p>
+        <pre class="keep-together pdf epub"><code class="sbt">libraryDependencies += &quot;io.laserdisc&quot; %% &quot;fs2-aws-kinesis&quot; % &quot;6.3.0&quot;</code></pre>
+        
+        <h2 id="consuming-records" class="section"><a class="anchor-link left" href="#consuming-records"><i class="icofont-laika link">&#xef71;</i></a>Consuming records</h2>
+        <p><code>DefaultKinesisStreamBuilder</code> walks you through the required configuration phase by phase
+        (each <code>with*</code> step also has a <code>withDefault*</code> shortcut where a sensible default exists) and
+        yields a <code>Resource</code> managing the KCL scheduler lifecycle:</p>
+        <pre><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">cats</span><span>.</span><span class="identifier">effect</span><span>.*
+</span><span class="keyword">import</span><span> </span><span class="identifier">fs2</span><span>.</span><span class="type-name">Stream</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">fs2</span><span>.</span><span class="identifier">aws</span><span>.</span><span class="identifier">kinesis</span><span>.{</span><span class="type-name">CommittableRecord</span><span>, </span><span class="type-name">DefaultKinesisStreamBuilder</span><span>}
+</span><span class="keyword">import</span><span> </span><span class="identifier">fs2</span><span>.</span><span class="identifier">aws</span><span>.</span><span class="identifier">kinesis</span><span>.</span><span class="identifier">models</span><span>.</span><span class="type-name">KinesisModels</span><span>.{</span><span class="type-name">AppName</span><span>, </span><span class="type-name">StreamName</span><span>}
+</span><span class="keyword">import</span><span> </span><span class="identifier">software</span><span>.</span><span class="identifier">amazon</span><span>.</span><span class="identifier">awssdk</span><span>.</span><span class="identifier">services</span><span>.</span><span class="identifier">cloudwatch</span><span>.</span><span class="type-name">CloudWatchAsyncClient</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">software</span><span>.</span><span class="identifier">amazon</span><span>.</span><span class="identifier">awssdk</span><span>.</span><span class="identifier">services</span><span>.</span><span class="identifier">dynamodb</span><span>.</span><span class="type-name">DynamoDbAsyncClient</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">software</span><span>.</span><span class="identifier">amazon</span><span>.</span><span class="identifier">awssdk</span><span>.</span><span class="identifier">services</span><span>.</span><span class="identifier">kinesis</span><span>.</span><span class="type-name">KinesisAsyncClient</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">software</span><span>.</span><span class="identifier">amazon</span><span>.</span><span class="identifier">kinesis</span><span>.</span><span class="identifier">coordinator</span><span>.</span><span class="type-name">CoordinatorConfig</span><span>.</span><span class="type-name">ClientVersionConfig</span><span>
+
+</span><span class="keyword">def</span><span> </span><span class="declaration-name">records</span><span>(
+    </span><span class="identifier">appName</span><span>: </span><span class="type-name">AppName</span><span>,
+    </span><span class="identifier">streamName</span><span>: </span><span class="type-name">StreamName</span><span>,
+    </span><span class="identifier">kinesis</span><span>: </span><span class="type-name">KinesisAsyncClient</span><span>,
+    </span><span class="identifier">dynamo</span><span>: </span><span class="type-name">DynamoDbAsyncClient</span><span>,
+    </span><span class="identifier">cloudWatch</span><span>: </span><span class="type-name">CloudWatchAsyncClient</span><span>
+): </span><span class="type-name">Resource</span><span>[</span><span class="type-name">IO</span><span>, </span><span class="type-name">Stream</span><span>[</span><span class="type-name">IO</span><span>, </span><span class="type-name">CommittableRecord</span><span>]] =
+  </span><span class="type-name">DefaultKinesisStreamBuilder</span><span>[</span><span class="type-name">IO</span><span>]()
+    .</span><span class="identifier">withAppName</span><span>(</span><span class="identifier">appName</span><span>)
+    .</span><span class="identifier">withKinesisClient</span><span>(</span><span class="identifier">kinesis</span><span>)
+    .</span><span class="identifier">withDynamoDBClient</span><span>(</span><span class="identifier">dynamo</span><span>)
+    .</span><span class="identifier">withCloudWatchClient</span><span>(</span><span class="identifier">cloudWatch</span><span>)
+    .</span><span class="identifier">withDefaultSchedulerId</span><span>
+    .</span><span class="identifier">withSingleStreamTracker</span><span>(</span><span class="identifier">streamName</span><span>)
+    .</span><span class="identifier">withDefaultStreamTracker</span><span>
+    .</span><span class="identifier">withDefaultSchedulerConfigs</span><span>
+    .</span><span class="identifier">withDefaultBufferSize</span><span>
+    .</span><span class="identifier">withDefaultScheduler</span><span>(</span><span class="type-name">ClientVersionConfig</span><span>.</span><span class="type-name">CLIENT_VERSION_CONFIG_3X</span><span>)
+    .</span><span class="identifier">build</span><span>
+    .</span><span class="identifier">map</span><span>(</span><span class="identifier">_</span><span>.</span><span class="identifier">flatMap</span><span>(</span><span class="type-name">Stream</span><span>.</span><span class="identifier">chunk</span><span>)) </span><span class="comment">// the stream emits Chunk[CommittableRecord]</span></code></pre>
+        <p>Use <code>withMultiStreamTracker</code> instead of <code>withSingleStreamTracker</code> to consume several streams
+        with one scheduler (see
+        <a href="https://github.com/laserdisc-io/fs2-aws/blob/main/fs2-aws-examples/src/main/scala/fs2/aws/examples/KinesisMultistreamExample.scala"><code>KinesisMultistreamExample</code></a>).</p>
+        <p>The older <code>Kinesis.create(...)</code> factory + <code>readFromKinesisStream(appName, streamName)</code> API is
+        still available and takes the same three SDK clients plus a <code>ClientVersionConfig</code>.</p>
+        
+        <h3 id="choosing-the-clientversionconfig" class="section"><a class="anchor-link left" href="#choosing-the-clientversionconfig"><i class="icofont-laika link">&#xef71;</i></a>Choosing the <code>ClientVersionConfig</code></h3>
+        <p>KCL 3.x changed the lease-coordination protocol, so the default scheduler requires you to pick a
+        mode explicitly:</p>
+        <ul>
+          <li><code>CLIENT_VERSION_CONFIG_3X</code> — new applications, or once all workers run KCL 3.x.</li>
+          <li><code>CLIENT_VERSION_CONFIG_COMPATIBLE_WITH_2X</code> — while workers built against KCL 2.x still share
+          the same lease table; switch to <code>CLIENT_VERSION_CONFIG_3X</code> once migration completes.</li>
+        </ul>
+        <p>See the <a href="https://docs.aws.amazon.com/streams/latest/dev/kcl-migration-from-2-3.html">KCL 2.x-to-3.x migration guide</a>.</p>
+        
+        <h3 id="checkpointing-records" class="section"><a class="anchor-link left" href="#checkpointing-records"><i class="icofont-laika link">&#xef71;</i></a>Checkpointing records</h3>
+        <p>Records must be checkpointed to record consumer progress. Checkpointing a record implicitly
+        checkpoints everything before it on the same shard. The <code>Kinesis[F]</code> algebra provides a pipe
+        that batches checkpoints per shard:</p>
+        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">fs2</span><span>.</span><span class="identifier">aws</span><span>.</span><span class="identifier">kinesis</span><span>.{</span><span class="type-name">Kinesis</span><span>, </span><span class="type-name">KinesisCheckpointSettings</span><span>, </span><span class="type-name">KinesisConsumerSettings</span><span>}
+
+</span><span class="keyword">val</span><span> </span><span class="identifier">kinesis</span><span>: </span><span class="type-name">Kinesis</span><span>[</span><span class="type-name">IO</span><span>] = </span><span class="type-name">Kinesis</span><span>.</span><span class="identifier">create</span><span>[</span><span class="type-name">IO</span><span>](</span><span class="identifier">kinesisClient</span><span>, </span><span class="identifier">dynamoClient</span><span>, </span><span class="identifier">cloudWatchClient</span><span>, </span><span class="type-name">ClientVersionConfig</span><span>.</span><span class="type-name">CLIENT_VERSION_CONFIG_3X</span><span>)
+
+</span><span class="identifier">kinesis</span><span>
+  .</span><span class="identifier">readFromKinesisStream</span><span>(</span><span class="type-name">KinesisConsumerSettings</span><span>(</span><span class="string-literal">&quot;streamName&quot;</span><span>, </span><span class="string-literal">&quot;appName&quot;</span><span>))
+  .</span><span class="identifier">through</span><span>(</span><span class="identifier">myProcessingPipeline</span><span>)
+  .</span><span class="identifier">through</span><span>(</span><span class="identifier">kinesis</span><span>.</span><span class="identifier">checkpointRecords</span><span>(</span><span class="type-name">KinesisCheckpointSettings</span><span>.</span><span class="identifier">defaultInstance</span><span>))</span></code></pre>
+        
+        <h2 id="publishing-records" class="section"><a class="anchor-link left" href="#publishing-records"><i class="icofont-laika link">&#xef71;</i></a>Publishing records</h2>
+        <p><code>fs2.aws.kinesis.publisher</code> provides pipes that write <code>(partitionKey, ByteBuffer)</code> tuples via
+        the KPL:</p>
+        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">fs2</span><span>.</span><span class="identifier">aws</span><span>.</span><span class="identifier">internal</span><span>.</span><span class="type-name">KinesisProducerClientImpl</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">fs2</span><span>.</span><span class="identifier">aws</span><span>.</span><span class="identifier">kinesis</span><span>.</span><span class="identifier">publisher</span><span>.</span><span class="identifier">writeToKinesis</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">java</span><span>.</span><span class="identifier">nio</span><span>.</span><span class="type-name">ByteBuffer</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">scala</span><span>.</span><span class="identifier">concurrent</span><span>.</span><span class="type-name">ExecutionContext</span><span>.</span><span class="type-name">Implicits</span><span>.</span><span class="identifier">global</span><span>
+
+</span><span class="type-name">Stream</span><span>(</span><span class="string-literal">&quot;testData&quot;</span><span>)
+  .</span><span class="identifier">map</span><span>(</span><span class="identifier">d</span><span> =&gt; (</span><span class="string-literal">&quot;partitionKey&quot;</span><span>, </span><span class="type-name">ByteBuffer</span><span>.</span><span class="identifier">wrap</span><span>(</span><span class="identifier">d</span><span>.</span><span class="identifier">getBytes</span><span>)))
+  .</span><span class="identifier">through</span><span>(</span><span class="identifier">writeToKinesis</span><span>[</span><span class="type-name">IO</span><span>](</span><span class="string-literal">&quot;streamName&quot;</span><span>, </span><span class="identifier">producer</span><span> = </span><span class="keyword">new</span><span> </span><span class="type-name">KinesisProducerClientImpl</span><span>[</span><span class="type-name">IO</span><span>]))</span></code></pre>
+        <p>Credentials and region are configured on the <code>KinesisProducerClient</code> (by default, the AWS
+        default credentials chain and the KPL&#39;s own region resolution). Variants include <code>writeAndForgetToKinesis</code> (don&#39;t wait for
+        results) and <code>writeObjectToKinesis</code> (takes an implicit <code>I =&gt; ByteBuffer</code> encoder).</p>
+        
+        <h2 id="use-with-localstack" class="section"><a class="anchor-link left" href="#use-with-localstack"><i class="icofont-laika link">&#xef71;</i></a>Use with LocalStack</h2>
+        <p>Consuming from and publishing to Kinesis in <a href="https://localstack.cloud/">LocalStack</a> works —
+        set the client <code>endpointOverride</code> (e.g. <code>http://localhost:4566</code>) and use <code>Polling</code> retrieval
+        mode (LocalStack does not support <code>FanOut</code>). See
+        <a href="https://github.com/laserdisc-io/fs2-aws/blob/main/fs2-aws-examples/src/main/scala/fs2/aws/examples/KinesisExampleNew.scala"><code>KinesisExampleNew</code></a>
+        for a complete runnable example.</p>
+        
+        <h2 id="testing" class="section"><a class="anchor-link left" href="#testing"><i class="icofont-laika link">&#xef71;</i></a>Testing</h2>
+        <p>See <a href="fs2-aws-testkit.html">fs2-aws-testkit</a> for test doubles for both the consumer and the producer.</p>
+
+        
+<hr class="footer-rule"/>
+<footer>
+  fs2-aws is a <a href="https://github.com/laserdisc-io">LaserDisc</a> project released under the <a href="https://opensource.org/licenses/MIT">MIT licence</a>.
+</footer>
+
+
+      </main>
+
+    </div>
+
+  </body>
+
+</html>
