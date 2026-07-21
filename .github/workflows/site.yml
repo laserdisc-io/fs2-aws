@@ -23,7 +23,7 @@ jobs:
           java-version: 21
 
       - name: Generate site
-        run: sbt docs/tlSite
+        run: sbt siteDocs/tlSite
 
       - name: Publish site
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
