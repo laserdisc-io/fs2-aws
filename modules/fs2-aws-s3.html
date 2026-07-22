@@ -122,7 +122,7 @@
         <p>An FS2 Streams-based API for common AWS S3 operations.</p>
         
         <h3 id="import" class="section"><a class="anchor-link left" href="#import"><i class="icofont-laika link">&#xef71;</i></a>Import:</h3>
-        <pre class="keep-together pdf epub"><code class="sbt">libraryDependencies += &quot;io.laserdisc&quot; %% &quot;fs2-aws-s3&quot; % &quot;6.3.0&quot;</code></pre>
+        <pre class="keep-together pdf epub"><code class="sbt">libraryDependencies += &quot;io.laserdisc&quot; %% &quot;fs2-aws-s3&quot; % &quot;7.0.0-RC1&quot;</code></pre>
         <p>This module provides the <code>S3[F]</code> algebra, e.g.:</p>
         <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">trait</span><span> </span><span class="type-name">S3</span><span>[</span><span class="type-name">F</span><span>[</span><span class="identifier">_</span><span>]] {
     </span><span class="keyword">def</span><span> </span><span class="declaration-name">uploadFile</span><span>(</span><span class="identifier">bucket</span><span>: </span><span class="type-name">BucketName</span><span>, </span><span class="identifier">key</span><span>: </span><span class="type-name">FileKey</span><span>): </span><span class="type-name">Pipe</span><span>[</span><span class="type-name">F</span><span>, </span><span class="type-name">Byte</span><span>, </span><span class="type-name">ETag</span><span>]

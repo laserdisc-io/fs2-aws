@@ -119,7 +119,7 @@
         <h1 id="fs2-aws-testkit" class="title">fs2-aws-testkit</h1>
         <p>Test doubles for the <a href="fs2-aws-kinesis.html">fs2-aws-kinesis</a> consumer and producer,
         letting you exercise stream logic without a real KCL scheduler or KPL daemon.</p>
-        <pre class="keep-together pdf epub"><code class="sbt">libraryDependencies += &quot;io.laserdisc&quot; %% &quot;fs2-aws-testkit&quot; % &quot;6.3.0&quot; % Test</code></pre>
+        <pre class="keep-together pdf epub"><code class="sbt">libraryDependencies += &quot;io.laserdisc&quot; %% &quot;fs2-aws-testkit&quot; % &quot;7.0.0-RC1&quot; % Test</code></pre>
         
         <h2 id="testing-a-consumer-schedulerfactorytestcontext" class="section"><a class="anchor-link left" href="#testing-a-consumer-schedulerfactorytestcontext"><i class="icofont-laika link">&#xef71;</i></a>Testing a consumer: <code>SchedulerFactoryTestContext</code></h2>
         <p><code>Kinesis.create</code> accepts any <code>ShardRecordProcessorFactory =&gt; F[Scheduler]</code>.
