@@ -81,6 +81,7 @@
   </div>
 
   <ul class="nav-list">
+    <li class="level1 nav-leaf"><a href="../migration.html">Migrating from 6.x to 7.x</a></li>
     <li class="level1 nav-header">modules</li>
     <li class="level2 nav-leaf"><a href="fs2-aws-dynamodb.html">fs2-aws-dynamodb</a></li>
     <li class="level2 nav-leaf"><a href="fs2-aws-kinesis.html">fs2-aws-kinesis</a></li>
@@ -137,11 +138,9 @@
           <li>You get this automatically as <code>fs2-aws-sqs</code> has a transitive dependency on <code>pure-sqs-tagless</code> (see <a href="pure-aws.html">pure-aws</a>).</li>
         </ul>
         <p>The general usage pattern is as follows:</p>
-        <pre><code class="nohighlight"><span class="comment">// first, get your SQS builder from the AWS SDK (configure credentials, region, etc.)
-</span><span class="keyword">val</span><span> </span><span class="identifier">sqsBuilder</span><span> = </span><span class="type-name">SqsAsyncClient</span><span>.</span><span class="identifier">builder</span><span>()
-
-</span><span class="comment">// now create the tagless-final wrapper resource around it
-</span><span class="keyword">val</span><span> </span><span class="identifier">sqsInterpreter</span><span> = </span><span class="type-name">SqsInterpreter</span><span>[</span><span class="type-name">IO</span><span>].</span><span class="type-name">SqsAsyncClientOpResource</span><span>(</span><span class="identifier">sqsBuilder</span><span>)
+        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="comment">// create the tagless-final wrapper resource (pass an SqsAsyncClient.builder()
+// if you need to configure credentials, region, etc.)
+</span><span class="keyword">val</span><span> </span><span class="identifier">sqsInterpreter</span><span> = </span><span class="type-name">SqsInterpreter</span><span>[</span><span class="type-name">IO</span><span>].</span><span class="identifier">resource</span><span>
 
 </span><span class="comment">// use the interpreter directly for effectful AWS SDK calls
 </span><span class="identifier">sqsInterpreter</span><span>.</span><span class="identifier">use</span><span> { </span><span class="identifier">sqsOp</span><span> =&gt;
@@ -154,8 +153,7 @@
         <h3 id="full-example" class="section"><a class="anchor-link left" href="#full-example"><i class="icofont-laika link">&#xef71;</i></a>Full Example</h3>
         <pre><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">cats</span><span>.</span><span class="identifier">effect</span><span>.*
 </span><span class="keyword">import</span><span> </span><span class="identifier">fs2</span><span>.</span><span class="identifier">aws</span><span>.</span><span class="identifier">sqs</span><span>.{</span><span class="type-name">SQS</span><span>, </span><span class="type-name">SqsConfig</span><span>}
-</span><span class="keyword">import</span><span> </span><span class="identifier">io</span><span>.</span><span class="identifier">laserdisc</span><span>.</span><span class="identifier">pure</span><span>.</span><span class="identifier">sqs</span><span>.</span><span class="identifier">tagless</span><span>.{</span><span class="type-name">SqsAsyncClientOp</span><span>, </span><span class="type-name">Interpreter</span><span> </span><span class="identifier">as</span><span> </span><span class="type-name">SqsInterpreter</span><span>}
-</span><span class="keyword">import</span><span> </span><span class="identifier">software</span><span>.</span><span class="identifier">amazon</span><span>.</span><span class="identifier">awssdk</span><span>.</span><span class="identifier">services</span><span>.</span><span class="identifier">sqs</span><span>.</span><span class="type-name">SqsAsyncClient</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">io</span><span>.</span><span class="identifier">laserdisc</span><span>.</span><span class="identifier">pure</span><span>.</span><span class="identifier">sqs</span><span>.</span><span class="identifier">tagless</span><span>.</span><span class="type-name">SqsInterpreter</span><span>
 </span><span class="keyword">import</span><span> </span><span class="identifier">software</span><span>.</span><span class="identifier">amazon</span><span>.</span><span class="identifier">awssdk</span><span>.</span><span class="identifier">services</span><span>.</span><span class="identifier">sqs</span><span>.</span><span class="identifier">model</span><span>.</span><span class="type-name">ListQueuesResponse</span><span>
 </span><span class="keyword">import</span><span> </span><span class="identifier">scala</span><span>.</span><span class="identifier">concurrent</span><span>.</span><span class="identifier">duration</span><span>.*
 
@@ -167,18 +165,15 @@
 
 </span><span class="keyword">object</span><span> </span><span class="type-name">SQSExample</span><span> {
 
-  </span><span class="keyword">def</span><span> </span><span class="declaration-name">mkSqsResource</span><span>: </span><span class="type-name">Resource</span><span>[</span><span class="type-name">IO</span><span>, </span><span class="type-name">SqsAsyncClientOp</span><span>[</span><span class="type-name">IO</span><span>]] =
-    </span><span class="type-name">SqsInterpreter</span><span>[</span><span class="type-name">IO</span><span>].</span><span class="type-name">SqsAsyncClientOpResource</span><span>(</span><span class="type-name">SqsAsyncClient</span><span>.</span><span class="identifier">builder</span><span>())
-
   </span><span class="comment">// use the tagless-final wrapper directly for effectful AWS SDK calls
-</span><span>  </span><span class="keyword">def</span><span> </span><span class="declaration-name">simpleTaglessFinalCall</span><span>: </span><span class="type-name">IO</span><span>[</span><span class="type-name">ListQueuesResponse</span><span>] =
-    </span><span class="identifier">mkSqsResource</span><span>.</span><span class="identifier">use</span><span> { </span><span class="identifier">client</span><span> =&gt;
+</span><span>  </span><span class="keyword">def</span><span> </span><span class="declaration-name">basicExample</span><span>: </span><span class="type-name">IO</span><span>[</span><span class="type-name">ListQueuesResponse</span><span>] =
+    </span><span class="type-name">SqsInterpreter</span><span>[</span><span class="type-name">IO</span><span>].</span><span class="identifier">resource</span><span>.</span><span class="identifier">use</span><span> { </span><span class="identifier">client</span><span> =&gt;
       </span><span class="identifier">client</span><span>.</span><span class="identifier">listQueues</span><span>
     }
 
   </span><span class="comment">// or make use of the streaming API for consuming and publishing messages
 </span><span>  </span><span class="keyword">def</span><span> </span><span class="declaration-name">fs2StreamingExample</span><span>: </span><span class="type-name">IO</span><span>[</span><span class="type-name">Unit</span><span>] =
-    </span><span class="identifier">mkSqsResource</span><span>.</span><span class="identifier">use</span><span> { </span><span class="identifier">sqsOp</span><span> =&gt;
+    </span><span class="type-name">SqsInterpreter</span><span>[</span><span class="type-name">IO</span><span>].</span><span class="identifier">resource</span><span>.</span><span class="identifier">use</span><span> { </span><span class="identifier">sqsOp</span><span> =&gt;
       </span><span class="type-name">SQS</span><span>.</span><span class="identifier">create</span><span>[</span><span class="type-name">IO</span><span>](</span><span class="identifier">config</span><span>, </span><span class="identifier">sqsOp</span><span>).</span><span class="identifier">flatMap</span><span> { </span><span class="identifier">sqs</span><span> =&gt;
         </span><span class="keyword">for</span><span> {
           </span><span class="comment">// publish

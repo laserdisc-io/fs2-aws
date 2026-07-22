@@ -81,6 +81,7 @@
   </div>
 
   <ul class="nav-list">
+    <li class="level1 nav-leaf"><a href="../migration.html">Migrating from 6.x to 7.x</a></li>
     <li class="level1 nav-header">modules</li>
     <li class="level2 nav-leaf"><a href="fs2-aws-dynamodb.html">fs2-aws-dynamodb</a></li>
     <li class="level2 active nav-leaf"><a href="#">fs2-aws-kinesis</a></li>
@@ -162,14 +163,11 @@
         still available and takes the same three SDK clients plus a <code>ClientVersionConfig</code>.</p>
         
         <h3 id="choosing-the-clientversionconfig" class="section"><a class="anchor-link left" href="#choosing-the-clientversionconfig"><i class="icofont-laika link">&#xef71;</i></a>Choosing the <code>ClientVersionConfig</code></h3>
-        <p>KCL 3.x changed the lease-coordination protocol, so the default scheduler requires you to pick a
-        mode explicitly:</p>
+        <p>KCL 3.x changed the lease-coordination protocol, so to prevent accidental misconfiguration for existing applications, the <code>ClientVersionConfig</code> must be explicitly set.</p>
         <ul>
-          <li><code>CLIENT_VERSION_CONFIG_3X</code> — new applications, or once all workers run KCL 3.x.</li>
-          <li><code>CLIENT_VERSION_CONFIG_COMPATIBLE_WITH_2X</code> — while workers built against KCL 2.x still share
-          the same lease table; switch to <code>CLIENT_VERSION_CONFIG_3X</code> once migration completes.</li>
+          <li>For a new application, use <code>CLIENT_VERSION_CONFIG_3X</code>. </li>
+          <li>For an existing application, see the <a href="https://docs.aws.amazon.com/streams/latest/dev/kcl-migration-from-2-3.html">KCL 2.x-to-3.x migration guide</a> (and also the fs2-aws <a href="../migration.html">v7 migration notes</a>)</li>
         </ul>
-        <p>See the <a href="https://docs.aws.amazon.com/streams/latest/dev/kcl-migration-from-2-3.html">KCL 2.x-to-3.x migration guide</a>.</p>
         
         <h3 id="checkpointing-records" class="section"><a class="anchor-link left" href="#checkpointing-records"><i class="icofont-laika link">&#xef71;</i></a>Checkpointing records</h3>
         <p>Records must be checkpointed to record consumer progress. Checkpointing a record implicitly
@@ -200,11 +198,10 @@
         results) and <code>writeObjectToKinesis</code> (takes an implicit <code>I =&gt; ByteBuffer</code> encoder).</p>
         
         <h2 id="use-with-localstack" class="section"><a class="anchor-link left" href="#use-with-localstack"><i class="icofont-laika link">&#xef71;</i></a>Use with LocalStack</h2>
-        <p>Consuming from and publishing to Kinesis in <a href="https://localstack.cloud/">LocalStack</a> works —
-        set the client <code>endpointOverride</code> (e.g. <code>http://localhost:4566</code>) and use <code>Polling</code> retrieval
-        mode (LocalStack does not support <code>FanOut</code>). See
-        <a href="https://github.com/laserdisc-io/fs2-aws/blob/main/fs2-aws-examples/src/main/scala/fs2/aws/examples/KinesisExampleNew.scala"><code>KinesisExampleNew</code></a>
-        for a complete runnable example.</p>
+        <p>Consuming from and publishing to Kinesis in <a href="https://localstack.cloud/">LocalStack</a> works. 
+        Set the client <code>endpointOverride</code> (e.g. <code>http://localhost:4566</code>) and use <code>Polling</code> retrieval
+        mode (LocalStack does not support <code>FanOut</code>). </p>
+        <p>See <a href="https://github.com/laserdisc-io/fs2-aws/blob/main/fs2-aws-examples/src/main/scala/fs2/aws/examples/KinesisExampleNew.scala"><code>KinesisExampleNew</code></a> for a complete runnable example.</p>
         
         <h2 id="testing" class="section"><a class="anchor-link left" href="#testing"><i class="icofont-laika link">&#xef71;</i></a>Testing</h2>
         <p>See <a href="fs2-aws-testkit.html">fs2-aws-testkit</a> for test doubles for both the consumer and the producer.</p>

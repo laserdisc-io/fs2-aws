@@ -81,6 +81,7 @@
   </div>
 
   <ul class="nav-list">
+    <li class="level1 nav-leaf"><a href="../migration.html">Migrating from 6.x to 7.x</a></li>
     <li class="level1 nav-header">modules</li>
     <li class="level2 nav-leaf"><a href="fs2-aws-dynamodb.html">fs2-aws-dynamodb</a></li>
     <li class="level2 nav-leaf"><a href="fs2-aws-kinesis.html">fs2-aws-kinesis</a></li>
@@ -119,7 +120,7 @@
         <p>Machine-generated <a href="https://okmij.org/ftp/tagless-final/index.html">tagless-final</a> wrappers for
         the AWS SDK v2 <strong>async</strong> clients. Each module exposes the full client API as an algebra in an
         arbitrary effect <code>F[_]: Async</code> — every <code>CompletableFuture</code>-returning SDK method becomes an
-        <code>F</code>-returning method — plus an <code>Interpreter</code> that builds instances (and manages the underlying
+        <code>F</code>-returning method — plus an interpreter that builds instances (and manages the underlying
         client as a <code>cats.effect.Resource</code>).</p>
         <table>
           <thead>
@@ -127,6 +128,7 @@
               <th>Module</th>
               <th>Wraps</th>
               <th>Algebra</th>
+              <th>Interpreter</th>
             </tr>
           </thead>
           <tbody>
@@ -134,31 +136,37 @@
               <td><code>pure-s3-tagless</code></td>
               <td><code>S3AsyncClient</code></td>
               <td><code>S3AsyncClientOp[F]</code></td>
+              <td><code>S3Interpreter</code></td>
             </tr>
             <tr>
               <td><code>pure-sqs-tagless</code></td>
               <td><code>SqsAsyncClient</code></td>
               <td><code>SqsAsyncClientOp[F]</code></td>
+              <td><code>SqsInterpreter</code></td>
             </tr>
             <tr>
               <td><code>pure-sns-tagless</code></td>
               <td><code>SnsAsyncClient</code></td>
               <td><code>SnsAsyncClientOp[F]</code></td>
+              <td><code>SnsInterpreter</code></td>
             </tr>
             <tr>
               <td><code>pure-kinesis-tagless</code></td>
               <td><code>KinesisAsyncClient</code></td>
               <td><code>KinesisAsyncClientOp[F]</code></td>
+              <td><code>KinesisInterpreter</code></td>
             </tr>
             <tr>
               <td><code>pure-dynamodb-tagless</code></td>
               <td><code>DynamoDbAsyncClient</code></td>
               <td><code>DynamoDbAsyncClientOp[F]</code></td>
+              <td><code>DynamoDbInterpreter</code></td>
             </tr>
             <tr>
               <td><code>pure-cloudwatch-tagless</code></td>
               <td><code>CloudWatchAsyncClient</code></td>
               <td><code>CloudWatchAsyncClientOp[F]</code></td>
+              <td><code>CloudWatchInterpreter</code></td>
             </tr>
           </tbody>
         </table>
@@ -171,14 +179,11 @@
         <p>Acquire the algebra as a <code>Resource</code> from the SDK client builder, then call SDK operations as
         <code>F</code> effects:</p>
         <pre><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">cats</span><span>.</span><span class="identifier">effect</span><span>.*
-</span><span class="keyword">import</span><span> </span><span class="identifier">io</span><span>.</span><span class="identifier">laserdisc</span><span>.</span><span class="identifier">pure</span><span>.</span><span class="identifier">sqs</span><span>.</span><span class="identifier">tagless</span><span>.{</span><span class="type-name">Interpreter</span><span> </span><span class="identifier">as</span><span> </span><span class="type-name">SqsInterpreter</span><span>, </span><span class="type-name">SqsAsyncClientOp</span><span>}
-</span><span class="keyword">import</span><span> </span><span class="identifier">software</span><span>.</span><span class="identifier">amazon</span><span>.</span><span class="identifier">awssdk</span><span>.</span><span class="identifier">services</span><span>.</span><span class="identifier">sqs</span><span>.</span><span class="type-name">SqsAsyncClient</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">io</span><span>.</span><span class="identifier">laserdisc</span><span>.</span><span class="identifier">pure</span><span>.</span><span class="identifier">sqs</span><span>.</span><span class="identifier">tagless</span><span>.{</span><span class="type-name">SqsInterpreter</span><span>, </span><span class="type-name">SqsAsyncClientOp</span><span>}
 </span><span class="keyword">import</span><span> </span><span class="identifier">software</span><span>.</span><span class="identifier">amazon</span><span>.</span><span class="identifier">awssdk</span><span>.</span><span class="identifier">services</span><span>.</span><span class="identifier">sqs</span><span>.</span><span class="identifier">model</span><span>.{</span><span class="type-name">CreateQueueRequest</span><span>, </span><span class="type-name">SendMessageRequest</span><span>}
 
 </span><span class="keyword">val</span><span> </span><span class="identifier">sqsResource</span><span>: </span><span class="type-name">Resource</span><span>[</span><span class="type-name">IO</span><span>, </span><span class="type-name">SqsAsyncClientOp</span><span>[</span><span class="type-name">IO</span><span>]] =
-  </span><span class="type-name">SqsInterpreter</span><span>[</span><span class="type-name">IO</span><span>].</span><span class="type-name">SqsAsyncClientOpResource</span><span>(
-    </span><span class="type-name">SqsAsyncClient</span><span>.</span><span class="identifier">builder</span><span>() </span><span class="comment">// configure credentials/region/endpoint as needed
-</span><span>  )
+  </span><span class="type-name">SqsInterpreter</span><span>[</span><span class="type-name">IO</span><span>].</span><span class="identifier">resource</span><span>
 
 </span><span class="identifier">sqsResource</span><span>.</span><span class="identifier">use</span><span> { </span><span class="identifier">sqs</span><span> =&gt;
   </span><span class="keyword">for</span><span> {
@@ -188,6 +193,10 @@
     )
   } </span><span class="keyword">yield</span><span> ()
 }</span></code></pre>
+        <p>To configure credentials/region/endpoint, pass a builder:
+        <code>SqsInterpreter[IO].resource(SqsAsyncClient.builder().region(...))</code>. When you want the raw SDK
+        client rather than the algebra (e.g. to hand it to the KCL), use <code>clientResource</code> instead of
+        <code>resource</code>.</p>
         <p>The interpreters also support <code>Kleisli</code>-based environment passing — see
         <a href="https://github.com/laserdisc-io/fs2-aws/blob/main/fs2-aws-examples/src/main/scala/fs2/aws/examples/PureAWS.scala"><code>PureAWS.scala</code></a>
         for an example combining SQS and SNS both ways.</p>
