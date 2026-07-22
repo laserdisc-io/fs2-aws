@@ -31,9 +31,16 @@ object CloudWatchInterpreter {
 
 }
 
+// the interpreter was previously named `Interpreter`; kept (as both a type and a term) so 6.x code still compiles
+@deprecated("use CloudWatchInterpreter", "7.0.0")
+trait Interpreter[M[_]] extends CloudWatchInterpreter[M]
+
 @deprecated("use CloudWatchInterpreter", "7.0.0")
 object Interpreter {
-  def apply[M[_]](implicit am: Async[M]): CloudWatchInterpreter[M] = CloudWatchInterpreter[M]
+  def apply[M[_]](implicit am: Async[M]): Interpreter[M] =
+    new Interpreter[M] {
+      val asyncM: Async[M] = am
+    }
 }
 
 // Family of interpreters into Kleisli arrows for some monad M.

@@ -29,9 +29,16 @@ object SnsInterpreter {
 
 }
 
+// the interpreter was previously named `Interpreter`; kept (as both a type and a term) so 6.x code still compiles
+@deprecated("use SnsInterpreter", "7.0.0")
+trait Interpreter[M[_]] extends SnsInterpreter[M]
+
 @deprecated("use SnsInterpreter", "7.0.0")
 object Interpreter {
-  def apply[M[_]](implicit am: Async[M]): SnsInterpreter[M] = SnsInterpreter[M]
+  def apply[M[_]](implicit am: Async[M]): Interpreter[M] =
+    new Interpreter[M] {
+      val asyncM: Async[M] = am
+    }
 }
 
 // Family of interpreters into Kleisli arrows for some monad M.
