@@ -206,13 +206,13 @@ trait SqsInterpreter[M[_]] { outer =>
   }
   // end interpreters
 
-  /** Builds a [[SqsAsyncClient]] from the given builder, exposed as the [[SqsAsyncClientOp]] algebra in a managed [[Resource]]. */
+  /** Builds a `SqsAsyncClient` from the given builder, exposed as the [[SqsAsyncClientOp]] algebra in a managed `Resource`. */
   def resource(builder: SqsAsyncClientBuilder): Resource[M, SqsAsyncClientOp[M]] = clientResource(builder).map(create)
 
   /** Like `resource(builder)`, but using a default client builder. */
   def resource: Resource[M, SqsAsyncClientOp[M]] = resource(SqsAsyncClient.builder())
 
-  /** Builds the underlying [[SqsAsyncClient]] from the given builder as a managed [[Resource]]. */
+  /** Builds the underlying `SqsAsyncClient` from the given builder as a managed `Resource`. */
   def clientResource(builder: SqsAsyncClientBuilder): Resource[M, SqsAsyncClient] =
     Resource.fromAutoCloseable(asyncM.delay(builder.build()))
 

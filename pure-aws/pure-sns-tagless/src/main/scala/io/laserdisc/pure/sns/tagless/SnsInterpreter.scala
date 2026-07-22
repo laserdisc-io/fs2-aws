@@ -397,13 +397,13 @@ trait SnsInterpreter[M[_]] { outer =>
   }
   // end interpreters
 
-  /** Builds a [[SnsAsyncClient]] from the given builder, exposed as the [[SnsAsyncClientOp]] algebra in a managed [[Resource]]. */
+  /** Builds a `SnsAsyncClient` from the given builder, exposed as the [[SnsAsyncClientOp]] algebra in a managed `Resource`. */
   def resource(builder: SnsAsyncClientBuilder): Resource[M, SnsAsyncClientOp[M]] = clientResource(builder).map(create)
 
   /** Like `resource(builder)`, but using a default client builder. */
   def resource: Resource[M, SnsAsyncClientOp[M]] = resource(SnsAsyncClient.builder())
 
-  /** Builds the underlying [[SnsAsyncClient]] from the given builder as a managed [[Resource]]. */
+  /** Builds the underlying `SnsAsyncClient` from the given builder as a managed `Resource`. */
   def clientResource(builder: SnsAsyncClientBuilder): Resource[M, SnsAsyncClient] =
     Resource.fromAutoCloseable(asyncM.delay(builder.build()))
 

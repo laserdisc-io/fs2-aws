@@ -339,13 +339,13 @@ class TaglessGen[T](
   val fInterp: String = {
     val oname = ct.runtimeClass.getSimpleName // original name, without name mapping
     s"""
-       |  /** Builds a [[$oname]] from the given builder, exposed as the [[${oname}Op]] algebra in a managed [[Resource]]. */
+       |  /** Builds a `$oname` from the given builder, exposed as the [[${oname}Op]] algebra in a managed `Resource`. */
        |  def resource(builder: ${oname}Builder): Resource[M, ${oname}Op[M]] = clientResource(builder).map(create)
        |
        |  /** Like `resource(builder)`, but using a default client builder. */
        |  def resource: Resource[M, ${oname}Op[M]] = resource($oname.builder())
        |
-       |  /** Builds the underlying [[$oname]] from the given builder as a managed [[Resource]]. */
+       |  /** Builds the underlying `$oname` from the given builder as a managed `Resource`. */
        |  def clientResource(builder: ${oname}Builder): Resource[M, $oname] = Resource.fromAutoCloseable(asyncM.delay(builder.build()))
        |
        |  /** Like `clientResource(builder)`, but using a default client builder. */

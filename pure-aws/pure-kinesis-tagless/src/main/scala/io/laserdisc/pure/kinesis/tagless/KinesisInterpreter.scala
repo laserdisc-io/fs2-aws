@@ -304,14 +304,14 @@ trait KinesisInterpreter[M[_]] { outer =>
   }
   // end interpreters
 
-  /** Builds a [[KinesisAsyncClient]] from the given builder, exposed as the [[KinesisAsyncClientOp]] algebra in a managed [[Resource]]. */
+  /** Builds a `KinesisAsyncClient` from the given builder, exposed as the [[KinesisAsyncClientOp]] algebra in a managed `Resource`. */
   def resource(builder: KinesisAsyncClientBuilder): Resource[M, KinesisAsyncClientOp[M]] =
     clientResource(builder).map(create)
 
   /** Like `resource(builder)`, but using a default client builder. */
   def resource: Resource[M, KinesisAsyncClientOp[M]] = resource(KinesisAsyncClient.builder())
 
-  /** Builds the underlying [[KinesisAsyncClient]] from the given builder as a managed [[Resource]]. */
+  /** Builds the underlying `KinesisAsyncClient` from the given builder as a managed `Resource`. */
   def clientResource(builder: KinesisAsyncClientBuilder): Resource[M, KinesisAsyncClient] =
     Resource.fromAutoCloseable(asyncM.delay(builder.build()))
 
