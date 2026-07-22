@@ -367,14 +367,14 @@ trait CloudWatchInterpreter[M[_]] { outer =>
   }
   // end interpreters
 
-  /** Builds a [[CloudWatchAsyncClient]] from the given builder, exposed as the [[CloudWatchAsyncClientOp]] algebra in a managed [[Resource]]. */
+  /** Builds a `CloudWatchAsyncClient` from the given builder, exposed as the [[CloudWatchAsyncClientOp]] algebra in a managed `Resource`. */
   def resource(builder: CloudWatchAsyncClientBuilder): Resource[M, CloudWatchAsyncClientOp[M]] =
     clientResource(builder).map(create)
 
   /** Like `resource(builder)`, but using a default client builder. */
   def resource: Resource[M, CloudWatchAsyncClientOp[M]] = resource(CloudWatchAsyncClient.builder())
 
-  /** Builds the underlying [[CloudWatchAsyncClient]] from the given builder as a managed [[Resource]]. */
+  /** Builds the underlying `CloudWatchAsyncClient` from the given builder as a managed `Resource`. */
   def clientResource(builder: CloudWatchAsyncClientBuilder): Resource[M, CloudWatchAsyncClient] =
     Resource.fromAutoCloseable(asyncM.delay(builder.build()))
 

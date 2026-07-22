@@ -436,14 +436,14 @@ trait DynamoDbInterpreter[M[_]] { outer =>
   }
   // end interpreters
 
-  /** Builds a [[DynamoDbAsyncClient]] from the given builder, exposed as the [[DynamoDbAsyncClientOp]] algebra in a managed [[Resource]]. */
+  /** Builds a `DynamoDbAsyncClient` from the given builder, exposed as the [[DynamoDbAsyncClientOp]] algebra in a managed `Resource`. */
   def resource(builder: DynamoDbAsyncClientBuilder): Resource[M, DynamoDbAsyncClientOp[M]] =
     clientResource(builder).map(create)
 
   /** Like `resource(builder)`, but using a default client builder. */
   def resource: Resource[M, DynamoDbAsyncClientOp[M]] = resource(DynamoDbAsyncClient.builder())
 
-  /** Builds the underlying [[DynamoDbAsyncClient]] from the given builder as a managed [[Resource]]. */
+  /** Builds the underlying `DynamoDbAsyncClient` from the given builder as a managed `Resource`. */
   def clientResource(builder: DynamoDbAsyncClientBuilder): Resource[M, DynamoDbAsyncClient] =
     Resource.fromAutoCloseable(asyncM.delay(builder.build()))
 

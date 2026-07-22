@@ -787,13 +787,13 @@ trait S3Interpreter[M[_]] { outer =>
   }
   // end interpreters
 
-  /** Builds a [[S3AsyncClient]] from the given builder, exposed as the [[S3AsyncClientOp]] algebra in a managed [[Resource]]. */
+  /** Builds a `S3AsyncClient` from the given builder, exposed as the [[S3AsyncClientOp]] algebra in a managed `Resource`. */
   def resource(builder: S3AsyncClientBuilder): Resource[M, S3AsyncClientOp[M]] = clientResource(builder).map(create)
 
   /** Like `resource(builder)`, but using a default client builder. */
   def resource: Resource[M, S3AsyncClientOp[M]] = resource(S3AsyncClient.builder())
 
-  /** Builds the underlying [[S3AsyncClient]] from the given builder as a managed [[Resource]]. */
+  /** Builds the underlying `S3AsyncClient` from the given builder as a managed `Resource`. */
   def clientResource(builder: S3AsyncClientBuilder): Resource[M, S3AsyncClient] =
     Resource.fromAutoCloseable(asyncM.delay(builder.build()))
 
