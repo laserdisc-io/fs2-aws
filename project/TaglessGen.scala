@@ -43,6 +43,9 @@ class TaglessGen[T](
   val clientFQDN: String       = ct.runtimeClass.getCanonicalName
   val clientSimpleName: String = ct.runtimeClass.getSimpleName
 
+  // e.g. KinesisAsyncClient -> KinesisInterpreter
+  val interpreterName: String = s"${clientSimpleName.stripSuffix("AsyncClient")}Interpreter"
+
   // These Java classes will have non-Java names in our generated code
   val ClassBoolean: Class[Boolean] = classOf
   val ClassByte: Class[Byte]       = classOf
@@ -336,8 +339,23 @@ class TaglessGen[T](
   val fInterp: String = {
     val oname = ct.runtimeClass.getSimpleName // original name, without name mapping
     s"""
-       |  def ${oname}Resource(builder : ${oname}Builder) : Resource[M, $oname] = Resource.fromAutoCloseable(asyncM.delay(builder.build()))
-       |  def ${oname}OpResource(builder: ${oname}Builder) : Resource[M, ${oname}Op[M]] = ${oname}Resource(builder).map(create)
+       |  /** Builds a [[$oname]] from the given builder, exposed as the [[${oname}Op]] algebra in a managed [[Resource]]. */
+       |  def resource(builder: ${oname}Builder): Resource[M, ${oname}Op[M]] = clientResource(builder).map(create)
+       |
+       |  /** Like `resource(builder)`, but using a default client builder. */
+       |  def resource: Resource[M, ${oname}Op[M]] = resource($oname.builder())
+       |
+       |  /** Builds the underlying [[$oname]] from the given builder as a managed [[Resource]]. */
+       |  def clientResource(builder: ${oname}Builder): Resource[M, $oname] = Resource.fromAutoCloseable(asyncM.delay(builder.build()))
+       |
+       |  /** Like `clientResource(builder)`, but using a default client builder. */
+       |  def clientResource: Resource[M, $oname] = clientResource($oname.builder())
+       |
+       |  @deprecated("use clientResource(builder)", "7.0.0")
+       |  def ${oname}Resource(builder: ${oname}Builder): Resource[M, $oname] = clientResource(builder)
+       |
+       |  @deprecated("use resource(builder)", "7.0.0")
+       |  def ${oname}OpResource(builder: ${oname}Builder): Resource[M, ${oname}Op[M]] = resource(builder)
        |
        |  def create(client : $oname) : ${oname}Op[M] = new ${oname}Op[M] {
        |
@@ -372,19 +390,24 @@ class TaglessGen[T](
        |${referenceImports.distinct.sorted.mkString("\n")}
        |
        |
-       |object Interpreter {
+       |object $interpreterName {
        |
        |  def apply[M[_]](
        |    implicit am: Async[M]
-       |  ): Interpreter[M] =
-       |    new Interpreter[M] {
+       |  ): $interpreterName[M] =
+       |    new $interpreterName[M] {
        |      val asyncM: Async[M] = am
        |    }
        |
        |}
        |
+       |@deprecated("use $interpreterName", "7.0.0")
+       |object Interpreter {
+       |  def apply[M[_]](implicit am: Async[M]): $interpreterName[M] = $interpreterName[M]
+       |}
+       |
        |// Family of interpreters into Kleisli arrows for some monad M.
-       |trait Interpreter[M[_]] { outer =>
+       |trait $interpreterName[M[_]] { outer =>
        |
        |  import java.util.concurrent.CompletableFuture
        |
@@ -424,7 +447,10 @@ class TaglessGen[T](
     base.mkdirs()
 
     val op = writeFile(s"${clientSimpleName}Op.scala", module);
-    val ki = writeFile(s"Interpreter.scala", kleisliInterpreter);
+    val ki = writeFile(s"$interpreterName.scala", kleisliInterpreter);
+
+    // locally clear out the old pre-7.x intepreter if it exists
+    new File(base, "Interpreter.scala").delete()
 
     log.info(s"""Generating Tagless Algebra for $awsService:
         |   SDK Client: $clientSimpleName
