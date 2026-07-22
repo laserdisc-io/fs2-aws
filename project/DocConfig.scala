@@ -6,9 +6,10 @@ import laika.helium.config.*
 import laika.sbt.LaikaPlugin.autoImport.*
 import laika.theme.config.Color
 import org.typelevel.sbt.TypelevelSitePlugin.autoImport.*
+import mdoc.MdocPlugin.autoImport.mdocVariables
 import sbt.*
 import sbt.Keys.{isSnapshot, version}
-import sbtdynver.DynVerPlugin.autoImport.previousStableVersion
+import sbtdynver.DynVerPlugin.autoImport.{dynverGitDescribeOutput, previousStableVersion}
 
 //noinspection TypeAnnotation
 object DocConfig {
@@ -18,6 +19,20 @@ object DocConfig {
     val current = version.value
     if (!isSnapshot.value && current.matches("""\d+\.\d+\.\d+""")) Some(current)
     else previousStableVersion.value
+  }
+
+  // temporary hack until we get v7 past RC
+  private val latestPreRelease = Def.setting {
+    val PreRelease    = """(\d+)\.(\d+)\.(\d+)-\w[\w.]*""".r
+    val StableVersion = """(\d+)\.(\d+)\.(\d+)""".r
+    val stable        = latestStableRelease.value.collect { case StableVersion(ma, mi, pa) =>
+      (ma.toInt, mi.toInt, pa.toInt)
+    }
+    dynverGitDescribeOutput.value.map(_.ref.dropPrefix).collect {
+      case v @ PreRelease(ma, mi, pa)
+          if stable.forall(Ordering[(Int, Int, Int)].gt((ma.toInt, mi.toInt, pa.toInt), _)) =>
+        v
+    }
   }
 
   // maybe see if the laika project wants this
@@ -32,6 +47,9 @@ object DocConfig {
 
   val FS2AWS = Seq(
     tlSiteApiUrl := Some(url("https://fs2aws.laserdisc.io/")),
+    // sbt-typelevel resolves VERSION to a pre-release when no stable release is bin-compatible with it;
+    // we always want the stable release there, with the pre-release surfaced on the landing page
+    mdocVariables += "VERSION" -> latestStableRelease.value.getOrElse(version.value),
     laikaExtensions += SyntaxHighlighting,
     tlSiteIsTypelevelProject := None,
     tlSiteHelium             :=
@@ -82,12 +100,20 @@ object DocConfig {
           logo = Some(Image.internal(Root / "fs2-aws-logo.png", alt = Some("fs2-aws logo"), height = Some(px(150)))),
           title = Some("fs2-aws"),
           subtitle = Some("FS2 streaming wrappers for the AWS SDK"),
-          latestReleases = latestStableRelease.value.map { v =>
-            ReleaseInfo(
-              "Latest Release",
-              s"""<a href="https://github.com/laserdisc-io/fs2-aws/releases/tag/v$v">$v</a>"""
-            )
-          }.toSeq,
+          latestReleases = (
+            latestStableRelease.value.map { v =>
+              ReleaseInfo(
+                "Latest Release",
+                s"""<a href="https://github.com/laserdisc-io/fs2-aws/releases/tag/v$v">$v</a>"""
+              )
+            } ++
+              latestPreRelease.value.map { v =>
+                ReleaseInfo(
+                  "Latest Pre-Release",
+                  s"""<a href="https://github.com/laserdisc-io/fs2-aws/releases/tag/v$v">$v</a>"""
+                )
+              }
+          ).toSeq,
           license = Some("""<a href="https://github.com/laserdisc-io/fs2-aws/blob/main/LICENSE">MIT</a>"""),
           titleLinks = Seq(
             VersionMenu.create(unversionedLabel = "Getting Started"),
