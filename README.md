@@ -5,7 +5,12 @@
 [![Maven Central](https://img.shields.io/maven-central/v/io.laserdisc/fs2-aws-s3_3)](https://central.sonatype.com/search?q=io.laserdisc.fs2-aws)
 [![Coverage Status](https://coveralls.io/repos/github/laserdisc-io/fs2-aws/badge.svg?branch=main)](https://coveralls.io/github/laserdisc-io/fs2-aws?branch=main)
 
+> **Warning**
+> The 7.x release contains breaking changes from 6.x. See [migration notes]() for details.
+
 Provides [FS2](https://fs2.io) streaming utilities for interacting with AWS.
+
+<img src="docs/fs2-aws-logo.png" width="150" height="150" alt="fs2-aws logo"/>
 
 This project wraps the [AWS SDK v2](https://github.com/aws/aws-sdk-java-v2) S3, SQS, SNS, DynamoDB and Cloudwatch clients in purely functional, resource-safe APIs built
 on [cats-effect](https://typelevel.org/cats-effect/), and offers an FS2 streaming interface for common operations.

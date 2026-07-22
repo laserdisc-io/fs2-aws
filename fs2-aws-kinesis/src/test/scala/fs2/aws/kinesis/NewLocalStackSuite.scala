@@ -5,9 +5,9 @@ import cats.effect.{IO, Resource}
 import fs2.Stream
 import fs2.aws.internal.KinesisProducerClientImpl
 import fs2.aws.kinesis.publisher.writeToKinesis
-import io.laserdisc.pure.cloudwatch.tagless.Interpreter as CloudwatchInterpreter
-import io.laserdisc.pure.dynamodb.tagless.Interpreter as DynamoDbInterpreter
-import io.laserdisc.pure.kinesis.tagless.Interpreter as KinesisInterpreter
+import io.laserdisc.pure.cloudwatch.tagless.CloudWatchInterpreter
+import io.laserdisc.pure.dynamodb.tagless.DynamoDbInterpreter
+import io.laserdisc.pure.kinesis.tagless.KinesisInterpreter
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -199,10 +199,10 @@ class NewLocalStackSuite extends AnyFlatSpec with Matchers with ScalaFutures {
       cac: CloudWatchAsyncClientBuilder
   ) =
     for {
-      d <- DynamoDbInterpreter[IO].DynamoDbAsyncClientResource(dac)
-      c <- CloudwatchInterpreter[IO].CloudWatchAsyncClientResource(cac)
+      d <- DynamoDbInterpreter[IO].clientResource(dac)
+      c <- CloudWatchInterpreter[IO].clientResource(cac)
       i = KinesisInterpreter[IO]
-      k <- i.KinesisAsyncClientResource(kac)
+      k <- i.clientResource(kac)
       kinesisInterpreter = i.create(k)
       // Use native KCL 3.x mode in tests (no compat migration state-machine overhead).
       kAlgebra = Kinesis.create[IO](k, d, c, ClientVersionConfig.CLIENT_VERSION_CONFIG_3X)

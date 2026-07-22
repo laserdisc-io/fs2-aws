@@ -2,7 +2,7 @@ package fs2.aws.sqs
 
 import cats.effect.unsafe.IORuntime
 import cats.effect.{IO, Resource}
-import io.laserdisc.pure.sqs.tagless.{Interpreter, SqsAsyncClientOp}
+import io.laserdisc.pure.sqs.tagless.{SqsAsyncClientOp, SqsInterpreter}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
@@ -122,7 +122,7 @@ class SqsSpec extends AnyWordSpec with Matchers {
       )
 
   def mkAWSSQSClient(): Resource[IO, SqsAsyncClientOp[IO]] =
-    Interpreter[IO].SqsAsyncClientOpResource(
+    SqsInterpreter[IO].resource(
       SqsAsyncClient
         .builder()
         .credentialsProvider(

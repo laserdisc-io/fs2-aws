@@ -28,11 +28,9 @@ To use `SQS[F]`, you need an instance of `SqsAsyncClientOp[F]`:
 The general usage pattern is as follows:
 
 ```scala
-// first, get your SQS builder from the AWS SDK (configure credentials, region, etc.)
-val sqsBuilder = SqsAsyncClient.builder()
-
-// now create the tagless-final wrapper resource around it
-val sqsInterpreter = SqsInterpreter[IO].SqsAsyncClientOpResource(sqsBuilder)
+// create the tagless-final wrapper resource (pass an SqsAsyncClient.builder()
+// if you need to configure credentials, region, etc.)
+val sqsInterpreter = SqsInterpreter[IO].resource
 
 // use the interpreter directly for effectful AWS SDK calls
 sqsInterpreter.use { sqsOp =>
@@ -48,8 +46,7 @@ sqsInterpreter.use { sqsOp =>
 ```scala mdoc:compile-only
 import cats.effect.*
 import fs2.aws.sqs.{SQS, SqsConfig}
-import io.laserdisc.pure.sqs.tagless.{SqsAsyncClientOp, Interpreter as SqsInterpreter}
-import software.amazon.awssdk.services.sqs.SqsAsyncClient
+import io.laserdisc.pure.sqs.tagless.SqsInterpreter
 import software.amazon.awssdk.services.sqs.model.ListQueuesResponse
 import scala.concurrent.duration.*
 
@@ -61,18 +58,15 @@ val config = SqsConfig(
 
 object SQSExample {
 
-  def mkSqsResource: Resource[IO, SqsAsyncClientOp[IO]] =
-    SqsInterpreter[IO].SqsAsyncClientOpResource(SqsAsyncClient.builder())
-
   // use the tagless-final wrapper directly for effectful AWS SDK calls
-  def simpleTaglessFinalCall: IO[ListQueuesResponse] =
-    mkSqsResource.use { client =>
+  def basicExample: IO[ListQueuesResponse] =
+    SqsInterpreter[IO].resource.use { client =>
       client.listQueues
     }
 
   // or make use of the streaming API for consuming and publishing messages
   def fs2StreamingExample: IO[Unit] =
-    mkSqsResource.use { sqsOp =>
+    SqsInterpreter[IO].resource.use { sqsOp =>
       SQS.create[IO](config, sqsOp).flatMap { sqs =>
         for {
           // publish

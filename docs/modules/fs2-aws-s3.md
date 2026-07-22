@@ -27,11 +27,9 @@ To use `S3[F]`, you need an instance of `S3AsyncClientOp[F]`:
 The general usage pattern is as follows:
 
 ```scala
-// first, get your S3 builder from the AWS SDK (configure credentials, region, etc.)
-val s3Builder = S3AsyncClient.builder()
-
-// now create the tagless-final wrapper resource around it
-val s3Interpreter = S3Interpreter[IO].S3AsyncClientOpResource(s3Builder)
+// create the tagless-final wrapper resource (pass an S3AsyncClient.builder()
+// if you need to configure credentials, region, etc.)
+val s3Interpreter = S3Interpreter[IO].resource
 
 // use the interpreter directly for effectful AWS SDK calls
 s3Interpreter.map(S3.create[IO]).use { s3 =>
@@ -46,8 +44,7 @@ s3Interpreter.map(S3.create[IO]).use { s3 =>
 import cats.effect.*
 import fs2.aws.s3.S3
 import fs2.aws.s3.models.Models.{BucketName, FileKey}
-import io.laserdisc.pure.s3.tagless.{S3AsyncClientOp, Interpreter as S3Interpreter}
-import software.amazon.awssdk.services.s3.S3AsyncClient
+import io.laserdisc.pure.s3.tagless.S3Interpreter
 import software.amazon.awssdk.services.s3.model.ListBucketsResponse
 
 val bucket = BucketName.unsafeFrom("my-bucket")
@@ -55,19 +52,16 @@ val key    = FileKey.unsafeFrom("my-file.txt")
 
 object S3Example {
 
-  def mkS3Resource: Resource[IO, S3AsyncClientOp[IO]] =
-    S3Interpreter[IO].S3AsyncClientOpResource(S3AsyncClient.builder())
-
   // use the tagless-final wrapper directly for effectful AWS SDK calls
-  def simpleTaglessFinalCall: IO[ListBucketsResponse] =
-    mkS3Resource.use { client =>
+  def basicExample: IO[ListBucketsResponse] =
+    S3Interpreter[IO].resource.use { client =>
       client.listBuckets
     }
     
   // or make use of the streaming API for common S3 operations
   def fs2StreamingExample: IO[Unit] = {
 
-    mkS3Resource
+    S3Interpreter[IO].resource
       .map(S3.create[IO])
       .use { s3 =>
         for {

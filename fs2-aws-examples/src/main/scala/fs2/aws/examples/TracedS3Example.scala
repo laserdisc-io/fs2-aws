@@ -8,7 +8,7 @@ import fs2.aws.s3.models.Models.{BucketName, FileKey}
 import fs2.text
 import trace4cats.Span
 import trace4cats.Trace
-import io.laserdisc.pure.s3.tagless.{Interpreter as S3Interpreter, S3AsyncClientOp}
+import io.laserdisc.pure.s3.tagless.{S3AsyncClientOp, S3Interpreter}
 import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3AsyncClient
@@ -23,7 +23,7 @@ object TracedS3Example extends IOApp {
     s3StreamResource.map(S3.create[IO]).use(s3 => program(s3).as(ExitCode.Success))
 
   def s3StreamResource: Resource[IO, S3AsyncClientOp[IO]] =
-    S3Interpreter[IO].S3AsyncClientOpResource(
+    S3Interpreter[IO].resource(
       S3AsyncClient
         .builder()
         .credentialsProvider(StaticCredentialsProvider.create(credentials))

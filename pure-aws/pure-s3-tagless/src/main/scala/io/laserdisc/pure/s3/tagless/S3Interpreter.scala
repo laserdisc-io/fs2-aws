@@ -1,0 +1,1123 @@
+package io.laserdisc.pure.s3.tagless
+
+// Library imports
+import cats.data.Kleisli
+import cats.effect.{Async, Resource}
+
+import software.amazon.awssdk.services.s3.*
+import software.amazon.awssdk.services.s3.model.*
+
+// Types referenced
+import java.nio.file.Path
+import software.amazon.awssdk.core.async.AsyncRequestBody
+import software.amazon.awssdk.core.async.AsyncResponseTransformer
+import software.amazon.awssdk.services.s3.S3ServiceClientConfiguration
+import software.amazon.awssdk.services.s3.S3Utilities
+import software.amazon.awssdk.services.s3.paginators.ListBucketsPublisher
+import software.amazon.awssdk.services.s3.paginators.ListDirectoryBucketsPublisher
+import software.amazon.awssdk.services.s3.paginators.ListMultipartUploadsPublisher
+import software.amazon.awssdk.services.s3.paginators.ListObjectVersionsPublisher
+import software.amazon.awssdk.services.s3.paginators.ListObjectsV2Publisher
+import software.amazon.awssdk.services.s3.paginators.ListPartsPublisher
+import software.amazon.awssdk.services.s3.waiters.S3AsyncWaiter
+
+object S3Interpreter {
+
+  def apply[M[_]](
+      implicit am: Async[M]
+  ): S3Interpreter[M] =
+    new S3Interpreter[M] {
+      val asyncM: Async[M] = am
+    }
+
+}
+
+@deprecated("use S3Interpreter", "7.0.0")
+object Interpreter {
+  def apply[M[_]](implicit am: Async[M]): S3Interpreter[M] = S3Interpreter[M]
+}
+
+// Family of interpreters into Kleisli arrows for some monad M.
+trait S3Interpreter[M[_]] { outer =>
+
+  import java.util.concurrent.CompletableFuture
+
+  implicit val asyncM: Async[M]
+
+  lazy val S3AsyncClientInterpreter: S3AsyncClientInterpreter = new S3AsyncClientInterpreter {}
+  // Some methods are common to all interpreters and can be overridden to change behavior globally.
+
+  private def primitive[J, A](f: J => A): Kleisli[M, J, A] = Kleisli(j => asyncM.blocking(f(j)))
+  private def primitive1[J, A](f: => A): M[A]              = asyncM.blocking(f)
+
+  private def eff[J, A](fut: J => CompletableFuture[A]): Kleisli[M, J, A] = Kleisli { j =>
+    asyncM.fromCompletableFuture(asyncM.delay(fut(j)))
+  }
+  private def eff1[J, A](fut: => CompletableFuture[A]): M[A] =
+    asyncM.fromCompletableFuture(asyncM.delay(fut))
+
+  // Interpreters
+  trait S3AsyncClientInterpreter extends S3AsyncClientOp[Kleisli[M, S3AsyncClient, *]] {
+
+    // domain-specific operations are implemented in terms of `primitive`
+    override def abortMultipartUpload(
+        a: AbortMultipartUploadRequest
+    ): Kleisli[M, S3AsyncClient, AbortMultipartUploadResponse] = eff(_.abortMultipartUpload(a))
+    override def close: Kleisli[M, S3AsyncClient, Unit] = primitive(_.close)
+    override def completeMultipartUpload(
+        a: CompleteMultipartUploadRequest
+    ): Kleisli[M, S3AsyncClient, CompleteMultipartUploadResponse] = eff(_.completeMultipartUpload(a))
+    override def copyObject(a: CopyObjectRequest): Kleisli[M, S3AsyncClient, CopyObjectResponse] = eff(_.copyObject(a))
+    override def createBucket(a: CreateBucketRequest): Kleisli[M, S3AsyncClient, CreateBucketResponse] = eff(
+      _.createBucket(a)
+    )
+    override def createBucketMetadataConfiguration(
+        a: CreateBucketMetadataConfigurationRequest
+    ): Kleisli[M, S3AsyncClient, CreateBucketMetadataConfigurationResponse] = eff(
+      _.createBucketMetadataConfiguration(a)
+    )
+    override def createBucketMetadataTableConfiguration(
+        a: CreateBucketMetadataTableConfigurationRequest
+    ): Kleisli[M, S3AsyncClient, CreateBucketMetadataTableConfigurationResponse] = eff(
+      _.createBucketMetadataTableConfiguration(a)
+    )
+    override def createMultipartUpload(
+        a: CreateMultipartUploadRequest
+    ): Kleisli[M, S3AsyncClient, CreateMultipartUploadResponse] = eff(_.createMultipartUpload(a))
+    override def createSession(a: CreateSessionRequest): Kleisli[M, S3AsyncClient, CreateSessionResponse] = eff(
+      _.createSession(a)
+    )
+    override def deleteBucket(a: DeleteBucketRequest): Kleisli[M, S3AsyncClient, DeleteBucketResponse] = eff(
+      _.deleteBucket(a)
+    )
+    override def deleteBucketAnalyticsConfiguration(
+        a: DeleteBucketAnalyticsConfigurationRequest
+    ): Kleisli[M, S3AsyncClient, DeleteBucketAnalyticsConfigurationResponse] = eff(
+      _.deleteBucketAnalyticsConfiguration(a)
+    )
+    override def deleteBucketCors(a: DeleteBucketCorsRequest): Kleisli[M, S3AsyncClient, DeleteBucketCorsResponse] =
+      eff(_.deleteBucketCors(a))
+    override def deleteBucketEncryption(
+        a: DeleteBucketEncryptionRequest
+    ): Kleisli[M, S3AsyncClient, DeleteBucketEncryptionResponse] = eff(_.deleteBucketEncryption(a))
+    override def deleteBucketIntelligentTieringConfiguration(
+        a: DeleteBucketIntelligentTieringConfigurationRequest
+    ): Kleisli[M, S3AsyncClient, DeleteBucketIntelligentTieringConfigurationResponse] = eff(
+      _.deleteBucketIntelligentTieringConfiguration(a)
+    )
+    override def deleteBucketInventoryConfiguration(
+        a: DeleteBucketInventoryConfigurationRequest
+    ): Kleisli[M, S3AsyncClient, DeleteBucketInventoryConfigurationResponse] = eff(
+      _.deleteBucketInventoryConfiguration(a)
+    )
+    override def deleteBucketLifecycle(
+        a: DeleteBucketLifecycleRequest
+    ): Kleisli[M, S3AsyncClient, DeleteBucketLifecycleResponse] = eff(_.deleteBucketLifecycle(a))
+    override def deleteBucketMetadataConfiguration(
+        a: DeleteBucketMetadataConfigurationRequest
+    ): Kleisli[M, S3AsyncClient, DeleteBucketMetadataConfigurationResponse] = eff(
+      _.deleteBucketMetadataConfiguration(a)
+    )
+    override def deleteBucketMetadataTableConfiguration(
+        a: DeleteBucketMetadataTableConfigurationRequest
+    ): Kleisli[M, S3AsyncClient, DeleteBucketMetadataTableConfigurationResponse] = eff(
+      _.deleteBucketMetadataTableConfiguration(a)
+    )
+    override def deleteBucketMetricsConfiguration(
+        a: DeleteBucketMetricsConfigurationRequest
+    ): Kleisli[M, S3AsyncClient, DeleteBucketMetricsConfigurationResponse] = eff(_.deleteBucketMetricsConfiguration(a))
+    override def deleteBucketOwnershipControls(
+        a: DeleteBucketOwnershipControlsRequest
+    ): Kleisli[M, S3AsyncClient, DeleteBucketOwnershipControlsResponse] = eff(_.deleteBucketOwnershipControls(a))
+    override def deleteBucketPolicy(
+        a: DeleteBucketPolicyRequest
+    ): Kleisli[M, S3AsyncClient, DeleteBucketPolicyResponse] = eff(_.deleteBucketPolicy(a))
+    override def deleteBucketReplication(
+        a: DeleteBucketReplicationRequest
+    ): Kleisli[M, S3AsyncClient, DeleteBucketReplicationResponse] = eff(_.deleteBucketReplication(a))
+    override def deleteBucketTagging(
+        a: DeleteBucketTaggingRequest
+    ): Kleisli[M, S3AsyncClient, DeleteBucketTaggingResponse] = eff(_.deleteBucketTagging(a))
+    override def deleteBucketWebsite(
+        a: DeleteBucketWebsiteRequest
+    ): Kleisli[M, S3AsyncClient, DeleteBucketWebsiteResponse] = eff(_.deleteBucketWebsite(a))
+    override def deleteObject(a: DeleteObjectRequest): Kleisli[M, S3AsyncClient, DeleteObjectResponse] = eff(
+      _.deleteObject(a)
+    )
+    override def deleteObjectTagging(
+        a: DeleteObjectTaggingRequest
+    ): Kleisli[M, S3AsyncClient, DeleteObjectTaggingResponse] = eff(_.deleteObjectTagging(a))
+    override def deleteObjects(a: DeleteObjectsRequest): Kleisli[M, S3AsyncClient, DeleteObjectsResponse] = eff(
+      _.deleteObjects(a)
+    )
+    override def deletePublicAccessBlock(
+        a: DeletePublicAccessBlockRequest
+    ): Kleisli[M, S3AsyncClient, DeletePublicAccessBlockResponse] = eff(_.deletePublicAccessBlock(a))
+    override def getBucketAbac(a: GetBucketAbacRequest): Kleisli[M, S3AsyncClient, GetBucketAbacResponse] = eff(
+      _.getBucketAbac(a)
+    )
+    override def getBucketAccelerateConfiguration(
+        a: GetBucketAccelerateConfigurationRequest
+    ): Kleisli[M, S3AsyncClient, GetBucketAccelerateConfigurationResponse] = eff(_.getBucketAccelerateConfiguration(a))
+    override def getBucketAcl(a: GetBucketAclRequest): Kleisli[M, S3AsyncClient, GetBucketAclResponse] = eff(
+      _.getBucketAcl(a)
+    )
+    override def getBucketAnalyticsConfiguration(
+        a: GetBucketAnalyticsConfigurationRequest
+    ): Kleisli[M, S3AsyncClient, GetBucketAnalyticsConfigurationResponse] = eff(_.getBucketAnalyticsConfiguration(a))
+    override def getBucketCors(a: GetBucketCorsRequest): Kleisli[M, S3AsyncClient, GetBucketCorsResponse] = eff(
+      _.getBucketCors(a)
+    )
+    override def getBucketEncryption(
+        a: GetBucketEncryptionRequest
+    ): Kleisli[M, S3AsyncClient, GetBucketEncryptionResponse] = eff(_.getBucketEncryption(a))
+    override def getBucketIntelligentTieringConfiguration(
+        a: GetBucketIntelligentTieringConfigurationRequest
+    ): Kleisli[M, S3AsyncClient, GetBucketIntelligentTieringConfigurationResponse] = eff(
+      _.getBucketIntelligentTieringConfiguration(a)
+    )
+    override def getBucketInventoryConfiguration(
+        a: GetBucketInventoryConfigurationRequest
+    ): Kleisli[M, S3AsyncClient, GetBucketInventoryConfigurationResponse] = eff(_.getBucketInventoryConfiguration(a))
+    override def getBucketLifecycleConfiguration(
+        a: GetBucketLifecycleConfigurationRequest
+    ): Kleisli[M, S3AsyncClient, GetBucketLifecycleConfigurationResponse] = eff(_.getBucketLifecycleConfiguration(a))
+    override def getBucketLocation(a: GetBucketLocationRequest): Kleisli[M, S3AsyncClient, GetBucketLocationResponse] =
+      eff(_.getBucketLocation(a))
+    override def getBucketLogging(a: GetBucketLoggingRequest): Kleisli[M, S3AsyncClient, GetBucketLoggingResponse] =
+      eff(_.getBucketLogging(a))
+    override def getBucketMetadataConfiguration(
+        a: GetBucketMetadataConfigurationRequest
+    ): Kleisli[M, S3AsyncClient, GetBucketMetadataConfigurationResponse] = eff(_.getBucketMetadataConfiguration(a))
+    override def getBucketMetadataTableConfiguration(
+        a: GetBucketMetadataTableConfigurationRequest
+    ): Kleisli[M, S3AsyncClient, GetBucketMetadataTableConfigurationResponse] = eff(
+      _.getBucketMetadataTableConfiguration(a)
+    )
+    override def getBucketMetricsConfiguration(
+        a: GetBucketMetricsConfigurationRequest
+    ): Kleisli[M, S3AsyncClient, GetBucketMetricsConfigurationResponse] = eff(_.getBucketMetricsConfiguration(a))
+    override def getBucketNotificationConfiguration(
+        a: GetBucketNotificationConfigurationRequest
+    ): Kleisli[M, S3AsyncClient, GetBucketNotificationConfigurationResponse] = eff(
+      _.getBucketNotificationConfiguration(a)
+    )
+    override def getBucketOwnershipControls(
+        a: GetBucketOwnershipControlsRequest
+    ): Kleisli[M, S3AsyncClient, GetBucketOwnershipControlsResponse] = eff(_.getBucketOwnershipControls(a))
+    override def getBucketPolicy(a: GetBucketPolicyRequest): Kleisli[M, S3AsyncClient, GetBucketPolicyResponse] = eff(
+      _.getBucketPolicy(a)
+    )
+    override def getBucketPolicyStatus(
+        a: GetBucketPolicyStatusRequest
+    ): Kleisli[M, S3AsyncClient, GetBucketPolicyStatusResponse] = eff(_.getBucketPolicyStatus(a))
+    override def getBucketReplication(
+        a: GetBucketReplicationRequest
+    ): Kleisli[M, S3AsyncClient, GetBucketReplicationResponse] = eff(_.getBucketReplication(a))
+    override def getBucketRequestPayment(
+        a: GetBucketRequestPaymentRequest
+    ): Kleisli[M, S3AsyncClient, GetBucketRequestPaymentResponse] = eff(_.getBucketRequestPayment(a))
+    override def getBucketTagging(a: GetBucketTaggingRequest): Kleisli[M, S3AsyncClient, GetBucketTaggingResponse] =
+      eff(_.getBucketTagging(a))
+    override def getBucketVersioning(
+        a: GetBucketVersioningRequest
+    ): Kleisli[M, S3AsyncClient, GetBucketVersioningResponse] = eff(_.getBucketVersioning(a))
+    override def getBucketWebsite(a: GetBucketWebsiteRequest): Kleisli[M, S3AsyncClient, GetBucketWebsiteResponse] =
+      eff(_.getBucketWebsite(a))
+    override def getObject[ReturnT](
+        a: GetObjectRequest,
+        b: AsyncResponseTransformer[GetObjectResponse, ReturnT]
+    ): Kleisli[M, S3AsyncClient, ReturnT] = eff(_.getObject(a, b))
+    override def getObject(a: GetObjectRequest, b: Path): Kleisli[M, S3AsyncClient, GetObjectResponse] = eff(
+      _.getObject(a, b)
+    )
+    override def getObjectAcl(a: GetObjectAclRequest): Kleisli[M, S3AsyncClient, GetObjectAclResponse] = eff(
+      _.getObjectAcl(a)
+    )
+    override def getObjectAttributes(
+        a: GetObjectAttributesRequest
+    ): Kleisli[M, S3AsyncClient, GetObjectAttributesResponse] = eff(_.getObjectAttributes(a))
+    override def getObjectLegalHold(
+        a: GetObjectLegalHoldRequest
+    ): Kleisli[M, S3AsyncClient, GetObjectLegalHoldResponse] = eff(_.getObjectLegalHold(a))
+    override def getObjectLockConfiguration(
+        a: GetObjectLockConfigurationRequest
+    ): Kleisli[M, S3AsyncClient, GetObjectLockConfigurationResponse] = eff(_.getObjectLockConfiguration(a))
+    override def getObjectRetention(
+        a: GetObjectRetentionRequest
+    ): Kleisli[M, S3AsyncClient, GetObjectRetentionResponse] = eff(_.getObjectRetention(a))
+    override def getObjectTagging(a: GetObjectTaggingRequest): Kleisli[M, S3AsyncClient, GetObjectTaggingResponse] =
+      eff(_.getObjectTagging(a))
+    override def getObjectTorrent[ReturnT](
+        a: GetObjectTorrentRequest,
+        b: AsyncResponseTransformer[GetObjectTorrentResponse, ReturnT]
+    ): Kleisli[M, S3AsyncClient, ReturnT] = eff(_.getObjectTorrent(a, b))
+    override def getObjectTorrent(
+        a: GetObjectTorrentRequest,
+        b: Path
+    ): Kleisli[M, S3AsyncClient, GetObjectTorrentResponse] = eff(_.getObjectTorrent(a, b))
+    override def getPublicAccessBlock(
+        a: GetPublicAccessBlockRequest
+    ): Kleisli[M, S3AsyncClient, GetPublicAccessBlockResponse] = eff(_.getPublicAccessBlock(a))
+    override def headBucket(a: HeadBucketRequest): Kleisli[M, S3AsyncClient, HeadBucketResponse] = eff(_.headBucket(a))
+    override def headObject(a: HeadObjectRequest): Kleisli[M, S3AsyncClient, HeadObjectResponse] = eff(_.headObject(a))
+    override def listBucketAnalyticsConfigurations(
+        a: ListBucketAnalyticsConfigurationsRequest
+    ): Kleisli[M, S3AsyncClient, ListBucketAnalyticsConfigurationsResponse] = eff(
+      _.listBucketAnalyticsConfigurations(a)
+    )
+    override def listBucketIntelligentTieringConfigurations(
+        a: ListBucketIntelligentTieringConfigurationsRequest
+    ): Kleisli[M, S3AsyncClient, ListBucketIntelligentTieringConfigurationsResponse] = eff(
+      _.listBucketIntelligentTieringConfigurations(a)
+    )
+    override def listBucketInventoryConfigurations(
+        a: ListBucketInventoryConfigurationsRequest
+    ): Kleisli[M, S3AsyncClient, ListBucketInventoryConfigurationsResponse] = eff(
+      _.listBucketInventoryConfigurations(a)
+    )
+    override def listBucketMetricsConfigurations(
+        a: ListBucketMetricsConfigurationsRequest
+    ): Kleisli[M, S3AsyncClient, ListBucketMetricsConfigurationsResponse] = eff(_.listBucketMetricsConfigurations(a))
+    override def listBuckets: Kleisli[M, S3AsyncClient, ListBucketsResponse]                        = eff(_.listBuckets)
+    override def listBuckets(a: ListBucketsRequest): Kleisli[M, S3AsyncClient, ListBucketsResponse] = eff(
+      _.listBuckets(a)
+    )
+    override def listBucketsPaginator: Kleisli[M, S3AsyncClient, ListBucketsPublisher] = primitive(
+      _.listBucketsPaginator
+    )
+    override def listBucketsPaginator(a: ListBucketsRequest): Kleisli[M, S3AsyncClient, ListBucketsPublisher] =
+      primitive(_.listBucketsPaginator(a))
+    override def listDirectoryBuckets(
+        a: ListDirectoryBucketsRequest
+    ): Kleisli[M, S3AsyncClient, ListDirectoryBucketsResponse] = eff(_.listDirectoryBuckets(a))
+    override def listDirectoryBucketsPaginator(
+        a: ListDirectoryBucketsRequest
+    ): Kleisli[M, S3AsyncClient, ListDirectoryBucketsPublisher] = primitive(_.listDirectoryBucketsPaginator(a))
+    override def listMultipartUploads(
+        a: ListMultipartUploadsRequest
+    ): Kleisli[M, S3AsyncClient, ListMultipartUploadsResponse] = eff(_.listMultipartUploads(a))
+    override def listMultipartUploadsPaginator(
+        a: ListMultipartUploadsRequest
+    ): Kleisli[M, S3AsyncClient, ListMultipartUploadsPublisher] = primitive(_.listMultipartUploadsPaginator(a))
+    override def listObjectVersions(
+        a: ListObjectVersionsRequest
+    ): Kleisli[M, S3AsyncClient, ListObjectVersionsResponse] = eff(_.listObjectVersions(a))
+    override def listObjectVersionsPaginator(
+        a: ListObjectVersionsRequest
+    ): Kleisli[M, S3AsyncClient, ListObjectVersionsPublisher] = primitive(_.listObjectVersionsPaginator(a))
+    override def listObjects(a: ListObjectsRequest): Kleisli[M, S3AsyncClient, ListObjectsResponse] = eff(
+      _.listObjects(a)
+    )
+    override def listObjectsV2(a: ListObjectsV2Request): Kleisli[M, S3AsyncClient, ListObjectsV2Response] = eff(
+      _.listObjectsV2(a)
+    )
+    override def listObjectsV2Paginator(a: ListObjectsV2Request): Kleisli[M, S3AsyncClient, ListObjectsV2Publisher] =
+      primitive(_.listObjectsV2Paginator(a))
+    override def listParts(a: ListPartsRequest): Kleisli[M, S3AsyncClient, ListPartsResponse] = eff(_.listParts(a))
+    override def listPartsPaginator(a: ListPartsRequest): Kleisli[M, S3AsyncClient, ListPartsPublisher] = primitive(
+      _.listPartsPaginator(a)
+    )
+    override def putBucketAbac(a: PutBucketAbacRequest): Kleisli[M, S3AsyncClient, PutBucketAbacResponse] = eff(
+      _.putBucketAbac(a)
+    )
+    override def putBucketAccelerateConfiguration(
+        a: PutBucketAccelerateConfigurationRequest
+    ): Kleisli[M, S3AsyncClient, PutBucketAccelerateConfigurationResponse] = eff(_.putBucketAccelerateConfiguration(a))
+    override def putBucketAcl(a: PutBucketAclRequest): Kleisli[M, S3AsyncClient, PutBucketAclResponse] = eff(
+      _.putBucketAcl(a)
+    )
+    override def putBucketAnalyticsConfiguration(
+        a: PutBucketAnalyticsConfigurationRequest
+    ): Kleisli[M, S3AsyncClient, PutBucketAnalyticsConfigurationResponse] = eff(_.putBucketAnalyticsConfiguration(a))
+    override def putBucketCors(a: PutBucketCorsRequest): Kleisli[M, S3AsyncClient, PutBucketCorsResponse] = eff(
+      _.putBucketCors(a)
+    )
+    override def putBucketEncryption(
+        a: PutBucketEncryptionRequest
+    ): Kleisli[M, S3AsyncClient, PutBucketEncryptionResponse] = eff(_.putBucketEncryption(a))
+    override def putBucketIntelligentTieringConfiguration(
+        a: PutBucketIntelligentTieringConfigurationRequest
+    ): Kleisli[M, S3AsyncClient, PutBucketIntelligentTieringConfigurationResponse] = eff(
+      _.putBucketIntelligentTieringConfiguration(a)
+    )
+    override def putBucketInventoryConfiguration(
+        a: PutBucketInventoryConfigurationRequest
+    ): Kleisli[M, S3AsyncClient, PutBucketInventoryConfigurationResponse] = eff(_.putBucketInventoryConfiguration(a))
+    override def putBucketLifecycleConfiguration(
+        a: PutBucketLifecycleConfigurationRequest
+    ): Kleisli[M, S3AsyncClient, PutBucketLifecycleConfigurationResponse] = eff(_.putBucketLifecycleConfiguration(a))
+    override def putBucketLogging(a: PutBucketLoggingRequest): Kleisli[M, S3AsyncClient, PutBucketLoggingResponse] =
+      eff(_.putBucketLogging(a))
+    override def putBucketMetricsConfiguration(
+        a: PutBucketMetricsConfigurationRequest
+    ): Kleisli[M, S3AsyncClient, PutBucketMetricsConfigurationResponse] = eff(_.putBucketMetricsConfiguration(a))
+    override def putBucketNotificationConfiguration(
+        a: PutBucketNotificationConfigurationRequest
+    ): Kleisli[M, S3AsyncClient, PutBucketNotificationConfigurationResponse] = eff(
+      _.putBucketNotificationConfiguration(a)
+    )
+    override def putBucketOwnershipControls(
+        a: PutBucketOwnershipControlsRequest
+    ): Kleisli[M, S3AsyncClient, PutBucketOwnershipControlsResponse] = eff(_.putBucketOwnershipControls(a))
+    override def putBucketPolicy(a: PutBucketPolicyRequest): Kleisli[M, S3AsyncClient, PutBucketPolicyResponse] = eff(
+      _.putBucketPolicy(a)
+    )
+    override def putBucketReplication(
+        a: PutBucketReplicationRequest
+    ): Kleisli[M, S3AsyncClient, PutBucketReplicationResponse] = eff(_.putBucketReplication(a))
+    override def putBucketRequestPayment(
+        a: PutBucketRequestPaymentRequest
+    ): Kleisli[M, S3AsyncClient, PutBucketRequestPaymentResponse] = eff(_.putBucketRequestPayment(a))
+    override def putBucketTagging(a: PutBucketTaggingRequest): Kleisli[M, S3AsyncClient, PutBucketTaggingResponse] =
+      eff(_.putBucketTagging(a))
+    override def putBucketVersioning(
+        a: PutBucketVersioningRequest
+    ): Kleisli[M, S3AsyncClient, PutBucketVersioningResponse] = eff(_.putBucketVersioning(a))
+    override def putBucketWebsite(a: PutBucketWebsiteRequest): Kleisli[M, S3AsyncClient, PutBucketWebsiteResponse] =
+      eff(_.putBucketWebsite(a))
+    override def putObject(a: PutObjectRequest, b: AsyncRequestBody): Kleisli[M, S3AsyncClient, PutObjectResponse] =
+      eff(_.putObject(a, b))
+    override def putObject(a: PutObjectRequest, b: Path): Kleisli[M, S3AsyncClient, PutObjectResponse] = eff(
+      _.putObject(a, b)
+    )
+    override def putObjectAcl(a: PutObjectAclRequest): Kleisli[M, S3AsyncClient, PutObjectAclResponse] = eff(
+      _.putObjectAcl(a)
+    )
+    override def putObjectLegalHold(
+        a: PutObjectLegalHoldRequest
+    ): Kleisli[M, S3AsyncClient, PutObjectLegalHoldResponse] = eff(_.putObjectLegalHold(a))
+    override def putObjectLockConfiguration(
+        a: PutObjectLockConfigurationRequest
+    ): Kleisli[M, S3AsyncClient, PutObjectLockConfigurationResponse] = eff(_.putObjectLockConfiguration(a))
+    override def putObjectRetention(
+        a: PutObjectRetentionRequest
+    ): Kleisli[M, S3AsyncClient, PutObjectRetentionResponse] = eff(_.putObjectRetention(a))
+    override def putObjectTagging(a: PutObjectTaggingRequest): Kleisli[M, S3AsyncClient, PutObjectTaggingResponse] =
+      eff(_.putObjectTagging(a))
+    override def putPublicAccessBlock(
+        a: PutPublicAccessBlockRequest
+    ): Kleisli[M, S3AsyncClient, PutPublicAccessBlockResponse] = eff(_.putPublicAccessBlock(a))
+    override def renameObject(a: RenameObjectRequest): Kleisli[M, S3AsyncClient, RenameObjectResponse] = eff(
+      _.renameObject(a)
+    )
+    override def restoreObject(a: RestoreObjectRequest): Kleisli[M, S3AsyncClient, RestoreObjectResponse] = eff(
+      _.restoreObject(a)
+    )
+    override def selectObjectContent(
+        a: SelectObjectContentRequest,
+        b: SelectObjectContentResponseHandler
+    ): Kleisli[M, S3AsyncClient, Void] = eff(_.selectObjectContent(a, b))
+    override def serviceClientConfiguration: Kleisli[M, S3AsyncClient, S3ServiceClientConfiguration] = primitive(
+      _.serviceClientConfiguration
+    )
+    override def serviceName: Kleisli[M, S3AsyncClient, String] = primitive(_.serviceName)
+    override def updateBucketMetadataInventoryTableConfiguration(
+        a: UpdateBucketMetadataInventoryTableConfigurationRequest
+    ): Kleisli[M, S3AsyncClient, UpdateBucketMetadataInventoryTableConfigurationResponse] = eff(
+      _.updateBucketMetadataInventoryTableConfiguration(a)
+    )
+    override def updateBucketMetadataJournalTableConfiguration(
+        a: UpdateBucketMetadataJournalTableConfigurationRequest
+    ): Kleisli[M, S3AsyncClient, UpdateBucketMetadataJournalTableConfigurationResponse] = eff(
+      _.updateBucketMetadataJournalTableConfiguration(a)
+    )
+    override def uploadPart(a: UploadPartRequest, b: AsyncRequestBody): Kleisli[M, S3AsyncClient, UploadPartResponse] =
+      eff(_.uploadPart(a, b))
+    override def uploadPart(a: UploadPartRequest, b: Path): Kleisli[M, S3AsyncClient, UploadPartResponse] = eff(
+      _.uploadPart(a, b)
+    )
+    override def uploadPartCopy(a: UploadPartCopyRequest): Kleisli[M, S3AsyncClient, UploadPartCopyResponse] = eff(
+      _.uploadPartCopy(a)
+    )
+    override def utilities: Kleisli[M, S3AsyncClient, S3Utilities] = primitive(_.utilities)
+    override def waiter: Kleisli[M, S3AsyncClient, S3AsyncWaiter]  = primitive(_.waiter)
+    override def writeGetObjectResponse(
+        a: WriteGetObjectResponseRequest,
+        b: AsyncRequestBody
+    ): Kleisli[M, S3AsyncClient, WriteGetObjectResponseResponse] = eff(_.writeGetObjectResponse(a, b))
+    override def writeGetObjectResponse(
+        a: WriteGetObjectResponseRequest,
+        b: Path
+    ): Kleisli[M, S3AsyncClient, WriteGetObjectResponseResponse] = eff(_.writeGetObjectResponse(a, b))
+
+    def lens[E](f: E => S3AsyncClient): S3AsyncClientOp[Kleisli[M, E, *]] =
+      new S3AsyncClientOp[Kleisli[M, E, *]] {
+        override def abortMultipartUpload(a: AbortMultipartUploadRequest): Kleisli[M, E, AbortMultipartUploadResponse] =
+          Kleisli(e => eff1(f(e).abortMultipartUpload(a)))
+        override def close: Kleisli[M, E, Unit] = Kleisli(e => primitive1(f(e).close))
+        override def completeMultipartUpload(
+            a: CompleteMultipartUploadRequest
+        ): Kleisli[M, E, CompleteMultipartUploadResponse] = Kleisli(e => eff1(f(e).completeMultipartUpload(a)))
+        override def copyObject(a: CopyObjectRequest): Kleisli[M, E, CopyObjectResponse] =
+          Kleisli(e => eff1(f(e).copyObject(a)))
+        override def createBucket(a: CreateBucketRequest): Kleisli[M, E, CreateBucketResponse] =
+          Kleisli(e => eff1(f(e).createBucket(a)))
+        override def createBucketMetadataConfiguration(
+            a: CreateBucketMetadataConfigurationRequest
+        ): Kleisli[M, E, CreateBucketMetadataConfigurationResponse] =
+          Kleisli(e => eff1(f(e).createBucketMetadataConfiguration(a)))
+        override def createBucketMetadataTableConfiguration(
+            a: CreateBucketMetadataTableConfigurationRequest
+        ): Kleisli[M, E, CreateBucketMetadataTableConfigurationResponse] =
+          Kleisli(e => eff1(f(e).createBucketMetadataTableConfiguration(a)))
+        override def createMultipartUpload(
+            a: CreateMultipartUploadRequest
+        ): Kleisli[M, E, CreateMultipartUploadResponse] = Kleisli(e => eff1(f(e).createMultipartUpload(a)))
+        override def createSession(a: CreateSessionRequest): Kleisli[M, E, CreateSessionResponse] =
+          Kleisli(e => eff1(f(e).createSession(a)))
+        override def deleteBucket(a: DeleteBucketRequest): Kleisli[M, E, DeleteBucketResponse] =
+          Kleisli(e => eff1(f(e).deleteBucket(a)))
+        override def deleteBucketAnalyticsConfiguration(
+            a: DeleteBucketAnalyticsConfigurationRequest
+        ): Kleisli[M, E, DeleteBucketAnalyticsConfigurationResponse] =
+          Kleisli(e => eff1(f(e).deleteBucketAnalyticsConfiguration(a)))
+        override def deleteBucketCors(a: DeleteBucketCorsRequest): Kleisli[M, E, DeleteBucketCorsResponse] =
+          Kleisli(e => eff1(f(e).deleteBucketCors(a)))
+        override def deleteBucketEncryption(
+            a: DeleteBucketEncryptionRequest
+        ): Kleisli[M, E, DeleteBucketEncryptionResponse] = Kleisli(e => eff1(f(e).deleteBucketEncryption(a)))
+        override def deleteBucketIntelligentTieringConfiguration(
+            a: DeleteBucketIntelligentTieringConfigurationRequest
+        ): Kleisli[M, E, DeleteBucketIntelligentTieringConfigurationResponse] =
+          Kleisli(e => eff1(f(e).deleteBucketIntelligentTieringConfiguration(a)))
+        override def deleteBucketInventoryConfiguration(
+            a: DeleteBucketInventoryConfigurationRequest
+        ): Kleisli[M, E, DeleteBucketInventoryConfigurationResponse] =
+          Kleisli(e => eff1(f(e).deleteBucketInventoryConfiguration(a)))
+        override def deleteBucketLifecycle(
+            a: DeleteBucketLifecycleRequest
+        ): Kleisli[M, E, DeleteBucketLifecycleResponse] = Kleisli(e => eff1(f(e).deleteBucketLifecycle(a)))
+        override def deleteBucketMetadataConfiguration(
+            a: DeleteBucketMetadataConfigurationRequest
+        ): Kleisli[M, E, DeleteBucketMetadataConfigurationResponse] =
+          Kleisli(e => eff1(f(e).deleteBucketMetadataConfiguration(a)))
+        override def deleteBucketMetadataTableConfiguration(
+            a: DeleteBucketMetadataTableConfigurationRequest
+        ): Kleisli[M, E, DeleteBucketMetadataTableConfigurationResponse] =
+          Kleisli(e => eff1(f(e).deleteBucketMetadataTableConfiguration(a)))
+        override def deleteBucketMetricsConfiguration(
+            a: DeleteBucketMetricsConfigurationRequest
+        ): Kleisli[M, E, DeleteBucketMetricsConfigurationResponse] =
+          Kleisli(e => eff1(f(e).deleteBucketMetricsConfiguration(a)))
+        override def deleteBucketOwnershipControls(
+            a: DeleteBucketOwnershipControlsRequest
+        ): Kleisli[M, E, DeleteBucketOwnershipControlsResponse] =
+          Kleisli(e => eff1(f(e).deleteBucketOwnershipControls(a)))
+        override def deleteBucketPolicy(a: DeleteBucketPolicyRequest): Kleisli[M, E, DeleteBucketPolicyResponse] =
+          Kleisli(e => eff1(f(e).deleteBucketPolicy(a)))
+        override def deleteBucketReplication(
+            a: DeleteBucketReplicationRequest
+        ): Kleisli[M, E, DeleteBucketReplicationResponse] = Kleisli(e => eff1(f(e).deleteBucketReplication(a)))
+        override def deleteBucketTagging(a: DeleteBucketTaggingRequest): Kleisli[M, E, DeleteBucketTaggingResponse] =
+          Kleisli(e => eff1(f(e).deleteBucketTagging(a)))
+        override def deleteBucketWebsite(a: DeleteBucketWebsiteRequest): Kleisli[M, E, DeleteBucketWebsiteResponse] =
+          Kleisli(e => eff1(f(e).deleteBucketWebsite(a)))
+        override def deleteObject(a: DeleteObjectRequest): Kleisli[M, E, DeleteObjectResponse] =
+          Kleisli(e => eff1(f(e).deleteObject(a)))
+        override def deleteObjectTagging(a: DeleteObjectTaggingRequest): Kleisli[M, E, DeleteObjectTaggingResponse] =
+          Kleisli(e => eff1(f(e).deleteObjectTagging(a)))
+        override def deleteObjects(a: DeleteObjectsRequest): Kleisli[M, E, DeleteObjectsResponse] =
+          Kleisli(e => eff1(f(e).deleteObjects(a)))
+        override def deletePublicAccessBlock(
+            a: DeletePublicAccessBlockRequest
+        ): Kleisli[M, E, DeletePublicAccessBlockResponse] = Kleisli(e => eff1(f(e).deletePublicAccessBlock(a)))
+        override def getBucketAbac(a: GetBucketAbacRequest): Kleisli[M, E, GetBucketAbacResponse] =
+          Kleisli(e => eff1(f(e).getBucketAbac(a)))
+        override def getBucketAccelerateConfiguration(
+            a: GetBucketAccelerateConfigurationRequest
+        ): Kleisli[M, E, GetBucketAccelerateConfigurationResponse] =
+          Kleisli(e => eff1(f(e).getBucketAccelerateConfiguration(a)))
+        override def getBucketAcl(a: GetBucketAclRequest): Kleisli[M, E, GetBucketAclResponse] =
+          Kleisli(e => eff1(f(e).getBucketAcl(a)))
+        override def getBucketAnalyticsConfiguration(
+            a: GetBucketAnalyticsConfigurationRequest
+        ): Kleisli[M, E, GetBucketAnalyticsConfigurationResponse] =
+          Kleisli(e => eff1(f(e).getBucketAnalyticsConfiguration(a)))
+        override def getBucketCors(a: GetBucketCorsRequest): Kleisli[M, E, GetBucketCorsResponse] =
+          Kleisli(e => eff1(f(e).getBucketCors(a)))
+        override def getBucketEncryption(a: GetBucketEncryptionRequest): Kleisli[M, E, GetBucketEncryptionResponse] =
+          Kleisli(e => eff1(f(e).getBucketEncryption(a)))
+        override def getBucketIntelligentTieringConfiguration(
+            a: GetBucketIntelligentTieringConfigurationRequest
+        ): Kleisli[M, E, GetBucketIntelligentTieringConfigurationResponse] =
+          Kleisli(e => eff1(f(e).getBucketIntelligentTieringConfiguration(a)))
+        override def getBucketInventoryConfiguration(
+            a: GetBucketInventoryConfigurationRequest
+        ): Kleisli[M, E, GetBucketInventoryConfigurationResponse] =
+          Kleisli(e => eff1(f(e).getBucketInventoryConfiguration(a)))
+        override def getBucketLifecycleConfiguration(
+            a: GetBucketLifecycleConfigurationRequest
+        ): Kleisli[M, E, GetBucketLifecycleConfigurationResponse] =
+          Kleisli(e => eff1(f(e).getBucketLifecycleConfiguration(a)))
+        override def getBucketLocation(a: GetBucketLocationRequest): Kleisli[M, E, GetBucketLocationResponse] =
+          Kleisli(e => eff1(f(e).getBucketLocation(a)))
+        override def getBucketLogging(a: GetBucketLoggingRequest): Kleisli[M, E, GetBucketLoggingResponse] =
+          Kleisli(e => eff1(f(e).getBucketLogging(a)))
+        override def getBucketMetadataConfiguration(
+            a: GetBucketMetadataConfigurationRequest
+        ): Kleisli[M, E, GetBucketMetadataConfigurationResponse] =
+          Kleisli(e => eff1(f(e).getBucketMetadataConfiguration(a)))
+        override def getBucketMetadataTableConfiguration(
+            a: GetBucketMetadataTableConfigurationRequest
+        ): Kleisli[M, E, GetBucketMetadataTableConfigurationResponse] =
+          Kleisli(e => eff1(f(e).getBucketMetadataTableConfiguration(a)))
+        override def getBucketMetricsConfiguration(
+            a: GetBucketMetricsConfigurationRequest
+        ): Kleisli[M, E, GetBucketMetricsConfigurationResponse] =
+          Kleisli(e => eff1(f(e).getBucketMetricsConfiguration(a)))
+        override def getBucketNotificationConfiguration(
+            a: GetBucketNotificationConfigurationRequest
+        ): Kleisli[M, E, GetBucketNotificationConfigurationResponse] =
+          Kleisli(e => eff1(f(e).getBucketNotificationConfiguration(a)))
+        override def getBucketOwnershipControls(
+            a: GetBucketOwnershipControlsRequest
+        ): Kleisli[M, E, GetBucketOwnershipControlsResponse] = Kleisli(e => eff1(f(e).getBucketOwnershipControls(a)))
+        override def getBucketPolicy(a: GetBucketPolicyRequest): Kleisli[M, E, GetBucketPolicyResponse] =
+          Kleisli(e => eff1(f(e).getBucketPolicy(a)))
+        override def getBucketPolicyStatus(
+            a: GetBucketPolicyStatusRequest
+        ): Kleisli[M, E, GetBucketPolicyStatusResponse] = Kleisli(e => eff1(f(e).getBucketPolicyStatus(a)))
+        override def getBucketReplication(a: GetBucketReplicationRequest): Kleisli[M, E, GetBucketReplicationResponse] =
+          Kleisli(e => eff1(f(e).getBucketReplication(a)))
+        override def getBucketRequestPayment(
+            a: GetBucketRequestPaymentRequest
+        ): Kleisli[M, E, GetBucketRequestPaymentResponse] = Kleisli(e => eff1(f(e).getBucketRequestPayment(a)))
+        override def getBucketTagging(a: GetBucketTaggingRequest): Kleisli[M, E, GetBucketTaggingResponse] =
+          Kleisli(e => eff1(f(e).getBucketTagging(a)))
+        override def getBucketVersioning(a: GetBucketVersioningRequest): Kleisli[M, E, GetBucketVersioningResponse] =
+          Kleisli(e => eff1(f(e).getBucketVersioning(a)))
+        override def getBucketWebsite(a: GetBucketWebsiteRequest): Kleisli[M, E, GetBucketWebsiteResponse] =
+          Kleisli(e => eff1(f(e).getBucketWebsite(a)))
+        override def getObject[ReturnT](
+            a: GetObjectRequest,
+            b: AsyncResponseTransformer[GetObjectResponse, ReturnT]
+        ): Kleisli[M, E, ReturnT] = Kleisli(e => eff1(f(e).getObject(a, b)))
+        override def getObject(a: GetObjectRequest, b: Path): Kleisli[M, E, GetObjectResponse] =
+          Kleisli(e => eff1(f(e).getObject(a, b)))
+        override def getObjectAcl(a: GetObjectAclRequest): Kleisli[M, E, GetObjectAclResponse] =
+          Kleisli(e => eff1(f(e).getObjectAcl(a)))
+        override def getObjectAttributes(a: GetObjectAttributesRequest): Kleisli[M, E, GetObjectAttributesResponse] =
+          Kleisli(e => eff1(f(e).getObjectAttributes(a)))
+        override def getObjectLegalHold(a: GetObjectLegalHoldRequest): Kleisli[M, E, GetObjectLegalHoldResponse] =
+          Kleisli(e => eff1(f(e).getObjectLegalHold(a)))
+        override def getObjectLockConfiguration(
+            a: GetObjectLockConfigurationRequest
+        ): Kleisli[M, E, GetObjectLockConfigurationResponse] = Kleisli(e => eff1(f(e).getObjectLockConfiguration(a)))
+        override def getObjectRetention(a: GetObjectRetentionRequest): Kleisli[M, E, GetObjectRetentionResponse] =
+          Kleisli(e => eff1(f(e).getObjectRetention(a)))
+        override def getObjectTagging(a: GetObjectTaggingRequest): Kleisli[M, E, GetObjectTaggingResponse] =
+          Kleisli(e => eff1(f(e).getObjectTagging(a)))
+        override def getObjectTorrent[ReturnT](
+            a: GetObjectTorrentRequest,
+            b: AsyncResponseTransformer[GetObjectTorrentResponse, ReturnT]
+        ): Kleisli[M, E, ReturnT] = Kleisli(e => eff1(f(e).getObjectTorrent(a, b)))
+        override def getObjectTorrent(a: GetObjectTorrentRequest, b: Path): Kleisli[M, E, GetObjectTorrentResponse] =
+          Kleisli(e => eff1(f(e).getObjectTorrent(a, b)))
+        override def getPublicAccessBlock(a: GetPublicAccessBlockRequest): Kleisli[M, E, GetPublicAccessBlockResponse] =
+          Kleisli(e => eff1(f(e).getPublicAccessBlock(a)))
+        override def headBucket(a: HeadBucketRequest): Kleisli[M, E, HeadBucketResponse] =
+          Kleisli(e => eff1(f(e).headBucket(a)))
+        override def headObject(a: HeadObjectRequest): Kleisli[M, E, HeadObjectResponse] =
+          Kleisli(e => eff1(f(e).headObject(a)))
+        override def listBucketAnalyticsConfigurations(
+            a: ListBucketAnalyticsConfigurationsRequest
+        ): Kleisli[M, E, ListBucketAnalyticsConfigurationsResponse] =
+          Kleisli(e => eff1(f(e).listBucketAnalyticsConfigurations(a)))
+        override def listBucketIntelligentTieringConfigurations(
+            a: ListBucketIntelligentTieringConfigurationsRequest
+        ): Kleisli[M, E, ListBucketIntelligentTieringConfigurationsResponse] =
+          Kleisli(e => eff1(f(e).listBucketIntelligentTieringConfigurations(a)))
+        override def listBucketInventoryConfigurations(
+            a: ListBucketInventoryConfigurationsRequest
+        ): Kleisli[M, E, ListBucketInventoryConfigurationsResponse] =
+          Kleisli(e => eff1(f(e).listBucketInventoryConfigurations(a)))
+        override def listBucketMetricsConfigurations(
+            a: ListBucketMetricsConfigurationsRequest
+        ): Kleisli[M, E, ListBucketMetricsConfigurationsResponse] =
+          Kleisli(e => eff1(f(e).listBucketMetricsConfigurations(a)))
+        override def listBuckets: Kleisli[M, E, ListBucketsResponse] = Kleisli(e => eff1(f(e).listBuckets))
+        override def listBuckets(a: ListBucketsRequest): Kleisli[M, E, ListBucketsResponse] =
+          Kleisli(e => eff1(f(e).listBuckets(a)))
+        override def listBucketsPaginator: Kleisli[M, E, ListBucketsPublisher] =
+          Kleisli(e => primitive1(f(e).listBucketsPaginator))
+        override def listBucketsPaginator(a: ListBucketsRequest): Kleisli[M, E, ListBucketsPublisher] =
+          Kleisli(e => primitive1(f(e).listBucketsPaginator(a)))
+        override def listDirectoryBuckets(a: ListDirectoryBucketsRequest): Kleisli[M, E, ListDirectoryBucketsResponse] =
+          Kleisli(e => eff1(f(e).listDirectoryBuckets(a)))
+        override def listDirectoryBucketsPaginator(
+            a: ListDirectoryBucketsRequest
+        ): Kleisli[M, E, ListDirectoryBucketsPublisher] =
+          Kleisli(e => primitive1(f(e).listDirectoryBucketsPaginator(a)))
+        override def listMultipartUploads(a: ListMultipartUploadsRequest): Kleisli[M, E, ListMultipartUploadsResponse] =
+          Kleisli(e => eff1(f(e).listMultipartUploads(a)))
+        override def listMultipartUploadsPaginator(
+            a: ListMultipartUploadsRequest
+        ): Kleisli[M, E, ListMultipartUploadsPublisher] =
+          Kleisli(e => primitive1(f(e).listMultipartUploadsPaginator(a)))
+        override def listObjectVersions(a: ListObjectVersionsRequest): Kleisli[M, E, ListObjectVersionsResponse] =
+          Kleisli(e => eff1(f(e).listObjectVersions(a)))
+        override def listObjectVersionsPaginator(
+            a: ListObjectVersionsRequest
+        ): Kleisli[M, E, ListObjectVersionsPublisher] = Kleisli(e => primitive1(f(e).listObjectVersionsPaginator(a)))
+        override def listObjects(a: ListObjectsRequest): Kleisli[M, E, ListObjectsResponse] =
+          Kleisli(e => eff1(f(e).listObjects(a)))
+        override def listObjectsV2(a: ListObjectsV2Request): Kleisli[M, E, ListObjectsV2Response] =
+          Kleisli(e => eff1(f(e).listObjectsV2(a)))
+        override def listObjectsV2Paginator(a: ListObjectsV2Request): Kleisli[M, E, ListObjectsV2Publisher] =
+          Kleisli(e => primitive1(f(e).listObjectsV2Paginator(a)))
+        override def listParts(a: ListPartsRequest): Kleisli[M, E, ListPartsResponse] =
+          Kleisli(e => eff1(f(e).listParts(a)))
+        override def listPartsPaginator(a: ListPartsRequest): Kleisli[M, E, ListPartsPublisher] =
+          Kleisli(e => primitive1(f(e).listPartsPaginator(a)))
+        override def putBucketAbac(a: PutBucketAbacRequest): Kleisli[M, E, PutBucketAbacResponse] =
+          Kleisli(e => eff1(f(e).putBucketAbac(a)))
+        override def putBucketAccelerateConfiguration(
+            a: PutBucketAccelerateConfigurationRequest
+        ): Kleisli[M, E, PutBucketAccelerateConfigurationResponse] =
+          Kleisli(e => eff1(f(e).putBucketAccelerateConfiguration(a)))
+        override def putBucketAcl(a: PutBucketAclRequest): Kleisli[M, E, PutBucketAclResponse] =
+          Kleisli(e => eff1(f(e).putBucketAcl(a)))
+        override def putBucketAnalyticsConfiguration(
+            a: PutBucketAnalyticsConfigurationRequest
+        ): Kleisli[M, E, PutBucketAnalyticsConfigurationResponse] =
+          Kleisli(e => eff1(f(e).putBucketAnalyticsConfiguration(a)))
+        override def putBucketCors(a: PutBucketCorsRequest): Kleisli[M, E, PutBucketCorsResponse] =
+          Kleisli(e => eff1(f(e).putBucketCors(a)))
+        override def putBucketEncryption(a: PutBucketEncryptionRequest): Kleisli[M, E, PutBucketEncryptionResponse] =
+          Kleisli(e => eff1(f(e).putBucketEncryption(a)))
+        override def putBucketIntelligentTieringConfiguration(
+            a: PutBucketIntelligentTieringConfigurationRequest
+        ): Kleisli[M, E, PutBucketIntelligentTieringConfigurationResponse] =
+          Kleisli(e => eff1(f(e).putBucketIntelligentTieringConfiguration(a)))
+        override def putBucketInventoryConfiguration(
+            a: PutBucketInventoryConfigurationRequest
+        ): Kleisli[M, E, PutBucketInventoryConfigurationResponse] =
+          Kleisli(e => eff1(f(e).putBucketInventoryConfiguration(a)))
+        override def putBucketLifecycleConfiguration(
+            a: PutBucketLifecycleConfigurationRequest
+        ): Kleisli[M, E, PutBucketLifecycleConfigurationResponse] =
+          Kleisli(e => eff1(f(e).putBucketLifecycleConfiguration(a)))
+        override def putBucketLogging(a: PutBucketLoggingRequest): Kleisli[M, E, PutBucketLoggingResponse] =
+          Kleisli(e => eff1(f(e).putBucketLogging(a)))
+        override def putBucketMetricsConfiguration(
+            a: PutBucketMetricsConfigurationRequest
+        ): Kleisli[M, E, PutBucketMetricsConfigurationResponse] =
+          Kleisli(e => eff1(f(e).putBucketMetricsConfiguration(a)))
+        override def putBucketNotificationConfiguration(
+            a: PutBucketNotificationConfigurationRequest
+        ): Kleisli[M, E, PutBucketNotificationConfigurationResponse] =
+          Kleisli(e => eff1(f(e).putBucketNotificationConfiguration(a)))
+        override def putBucketOwnershipControls(
+            a: PutBucketOwnershipControlsRequest
+        ): Kleisli[M, E, PutBucketOwnershipControlsResponse] = Kleisli(e => eff1(f(e).putBucketOwnershipControls(a)))
+        override def putBucketPolicy(a: PutBucketPolicyRequest): Kleisli[M, E, PutBucketPolicyResponse] =
+          Kleisli(e => eff1(f(e).putBucketPolicy(a)))
+        override def putBucketReplication(a: PutBucketReplicationRequest): Kleisli[M, E, PutBucketReplicationResponse] =
+          Kleisli(e => eff1(f(e).putBucketReplication(a)))
+        override def putBucketRequestPayment(
+            a: PutBucketRequestPaymentRequest
+        ): Kleisli[M, E, PutBucketRequestPaymentResponse] = Kleisli(e => eff1(f(e).putBucketRequestPayment(a)))
+        override def putBucketTagging(a: PutBucketTaggingRequest): Kleisli[M, E, PutBucketTaggingResponse] =
+          Kleisli(e => eff1(f(e).putBucketTagging(a)))
+        override def putBucketVersioning(a: PutBucketVersioningRequest): Kleisli[M, E, PutBucketVersioningResponse] =
+          Kleisli(e => eff1(f(e).putBucketVersioning(a)))
+        override def putBucketWebsite(a: PutBucketWebsiteRequest): Kleisli[M, E, PutBucketWebsiteResponse] =
+          Kleisli(e => eff1(f(e).putBucketWebsite(a)))
+        override def putObject(a: PutObjectRequest, b: AsyncRequestBody): Kleisli[M, E, PutObjectResponse] =
+          Kleisli(e => eff1(f(e).putObject(a, b)))
+        override def putObject(a: PutObjectRequest, b: Path): Kleisli[M, E, PutObjectResponse] =
+          Kleisli(e => eff1(f(e).putObject(a, b)))
+        override def putObjectAcl(a: PutObjectAclRequest): Kleisli[M, E, PutObjectAclResponse] =
+          Kleisli(e => eff1(f(e).putObjectAcl(a)))
+        override def putObjectLegalHold(a: PutObjectLegalHoldRequest): Kleisli[M, E, PutObjectLegalHoldResponse] =
+          Kleisli(e => eff1(f(e).putObjectLegalHold(a)))
+        override def putObjectLockConfiguration(
+            a: PutObjectLockConfigurationRequest
+        ): Kleisli[M, E, PutObjectLockConfigurationResponse] = Kleisli(e => eff1(f(e).putObjectLockConfiguration(a)))
+        override def putObjectRetention(a: PutObjectRetentionRequest): Kleisli[M, E, PutObjectRetentionResponse] =
+          Kleisli(e => eff1(f(e).putObjectRetention(a)))
+        override def putObjectTagging(a: PutObjectTaggingRequest): Kleisli[M, E, PutObjectTaggingResponse] =
+          Kleisli(e => eff1(f(e).putObjectTagging(a)))
+        override def putPublicAccessBlock(a: PutPublicAccessBlockRequest): Kleisli[M, E, PutPublicAccessBlockResponse] =
+          Kleisli(e => eff1(f(e).putPublicAccessBlock(a)))
+        override def renameObject(a: RenameObjectRequest): Kleisli[M, E, RenameObjectResponse] =
+          Kleisli(e => eff1(f(e).renameObject(a)))
+        override def restoreObject(a: RestoreObjectRequest): Kleisli[M, E, RestoreObjectResponse] =
+          Kleisli(e => eff1(f(e).restoreObject(a)))
+        override def selectObjectContent(
+            a: SelectObjectContentRequest,
+            b: SelectObjectContentResponseHandler
+        ): Kleisli[M, E, Void] = Kleisli(e => eff1(f(e).selectObjectContent(a, b)))
+        override def serviceClientConfiguration: Kleisli[M, E, S3ServiceClientConfiguration] =
+          Kleisli(e => primitive1(f(e).serviceClientConfiguration))
+        override def serviceName: Kleisli[M, E, String] = Kleisli(e => primitive1(f(e).serviceName))
+        override def updateBucketMetadataInventoryTableConfiguration(
+            a: UpdateBucketMetadataInventoryTableConfigurationRequest
+        ): Kleisli[M, E, UpdateBucketMetadataInventoryTableConfigurationResponse] =
+          Kleisli(e => eff1(f(e).updateBucketMetadataInventoryTableConfiguration(a)))
+        override def updateBucketMetadataJournalTableConfiguration(
+            a: UpdateBucketMetadataJournalTableConfigurationRequest
+        ): Kleisli[M, E, UpdateBucketMetadataJournalTableConfigurationResponse] =
+          Kleisli(e => eff1(f(e).updateBucketMetadataJournalTableConfiguration(a)))
+        override def uploadPart(a: UploadPartRequest, b: AsyncRequestBody): Kleisli[M, E, UploadPartResponse] =
+          Kleisli(e => eff1(f(e).uploadPart(a, b)))
+        override def uploadPart(a: UploadPartRequest, b: Path): Kleisli[M, E, UploadPartResponse] =
+          Kleisli(e => eff1(f(e).uploadPart(a, b)))
+        override def uploadPartCopy(a: UploadPartCopyRequest): Kleisli[M, E, UploadPartCopyResponse] =
+          Kleisli(e => eff1(f(e).uploadPartCopy(a)))
+        override def utilities: Kleisli[M, E, S3Utilities] = Kleisli(e => primitive1(f(e).utilities))
+        override def waiter: Kleisli[M, E, S3AsyncWaiter]  = Kleisli(e => primitive1(f(e).waiter))
+        override def writeGetObjectResponse(
+            a: WriteGetObjectResponseRequest,
+            b: AsyncRequestBody
+        ): Kleisli[M, E, WriteGetObjectResponseResponse] = Kleisli(e => eff1(f(e).writeGetObjectResponse(a, b)))
+        override def writeGetObjectResponse(
+            a: WriteGetObjectResponseRequest,
+            b: Path
+        ): Kleisli[M, E, WriteGetObjectResponseResponse] = Kleisli(e => eff1(f(e).writeGetObjectResponse(a, b)))
+      }
+  }
+  // end interpreters
+
+  /** Builds a [[S3AsyncClient]] from the given builder, exposed as the [[S3AsyncClientOp]] algebra in a managed [[Resource]]. */
+  def resource(builder: S3AsyncClientBuilder): Resource[M, S3AsyncClientOp[M]] = clientResource(builder).map(create)
+
+  /** Like `resource(builder)`, but using a default client builder. */
+  def resource: Resource[M, S3AsyncClientOp[M]] = resource(S3AsyncClient.builder())
+
+  /** Builds the underlying [[S3AsyncClient]] from the given builder as a managed [[Resource]]. */
+  def clientResource(builder: S3AsyncClientBuilder): Resource[M, S3AsyncClient] =
+    Resource.fromAutoCloseable(asyncM.delay(builder.build()))
+
+  /** Like `clientResource(builder)`, but using a default client builder. */
+  def clientResource: Resource[M, S3AsyncClient] = clientResource(S3AsyncClient.builder())
+
+  @deprecated("use clientResource(builder)", "7.0.0")
+  def S3AsyncClientResource(builder: S3AsyncClientBuilder): Resource[M, S3AsyncClient] = clientResource(builder)
+
+  @deprecated("use resource(builder)", "7.0.0")
+  def S3AsyncClientOpResource(builder: S3AsyncClientBuilder): Resource[M, S3AsyncClientOp[M]] = resource(builder)
+
+  def create(client: S3AsyncClient): S3AsyncClientOp[M] = new S3AsyncClientOp[M] {
+
+    // domain-specific operations are implemented in terms of `primitive`
+    override def abortMultipartUpload(a: AbortMultipartUploadRequest): M[AbortMultipartUploadResponse] = eff1(
+      client.abortMultipartUpload(a)
+    )
+    override def close: M[Unit] = primitive1(client.close)
+    override def completeMultipartUpload(a: CompleteMultipartUploadRequest): M[CompleteMultipartUploadResponse] = eff1(
+      client.completeMultipartUpload(a)
+    )
+    override def copyObject(a: CopyObjectRequest): M[CopyObjectResponse]       = eff1(client.copyObject(a))
+    override def createBucket(a: CreateBucketRequest): M[CreateBucketResponse] = eff1(client.createBucket(a))
+    override def createBucketMetadataConfiguration(
+        a: CreateBucketMetadataConfigurationRequest
+    ): M[CreateBucketMetadataConfigurationResponse] = eff1(client.createBucketMetadataConfiguration(a))
+    override def createBucketMetadataTableConfiguration(
+        a: CreateBucketMetadataTableConfigurationRequest
+    ): M[CreateBucketMetadataTableConfigurationResponse] = eff1(client.createBucketMetadataTableConfiguration(a))
+    override def createMultipartUpload(a: CreateMultipartUploadRequest): M[CreateMultipartUploadResponse] = eff1(
+      client.createMultipartUpload(a)
+    )
+    override def createSession(a: CreateSessionRequest): M[CreateSessionResponse] = eff1(client.createSession(a))
+    override def deleteBucket(a: DeleteBucketRequest): M[DeleteBucketResponse]    = eff1(client.deleteBucket(a))
+    override def deleteBucketAnalyticsConfiguration(
+        a: DeleteBucketAnalyticsConfigurationRequest
+    ): M[DeleteBucketAnalyticsConfigurationResponse] = eff1(client.deleteBucketAnalyticsConfiguration(a))
+    override def deleteBucketCors(a: DeleteBucketCorsRequest): M[DeleteBucketCorsResponse] = eff1(
+      client.deleteBucketCors(a)
+    )
+    override def deleteBucketEncryption(a: DeleteBucketEncryptionRequest): M[DeleteBucketEncryptionResponse] = eff1(
+      client.deleteBucketEncryption(a)
+    )
+    override def deleteBucketIntelligentTieringConfiguration(
+        a: DeleteBucketIntelligentTieringConfigurationRequest
+    ): M[DeleteBucketIntelligentTieringConfigurationResponse] = eff1(
+      client.deleteBucketIntelligentTieringConfiguration(a)
+    )
+    override def deleteBucketInventoryConfiguration(
+        a: DeleteBucketInventoryConfigurationRequest
+    ): M[DeleteBucketInventoryConfigurationResponse] = eff1(client.deleteBucketInventoryConfiguration(a))
+    override def deleteBucketLifecycle(a: DeleteBucketLifecycleRequest): M[DeleteBucketLifecycleResponse] = eff1(
+      client.deleteBucketLifecycle(a)
+    )
+    override def deleteBucketMetadataConfiguration(
+        a: DeleteBucketMetadataConfigurationRequest
+    ): M[DeleteBucketMetadataConfigurationResponse] = eff1(client.deleteBucketMetadataConfiguration(a))
+    override def deleteBucketMetadataTableConfiguration(
+        a: DeleteBucketMetadataTableConfigurationRequest
+    ): M[DeleteBucketMetadataTableConfigurationResponse] = eff1(client.deleteBucketMetadataTableConfiguration(a))
+    override def deleteBucketMetricsConfiguration(
+        a: DeleteBucketMetricsConfigurationRequest
+    ): M[DeleteBucketMetricsConfigurationResponse] = eff1(client.deleteBucketMetricsConfiguration(a))
+    override def deleteBucketOwnershipControls(
+        a: DeleteBucketOwnershipControlsRequest
+    ): M[DeleteBucketOwnershipControlsResponse] = eff1(client.deleteBucketOwnershipControls(a))
+    override def deleteBucketPolicy(a: DeleteBucketPolicyRequest): M[DeleteBucketPolicyResponse] = eff1(
+      client.deleteBucketPolicy(a)
+    )
+    override def deleteBucketReplication(a: DeleteBucketReplicationRequest): M[DeleteBucketReplicationResponse] = eff1(
+      client.deleteBucketReplication(a)
+    )
+    override def deleteBucketTagging(a: DeleteBucketTaggingRequest): M[DeleteBucketTaggingResponse] = eff1(
+      client.deleteBucketTagging(a)
+    )
+    override def deleteBucketWebsite(a: DeleteBucketWebsiteRequest): M[DeleteBucketWebsiteResponse] = eff1(
+      client.deleteBucketWebsite(a)
+    )
+    override def deleteObject(a: DeleteObjectRequest): M[DeleteObjectResponse] = eff1(client.deleteObject(a))
+    override def deleteObjectTagging(a: DeleteObjectTaggingRequest): M[DeleteObjectTaggingResponse] = eff1(
+      client.deleteObjectTagging(a)
+    )
+    override def deleteObjects(a: DeleteObjectsRequest): M[DeleteObjectsResponse] = eff1(client.deleteObjects(a))
+    override def deletePublicAccessBlock(a: DeletePublicAccessBlockRequest): M[DeletePublicAccessBlockResponse] = eff1(
+      client.deletePublicAccessBlock(a)
+    )
+    override def getBucketAbac(a: GetBucketAbacRequest): M[GetBucketAbacResponse] = eff1(client.getBucketAbac(a))
+    override def getBucketAccelerateConfiguration(
+        a: GetBucketAccelerateConfigurationRequest
+    ): M[GetBucketAccelerateConfigurationResponse] = eff1(client.getBucketAccelerateConfiguration(a))
+    override def getBucketAcl(a: GetBucketAclRequest): M[GetBucketAclResponse] = eff1(client.getBucketAcl(a))
+    override def getBucketAnalyticsConfiguration(
+        a: GetBucketAnalyticsConfigurationRequest
+    ): M[GetBucketAnalyticsConfigurationResponse] = eff1(client.getBucketAnalyticsConfiguration(a))
+    override def getBucketCors(a: GetBucketCorsRequest): M[GetBucketCorsResponse] = eff1(client.getBucketCors(a))
+    override def getBucketEncryption(a: GetBucketEncryptionRequest): M[GetBucketEncryptionResponse] = eff1(
+      client.getBucketEncryption(a)
+    )
+    override def getBucketIntelligentTieringConfiguration(
+        a: GetBucketIntelligentTieringConfigurationRequest
+    ): M[GetBucketIntelligentTieringConfigurationResponse] = eff1(client.getBucketIntelligentTieringConfiguration(a))
+    override def getBucketInventoryConfiguration(
+        a: GetBucketInventoryConfigurationRequest
+    ): M[GetBucketInventoryConfigurationResponse] = eff1(client.getBucketInventoryConfiguration(a))
+    override def getBucketLifecycleConfiguration(
+        a: GetBucketLifecycleConfigurationRequest
+    ): M[GetBucketLifecycleConfigurationResponse] = eff1(client.getBucketLifecycleConfiguration(a))
+    override def getBucketLocation(a: GetBucketLocationRequest): M[GetBucketLocationResponse] = eff1(
+      client.getBucketLocation(a)
+    )
+    override def getBucketLogging(a: GetBucketLoggingRequest): M[GetBucketLoggingResponse] = eff1(
+      client.getBucketLogging(a)
+    )
+    override def getBucketMetadataConfiguration(
+        a: GetBucketMetadataConfigurationRequest
+    ): M[GetBucketMetadataConfigurationResponse] = eff1(client.getBucketMetadataConfiguration(a))
+    override def getBucketMetadataTableConfiguration(
+        a: GetBucketMetadataTableConfigurationRequest
+    ): M[GetBucketMetadataTableConfigurationResponse] = eff1(client.getBucketMetadataTableConfiguration(a))
+    override def getBucketMetricsConfiguration(
+        a: GetBucketMetricsConfigurationRequest
+    ): M[GetBucketMetricsConfigurationResponse] = eff1(client.getBucketMetricsConfiguration(a))
+    override def getBucketNotificationConfiguration(
+        a: GetBucketNotificationConfigurationRequest
+    ): M[GetBucketNotificationConfigurationResponse] = eff1(client.getBucketNotificationConfiguration(a))
+    override def getBucketOwnershipControls(
+        a: GetBucketOwnershipControlsRequest
+    ): M[GetBucketOwnershipControlsResponse] = eff1(client.getBucketOwnershipControls(a))
+    override def getBucketPolicy(a: GetBucketPolicyRequest): M[GetBucketPolicyResponse] = eff1(
+      client.getBucketPolicy(a)
+    )
+    override def getBucketPolicyStatus(a: GetBucketPolicyStatusRequest): M[GetBucketPolicyStatusResponse] = eff1(
+      client.getBucketPolicyStatus(a)
+    )
+    override def getBucketReplication(a: GetBucketReplicationRequest): M[GetBucketReplicationResponse] = eff1(
+      client.getBucketReplication(a)
+    )
+    override def getBucketRequestPayment(a: GetBucketRequestPaymentRequest): M[GetBucketRequestPaymentResponse] = eff1(
+      client.getBucketRequestPayment(a)
+    )
+    override def getBucketTagging(a: GetBucketTaggingRequest): M[GetBucketTaggingResponse] = eff1(
+      client.getBucketTagging(a)
+    )
+    override def getBucketVersioning(a: GetBucketVersioningRequest): M[GetBucketVersioningResponse] = eff1(
+      client.getBucketVersioning(a)
+    )
+    override def getBucketWebsite(a: GetBucketWebsiteRequest): M[GetBucketWebsiteResponse] = eff1(
+      client.getBucketWebsite(a)
+    )
+    override def getObject[ReturnT](
+        a: GetObjectRequest,
+        b: AsyncResponseTransformer[GetObjectResponse, ReturnT]
+    ): M[ReturnT] = eff1(client.getObject(a, b))
+    override def getObject(a: GetObjectRequest, b: Path): M[GetObjectResponse] = eff1(client.getObject(a, b))
+    override def getObjectAcl(a: GetObjectAclRequest): M[GetObjectAclResponse] = eff1(client.getObjectAcl(a))
+    override def getObjectAttributes(a: GetObjectAttributesRequest): M[GetObjectAttributesResponse] = eff1(
+      client.getObjectAttributes(a)
+    )
+    override def getObjectLegalHold(a: GetObjectLegalHoldRequest): M[GetObjectLegalHoldResponse] = eff1(
+      client.getObjectLegalHold(a)
+    )
+    override def getObjectLockConfiguration(
+        a: GetObjectLockConfigurationRequest
+    ): M[GetObjectLockConfigurationResponse] = eff1(client.getObjectLockConfiguration(a))
+    override def getObjectRetention(a: GetObjectRetentionRequest): M[GetObjectRetentionResponse] = eff1(
+      client.getObjectRetention(a)
+    )
+    override def getObjectTagging(a: GetObjectTaggingRequest): M[GetObjectTaggingResponse] = eff1(
+      client.getObjectTagging(a)
+    )
+    override def getObjectTorrent[ReturnT](
+        a: GetObjectTorrentRequest,
+        b: AsyncResponseTransformer[GetObjectTorrentResponse, ReturnT]
+    ): M[ReturnT] = eff1(client.getObjectTorrent(a, b))
+    override def getObjectTorrent(a: GetObjectTorrentRequest, b: Path): M[GetObjectTorrentResponse] = eff1(
+      client.getObjectTorrent(a, b)
+    )
+    override def getPublicAccessBlock(a: GetPublicAccessBlockRequest): M[GetPublicAccessBlockResponse] = eff1(
+      client.getPublicAccessBlock(a)
+    )
+    override def headBucket(a: HeadBucketRequest): M[HeadBucketResponse] = eff1(client.headBucket(a))
+    override def headObject(a: HeadObjectRequest): M[HeadObjectResponse] = eff1(client.headObject(a))
+    override def listBucketAnalyticsConfigurations(
+        a: ListBucketAnalyticsConfigurationsRequest
+    ): M[ListBucketAnalyticsConfigurationsResponse] = eff1(client.listBucketAnalyticsConfigurations(a))
+    override def listBucketIntelligentTieringConfigurations(
+        a: ListBucketIntelligentTieringConfigurationsRequest
+    ): M[ListBucketIntelligentTieringConfigurationsResponse] = eff1(
+      client.listBucketIntelligentTieringConfigurations(a)
+    )
+    override def listBucketInventoryConfigurations(
+        a: ListBucketInventoryConfigurationsRequest
+    ): M[ListBucketInventoryConfigurationsResponse] = eff1(client.listBucketInventoryConfigurations(a))
+    override def listBucketMetricsConfigurations(
+        a: ListBucketMetricsConfigurationsRequest
+    ): M[ListBucketMetricsConfigurationsResponse] = eff1(client.listBucketMetricsConfigurations(a))
+    override def listBuckets: M[ListBucketsResponse]                        = eff1(client.listBuckets)
+    override def listBuckets(a: ListBucketsRequest): M[ListBucketsResponse] = eff1(client.listBuckets(a))
+    override def listBucketsPaginator: M[ListBucketsPublisher]              = primitive1(client.listBucketsPaginator)
+    override def listBucketsPaginator(a: ListBucketsRequest): M[ListBucketsPublisher] = primitive1(
+      client.listBucketsPaginator(a)
+    )
+    override def listDirectoryBuckets(a: ListDirectoryBucketsRequest): M[ListDirectoryBucketsResponse] = eff1(
+      client.listDirectoryBuckets(a)
+    )
+    override def listDirectoryBucketsPaginator(a: ListDirectoryBucketsRequest): M[ListDirectoryBucketsPublisher] =
+      primitive1(client.listDirectoryBucketsPaginator(a))
+    override def listMultipartUploads(a: ListMultipartUploadsRequest): M[ListMultipartUploadsResponse] = eff1(
+      client.listMultipartUploads(a)
+    )
+    override def listMultipartUploadsPaginator(a: ListMultipartUploadsRequest): M[ListMultipartUploadsPublisher] =
+      primitive1(client.listMultipartUploadsPaginator(a))
+    override def listObjectVersions(a: ListObjectVersionsRequest): M[ListObjectVersionsResponse] = eff1(
+      client.listObjectVersions(a)
+    )
+    override def listObjectVersionsPaginator(a: ListObjectVersionsRequest): M[ListObjectVersionsPublisher] = primitive1(
+      client.listObjectVersionsPaginator(a)
+    )
+    override def listObjects(a: ListObjectsRequest): M[ListObjectsResponse]       = eff1(client.listObjects(a))
+    override def listObjectsV2(a: ListObjectsV2Request): M[ListObjectsV2Response] = eff1(client.listObjectsV2(a))
+    override def listObjectsV2Paginator(a: ListObjectsV2Request): M[ListObjectsV2Publisher] = primitive1(
+      client.listObjectsV2Paginator(a)
+    )
+    override def listParts(a: ListPartsRequest): M[ListPartsResponse]           = eff1(client.listParts(a))
+    override def listPartsPaginator(a: ListPartsRequest): M[ListPartsPublisher] = primitive1(
+      client.listPartsPaginator(a)
+    )
+    override def putBucketAbac(a: PutBucketAbacRequest): M[PutBucketAbacResponse] = eff1(client.putBucketAbac(a))
+    override def putBucketAccelerateConfiguration(
+        a: PutBucketAccelerateConfigurationRequest
+    ): M[PutBucketAccelerateConfigurationResponse] = eff1(client.putBucketAccelerateConfiguration(a))
+    override def putBucketAcl(a: PutBucketAclRequest): M[PutBucketAclResponse] = eff1(client.putBucketAcl(a))
+    override def putBucketAnalyticsConfiguration(
+        a: PutBucketAnalyticsConfigurationRequest
+    ): M[PutBucketAnalyticsConfigurationResponse] = eff1(client.putBucketAnalyticsConfiguration(a))
+    override def putBucketCors(a: PutBucketCorsRequest): M[PutBucketCorsResponse] = eff1(client.putBucketCors(a))
+    override def putBucketEncryption(a: PutBucketEncryptionRequest): M[PutBucketEncryptionResponse] = eff1(
+      client.putBucketEncryption(a)
+    )
+    override def putBucketIntelligentTieringConfiguration(
+        a: PutBucketIntelligentTieringConfigurationRequest
+    ): M[PutBucketIntelligentTieringConfigurationResponse] = eff1(client.putBucketIntelligentTieringConfiguration(a))
+    override def putBucketInventoryConfiguration(
+        a: PutBucketInventoryConfigurationRequest
+    ): M[PutBucketInventoryConfigurationResponse] = eff1(client.putBucketInventoryConfiguration(a))
+    override def putBucketLifecycleConfiguration(
+        a: PutBucketLifecycleConfigurationRequest
+    ): M[PutBucketLifecycleConfigurationResponse] = eff1(client.putBucketLifecycleConfiguration(a))
+    override def putBucketLogging(a: PutBucketLoggingRequest): M[PutBucketLoggingResponse] = eff1(
+      client.putBucketLogging(a)
+    )
+    override def putBucketMetricsConfiguration(
+        a: PutBucketMetricsConfigurationRequest
+    ): M[PutBucketMetricsConfigurationResponse] = eff1(client.putBucketMetricsConfiguration(a))
+    override def putBucketNotificationConfiguration(
+        a: PutBucketNotificationConfigurationRequest
+    ): M[PutBucketNotificationConfigurationResponse] = eff1(client.putBucketNotificationConfiguration(a))
+    override def putBucketOwnershipControls(
+        a: PutBucketOwnershipControlsRequest
+    ): M[PutBucketOwnershipControlsResponse] = eff1(client.putBucketOwnershipControls(a))
+    override def putBucketPolicy(a: PutBucketPolicyRequest): M[PutBucketPolicyResponse] = eff1(
+      client.putBucketPolicy(a)
+    )
+    override def putBucketReplication(a: PutBucketReplicationRequest): M[PutBucketReplicationResponse] = eff1(
+      client.putBucketReplication(a)
+    )
+    override def putBucketRequestPayment(a: PutBucketRequestPaymentRequest): M[PutBucketRequestPaymentResponse] = eff1(
+      client.putBucketRequestPayment(a)
+    )
+    override def putBucketTagging(a: PutBucketTaggingRequest): M[PutBucketTaggingResponse] = eff1(
+      client.putBucketTagging(a)
+    )
+    override def putBucketVersioning(a: PutBucketVersioningRequest): M[PutBucketVersioningResponse] = eff1(
+      client.putBucketVersioning(a)
+    )
+    override def putBucketWebsite(a: PutBucketWebsiteRequest): M[PutBucketWebsiteResponse] = eff1(
+      client.putBucketWebsite(a)
+    )
+    override def putObject(a: PutObjectRequest, b: AsyncRequestBody): M[PutObjectResponse] = eff1(
+      client.putObject(a, b)
+    )
+    override def putObject(a: PutObjectRequest, b: Path): M[PutObjectResponse] = eff1(client.putObject(a, b))
+    override def putObjectAcl(a: PutObjectAclRequest): M[PutObjectAclResponse] = eff1(client.putObjectAcl(a))
+    override def putObjectLegalHold(a: PutObjectLegalHoldRequest): M[PutObjectLegalHoldResponse] = eff1(
+      client.putObjectLegalHold(a)
+    )
+    override def putObjectLockConfiguration(
+        a: PutObjectLockConfigurationRequest
+    ): M[PutObjectLockConfigurationResponse] = eff1(client.putObjectLockConfiguration(a))
+    override def putObjectRetention(a: PutObjectRetentionRequest): M[PutObjectRetentionResponse] = eff1(
+      client.putObjectRetention(a)
+    )
+    override def putObjectTagging(a: PutObjectTaggingRequest): M[PutObjectTaggingResponse] = eff1(
+      client.putObjectTagging(a)
+    )
+    override def putPublicAccessBlock(a: PutPublicAccessBlockRequest): M[PutPublicAccessBlockResponse] = eff1(
+      client.putPublicAccessBlock(a)
+    )
+    override def renameObject(a: RenameObjectRequest): M[RenameObjectResponse]    = eff1(client.renameObject(a))
+    override def restoreObject(a: RestoreObjectRequest): M[RestoreObjectResponse] = eff1(client.restoreObject(a))
+    override def selectObjectContent(a: SelectObjectContentRequest, b: SelectObjectContentResponseHandler): M[Void] =
+      eff1(client.selectObjectContent(a, b))
+    override def serviceClientConfiguration: M[S3ServiceClientConfiguration] = primitive1(
+      client.serviceClientConfiguration
+    )
+    override def serviceName: M[String] = primitive1(client.serviceName)
+    override def updateBucketMetadataInventoryTableConfiguration(
+        a: UpdateBucketMetadataInventoryTableConfigurationRequest
+    ): M[UpdateBucketMetadataInventoryTableConfigurationResponse] = eff1(
+      client.updateBucketMetadataInventoryTableConfiguration(a)
+    )
+    override def updateBucketMetadataJournalTableConfiguration(
+        a: UpdateBucketMetadataJournalTableConfigurationRequest
+    ): M[UpdateBucketMetadataJournalTableConfigurationResponse] = eff1(
+      client.updateBucketMetadataJournalTableConfiguration(a)
+    )
+    override def uploadPart(a: UploadPartRequest, b: AsyncRequestBody): M[UploadPartResponse] = eff1(
+      client.uploadPart(a, b)
+    )
+    override def uploadPart(a: UploadPartRequest, b: Path): M[UploadPartResponse]    = eff1(client.uploadPart(a, b))
+    override def uploadPartCopy(a: UploadPartCopyRequest): M[UploadPartCopyResponse] = eff1(client.uploadPartCopy(a))
+    override def utilities: M[S3Utilities]                                           = primitive1(client.utilities)
+    override def waiter: M[S3AsyncWaiter]                                            = primitive1(client.waiter)
+    override def writeGetObjectResponse(
+        a: WriteGetObjectResponseRequest,
+        b: AsyncRequestBody
+    ): M[WriteGetObjectResponseResponse] = eff1(client.writeGetObjectResponse(a, b))
+    override def writeGetObjectResponse(a: WriteGetObjectResponseRequest, b: Path): M[WriteGetObjectResponseResponse] =
+      eff1(client.writeGetObjectResponse(a, b))
+
+  }
+
+}

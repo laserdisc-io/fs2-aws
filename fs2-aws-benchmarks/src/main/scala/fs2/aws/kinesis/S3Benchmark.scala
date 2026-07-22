@@ -6,7 +6,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import fs2.Chunk
 import fs2.aws.s3.S3
 import fs2.aws.s3.models.Models.{BucketName, FileKey, PartSizeMB}
-import io.laserdisc.pure.s3.tagless.{Interpreter as S3Interpreter, S3AsyncClientOp}
+import io.laserdisc.pure.s3.tagless.{S3AsyncClientOp, S3Interpreter}
 import org.openjdk.jmh.annotations.{Benchmark, Scope, State}
 import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import software.amazon.awssdk.regions.Region
@@ -77,7 +77,7 @@ object S3Benchmark {
     def s3StreamResource1: Resource[IO, S3AsyncClientOp[IO]] =
       Resource.pure(new S3OpsStub)
     def s3StreamResource(credentials: AwsBasicCredentials, port: Int): Resource[IO, S3AsyncClientOp[IO]] =
-      S3Interpreter[IO].S3AsyncClientOpResource(
+      S3Interpreter[IO].resource(
         S3AsyncClient
           .builder()
           .credentialsProvider(StaticCredentialsProvider.create(credentials))

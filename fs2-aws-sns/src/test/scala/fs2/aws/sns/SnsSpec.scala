@@ -4,7 +4,7 @@ import cats.effect.unsafe.IORuntime
 import cats.effect.{IO, Resource}
 import cats.implicits.*
 import fs2.aws.sns.sns.SNS
-import io.laserdisc.pure.sns.tagless.{Interpreter, SnsAsyncClientOp}
+import io.laserdisc.pure.sns.tagless.{SnsAsyncClientOp, SnsInterpreter}
 import io.laserdisc.pure.sqs.tagless
 import io.laserdisc.pure.sqs.tagless.SqsAsyncClientOp
 import org.scalatest.BeforeAndAfterAll
@@ -121,7 +121,7 @@ class SnsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
   def mkSNSClient(snsPort: Int): Resource[IO, SnsAsyncClientOp[IO]] = {
     val credentials =
       AwsBasicCredentials.create("accesskey", "secretkey")
-    Interpreter[IO].SnsAsyncClientOpResource(
+    SnsInterpreter[IO].resource(
       SnsAsyncClient
         .builder()
         .credentialsProvider(StaticCredentialsProvider.create(credentials))
@@ -134,8 +134,8 @@ class SnsSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
     val credentials =
       AwsBasicCredentials.create("accesskey", "secretkey")
     tagless
-      .Interpreter[IO]
-      .SqsAsyncClientOpResource(
+      .SqsInterpreter[IO]
+      .resource(
         SqsAsyncClient
           .builder()
           .credentialsProvider(StaticCredentialsProvider.create(credentials))

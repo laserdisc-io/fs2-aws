@@ -54,14 +54,10 @@ still available and takes the same three SDK clients plus a `ClientVersionConfig
 
 ### Choosing the `ClientVersionConfig`
 
-KCL 3.x changed the lease-coordination protocol, so the default scheduler requires you to pick a
-mode explicitly:
+KCL 3.x changed the lease-coordination protocol, so to prevent accidental misconfiguration for existing applications, the `ClientVersionConfig` must be explicitly set.
 
-* `CLIENT_VERSION_CONFIG_3X` — new applications, or once all workers run KCL 3.x.
-* `CLIENT_VERSION_CONFIG_COMPATIBLE_WITH_2X` — while workers built against KCL 2.x still share
-  the same lease table; switch to `CLIENT_VERSION_CONFIG_3X` once migration completes.
-
-See the [KCL 2.x-to-3.x migration guide](https://docs.aws.amazon.com/streams/latest/dev/kcl-migration-from-2-3.html).
+* For a new application, use `CLIENT_VERSION_CONFIG_3X`. 
+* For an existing application, see the [KCL 2.x-to-3.x migration guide](https://docs.aws.amazon.com/streams/latest/dev/kcl-migration-from-2-3.html) (and also the fs2-aws [v7 migration notes](../migration.md))
 
 ### Checkpointing records
 
@@ -102,11 +98,11 @@ results) and `writeObjectToKinesis` (takes an implicit `I => ByteBuffer` encoder
 
 ## Use with LocalStack
 
-Consuming from and publishing to Kinesis in [LocalStack](https://localstack.cloud/) works —
-set the client `endpointOverride` (e.g. `http://localhost:4566`) and use `Polling` retrieval
-mode (LocalStack does not support `FanOut`). See
-[`KinesisExampleNew`](https://github.com/laserdisc-io/fs2-aws/blob/main/fs2-aws-examples/src/main/scala/fs2/aws/examples/KinesisExampleNew.scala)
-for a complete runnable example.
+Consuming from and publishing to Kinesis in [LocalStack](https://localstack.cloud/) works. 
+Set the client `endpointOverride` (e.g. `http://localhost:4566`) and use `Polling` retrieval
+mode (LocalStack does not support `FanOut`). 
+
+See [`KinesisExampleNew`](https://github.com/laserdisc-io/fs2-aws/blob/main/fs2-aws-examples/src/main/scala/fs2/aws/examples/KinesisExampleNew.scala) for a complete runnable example.
 
 ## Testing
 

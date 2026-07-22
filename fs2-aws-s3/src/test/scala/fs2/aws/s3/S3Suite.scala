@@ -7,7 +7,7 @@ import fs2.aws.s3.S3.MultipartETagValidation
 import fs2.aws.s3.models.Models.{BucketName, FileKey, PartSizeMB}
 import fs2.io.file.{Files, Flags, Path}
 import fs2.text
-import io.laserdisc.pure.s3.tagless.{Interpreter, S3AsyncClientOp}
+import io.laserdisc.pure.s3.tagless.{S3AsyncClientOp, S3Interpreter}
 import munit.CatsEffectSuite
 import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import software.amazon.awssdk.regions.Region
@@ -26,7 +26,7 @@ class S3Suite extends CatsEffectSuite {
   val multipartETagValidation = MultipartETagValidation.create[IO]
 
   def s3R: Resource[IO, S3AsyncClientOp[IO]] =
-    Interpreter[IO].S3AsyncClientOpResource(
+    S3Interpreter[IO].resource(
       S3AsyncClient
         .builder()
         .endpointOverride(URI.create("http://localhost:9000"))

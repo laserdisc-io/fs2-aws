@@ -2,7 +2,7 @@ package fs2.aws.dynamodb
 
 import cats.effect.unsafe.IORuntime
 import cats.effect.{IO, Resource}
-import io.laserdisc.pure.dynamodb.tagless.{DynamoDbAsyncClientOp, Interpreter as DDBInterpreter}
+import io.laserdisc.pure.dynamodb.tagless.{DynamoDbAsyncClientOp, DynamoDbInterpreter}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Minutes, Second, Span}
@@ -73,7 +73,7 @@ class StreamScanSpec extends AnyWordSpec with Matchers with ScalaFutures {
   }
   def resourcesF: Resource[IO, (String, DynamoDbAsyncClientOp[IO])] =
     for {
-      ddb <- DDBInterpreter[IO].DynamoDbAsyncClientOpResource(
+      ddb <- DynamoDbInterpreter[IO].resource(
         DynamoDbAsyncClient
           .builder()
           .credentialsProvider(

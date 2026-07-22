@@ -25,11 +25,9 @@ To use `StreamScan[F]`, you need an instance of `DynamoDbAsyncClientOp[F]`:
 The general usage pattern is as follows:
 
 ```scala
-// first, get your DynamoDB builder from the AWS SDK (configure credentials, region, etc.)
-val ddbBuilder = DynamoDbAsyncClient.builder()
-
-// now create the tagless-final wrapper resource around it
-val ddbInterpreter = DdbInterpreter[IO].DynamoDbAsyncClientOpResource(ddbBuilder)
+// create the tagless-final wrapper resource (pass a DynamoDbAsyncClient.builder()
+// if you need to configure credentials, region, etc.)
+val ddbInterpreter = DynamoDbInterpreter[IO].resource
 
 // use the interpreter directly for effectful AWS SDK calls
 ddbInterpreter.map(StreamScan[IO](_)).use { scanner =>
@@ -43,26 +41,22 @@ ddbInterpreter.map(StreamScan[IO](_)).use { scanner =>
 ```scala mdoc:compile-only
 import cats.effect.*
 import fs2.aws.dynamodb.StreamScan
-import io.laserdisc.pure.dynamodb.tagless.{DynamoDbAsyncClientOp, Interpreter as DdbInterpreter}
-import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
+import io.laserdisc.pure.dynamodb.tagless.DynamoDbInterpreter
 import software.amazon.awssdk.services.dynamodb.model.{ListTablesResponse, ScanRequest}
 
 val scanRequest = ScanRequest.builder().tableName("my-table").build()
 
 object DynamoDBExample {
 
-  def mkDdbResource: Resource[IO, DynamoDbAsyncClientOp[IO]] =
-    DdbInterpreter[IO].DynamoDbAsyncClientOpResource(DynamoDbAsyncClient.builder())
-
   // use the tagless-final wrapper directly for effectful AWS SDK calls
-  def simpleTaglessFinalCall: IO[ListTablesResponse] =
-    mkDdbResource.use { client =>
+  def basicExample: IO[ListTablesResponse] =
+    DynamoDbInterpreter[IO].resource.use { client =>
       client.listTables
     }
 
   // or make use of the streaming API for scanning tables
   def fs2StreamingExample: IO[Unit] =
-    mkDdbResource
+    DynamoDbInterpreter[IO].resource
       .map(StreamScan[IO](_))
       .use { scanner =>
         scanner

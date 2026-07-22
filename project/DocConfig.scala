@@ -98,14 +98,15 @@ object DocConfig {
           ),
           linkPanel = Some(
             LinkPanel(
-              "Modules",
+              "Documentation",
               TextLink.internal(Root / "modules" / "fs2-aws-s3.md", "fs2-aws-s3"),
               TextLink.internal(Root / "modules" / "fs2-aws-kinesis.md", "fs2-aws-kinesis"),
               TextLink.internal(Root / "modules" / "fs2-aws-sqs.md", "fs2-aws-sqs"),
               TextLink.internal(Root / "modules" / "fs2-aws-sns.md", "fs2-aws-sns"),
               TextLink.internal(Root / "modules" / "fs2-aws-dynamodb.md", "fs2-aws-dynamodb"),
               TextLink.internal(Root / "modules" / "fs2-aws-testkit.md", "fs2-aws-testkit"),
-              TextLink.internal(Root / "modules" / "pure-aws.md", "pure-aws")
+              TextLink.internal(Root / "modules" / "pure-aws.md", "pure-aws"),
+              TextLink.internal(Root / "migration.md", "Migrating to 7.x")
             )
           ),
           teasers = Seq(

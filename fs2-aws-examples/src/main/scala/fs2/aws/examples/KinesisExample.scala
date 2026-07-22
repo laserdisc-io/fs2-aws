@@ -12,12 +12,12 @@ import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClientBuilder
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClientBuilder
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClientBuilder
 import software.amazon.awssdk.services.kinesis.model.{CreateStreamRequest, DeleteStreamRequest}
-import software.amazon.kinesis.coordinator.CoordinatorConfig.ClientVersionConfig
+import software.amazon.kinesis.coordinator.CoordinatorConfig.ClientVersionConfig.*
 import fs2.aws.examples.KinesisAppConfig.syntax.*
 import cats.implicits.*
-import io.laserdisc.pure.cloudwatch.tagless.Interpreter as CloudwatchInterpreter
-import io.laserdisc.pure.dynamodb.tagless.Interpreter as DynamoDbInterpreter
-import io.laserdisc.pure.kinesis.tagless.Interpreter as KinesisInterpreter
+import io.laserdisc.pure.cloudwatch.tagless.CloudWatchInterpreter
+import io.laserdisc.pure.dynamodb.tagless.DynamoDbInterpreter
+import io.laserdisc.pure.kinesis.tagless.KinesisInterpreter
 import scala.concurrent.ExecutionContext.Implicits.global
 
 import java.nio.ByteBuffer
@@ -46,12 +46,12 @@ object KinesisExample extends IOApp {
       streamName: String
   ) =
     for {
-      k <- KinesisInterpreter[F].KinesisAsyncClientResource(kac)
-      d <- DynamoDbInterpreter[F].DynamoDbAsyncClientResource(dac)
-      c <- CloudwatchInterpreter[F].CloudWatchAsyncClientResource(cac)
+      k <- KinesisInterpreter[F].clientResource(kac)
+      d <- DynamoDbInterpreter[F].clientResource(dac)
+      c <- CloudWatchInterpreter[F].clientResource(cac)
       kinesisInterpreter = KinesisInterpreter[F].create(k)
       _ <- disposableStream(kinesisInterpreter, streamName)
-    } yield Kinesis.create[F](k, d, c, ClientVersionConfig.CLIENT_VERSION_CONFIG_3X)
+    } yield Kinesis.create[F](k, d, c, CLIENT_VERSION_CONFIG_3X)
 
   def program[F[_]: Async: Concurrent: Temporal: NonEmptyParallel](
       kinesis: Kinesis[F],

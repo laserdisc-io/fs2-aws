@@ -25,11 +25,9 @@ To use `SNS[F]`, you need an instance of `SnsAsyncClientOp[F]`:
 The general usage pattern is as follows:
 
 ```scala
-// first, get your SNS builder from the AWS SDK (configure credentials, region, etc.)
-val snsBuilder = SnsAsyncClient.builder()
-
-// now create the tagless-final wrapper resource around it
-val snsInterpreter = SnsInterpreter[IO].SnsAsyncClientOpResource(snsBuilder)
+// create the tagless-final wrapper resource (pass an SnsAsyncClient.builder()
+// if you need to configure credentials, region, etc.)
+val snsInterpreter = SnsInterpreter[IO].resource
 
 // use the interpreter directly for effectful AWS SDK calls
 snsInterpreter.use { snsOp =>
@@ -45,26 +43,22 @@ snsInterpreter.use { snsOp =>
 ```scala mdoc:compile-only
 import cats.effect.*
 import fs2.aws.sns.sns.*
-import io.laserdisc.pure.sns.tagless.{SnsAsyncClientOp, Interpreter as SnsInterpreter}
-import software.amazon.awssdk.services.sns.SnsAsyncClient
+import io.laserdisc.pure.sns.tagless.SnsInterpreter
 import software.amazon.awssdk.services.sns.model.ListTopicsResponse
 
 val topicArn = "arn:aws:sns:us-east-1:123456789012:my-topic"
 
 object SNSExample {
 
-  def mkSnsResource: Resource[IO, SnsAsyncClientOp[IO]] =
-    SnsInterpreter[IO].SnsAsyncClientOpResource(SnsAsyncClient.builder())
-
   // use the tagless-final wrapper directly for effectful AWS SDK calls
-  def simpleTaglessFinalCall: IO[ListTopicsResponse] =
-    mkSnsResource.use { client =>
+  def basicExample: IO[ListTopicsResponse] =
+    SnsInterpreter[IO].resource.use { client =>
       client.listTopics
     }
 
   // or make use of the streaming API for publishing messages
   def fs2StreamingExample: IO[Unit] =
-    mkSnsResource.use { snsOp =>
+    SnsInterpreter[IO].resource.use { snsOp =>
       SNS.create[IO](snsOp).flatMap { sns =>
         fs2.Stream("hello", "world")
           .through(sns.publish(topicArn))

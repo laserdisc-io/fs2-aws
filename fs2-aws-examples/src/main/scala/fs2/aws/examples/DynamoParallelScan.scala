@@ -5,7 +5,7 @@ import cats.effect.{ExitCode, IO, IOApp, Sync}
 import cats.implicits.*
 import fs2.aws.dynamodb.StreamScan
 import fs2.{Chunk, Pipe}
-import io.laserdisc.pure.dynamodb.tagless.{DynamoDbAsyncClientOp, Interpreter}
+import io.laserdisc.pure.dynamodb.tagless.{DynamoDbAsyncClientOp, DynamoDbInterpreter}
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 import software.amazon.awssdk.services.dynamodb.model.*
@@ -82,7 +82,7 @@ case class DDBEnvironment[F[_]](
 object DynamoParallelScan extends IOApp {
   override def run(args: List[String]): IO[ExitCode] =
     (for {
-      ddb <- Interpreter[IO].DynamoDbAsyncClientOpResource(
+      ddb <- DynamoDbInterpreter[IO].resource(
         DynamoDbAsyncClient
           .builder()
           .region(Region.US_EAST_1)

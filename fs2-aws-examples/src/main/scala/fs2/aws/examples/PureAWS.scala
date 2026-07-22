@@ -4,8 +4,8 @@ import cats.data.Kleisli
 import cats.effect.*
 import cats.syntax.flatMap.*
 import cats.syntax.functor.*
-import io.laserdisc.pure.sns.tagless.{Interpreter as SNSInterpreter, SnsAsyncClientOp}
-import io.laserdisc.pure.sqs.tagless.{Interpreter as SQSInterpreter, SqsAsyncClientOp}
+import io.laserdisc.pure.sns.tagless.{SnsAsyncClientOp, SnsInterpreter}
+import io.laserdisc.pure.sqs.tagless.{SqsAsyncClientOp, SqsInterpreter}
 import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.sns.SnsAsyncClient
@@ -30,8 +30,8 @@ object PureAWSKleisli extends IOApp {
     // Kleisli example
     resourcesK.use { e =>
       program[Kleisli[IO, Environment, *]](
-        SQSInterpreter[IO].SqsAsyncClientInterpreter.lens[Environment](_.sqs),
-        SNSInterpreter[IO].SnsAsyncClientInterpreter.lens[Environment](_.sns)
+        SqsInterpreter[IO].SqsAsyncClientInterpreter.lens[Environment](_.sqs),
+        SnsInterpreter[IO].SnsAsyncClientInterpreter.lens[Environment](_.sns)
       ).run(e)
     } >> // TF example
       resourcesF.use { case (sqs, sns) => program[IO](sqs, sns) }
@@ -64,14 +64,14 @@ object PureAWSKleisli extends IOApp {
 
   def resourcesF: Resource[IO, (SqsAsyncClientOp[IO], SnsAsyncClientOp[IO])] =
     for {
-      sns <- SNSInterpreter[IO].SnsAsyncClientOpResource(
+      sns <- SnsInterpreter[IO].resource(
         SnsAsyncClient
           .builder()
           .credentialsProvider(StaticCredentialsProvider.create(creds))
           .endpointOverride(URI.create(s"http://localhost:$port"))
           .region(Region.US_EAST_1)
       )
-      sqs <- SQSInterpreter[IO].SqsAsyncClientOpResource(
+      sqs <- SqsInterpreter[IO].resource(
         SqsAsyncClient
           .builder()
           .credentialsProvider(StaticCredentialsProvider.create(creds))

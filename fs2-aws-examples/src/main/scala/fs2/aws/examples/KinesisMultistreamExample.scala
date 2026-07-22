@@ -10,9 +10,9 @@ import fs2.aws.internal.KinesisProducerClientImpl
 import fs2.aws.kinesis.models.KinesisModels.AppName
 import fs2.aws.kinesis.publisher.writeToKinesis
 import fs2.aws.kinesis.{CommittableRecord, DefaultKinesisStreamBuilder}
-import io.laserdisc.pure.cloudwatch.tagless.Interpreter as CloudwatchInterpreter
-import io.laserdisc.pure.dynamodb.tagless.Interpreter as DynamoDbInterpreter
-import io.laserdisc.pure.kinesis.tagless.{Interpreter as KinesisInterpreter, KinesisAsyncClientOp}
+import io.laserdisc.pure.cloudwatch.tagless.CloudWatchInterpreter
+import io.laserdisc.pure.dynamodb.tagless.DynamoDbInterpreter
+import io.laserdisc.pure.kinesis.tagless.{KinesisAsyncClientOp, KinesisInterpreter}
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClientBuilder
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClientBuilder
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClientBuilder
@@ -48,14 +48,14 @@ object KinesisMultistreamExample extends IOApp {
       streamNames: List[String]
   ) =
     for {
-      k <- KinesisInterpreter[F].KinesisAsyncClientResource(kac)
+      k <- KinesisInterpreter[F].clientResource(kac)
       _ <- streamNames.map(streamName => disposableStream(KinesisInterpreter[F].create(k), streamName)).parSequence_
       appName <- Resource.eval(Sync[F].fromEither(AppName("kinesis-multistream-example").leftMap(new Throwable(_))))
       stream  <- DefaultKinesisStreamBuilder[F]()
         .withAppName(appName)
         .withKinesisClient(k)
-        .withDynamoDBClient(DynamoDbInterpreter[F].DynamoDbAsyncClientResource(dac))
-        .withCloudWatchClient(CloudwatchInterpreter[F].CloudWatchAsyncClientResource(cac))
+        .withDynamoDBClient(DynamoDbInterpreter[F].clientResource(dac))
+        .withCloudWatchClient(CloudWatchInterpreter[F].clientResource(cac))
         .withDefaultSchedulerId
         .withMultiStreamTracker
         .withStreamTracker(
