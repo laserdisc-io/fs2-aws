@@ -6,7 +6,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/laserdisc-io/fs2-aws/badge.svg?branch=main)](https://coveralls.io/github/laserdisc-io/fs2-aws?branch=main)
 
 > **Warning**
-> The 7.x release contains breaking changes from 6.x. See [migration notes]() for details.
+> The 7.x release contains breaking changes from 6.x. See [migration notes](https://fs2aws.laserdisc.io/migration.html) for details.
 
 Provides [FS2](https://fs2.io) streaming utilities for interacting with AWS.
 

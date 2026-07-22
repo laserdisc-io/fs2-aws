@@ -9,7 +9,7 @@ object S3Example extends IOApp.Simple {
 
   override def run: IO[Unit] =
     S3Interpreter[IO].resource
-      .map(S3.create)
+      .map(S3.create[IO])
       .use { s3 =>
         s3.readFile(
           BucketName.unsafeFrom("test-bucket"),

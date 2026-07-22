@@ -401,9 +401,16 @@ class TaglessGen[T](
        |
        |}
        |
+       |// the interpreter was previously named `Interpreter`; kept (as both a type and a term) so 6.x code still compiles
+       |@deprecated("use $interpreterName", "7.0.0")
+       |trait Interpreter[M[_]] extends $interpreterName[M]
+       |
        |@deprecated("use $interpreterName", "7.0.0")
        |object Interpreter {
-       |  def apply[M[_]](implicit am: Async[M]): $interpreterName[M] = $interpreterName[M]
+       |  def apply[M[_]](implicit am: Async[M]): Interpreter[M] =
+       |    new Interpreter[M] {
+       |      val asyncM: Async[M] = am
+       |    }
        |}
        |
        |// Family of interpreters into Kleisli arrows for some monad M.
@@ -449,7 +456,7 @@ class TaglessGen[T](
     val op = writeFile(s"${clientSimpleName}Op.scala", module);
     val ki = writeFile(s"$interpreterName.scala", kleisliInterpreter);
 
-    // locally clear out the old pre-7.x intepreter if it exists
+    // locally clear out the old pre-7.x interpreter if it exists
     new File(base, "Interpreter.scala").delete()
 
     log.info(s"""Generating Tagless Algebra for $awsService:

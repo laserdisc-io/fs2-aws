@@ -29,9 +29,16 @@ object DynamoDbInterpreter {
 
 }
 
+// the interpreter was previously named `Interpreter`; kept (as both a type and a term) so 6.x code still compiles
+@deprecated("use DynamoDbInterpreter", "7.0.0")
+trait Interpreter[M[_]] extends DynamoDbInterpreter[M]
+
 @deprecated("use DynamoDbInterpreter", "7.0.0")
 object Interpreter {
-  def apply[M[_]](implicit am: Async[M]): DynamoDbInterpreter[M] = DynamoDbInterpreter[M]
+  def apply[M[_]](implicit am: Async[M]): Interpreter[M] =
+    new Interpreter[M] {
+      val asyncM: Async[M] = am
+    }
 }
 
 // Family of interpreters into Kleisli arrows for some monad M.
