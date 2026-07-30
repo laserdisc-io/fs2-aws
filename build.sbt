@@ -5,6 +5,7 @@ import software.amazon.awssdk.services.kinesis.KinesisAsyncClient
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.sns.SnsAsyncClient
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
+import sbtunidoc.ScalaUnidocPlugin
 
 organization := "io.laserdisc"
 name         := "fs2-aws"
@@ -41,12 +42,28 @@ lazy val root = (project in file("."))
   )
 
 lazy val siteDocs = (project in file("site"))
-  .enablePlugins(TypelevelSitePlugin)
+  .enablePlugins(TypelevelSitePlugin, ScalaUnidocPlugin)
   .dependsOn(`fs2-aws-examples`)
   .settings(
     DocConfig.FS2AWS,
-    publishArtifact    := false,
-    crossScalaVersions := Nil
+    ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(
+      `fs2-aws-core`,
+      `fs2-aws-s3`,
+      `fs2-aws-kinesis`,
+      `fs2-aws-sqs`,
+      `fs2-aws-sns`,
+      `fs2-aws-dynamodb`,
+      `fs2-aws-testkit`,
+      `pure-sqs-tagless`,
+      `pure-sns-tagless`,
+      `pure-s3-tagless`,
+      `pure-cloudwatch-tagless`,
+      `pure-dynamodb-tagless`,
+      `pure-kinesis-tagless`
+    ),
+    Compile / packageDoc / mappings := (ScalaUnidoc / packageDoc / mappings).value,
+    publishArtifact                 := false,
+    crossScalaVersions              := Nil
   )
 
 lazy val `fs2-aws-core` = (project in file("fs2-aws-core"))
