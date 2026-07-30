@@ -122,7 +122,7 @@
         <p>An FS2 Streams-based API for scanning AWS DynamoDB tables with back-pressure.</p>
         
         <h3 id="import" class="section"><a class="anchor-link left" href="#import"><i class="icofont-laika link">&#xef71;</i></a>Import:</h3>
-        <pre class="keep-together pdf epub"><code class="sbt">libraryDependencies += &quot;io.laserdisc&quot; %% &quot;fs2-aws-dynamodb&quot; % &quot;7.0.0-RC1&quot;</code></pre>
+        <pre class="keep-together pdf epub"><code class="sbt">libraryDependencies += &quot;io.laserdisc&quot; %% &quot;fs2-aws-dynamodb&quot; % &quot;6.6.0&quot;</code></pre>
         <p>This module provides the <code>StreamScan[F]</code> algebra:</p>
         <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">trait</span><span> </span><span class="type-name">StreamScan</span><span>[</span><span class="type-name">F</span><span>[</span><span class="identifier">_</span><span>]] {
     </span><span class="keyword">def</span><span> </span><span class="declaration-name">scanDynamoDB</span><span>(</span><span class="identifier">scanRequest</span><span>: </span><span class="type-name">ScanRequest</span><span>, </span><span class="identifier">pageSize</span><span>: </span><span class="type-name">Int</span><span>): </span><span class="type-name">Stream</span><span>[</span><span class="type-name">F</span><span>, </span><span class="type-name">Chunk</span><span>[</span><span class="type-name">JMap</span><span>[</span><span class="type-name">String</span><span>, </span><span class="type-name">AttributeValue</span><span>]]]

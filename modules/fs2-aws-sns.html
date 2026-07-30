@@ -122,7 +122,7 @@
         <p>An FS2 Streams-based API for publishing messages to AWS SNS topics.</p>
         
         <h3 id="import" class="section"><a class="anchor-link left" href="#import"><i class="icofont-laika link">&#xef71;</i></a>Import:</h3>
-        <pre class="keep-together pdf epub"><code class="sbt">libraryDependencies += &quot;io.laserdisc&quot; %% &quot;fs2-aws-sns&quot; % &quot;7.0.0-RC1&quot;</code></pre>
+        <pre class="keep-together pdf epub"><code class="sbt">libraryDependencies += &quot;io.laserdisc&quot; %% &quot;fs2-aws-sns&quot; % &quot;6.6.0&quot;</code></pre>
         <p>This module provides the <code>SNS[F]</code> algebra:</p>
         <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">trait</span><span> </span><span class="type-name">SNS</span><span>[</span><span class="type-name">F</span><span>[</span><span class="identifier">_</span><span>]] {
     </span><span class="keyword">def</span><span> </span><span class="declaration-name">publish</span><span>(</span><span class="identifier">topicArn</span><span>: </span><span class="type-name">String</span><span>): </span><span class="type-name">Pipe</span><span>[</span><span class="type-name">F</span><span>, </span><span class="type-name">MsgBody</span><span>, </span><span class="type-name">PublishResponse</span><span>]
