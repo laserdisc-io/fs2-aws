@@ -56,10 +56,11 @@ object DocConfig {
   )
 
   val FS2AWS = Seq(
-    tlSiteApiUrl := Some(url("https://fs2aws.laserdisc.io/")),
+    tlSiteApiUrl := Some(url("https://fs2aws.laserdisc.io/api/")),
     // sbt-typelevel resolves VERSION to a pre-release when no stable release is bin-compatible with it;
     // we always want the stable release there, with the pre-release surfaced on the landing page
     mdocVariables += "VERSION" -> latestStableRelease.value.getOrElse(version.value),
+    laikaIncludeAPI            := true,
     laikaExtensions += SyntaxHighlighting,
     tlSiteIsTypelevelProject := None,
     tlSiteHelium             :=
@@ -85,7 +86,7 @@ object DocConfig {
         .disabled
         .site
         .topNavigationBar(
-          homeLink = IconLink.external("https://fs2aws.laserdisc.io/", HeliumIcon.home)
+          homeLink = IconLink.external("https://fs2aws.laserdisc.io/", HeliumIcon.home, text = Some("fs2-aws"))
         )
         .site
         .pageNavigation(enabled = true, depth = 1, keepOnSmallScreens = false)
