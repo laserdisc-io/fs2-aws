@@ -5,10 +5,14 @@
 [![Maven Central](https://img.shields.io/maven-central/v/io.laserdisc/fs2-aws-s3_3)](https://central.sonatype.com/search?q=io.laserdisc.fs2-aws)
 [![Coverage Status](https://coveralls.io/repos/github/laserdisc-io/fs2-aws/badge.svg?branch=main)](https://coveralls.io/github/laserdisc-io/fs2-aws?branch=main)
 
+Provides effectful and [FS2](https://fs2.io) streaming utilities for interacting with AWS.
+
 > **Warning**
 > The 7.x release contains breaking changes from 6.x. See [migration notes](https://fs2aws.laserdisc.io/migration.html) for details.
+> 
+> * The [`main`](https://github.com/laserdisc-io/fs2-aws/tree/main) branch contains the 7.x series. 
+> * The pre-breaking 6.x releases will be cut from [`series/6.x`](https://github.com/laserdisc-io/fs2-aws/tree/series/6.x). 
 
-Provides [FS2](https://fs2.io) streaming utilities for interacting with AWS.
 
 <img src="docs/fs2-aws-logo.png" width="150" height="150" alt="fs2-aws logo"/>
 
@@ -20,10 +24,6 @@ In addition, the kinesis module provides FS2-streaming support for consuming and
 * The [Kinesis Producer Library (KPL)](https://github.com/awslabs/amazon-kinesis-producer)
 
 For full details, visit [fs2aws.laserdisc.io](https://fs2aws.laserdisc.io).
-
-> [!NOTE]
-> `main` contains the unreleased 7.x series. For the currently published 6.x library,
-> see [`series/6.x`](https://github.com/laserdisc-io/fs2-aws/tree/series/6.x).
 
 ## License
 

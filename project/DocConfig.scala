@@ -9,16 +9,26 @@ import org.typelevel.sbt.TypelevelSitePlugin.autoImport.*
 import mdoc.MdocPlugin.autoImport.mdocVariables
 import sbt.*
 import sbt.Keys.{isSnapshot, version}
-import sbtdynver.DynVerPlugin.autoImport.{dynverGitDescribeOutput, previousStableVersion}
+import sbtdynver.DynVerPlugin.autoImport.dynverGitDescribeOutput
+
+import scala.sys.process.*
 
 //noinspection TypeAnnotation
 object DocConfig {
 
-  // latest stable release, from git tags via sbt-ci-release
+  // latest stable release across all tags, not just those reachable from HEAD:
+  // v6.x maintenance releases live on the series/6.x branch, so sbt-dynver's
+  // previousStableVersion (which walks ancestry from HEAD) can't see them.
   private val latestStableRelease = Def.setting {
     val current = version.value
     if (!isSnapshot.value && current.matches("""\d+\.\d+\.\d+""")) Some(current)
-    else previousStableVersion.value
+    else {
+      val StableTag = """v(\d+)\.(\d+)\.(\d+)""".r
+      "git tag".!!.linesIterator
+        .collect { case StableTag(maj, min, patch) => (maj.toInt, min.toInt, patch.toInt) }
+        .reduceOption(Ordering[(Int, Int, Int)].max)
+        .map { case (ma, mi, pa) => s"$ma.$mi.$pa" }
+    }
   }
 
   // temporary hack until we get v7 past RC
