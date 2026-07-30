@@ -2,8 +2,9 @@
 
 An FS2 Streams-based API for publishing messages to AWS SNS topics.
 
-### Import:
+@:include(_disclaimer.md)
 
+### Import
 ```sbt
 libraryDependencies += "io.laserdisc" %% "fs2-aws-sns" % "@VERSION@"
 ```

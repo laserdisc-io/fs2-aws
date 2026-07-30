@@ -2,8 +2,9 @@
 
 An FS2 Streams-based API for scanning AWS DynamoDB tables with back-pressure.
 
-### Import:
+@:include(_disclaimer.md)
 
+### Import
 ```sbt
 libraryDependencies += "io.laserdisc" %% "fs2-aws-dynamodb" % "@VERSION@"
 ```

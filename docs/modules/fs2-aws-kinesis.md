@@ -3,6 +3,9 @@
 Consume AWS Kinesis streams as fs2 streams via the [Kinesis Client Library (KCL)](https://docs.aws.amazon.com/streams/latest/dev/shared-throughput-kcl-consumers.html),
 and publish to Kinesis via the [Kinesis Producer Library (KPL)](https://docs.aws.amazon.com/streams/latest/dev/developing-producers-with-kpl.html).
 
+@:include(_disclaimer.md)
+
+### Import
 ```sbt
 libraryDependencies += "io.laserdisc" %% "fs2-aws-kinesis" % "@VERSION@"
 ```

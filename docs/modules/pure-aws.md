@@ -1,7 +1,10 @@
 # pure-aws
 
-Machine-generated [tagless-final](https://okmij.org/ftp/tagless-final/index.html) wrappers for
-the AWS SDK v2 **async** clients. Each module exposes the full client API as an algebra in an
+Machine-generated [tagless-final](https://okmij.org/ftp/tagless-final/index.html) wrappers for the AWS SDK v2 **async** clients. 
+
+@:include(_disclaimer.md)
+
+Each module exposes the full client API as an algebra in an
 arbitrary effect `F[_]: Async` — every `CompletableFuture`-returning SDK method becomes an
 `F`-returning method — plus an interpreter that builds instances (and manages the underlying
 client as a `cats.effect.Resource`).
@@ -15,6 +18,7 @@ client as a `cats.effect.Resource`).
 | `pure-dynamodb-tagless` | `DynamoDbAsyncClient` | `DynamoDbAsyncClientOp[F]` | `DynamoDbInterpreter` |
 | `pure-cloudwatch-tagless` | `CloudWatchAsyncClient` | `CloudWatchAsyncClientOp[F]` | `CloudWatchInterpreter` |
 
+### Import
 ```sbt
 libraryDependencies += "io.laserdisc" %% "pure-sqs-tagless" % "@VERSION@"
 ```

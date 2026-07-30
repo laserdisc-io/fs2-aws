@@ -2,8 +2,9 @@
 
 An FS2 Streams-based API for consuming and publishing AWS SQS messages.
 
-### Import:
+@:include(_disclaimer.md)
 
+### Import
 ```sbt
 libraryDependencies += "io.laserdisc" %% "fs2-aws-sqs" % "@VERSION@"
 ```

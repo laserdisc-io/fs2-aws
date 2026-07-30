@@ -2,8 +2,9 @@
 
 An FS2 Streams-based API for common AWS S3 operations.
 
-### Import:
+@:include(_disclaimer.md)
 
+### Import
 ```sbt
 libraryDependencies += "io.laserdisc" %% "fs2-aws-s3" % "@VERSION@"
 ```

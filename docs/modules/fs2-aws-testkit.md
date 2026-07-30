@@ -3,6 +3,9 @@
 Test doubles for the [fs2-aws-kinesis](fs2-aws-kinesis.md) consumer and producer,
 letting you exercise stream logic without a real KCL scheduler or KPL daemon.
 
+@:include(_disclaimer.md)
+
+### Import
 ```sbt
 libraryDependencies += "io.laserdisc" %% "fs2-aws-testkit" % "@VERSION@" % Test
 ```
