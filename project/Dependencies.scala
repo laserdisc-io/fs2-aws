@@ -5,7 +5,7 @@ import sbt.{Def, *}
 object Dependencies {
 
   object V {
-    val AwsSdk           = "2.52.1"
+    val AwsSdk           = "2.53.3"
     val Circe            = "0.14.16"
     val Munit            = "1.3.5"
     val Fs2              = "3.13.0"
