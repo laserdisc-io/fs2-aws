@@ -11,7 +11,7 @@ organization := "io.laserdisc"
 name         := "fs2-aws"
 
 lazy val scala213               = "2.13.18"
-lazy val scala3                 = "3.3.8"
+lazy val scala3                 = "3.9.0"
 lazy val supportedScalaVersions = List(scala213, scala3)
 ThisBuild / crossScalaVersions := supportedScalaVersions
 ThisBuild / scalaVersion       := scala3
