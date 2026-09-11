@@ -5,10 +5,10 @@ import sbt.{Def, *}
 object Dependencies {
 
   object V {
-    val AwsSdk           = "2.54.12"
+    val AwsSdk           = "2.54.16"
     val Circe            = "0.14.16"
     val Munit            = "1.3.6"
-    val Fs2              = "3.13.0"
+    val Fs2              = "3.14.0"
     val Refined          = "0.11.4"
     val ScalaTest        = "3.2.20"
     val MockitoScalaTest = "1.17.5"
@@ -26,7 +26,7 @@ object Dependencies {
 
   val CatsEffect = libraryDependencies += "org.typelevel" %% "cats-effect" % V.CE
 
-  val KinesisClient = libraryDependencies += "software.amazon.kinesis" % "amazon-kinesis-client" % "3.5.1"
+  val KinesisClient = libraryDependencies += "software.amazon.kinesis" % "amazon-kinesis-client" % "3.5.2"
 
   val KinesisProducer = libraryDependencies += "software.amazon.kinesis" % "amazon-kinesis-producer" % "1.0.8"
 
