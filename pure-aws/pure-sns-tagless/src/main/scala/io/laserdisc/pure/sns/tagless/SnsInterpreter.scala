@@ -70,7 +70,7 @@ trait SnsInterpreter[M[_]] { outer =>
     override def checkIfPhoneNumberIsOptedOut(
         a: CheckIfPhoneNumberIsOptedOutRequest
     ): Kleisli[M, SnsAsyncClient, CheckIfPhoneNumberIsOptedOutResponse] = eff(_.checkIfPhoneNumberIsOptedOut(a))
-    override def close: Kleisli[M, SnsAsyncClient, Unit] = primitive(_.close)
+    override def close: Kleisli[M, SnsAsyncClient, Unit]                = primitive(_.close)
     override def confirmSubscription(
         a: ConfirmSubscriptionRequest
     ): Kleisli[M, SnsAsyncClient, ConfirmSubscriptionResponse] = eff(_.confirmSubscription(a))
@@ -182,8 +182,8 @@ trait SnsInterpreter[M[_]] { outer =>
     ): Kleisli[M, SnsAsyncClient, ListSubscriptionsPublisher] = primitive(_.listSubscriptionsPaginator(a))
     override def listTagsForResource(
         a: ListTagsForResourceRequest
-    ): Kleisli[M, SnsAsyncClient, ListTagsForResourceResponse] = eff(_.listTagsForResource(a))
-    override def listTopics: Kleisli[M, SnsAsyncClient, ListTopicsResponse]                       = eff(_.listTopics)
+    ): Kleisli[M, SnsAsyncClient, ListTagsForResourceResponse]              = eff(_.listTagsForResource(a))
+    override def listTopics: Kleisli[M, SnsAsyncClient, ListTopicsResponse] = eff(_.listTopics)
     override def listTopics(a: ListTopicsRequest): Kleisli[M, SnsAsyncClient, ListTopicsResponse] = eff(_.listTopics(a))
     override def listTopicsPaginator: Kleisli[M, SnsAsyncClient, ListTopicsPublisher] = primitive(_.listTopicsPaginator)
     override def listTopicsPaginator(a: ListTopicsRequest): Kleisli[M, SnsAsyncClient, ListTopicsPublisher] = primitive(
@@ -423,7 +423,7 @@ trait SnsInterpreter[M[_]] { outer =>
     override def checkIfPhoneNumberIsOptedOut(
         a: CheckIfPhoneNumberIsOptedOutRequest
     ): M[CheckIfPhoneNumberIsOptedOutResponse] = eff1(client.checkIfPhoneNumberIsOptedOut(a))
-    override def close: M[Unit] = primitive1(client.close)
+    override def close: M[Unit]                = primitive1(client.close)
     override def confirmSubscription(a: ConfirmSubscriptionRequest): M[ConfirmSubscriptionResponse] = eff1(
       client.confirmSubscription(a)
     )
@@ -451,7 +451,7 @@ trait SnsInterpreter[M[_]] { outer =>
     )
     override def getPlatformApplicationAttributes(
         a: GetPlatformApplicationAttributesRequest
-    ): M[GetPlatformApplicationAttributesResponse] = eff1(client.getPlatformApplicationAttributes(a))
+    ): M[GetPlatformApplicationAttributesResponse]             = eff1(client.getPlatformApplicationAttributes(a))
     override def getSMSAttributes: M[GetSmsAttributesResponse] = eff1(client.getSMSAttributes)
     override def getSMSAttributes(a: GetSmsAttributesRequest): M[GetSmsAttributesResponse] = eff1(
       client.getSMSAttributes(a)

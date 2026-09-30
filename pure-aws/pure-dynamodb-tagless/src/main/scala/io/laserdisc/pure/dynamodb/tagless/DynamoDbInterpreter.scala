@@ -206,8 +206,8 @@ trait DynamoDbInterpreter[M[_]] { outer =>
     override def putItem(a: PutItemRequest): Kleisli[M, DynamoDbAsyncClient, PutItemResponse] = eff(_.putItem(a))
     override def putResourcePolicy(
         a: PutResourcePolicyRequest
-    ): Kleisli[M, DynamoDbAsyncClient, PutResourcePolicyResponse] = eff(_.putResourcePolicy(a))
-    override def query(a: QueryRequest): Kleisli[M, DynamoDbAsyncClient, QueryResponse]           = eff(_.query(a))
+    ): Kleisli[M, DynamoDbAsyncClient, PutResourcePolicyResponse]                       = eff(_.putResourcePolicy(a))
+    override def query(a: QueryRequest): Kleisli[M, DynamoDbAsyncClient, QueryResponse] = eff(_.query(a))
     override def queryPaginator(a: QueryRequest): Kleisli[M, DynamoDbAsyncClient, QueryPublisher] = primitive(
       _.queryPaginator(a)
     )
@@ -264,7 +264,7 @@ trait DynamoDbInterpreter[M[_]] { outer =>
     ): Kleisli[M, DynamoDbAsyncClient, UpdateTableReplicaAutoScalingResponse] = eff(_.updateTableReplicaAutoScaling(a))
     override def updateTimeToLive(
         a: UpdateTimeToLiveRequest
-    ): Kleisli[M, DynamoDbAsyncClient, UpdateTimeToLiveResponse] = eff(_.updateTimeToLive(a))
+    ): Kleisli[M, DynamoDbAsyncClient, UpdateTimeToLiveResponse]              = eff(_.updateTimeToLive(a))
     override def waiter: Kleisli[M, DynamoDbAsyncClient, DynamoDbAsyncWaiter] = primitive(_.waiter)
 
     def lens[E](f: E => DynamoDbAsyncClient): DynamoDbAsyncClientOp[Kleisli[M, E, *]] =
@@ -486,7 +486,7 @@ trait DynamoDbInterpreter[M[_]] { outer =>
       eff1(client.describeContinuousBackups(a))
     override def describeContributorInsights(
         a: DescribeContributorInsightsRequest
-    ): M[DescribeContributorInsightsResponse] = eff1(client.describeContributorInsights(a))
+    ): M[DescribeContributorInsightsResponse]                    = eff1(client.describeContributorInsights(a))
     override def describeEndpoints: M[DescribeEndpointsResponse] = eff1(client.describeEndpoints)
     override def describeEndpoints(a: DescribeEndpointsRequest): M[DescribeEndpointsResponse] = eff1(
       client.describeEndpoints(a)
@@ -501,8 +501,8 @@ trait DynamoDbInterpreter[M[_]] { outer =>
     override def describeImport(a: DescribeImportRequest): M[DescribeImportResponse] = eff1(client.describeImport(a))
     override def describeKinesisStreamingDestination(
         a: DescribeKinesisStreamingDestinationRequest
-    ): M[DescribeKinesisStreamingDestinationResponse] = eff1(client.describeKinesisStreamingDestination(a))
-    override def describeLimits: M[DescribeLimitsResponse]                           = eff1(client.describeLimits)
+    ): M[DescribeKinesisStreamingDestinationResponse]      = eff1(client.describeKinesisStreamingDestination(a))
+    override def describeLimits: M[DescribeLimitsResponse] = eff1(client.describeLimits)
     override def describeLimits(a: DescribeLimitsRequest): M[DescribeLimitsResponse] = eff1(client.describeLimits(a))
     override def describeTable(a: DescribeTableRequest): M[DescribeTableResponse]    = eff1(client.describeTable(a))
     override def describeTableReplicaAutoScaling(

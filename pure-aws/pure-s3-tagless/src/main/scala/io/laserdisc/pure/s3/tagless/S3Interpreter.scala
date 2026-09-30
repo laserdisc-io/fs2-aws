@@ -70,7 +70,7 @@ trait S3Interpreter[M[_]] { outer =>
     override def abortMultipartUpload(
         a: AbortMultipartUploadRequest
     ): Kleisli[M, S3AsyncClient, AbortMultipartUploadResponse] = eff(_.abortMultipartUpload(a))
-    override def close: Kleisli[M, S3AsyncClient, Unit] = primitive(_.close)
+    override def close: Kleisli[M, S3AsyncClient, Unit]        = primitive(_.close)
     override def completeMultipartUpload(
         a: CompleteMultipartUploadRequest
     ): Kleisli[M, S3AsyncClient, CompleteMultipartUploadResponse] = eff(_.completeMultipartUpload(a))
@@ -285,8 +285,8 @@ trait S3Interpreter[M[_]] { outer =>
     )
     override def listBucketMetricsConfigurations(
         a: ListBucketMetricsConfigurationsRequest
-    ): Kleisli[M, S3AsyncClient, ListBucketMetricsConfigurationsResponse] = eff(_.listBucketMetricsConfigurations(a))
-    override def listBuckets: Kleisli[M, S3AsyncClient, ListBucketsResponse]                        = eff(_.listBuckets)
+    ): Kleisli[M, S3AsyncClient, ListBucketMetricsConfigurationsResponse]    = eff(_.listBucketMetricsConfigurations(a))
+    override def listBuckets: Kleisli[M, S3AsyncClient, ListBucketsResponse] = eff(_.listBuckets)
     override def listBuckets(a: ListBucketsRequest): Kleisli[M, S3AsyncClient, ListBucketsResponse] = eff(
       _.listBuckets(a)
     )
@@ -947,7 +947,7 @@ trait S3Interpreter[M[_]] { outer =>
     override def getObject[ReturnT](
         a: GetObjectRequest,
         b: AsyncResponseTransformer[GetObjectResponse, ReturnT]
-    ): M[ReturnT] = eff1(client.getObject(a, b))
+    ): M[ReturnT]                                                              = eff1(client.getObject(a, b))
     override def getObject(a: GetObjectRequest, b: Path): M[GetObjectResponse] = eff1(client.getObject(a, b))
     override def getObjectAcl(a: GetObjectAclRequest): M[GetObjectAclResponse] = eff1(client.getObjectAcl(a))
     override def getObjectAttributes(a: GetObjectAttributesRequest): M[GetObjectAttributesResponse] = eff1(
@@ -990,8 +990,8 @@ trait S3Interpreter[M[_]] { outer =>
     ): M[ListBucketInventoryConfigurationsResponse] = eff1(client.listBucketInventoryConfigurations(a))
     override def listBucketMetricsConfigurations(
         a: ListBucketMetricsConfigurationsRequest
-    ): M[ListBucketMetricsConfigurationsResponse] = eff1(client.listBucketMetricsConfigurations(a))
-    override def listBuckets: M[ListBucketsResponse]                        = eff1(client.listBuckets)
+    ): M[ListBucketMetricsConfigurationsResponse]    = eff1(client.listBucketMetricsConfigurations(a))
+    override def listBuckets: M[ListBucketsResponse] = eff1(client.listBuckets)
     override def listBuckets(a: ListBucketsRequest): M[ListBucketsResponse] = eff1(client.listBuckets(a))
     override def listBucketsPaginator: M[ListBucketsPublisher]              = primitive1(client.listBucketsPaginator)
     override def listBucketsPaginator(a: ListBucketsRequest): M[ListBucketsPublisher] = primitive1(
