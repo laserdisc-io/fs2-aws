@@ -187,7 +187,7 @@ trait KinesisInterpreter[M[_]] { outer =>
     ): Kleisli[M, KinesisAsyncClient, UpdateStreamModeResponse] = eff(_.updateStreamMode(a))
     override def updateStreamWarmThroughput(
         a: UpdateStreamWarmThroughputRequest
-    ): Kleisli[M, KinesisAsyncClient, UpdateStreamWarmThroughputResponse] = eff(_.updateStreamWarmThroughput(a))
+    ): Kleisli[M, KinesisAsyncClient, UpdateStreamWarmThroughputResponse]   = eff(_.updateStreamWarmThroughput(a))
     override def waiter: Kleisli[M, KinesisAsyncClient, KinesisAsyncWaiter] = primitive(_.waiter)
 
     def lens[E](f: E => KinesisAsyncClient): KinesisAsyncClientOp[Kleisli[M, E, *]] =
@@ -298,7 +298,7 @@ trait KinesisInterpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).updateStreamMode(a)))
         override def updateStreamWarmThroughput(
             a: UpdateStreamWarmThroughputRequest
-        ): Kleisli[M, E, UpdateStreamWarmThroughputResponse] = Kleisli(e => eff1(f(e).updateStreamWarmThroughput(a)))
+        ): Kleisli[M, E, UpdateStreamWarmThroughputResponse]   = Kleisli(e => eff1(f(e).updateStreamWarmThroughput(a)))
         override def waiter: Kleisli[M, E, KinesisAsyncWaiter] = Kleisli(e => primitive1(f(e).waiter))
       }
   }
@@ -370,7 +370,7 @@ trait KinesisInterpreter[M[_]] { outer =>
     )
     override def increaseStreamRetentionPeriod(
         a: IncreaseStreamRetentionPeriodRequest
-    ): M[IncreaseStreamRetentionPeriodResponse] = eff1(client.increaseStreamRetentionPeriod(a))
+    ): M[IncreaseStreamRetentionPeriodResponse]                          = eff1(client.increaseStreamRetentionPeriod(a))
     override def listShards(a: ListShardsRequest): M[ListShardsResponse] = eff1(client.listShards(a))
     override def listStreamConsumers(a: ListStreamConsumersRequest): M[ListStreamConsumersResponse] = eff1(
       client.listStreamConsumers(a)
@@ -431,7 +431,7 @@ trait KinesisInterpreter[M[_]] { outer =>
     )
     override def updateStreamWarmThroughput(
         a: UpdateStreamWarmThroughputRequest
-    ): M[UpdateStreamWarmThroughputResponse] = eff1(client.updateStreamWarmThroughput(a))
+    ): M[UpdateStreamWarmThroughputResponse]   = eff1(client.updateStreamWarmThroughput(a))
     override def waiter: M[KinesisAsyncWaiter] = primitive1(client.waiter)
 
   }

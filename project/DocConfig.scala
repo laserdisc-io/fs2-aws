@@ -92,15 +92,16 @@ object DocConfig {
         .pageNavigation(enabled = true, depth = 1, keepOnSmallScreens = false)
         .site
         .mainNavigation(
-          appendLinks = Seq(
-            ThemeNavigationSection(
-              "Related Projects",
-              TextLink.external("https://github.com/aws/aws-sdk-java-v2", "aws-sdk-java-v2"),
-              TextLink.external("https://github.com/awslabs/amazon-kinesis-client", "amazon-kinesis-client"),
-              TextLink.external("https://github.com/awslabs/amazon-kinesis-producer", "amazon-kinesis-producer"),
-              TextLink.external("https://fs2.io", "fs2")
+          appendLinks =
+            Seq(
+              ThemeNavigationSection(
+                "Related Projects",
+                TextLink.external("https://github.com/aws/aws-sdk-java-v2", "aws-sdk-java-v2"),
+                TextLink.external("https://github.com/awslabs/amazon-kinesis-client", "amazon-kinesis-client"),
+                TextLink.external("https://github.com/awslabs/amazon-kinesis-producer", "amazon-kinesis-producer"),
+                TextLink.external("https://fs2.io", "fs2")
+              )
             )
-          )
         )
         .site
         .footer(
