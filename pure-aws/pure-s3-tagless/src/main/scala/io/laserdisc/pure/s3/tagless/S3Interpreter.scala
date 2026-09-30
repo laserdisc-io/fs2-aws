@@ -16,9 +16,11 @@ import software.amazon.awssdk.services.s3.S3Utilities
 import software.amazon.awssdk.services.s3.paginators.ListBucketsPublisher
 import software.amazon.awssdk.services.s3.paginators.ListDirectoryBucketsPublisher
 import software.amazon.awssdk.services.s3.paginators.ListMultipartUploadsPublisher
+import software.amazon.awssdk.services.s3.paginators.ListObjectAnnotationsPublisher
 import software.amazon.awssdk.services.s3.paginators.ListObjectVersionsPublisher
 import software.amazon.awssdk.services.s3.paginators.ListObjectsV2Publisher
 import software.amazon.awssdk.services.s3.paginators.ListPartsPublisher
+import software.amazon.awssdk.services.s3.presignedurl.AsyncPresignedUrlExtension
 import software.amazon.awssdk.services.s3.waiters.S3AsyncWaiter
 
 object S3Interpreter {
@@ -151,6 +153,9 @@ trait S3Interpreter[M[_]] { outer =>
     override def deleteObject(a: DeleteObjectRequest): Kleisli[M, S3AsyncClient, DeleteObjectResponse] = eff(
       _.deleteObject(a)
     )
+    override def deleteObjectAnnotation(
+        a: DeleteObjectAnnotationRequest
+    ): Kleisli[M, S3AsyncClient, DeleteObjectAnnotationResponse] = eff(_.deleteObjectAnnotation(a))
     override def deleteObjectTagging(
         a: DeleteObjectTaggingRequest
     ): Kleisli[M, S3AsyncClient, DeleteObjectTaggingResponse] = eff(_.deleteObjectTagging(a))
@@ -241,6 +246,14 @@ trait S3Interpreter[M[_]] { outer =>
     override def getObjectAcl(a: GetObjectAclRequest): Kleisli[M, S3AsyncClient, GetObjectAclResponse] = eff(
       _.getObjectAcl(a)
     )
+    override def getObjectAnnotation[ReturnT](
+        a: GetObjectAnnotationRequest,
+        b: AsyncResponseTransformer[GetObjectAnnotationResponse, ReturnT]
+    ): Kleisli[M, S3AsyncClient, ReturnT] = eff(_.getObjectAnnotation(a, b))
+    override def getObjectAnnotation(
+        a: GetObjectAnnotationRequest,
+        b: Path
+    ): Kleisli[M, S3AsyncClient, GetObjectAnnotationResponse] = eff(_.getObjectAnnotation(a, b))
     override def getObjectAttributes(
         a: GetObjectAttributesRequest
     ): Kleisli[M, S3AsyncClient, GetObjectAttributesResponse] = eff(_.getObjectAttributes(a))
@@ -307,6 +320,12 @@ trait S3Interpreter[M[_]] { outer =>
     override def listMultipartUploadsPaginator(
         a: ListMultipartUploadsRequest
     ): Kleisli[M, S3AsyncClient, ListMultipartUploadsPublisher] = primitive(_.listMultipartUploadsPaginator(a))
+    override def listObjectAnnotations(
+        a: ListObjectAnnotationsRequest
+    ): Kleisli[M, S3AsyncClient, ListObjectAnnotationsResponse] = eff(_.listObjectAnnotations(a))
+    override def listObjectAnnotationsPaginator(
+        a: ListObjectAnnotationsRequest
+    ): Kleisli[M, S3AsyncClient, ListObjectAnnotationsPublisher] = primitive(_.listObjectAnnotationsPaginator(a))
     override def listObjectVersions(
         a: ListObjectVersionsRequest
     ): Kleisli[M, S3AsyncClient, ListObjectVersionsResponse] = eff(_.listObjectVersions(a))
@@ -324,6 +343,9 @@ trait S3Interpreter[M[_]] { outer =>
     override def listParts(a: ListPartsRequest): Kleisli[M, S3AsyncClient, ListPartsResponse] = eff(_.listParts(a))
     override def listPartsPaginator(a: ListPartsRequest): Kleisli[M, S3AsyncClient, ListPartsPublisher] = primitive(
       _.listPartsPaginator(a)
+    )
+    override def presignedUrlExtension: Kleisli[M, S3AsyncClient, AsyncPresignedUrlExtension] = primitive(
+      _.presignedUrlExtension
     )
     override def putBucketAbac(a: PutBucketAbacRequest): Kleisli[M, S3AsyncClient, PutBucketAbacResponse] = eff(
       _.putBucketAbac(a)
@@ -391,6 +413,14 @@ trait S3Interpreter[M[_]] { outer =>
     override def putObjectAcl(a: PutObjectAclRequest): Kleisli[M, S3AsyncClient, PutObjectAclResponse] = eff(
       _.putObjectAcl(a)
     )
+    override def putObjectAnnotation(
+        a: PutObjectAnnotationRequest,
+        b: AsyncRequestBody
+    ): Kleisli[M, S3AsyncClient, PutObjectAnnotationResponse] = eff(_.putObjectAnnotation(a, b))
+    override def putObjectAnnotation(
+        a: PutObjectAnnotationRequest,
+        b: Path
+    ): Kleisli[M, S3AsyncClient, PutObjectAnnotationResponse] = eff(_.putObjectAnnotation(a, b))
     override def putObjectLegalHold(
         a: PutObjectLegalHoldRequest
     ): Kleisli[M, S3AsyncClient, PutObjectLegalHoldResponse] = eff(_.putObjectLegalHold(a))
@@ -419,6 +449,11 @@ trait S3Interpreter[M[_]] { outer =>
       _.serviceClientConfiguration
     )
     override def serviceName: Kleisli[M, S3AsyncClient, String] = primitive(_.serviceName)
+    override def updateBucketMetadataAnnotationTableConfiguration(
+        a: UpdateBucketMetadataAnnotationTableConfigurationRequest
+    ): Kleisli[M, S3AsyncClient, UpdateBucketMetadataAnnotationTableConfigurationResponse] = eff(
+      _.updateBucketMetadataAnnotationTableConfiguration(a)
+    )
     override def updateBucketMetadataInventoryTableConfiguration(
         a: UpdateBucketMetadataInventoryTableConfigurationRequest
     ): Kleisli[M, S3AsyncClient, UpdateBucketMetadataInventoryTableConfigurationResponse] = eff(
@@ -429,6 +464,9 @@ trait S3Interpreter[M[_]] { outer =>
     ): Kleisli[M, S3AsyncClient, UpdateBucketMetadataJournalTableConfigurationResponse] = eff(
       _.updateBucketMetadataJournalTableConfiguration(a)
     )
+    override def updateObjectEncryption(
+        a: UpdateObjectEncryptionRequest
+    ): Kleisli[M, S3AsyncClient, UpdateObjectEncryptionResponse] = eff(_.updateObjectEncryption(a))
     override def uploadPart(a: UploadPartRequest, b: AsyncRequestBody): Kleisli[M, S3AsyncClient, UploadPartResponse] =
       eff(_.uploadPart(a, b))
     override def uploadPart(a: UploadPartRequest, b: Path): Kleisli[M, S3AsyncClient, UploadPartResponse] = eff(
@@ -522,6 +560,9 @@ trait S3Interpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).deleteBucketWebsite(a)))
         override def deleteObject(a: DeleteObjectRequest): Kleisli[M, E, DeleteObjectResponse] =
           Kleisli(e => eff1(f(e).deleteObject(a)))
+        override def deleteObjectAnnotation(
+            a: DeleteObjectAnnotationRequest
+        ): Kleisli[M, E, DeleteObjectAnnotationResponse] = Kleisli(e => eff1(f(e).deleteObjectAnnotation(a)))
         override def deleteObjectTagging(a: DeleteObjectTaggingRequest): Kleisli[M, E, DeleteObjectTaggingResponse] =
           Kleisli(e => eff1(f(e).deleteObjectTagging(a)))
         override def deleteObjects(a: DeleteObjectsRequest): Kleisli[M, E, DeleteObjectsResponse] =
@@ -604,6 +645,14 @@ trait S3Interpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).getObject(a, b)))
         override def getObjectAcl(a: GetObjectAclRequest): Kleisli[M, E, GetObjectAclResponse] =
           Kleisli(e => eff1(f(e).getObjectAcl(a)))
+        override def getObjectAnnotation[ReturnT](
+            a: GetObjectAnnotationRequest,
+            b: AsyncResponseTransformer[GetObjectAnnotationResponse, ReturnT]
+        ): Kleisli[M, E, ReturnT] = Kleisli(e => eff1(f(e).getObjectAnnotation(a, b)))
+        override def getObjectAnnotation(
+            a: GetObjectAnnotationRequest,
+            b: Path
+        ): Kleisli[M, E, GetObjectAnnotationResponse] = Kleisli(e => eff1(f(e).getObjectAnnotation(a, b)))
         override def getObjectAttributes(a: GetObjectAttributesRequest): Kleisli[M, E, GetObjectAttributesResponse] =
           Kleisli(e => eff1(f(e).getObjectAttributes(a)))
         override def getObjectLegalHold(a: GetObjectLegalHoldRequest): Kleisli[M, E, GetObjectLegalHoldResponse] =
@@ -662,6 +711,13 @@ trait S3Interpreter[M[_]] { outer =>
             a: ListMultipartUploadsRequest
         ): Kleisli[M, E, ListMultipartUploadsPublisher] =
           Kleisli(e => primitive1(f(e).listMultipartUploadsPaginator(a)))
+        override def listObjectAnnotations(
+            a: ListObjectAnnotationsRequest
+        ): Kleisli[M, E, ListObjectAnnotationsResponse] = Kleisli(e => eff1(f(e).listObjectAnnotations(a)))
+        override def listObjectAnnotationsPaginator(
+            a: ListObjectAnnotationsRequest
+        ): Kleisli[M, E, ListObjectAnnotationsPublisher] =
+          Kleisli(e => primitive1(f(e).listObjectAnnotationsPaginator(a)))
         override def listObjectVersions(a: ListObjectVersionsRequest): Kleisli[M, E, ListObjectVersionsResponse] =
           Kleisli(e => eff1(f(e).listObjectVersions(a)))
         override def listObjectVersionsPaginator(
@@ -677,6 +733,8 @@ trait S3Interpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).listParts(a)))
         override def listPartsPaginator(a: ListPartsRequest): Kleisli[M, E, ListPartsPublisher] =
           Kleisli(e => primitive1(f(e).listPartsPaginator(a)))
+        override def presignedUrlExtension: Kleisli[M, E, AsyncPresignedUrlExtension] =
+          Kleisli(e => primitive1(f(e).presignedUrlExtension))
         override def putBucketAbac(a: PutBucketAbacRequest): Kleisli[M, E, PutBucketAbacResponse] =
           Kleisli(e => eff1(f(e).putBucketAbac(a)))
         override def putBucketAccelerateConfiguration(
@@ -737,6 +795,14 @@ trait S3Interpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).putObject(a, b)))
         override def putObjectAcl(a: PutObjectAclRequest): Kleisli[M, E, PutObjectAclResponse] =
           Kleisli(e => eff1(f(e).putObjectAcl(a)))
+        override def putObjectAnnotation(
+            a: PutObjectAnnotationRequest,
+            b: AsyncRequestBody
+        ): Kleisli[M, E, PutObjectAnnotationResponse] = Kleisli(e => eff1(f(e).putObjectAnnotation(a, b)))
+        override def putObjectAnnotation(
+            a: PutObjectAnnotationRequest,
+            b: Path
+        ): Kleisli[M, E, PutObjectAnnotationResponse] = Kleisli(e => eff1(f(e).putObjectAnnotation(a, b)))
         override def putObjectLegalHold(a: PutObjectLegalHoldRequest): Kleisli[M, E, PutObjectLegalHoldResponse] =
           Kleisli(e => eff1(f(e).putObjectLegalHold(a)))
         override def putObjectLockConfiguration(
@@ -759,6 +825,10 @@ trait S3Interpreter[M[_]] { outer =>
         override def serviceClientConfiguration: Kleisli[M, E, S3ServiceClientConfiguration] =
           Kleisli(e => primitive1(f(e).serviceClientConfiguration))
         override def serviceName: Kleisli[M, E, String] = Kleisli(e => primitive1(f(e).serviceName))
+        override def updateBucketMetadataAnnotationTableConfiguration(
+            a: UpdateBucketMetadataAnnotationTableConfigurationRequest
+        ): Kleisli[M, E, UpdateBucketMetadataAnnotationTableConfigurationResponse] =
+          Kleisli(e => eff1(f(e).updateBucketMetadataAnnotationTableConfiguration(a)))
         override def updateBucketMetadataInventoryTableConfiguration(
             a: UpdateBucketMetadataInventoryTableConfigurationRequest
         ): Kleisli[M, E, UpdateBucketMetadataInventoryTableConfigurationResponse] =
@@ -767,6 +837,9 @@ trait S3Interpreter[M[_]] { outer =>
             a: UpdateBucketMetadataJournalTableConfigurationRequest
         ): Kleisli[M, E, UpdateBucketMetadataJournalTableConfigurationResponse] =
           Kleisli(e => eff1(f(e).updateBucketMetadataJournalTableConfiguration(a)))
+        override def updateObjectEncryption(
+            a: UpdateObjectEncryptionRequest
+        ): Kleisli[M, E, UpdateObjectEncryptionResponse] = Kleisli(e => eff1(f(e).updateObjectEncryption(a)))
         override def uploadPart(a: UploadPartRequest, b: AsyncRequestBody): Kleisli[M, E, UploadPartResponse] =
           Kleisli(e => eff1(f(e).uploadPart(a, b)))
         override def uploadPart(a: UploadPartRequest, b: Path): Kleisli[M, E, UploadPartResponse] =
@@ -874,6 +947,9 @@ trait S3Interpreter[M[_]] { outer =>
       client.deleteBucketWebsite(a)
     )
     override def deleteObject(a: DeleteObjectRequest): M[DeleteObjectResponse] = eff1(client.deleteObject(a))
+    override def deleteObjectAnnotation(a: DeleteObjectAnnotationRequest): M[DeleteObjectAnnotationResponse] = eff1(
+      client.deleteObjectAnnotation(a)
+    )
     override def deleteObjectTagging(a: DeleteObjectTaggingRequest): M[DeleteObjectTaggingResponse] = eff1(
       client.deleteObjectTagging(a)
     )
@@ -950,6 +1026,13 @@ trait S3Interpreter[M[_]] { outer =>
     ): M[ReturnT]                                                              = eff1(client.getObject(a, b))
     override def getObject(a: GetObjectRequest, b: Path): M[GetObjectResponse] = eff1(client.getObject(a, b))
     override def getObjectAcl(a: GetObjectAclRequest): M[GetObjectAclResponse] = eff1(client.getObjectAcl(a))
+    override def getObjectAnnotation[ReturnT](
+        a: GetObjectAnnotationRequest,
+        b: AsyncResponseTransformer[GetObjectAnnotationResponse, ReturnT]
+    ): M[ReturnT] = eff1(client.getObjectAnnotation(a, b))
+    override def getObjectAnnotation(a: GetObjectAnnotationRequest, b: Path): M[GetObjectAnnotationResponse] = eff1(
+      client.getObjectAnnotation(a, b)
+    )
     override def getObjectAttributes(a: GetObjectAttributesRequest): M[GetObjectAttributesResponse] = eff1(
       client.getObjectAttributes(a)
     )
@@ -1007,6 +1090,11 @@ trait S3Interpreter[M[_]] { outer =>
     )
     override def listMultipartUploadsPaginator(a: ListMultipartUploadsRequest): M[ListMultipartUploadsPublisher] =
       primitive1(client.listMultipartUploadsPaginator(a))
+    override def listObjectAnnotations(a: ListObjectAnnotationsRequest): M[ListObjectAnnotationsResponse] = eff1(
+      client.listObjectAnnotations(a)
+    )
+    override def listObjectAnnotationsPaginator(a: ListObjectAnnotationsRequest): M[ListObjectAnnotationsPublisher] =
+      primitive1(client.listObjectAnnotationsPaginator(a))
     override def listObjectVersions(a: ListObjectVersionsRequest): M[ListObjectVersionsResponse] = eff1(
       client.listObjectVersions(a)
     )
@@ -1022,6 +1110,7 @@ trait S3Interpreter[M[_]] { outer =>
     override def listPartsPaginator(a: ListPartsRequest): M[ListPartsPublisher] = primitive1(
       client.listPartsPaginator(a)
     )
+    override def presignedUrlExtension: M[AsyncPresignedUrlExtension] = primitive1(client.presignedUrlExtension)
     override def putBucketAbac(a: PutBucketAbacRequest): M[PutBucketAbacResponse] = eff1(client.putBucketAbac(a))
     override def putBucketAccelerateConfiguration(
         a: PutBucketAccelerateConfigurationRequest
@@ -1078,6 +1167,13 @@ trait S3Interpreter[M[_]] { outer =>
     )
     override def putObject(a: PutObjectRequest, b: Path): M[PutObjectResponse] = eff1(client.putObject(a, b))
     override def putObjectAcl(a: PutObjectAclRequest): M[PutObjectAclResponse] = eff1(client.putObjectAcl(a))
+    override def putObjectAnnotation(
+        a: PutObjectAnnotationRequest,
+        b: AsyncRequestBody
+    ): M[PutObjectAnnotationResponse] = eff1(client.putObjectAnnotation(a, b))
+    override def putObjectAnnotation(a: PutObjectAnnotationRequest, b: Path): M[PutObjectAnnotationResponse] = eff1(
+      client.putObjectAnnotation(a, b)
+    )
     override def putObjectLegalHold(a: PutObjectLegalHoldRequest): M[PutObjectLegalHoldResponse] = eff1(
       client.putObjectLegalHold(a)
     )
@@ -1101,6 +1197,11 @@ trait S3Interpreter[M[_]] { outer =>
       client.serviceClientConfiguration
     )
     override def serviceName: M[String] = primitive1(client.serviceName)
+    override def updateBucketMetadataAnnotationTableConfiguration(
+        a: UpdateBucketMetadataAnnotationTableConfigurationRequest
+    ): M[UpdateBucketMetadataAnnotationTableConfigurationResponse] = eff1(
+      client.updateBucketMetadataAnnotationTableConfiguration(a)
+    )
     override def updateBucketMetadataInventoryTableConfiguration(
         a: UpdateBucketMetadataInventoryTableConfigurationRequest
     ): M[UpdateBucketMetadataInventoryTableConfigurationResponse] = eff1(
@@ -1110,6 +1211,9 @@ trait S3Interpreter[M[_]] { outer =>
         a: UpdateBucketMetadataJournalTableConfigurationRequest
     ): M[UpdateBucketMetadataJournalTableConfigurationResponse] = eff1(
       client.updateBucketMetadataJournalTableConfiguration(a)
+    )
+    override def updateObjectEncryption(a: UpdateObjectEncryptionRequest): M[UpdateObjectEncryptionResponse] = eff1(
+      client.updateObjectEncryption(a)
     )
     override def uploadPart(a: UploadPartRequest, b: AsyncRequestBody): M[UploadPartResponse] = eff1(
       client.uploadPart(a, b)
