@@ -221,6 +221,9 @@ trait DynamoDbInterpreter[M[_]] { outer =>
     override def scanPaginator(a: ScanRequest): Kleisli[M, DynamoDbAsyncClient, ScanPublisher] = primitive(
       _.scanPaginator(a)
     )
+    override def searchVectors(a: SearchVectorsRequest): Kleisli[M, DynamoDbAsyncClient, SearchVectorsResponse] = eff(
+      _.searchVectors(a)
+    )
     override def serviceClientConfiguration: Kleisli[M, DynamoDbAsyncClient, DynamoDbServiceClientConfiguration] =
       primitive(_.serviceClientConfiguration)
     override def serviceName: Kleisli[M, DynamoDbAsyncClient, String] = primitive(_.serviceName)
@@ -395,6 +398,8 @@ trait DynamoDbInterpreter[M[_]] { outer =>
         override def scan(a: ScanRequest): Kleisli[M, E, ScanResponse]           = Kleisli(e => eff1(f(e).scan(a)))
         override def scanPaginator(a: ScanRequest): Kleisli[M, E, ScanPublisher] =
           Kleisli(e => primitive1(f(e).scanPaginator(a)))
+        override def searchVectors(a: SearchVectorsRequest): Kleisli[M, E, SearchVectorsResponse] =
+          Kleisli(e => eff1(f(e).searchVectors(a)))
         override def serviceClientConfiguration: Kleisli[M, E, DynamoDbServiceClientConfiguration] =
           Kleisli(e => primitive1(f(e).serviceClientConfiguration))
         override def serviceName: Kleisli[M, E, String] = Kleisli(e => primitive1(f(e).serviceName))
@@ -572,6 +577,7 @@ trait DynamoDbInterpreter[M[_]] { outer =>
       eff1(client.restoreTableToPointInTime(a))
     override def scan(a: ScanRequest): M[ScanResponse]                             = eff1(client.scan(a))
     override def scanPaginator(a: ScanRequest): M[ScanPublisher]                   = primitive1(client.scanPaginator(a))
+    override def searchVectors(a: SearchVectorsRequest): M[SearchVectorsResponse]  = eff1(client.searchVectors(a))
     override def serviceClientConfiguration: M[DynamoDbServiceClientConfiguration] = primitive1(
       client.serviceClientConfiguration
     )

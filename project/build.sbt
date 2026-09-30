@@ -1,4 +1,5 @@
 // Required for the freegen definition in ../build.sbt
+// taglessGen reflects over this SDK version, keep it in sync with V.AwsSdk in Dependencies.scala
 val AwsSdk = "2.54.16"
 
 libraryDependencies += "software.amazon.awssdk" % "sqs"        % AwsSdk

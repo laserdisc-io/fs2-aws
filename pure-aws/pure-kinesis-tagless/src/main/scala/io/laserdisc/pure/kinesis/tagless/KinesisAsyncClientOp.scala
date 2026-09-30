@@ -3,6 +3,7 @@ package io.laserdisc.pure.kinesis.tagless
 import software.amazon.awssdk.services.kinesis.model.*
 
 import software.amazon.awssdk.services.kinesis.KinesisServiceClientConfiguration
+import software.amazon.awssdk.services.kinesis.paginators.ListChannelsPublisher
 import software.amazon.awssdk.services.kinesis.paginators.ListStreamConsumersPublisher
 import software.amazon.awssdk.services.kinesis.paginators.ListStreamsPublisher
 import software.amazon.awssdk.services.kinesis.waiters.KinesisAsyncWaiter
@@ -13,12 +14,15 @@ trait KinesisAsyncClientOp[F[_]] {
 
   def addTagsToStream(a: AddTagsToStreamRequest): F[AddTagsToStreamResponse]
   def close: F[Unit]
+  def createChannel(a: CreateChannelRequest): F[CreateChannelResponse]
   def createStream(a: CreateStreamRequest): F[CreateStreamResponse]
   def decreaseStreamRetentionPeriod(a: DecreaseStreamRetentionPeriodRequest): F[DecreaseStreamRetentionPeriodResponse]
+  def deleteChannel(a: DeleteChannelRequest): F[DeleteChannelResponse]
   def deleteResourcePolicy(a: DeleteResourcePolicyRequest): F[DeleteResourcePolicyResponse]
   def deleteStream(a: DeleteStreamRequest): F[DeleteStreamResponse]
   def deregisterStreamConsumer(a: DeregisterStreamConsumerRequest): F[DeregisterStreamConsumerResponse]
   def describeAccountSettings(a: DescribeAccountSettingsRequest): F[DescribeAccountSettingsResponse]
+  def describeChannel(a: DescribeChannelRequest): F[DescribeChannelResponse]
   def describeLimits: F[DescribeLimitsResponse]
   def describeLimits(a: DescribeLimitsRequest): F[DescribeLimitsResponse]
   def describeStream(a: DescribeStreamRequest): F[DescribeStreamResponse]
@@ -30,6 +34,8 @@ trait KinesisAsyncClientOp[F[_]] {
   def getResourcePolicy(a: GetResourcePolicyRequest): F[GetResourcePolicyResponse]
   def getShardIterator(a: GetShardIteratorRequest): F[GetShardIteratorResponse]
   def increaseStreamRetentionPeriod(a: IncreaseStreamRetentionPeriodRequest): F[IncreaseStreamRetentionPeriodResponse]
+  def listChannels(a: ListChannelsRequest): F[ListChannelsResponse]
+  def listChannelsPaginator(a: ListChannelsRequest): F[ListChannelsPublisher]
   def listShards(a: ListShardsRequest): F[ListShardsResponse]
   def listStreamConsumers(a: ListStreamConsumersRequest): F[ListStreamConsumersResponse]
   def listStreamConsumersPaginator(a: ListStreamConsumersRequest): F[ListStreamConsumersPublisher]
@@ -54,6 +60,7 @@ trait KinesisAsyncClientOp[F[_]] {
   def tagResource(a: TagResourceRequest): F[TagResourceResponse]
   def untagResource(a: UntagResourceRequest): F[UntagResourceResponse]
   def updateAccountSettings(a: UpdateAccountSettingsRequest): F[UpdateAccountSettingsResponse]
+  def updateChannel(a: UpdateChannelRequest): F[UpdateChannelResponse]
   def updateMaxRecordSize(a: UpdateMaxRecordSizeRequest): F[UpdateMaxRecordSizeResponse]
   def updateShardCount(a: UpdateShardCountRequest): F[UpdateShardCountResponse]
   def updateStreamMode(a: UpdateStreamModeRequest): F[UpdateStreamModeResponse]

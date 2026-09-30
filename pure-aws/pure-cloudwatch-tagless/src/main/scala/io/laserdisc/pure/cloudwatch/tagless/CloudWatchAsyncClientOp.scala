@@ -8,6 +8,7 @@ import software.amazon.awssdk.services.cloudwatch.paginators.DescribeAlarmsPubli
 import software.amazon.awssdk.services.cloudwatch.paginators.DescribeAnomalyDetectorsPublisher
 import software.amazon.awssdk.services.cloudwatch.paginators.DescribeInsightRulesPublisher
 import software.amazon.awssdk.services.cloudwatch.paginators.GetMetricDataPublisher
+import software.amazon.awssdk.services.cloudwatch.paginators.ListAlarmMuteRulesPublisher
 import software.amazon.awssdk.services.cloudwatch.paginators.ListDashboardsPublisher
 import software.amazon.awssdk.services.cloudwatch.paginators.ListManagedInsightRulesPublisher
 import software.amazon.awssdk.services.cloudwatch.paginators.ListMetricStreamsPublisher
@@ -18,7 +19,9 @@ import software.amazon.awssdk.services.cloudwatch.waiters.CloudWatchAsyncWaiter
   */
 trait CloudWatchAsyncClientOp[F[_]] {
 
+  def associateDatasetKmsKey(a: AssociateDatasetKmsKeyRequest): F[AssociateDatasetKmsKeyResponse]
   def close: F[Unit]
+  def deleteAlarmMuteRule(a: DeleteAlarmMuteRuleRequest): F[DeleteAlarmMuteRuleResponse]
   def deleteAlarms(a: DeleteAlarmsRequest): F[DeleteAlarmsResponse]
   def deleteAnomalyDetector(a: DeleteAnomalyDetectorRequest): F[DeleteAnomalyDetectorResponse]
   def deleteDashboards(a: DeleteDashboardsRequest): F[DeleteDashboardsResponse]
@@ -40,15 +43,21 @@ trait CloudWatchAsyncClientOp[F[_]] {
   def describeInsightRulesPaginator(a: DescribeInsightRulesRequest): F[DescribeInsightRulesPublisher]
   def disableAlarmActions(a: DisableAlarmActionsRequest): F[DisableAlarmActionsResponse]
   def disableInsightRules(a: DisableInsightRulesRequest): F[DisableInsightRulesResponse]
+  def disassociateDatasetKmsKey(a: DisassociateDatasetKmsKeyRequest): F[DisassociateDatasetKmsKeyResponse]
   def enableAlarmActions(a: EnableAlarmActionsRequest): F[EnableAlarmActionsResponse]
   def enableInsightRules(a: EnableInsightRulesRequest): F[EnableInsightRulesResponse]
+  def getAlarmMuteRule(a: GetAlarmMuteRuleRequest): F[GetAlarmMuteRuleResponse]
   def getDashboard(a: GetDashboardRequest): F[GetDashboardResponse]
+  def getDataset(a: GetDatasetRequest): F[GetDatasetResponse]
   def getInsightRuleReport(a: GetInsightRuleReportRequest): F[GetInsightRuleReportResponse]
   def getMetricData(a: GetMetricDataRequest): F[GetMetricDataResponse]
   def getMetricDataPaginator(a: GetMetricDataRequest): F[GetMetricDataPublisher]
   def getMetricStatistics(a: GetMetricStatisticsRequest): F[GetMetricStatisticsResponse]
   def getMetricStream(a: GetMetricStreamRequest): F[GetMetricStreamResponse]
   def getMetricWidgetImage(a: GetMetricWidgetImageRequest): F[GetMetricWidgetImageResponse]
+  def getOTelEnrichment(a: GetOTelEnrichmentRequest): F[GetOTelEnrichmentResponse]
+  def listAlarmMuteRules(a: ListAlarmMuteRulesRequest): F[ListAlarmMuteRulesResponse]
+  def listAlarmMuteRulesPaginator(a: ListAlarmMuteRulesRequest): F[ListAlarmMuteRulesPublisher]
   def listDashboards: F[ListDashboardsResponse]
   def listDashboards(a: ListDashboardsRequest): F[ListDashboardsResponse]
   def listDashboardsPaginator: F[ListDashboardsPublisher]
@@ -62,10 +71,12 @@ trait CloudWatchAsyncClientOp[F[_]] {
   def listMetricsPaginator: F[ListMetricsPublisher]
   def listMetricsPaginator(a: ListMetricsRequest): F[ListMetricsPublisher]
   def listTagsForResource(a: ListTagsForResourceRequest): F[ListTagsForResourceResponse]
+  def putAlarmMuteRule(a: PutAlarmMuteRuleRequest): F[PutAlarmMuteRuleResponse]
   def putAnomalyDetector(a: PutAnomalyDetectorRequest): F[PutAnomalyDetectorResponse]
   def putCompositeAlarm(a: PutCompositeAlarmRequest): F[PutCompositeAlarmResponse]
   def putDashboard(a: PutDashboardRequest): F[PutDashboardResponse]
   def putInsightRule(a: PutInsightRuleRequest): F[PutInsightRuleResponse]
+  def putLogAlarm(a: PutLogAlarmRequest): F[PutLogAlarmResponse]
   def putManagedInsightRules(a: PutManagedInsightRulesRequest): F[PutManagedInsightRulesResponse]
   def putMetricAlarm(a: PutMetricAlarmRequest): F[PutMetricAlarmResponse]
   def putMetricData(a: PutMetricDataRequest): F[PutMetricDataResponse]
@@ -74,7 +85,9 @@ trait CloudWatchAsyncClientOp[F[_]] {
   def serviceName: F[String]
   def setAlarmState(a: SetAlarmStateRequest): F[SetAlarmStateResponse]
   def startMetricStreams(a: StartMetricStreamsRequest): F[StartMetricStreamsResponse]
+  def startOTelEnrichment(a: StartOTelEnrichmentRequest): F[StartOTelEnrichmentResponse]
   def stopMetricStreams(a: StopMetricStreamsRequest): F[StopMetricStreamsResponse]
+  def stopOTelEnrichment(a: StopOTelEnrichmentRequest): F[StopOTelEnrichmentResponse]
   def tagResource(a: TagResourceRequest): F[TagResourceResponse]
   def untagResource(a: UntagResourceRequest): F[UntagResourceResponse]
   def waiter: F[CloudWatchAsyncWaiter]
