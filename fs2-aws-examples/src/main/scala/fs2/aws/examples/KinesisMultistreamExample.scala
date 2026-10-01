@@ -16,14 +16,22 @@ import io.laserdisc.pure.kinesis.tagless.{KinesisAsyncClientOp, KinesisInterpret
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClientBuilder
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClientBuilder
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClientBuilder
-import software.amazon.awssdk.services.kinesis.model.{CreateStreamRequest, DeleteStreamRequest}
-import software.amazon.kinesis.common.{StreamConfig, StreamIdentifier}
+import software.amazon.awssdk.services.kinesis.model.{
+  CreateStreamRequest,
+  DeleteStreamRequest,
+  DescribeStreamSummaryRequest
+}
+import software.amazon.kinesis.common.{
+  InitialPositionInStream,
+  InitialPositionInStreamExtended,
+  StreamConfig,
+  StreamIdentifier
+}
 import software.amazon.kinesis.coordinator.CoordinatorConfig.ClientVersionConfig
 import software.amazon.kinesis.processor.{FormerStreamsLeasesDeletionStrategy, MultiStreamTracker}
 
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
-import java.time.Instant
 import java.util
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.DurationInt
@@ -50,6 +58,23 @@ object KinesisMultistreamExample extends IOApp {
     for {
       k <- KinesisInterpreter[F].clientResource(kac)
       _ <- streamNames.map(streamName => disposableStream(KinesisInterpreter[F].create(k), streamName)).parSequence_
+      kinesis = KinesisInterpreter[F].create(k)
+      streamConfigs <- Resource.eval(streamNames.traverse { streamName =>
+        kinesis
+          .describeStreamSummary(DescribeStreamSummaryRequest.builder().streamName(streamName).build())
+          .map { response =>
+            val summary = response.streamDescriptionSummary()
+            val accountId = summary.streamARN().split(":")(4)
+            val creationEpoch = summary.creationTimestamp().getEpochSecond
+            val streamIdentifier =
+              StreamIdentifier.multiStreamInstance(s"$accountId:$streamName:$creationEpoch")
+
+            new StreamConfig(
+              streamIdentifier,
+              InitialPositionInStreamExtended.newInitialPosition(InitialPositionInStream.TRIM_HORIZON)
+            )
+          }
+      })
       appName <- Resource.eval(Sync[F].fromEither(AppName("kinesis-multistream-example").leftMap(new Throwable(_))))
       stream  <- DefaultKinesisStreamBuilder[F]()
         .withAppName(appName)
@@ -61,12 +86,7 @@ object KinesisMultistreamExample extends IOApp {
         .withStreamTracker(
           Resource.pure(new MultiStreamTracker {
             override def streamConfigList(): util.List[StreamConfig] =
-              streamNames.map { sn =>
-                val streamIdentifier =
-                  StreamIdentifier.multiStreamInstance(s"accountId:$sn:${Instant.now().getEpochSecond}")
-
-                new StreamConfig(streamIdentifier, ???)
-              }.asJava
+              streamConfigs.asJava
 
             override def formerStreamsLeasesDeletionStrategy(): FormerStreamsLeasesDeletionStrategy =
               new FormerStreamsLeasesDeletionStrategy.NoLeaseDeletionStrategy()
