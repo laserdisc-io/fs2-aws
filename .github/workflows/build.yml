@@ -23,12 +23,12 @@ jobs:
             ~/.cache/coursier/v1
             ~/.sbt
           key: sbt-${{ hashFiles('**/build.sbt') }}
-      - name: "Starting up MinIO 🐳"
+      - name: "Starting up LocalStack 🐳"
         run: docker compose up -d
       - name: Run tests
         run: sbt +clean +test +doc
         env:
           AWS_ACCESS_KEY_ID: dummy
           AWS_SECRET_ACCESS_KEY: dummy
-      - name: "Shutting down MinIO 🐳"
+      - name: "Shutting down LocalStack 🐳"
         run: docker compose down
