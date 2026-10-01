@@ -317,7 +317,7 @@ object S3 {
               s3.getObject(
                 GetObjectRequest
                   .builder()
-                  .range(s"bytes=$offset-${offset + chunkSizeBytes}")
+                  .range(s"bytes=$offset-${offset + chunkSizeBytes - 1}")
                   .bucket(bucket.value)
                   .key(key.value)
                   .build(),

@@ -151,6 +151,25 @@ class S3Suite extends CatsEffectSuite {
     }
   }
 
+  test("read multipart ranges without requesting one byte past each part") {
+    s3R.map(S3.create[IO](_)).use { s3 =>
+      for {
+        fileKey <- IO.delay(UUID.randomUUID().toString).map(k => FileKey(NonEmptyString.unsafeFrom(k)))
+        payload = Array.tabulate[Byte](5_000_001)(i => (i % 251).toByte)
+        actual <- Resource
+          .make(
+            fs2.Stream
+              .emits(payload)
+              .covary[IO]
+              .through(s3.uploadFile(bucket, fileKey))
+              .compile
+              .drain
+          )(_ => s3.delete(bucket, fileKey))
+          .use(_ => s3.readFileMultipart(bucket, fileKey, partSize).compile.toVector)
+      } yield assert(actual.toArray.sameElements(payload))
+    }
+  }
+
   test(
     "Gracefully abort multipart upload when no data has been passed through the stream and `uploadEmptyFile` is disabled."
   ) {
