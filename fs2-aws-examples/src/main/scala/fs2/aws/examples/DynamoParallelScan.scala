@@ -29,7 +29,6 @@ class DDBReader[F[_]](ss: StreamScan[F]) {
         .segment(segment)
         .totalSegments(totalSegments)
         .tableName(ddbName)
-        .limit(100)
         .build(),
       pageSize
     )
