@@ -8,10 +8,10 @@ import fs2.aws.s3.models.Models.{BucketName, FileKey, PartSizeMB}
 import fs2.io.file.{Files, Flags, Path}
 import fs2.text
 import io.laserdisc.pure.s3.tagless.{Interpreter, S3AsyncClientOp}
-import munit.CatsEffectSuite
+import munit.{AnyFixture, CatsEffectSuite}
 import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import software.amazon.awssdk.regions.Region
-import software.amazon.awssdk.services.s3.model.{ListMultipartUploadsRequest, NoSuchKeyException}
+import software.amazon.awssdk.services.s3.model.{CreateBucketRequest, ListMultipartUploadsRequest, NoSuchKeyException}
 import software.amazon.awssdk.services.s3.{S3AsyncClient, S3Configuration}
 
 import java.net.{URI, URL}
@@ -29,7 +29,7 @@ class S3Suite extends CatsEffectSuite {
     Interpreter[IO].S3AsyncClientOpResource(
       S3AsyncClient
         .builder()
-        .endpointOverride(URI.create("http://localhost:9000"))
+        .endpointOverride(URI.create("http://localhost:4566"))
         .credentialsProvider(StaticCredentialsProvider.create(credentials))
         .serviceConfiguration(
           // see https://stackoverflow.com/a/61602647
@@ -46,6 +46,14 @@ class S3Suite extends CatsEffectSuite {
   val bucket: BucketName   = BucketName(NonEmptyString.unsafeFrom("resources"))
   val fileKey: FileKey     = FileKey(NonEmptyString.unsafeFrom("jsontest.json"))
   val partSize: PartSizeMB = PartSizeMB.unsafeFrom(5)
+
+  // LocalStack starts with no buckets, so create the one the tests share, once per suite
+  val bucketFixture = ResourceSuiteLocalFixture(
+    "bucket",
+    Resource.eval(s3R.use(_.createBucket(CreateBucketRequest.builder().bucket(bucket.value.value).build())).void)
+  )
+
+  override def munitFixtures: Seq[AnyFixture[?]] = List(bucketFixture)
 
   test("Upload JSON test file & read it back") {
     s3R.map(S3.create[IO](_)).use { s3 =>

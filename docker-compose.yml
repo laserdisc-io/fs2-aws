@@ -1,33 +1,12 @@
 services:
-  minio:
-    image: minio/minio
-    ports:
-      - "9000:9000"
-      - "9090:9090"
-    environment:
-      - "MINIO_ROOT_USER=AKIAIOSFODNN7EXAMPLE"
-      - "MINIO_ROOT_PASSWORD=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-    command: server /data --console-address ":9090"
-
-  createbuckets:
-    image: minio/mc
-    depends_on:
-      - minio
-    entrypoint: >
-      /bin/sh -c "
-      /usr/bin/mc alias set testminio http://minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY --api S3v4;
-      /usr/bin/mc mb testminio/resources;
-      /usr/bin/mc policy download testminio/resources;
-      exit 0;
-      "
   localstack:
-    image: localstack/localstack:3
+    image: localstack/localstack:4
     ports:
       - 4566:4566
     environment:
       - "AWS_ACCESS_KEY_ID=dummy"
       - "AWS_SECRET_ACCESS_KEY=dummy"
-      - "SERVICES=sqs,sns,kinesis,cloudwatch,dynamodb,sts"
+      - "SERVICES=sqs,sns,kinesis,cloudwatch,dynamodb,sts,s3"
       - "DEFAULT_REGION=us-east-1"
       - "USE_SSL=true"
     volumes:
