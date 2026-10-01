@@ -16,8 +16,7 @@ trait StreamScan[F[_]] {
   /** Scans Dynamodb into the FS2 stream
     *
     *  @param scanRequest AWS SDK2 DynamoDB scan request
-    *  @param pageSize the page size of the scan, defines how many
-    *                  records will be loaded to the memory
+    *  @param pageSize the maximum number of records requested per scan page; must be positive
     *  @return an fs2 Stream that emits RAW DynamoDB items, terminates, once scan exhausted
     */
   def scanDynamoDB(
@@ -33,24 +32,24 @@ object StreamScan {
           scanRequest: ScanRequest,
           pageSize: Int
       ): Stream[F, Chunk[JMap[String, AttributeValue]]] =
-        for {
+        if (pageSize <= 0) throw new IllegalArgumentException("pageSize must be greater than 0")
+        else for {
           dispatcher <- Stream.resource(Dispatcher.parallel[F])
           queue      <- Stream.eval(Queue.bounded[F, Option[Chunk[JMap[String, AttributeValue]]]](1))
           sub        <- Stream.eval(Ref[F].of[Option[Subscription]](None))
           error      <- Stream.eval(Deferred[F, Throwable])
           _          <- Stream.eval(
             ddb
-              .scanPaginator(scanRequest)
+              .scanPaginator(scanRequest.toBuilder().limit(pageSize).build())
               .map { publisher =>
-                // subscribe to the paginator, every time we request to deliver next pageSize items from the DDB table
-                // we use FS2 Queue as bounded buffer with size 1, this way we implement back pressure, not allowing
-                // paginator exhaust memory
+                // Limit each DynamoDB response to pageSize items and request one response at a time.
+                // The bounded FS2 queue provides back pressure while a page is consumed.
                 publisher.subscribe(new Subscriber[ScanResponse] {
 
                   override def onSubscribe(s: Subscription): Unit =
                     dispatcher
                       .unsafeRunSync(
-                        sub.set(s.some) >> Async[F].delay(s.request(pageSize.toLong))
+                        sub.set(s.some) >> Async[F].delay(s.request(1))
                       )
 
                   override def onNext(t: ScanResponse): Unit =
@@ -59,7 +58,7 @@ object StreamScan {
                         for {
                           _ <- queue.offer(Chunk(t.items().asScala.toList*).some)
                           s <- sub.get
-                          _ <- Async[F].delay(s.map(_.request(pageSize.toLong)))
+                          _ <- Async[F].delay(s.map(_.request(1)))
                         } yield ()
                       )
 
@@ -71,10 +70,10 @@ object StreamScan {
                 })
               }
           )
-          stream <- Stream.fromQueueNoneTerminated(queue) ++ Stream.eval(error.tryGet).flatMap {
+          stream <- (Stream.fromQueueNoneTerminated(queue) ++ Stream.eval(error.tryGet).flatMap {
             case Some(value) => Stream.raiseError[F](value)
             case None        => Stream.empty
-          }
+          }).onFinalize(sub.get.flatMap(_.traverse_(s => Async[F].delay(s.cancel()))))
         } yield stream
 
     }
