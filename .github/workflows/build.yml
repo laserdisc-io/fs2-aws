@@ -25,6 +25,15 @@ jobs:
             ~/.cache/coursier/v1
             ~/.sbt
           key: sbt-${{ hashFiles('**/build.sbt') }}
+      - name: Check generated pure-aws sources are up to date
+        run: |
+          make generate-pure-aws
+          # Make a generated file that was never committed show up in git diff.
+          git add --intent-to-add -- pure-aws
+          git diff --exit-code -- pure-aws || {
+            echo "::error::Files under pure-aws/ differ from the taglessGen output. Don't edit them by hand. Run 'make generate-pure-aws' and commit the result. See AGENTS.md."
+            exit 1
+          }
       - name: "Starting up LocalStack 🐳"
         run: docker compose up -d
       - name: Run tests
