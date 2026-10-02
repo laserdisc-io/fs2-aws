@@ -65,7 +65,7 @@ object KinesisMultistreamExample extends IOApp {
           .map { response =>
             val summary = response.streamDescriptionSummary()
             val accountId = summary.streamARN().split(":")(4)
-            val creationEpoch = summary.creationTimestamp().getEpochSecond
+            val creationEpoch = summary.streamCreationTimestamp().getEpochSecond
             val streamIdentifier =
               StreamIdentifier.multiStreamInstance(s"$accountId:$streamName:$creationEpoch")
 
