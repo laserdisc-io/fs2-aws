@@ -32,7 +32,7 @@ object StreamScan {
           scanRequest: ScanRequest,
           pageSize: Int
       ): Stream[F, Chunk[JMap[String, AttributeValue]]] =
-        if (pageSize <= 0) throw new IllegalArgumentException("pageSize must be greater than 0")
+        if (pageSize <= 0) Stream.raiseError[F](new IllegalArgumentException("pageSize must be greater than 0"))
         else for {
           dispatcher <- Stream.resource(Dispatcher.parallel[F])
           queue      <- Stream.eval(Queue.bounded[F, Option[Chunk[JMap[String, AttributeValue]]]](1))
