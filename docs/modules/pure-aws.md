@@ -62,9 +62,14 @@ for an example combining SQS and SNS both ways.
 ## Code generation
 
 The sources are generated from the SDK client interfaces by the `taglessGen` sbt task
-(see `project/TaglessGen.scala`). To regenerate after an SDK bump:
+(see `project/TaglessGen.scala`). The task reads the SDK version from `project/build.sbt`, not
+from `project/Dependencies.scala`. To regenerate after an SDK bump, set `AwsSdk` in
+`project/build.sbt` and `V.AwsSdk` in `project/Dependencies.scala` to the same version, then run:
 
 ```sh
 make generate-pure-aws
 ```
+
+See [AGENTS.md](https://github.com/laserdisc-io/fs2-aws/blob/main/AGENTS.md) for the full steps and
+the CI checks.
 
