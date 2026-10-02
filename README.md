@@ -180,53 +180,49 @@ Ensure that the `endpoint` setting is set correctly (e.g. http://localhost:4566)
 **TODO:** Stream get data, Stream send data
 
 ## SQS
-Example
+`SQS.create` wraps one queue: `sqsStream` receives messages, and the pipes send, delete and change visibility.
+
 ```scala
-implicit val messageDecoder: Message => Either[Throwable, Quote] = { sqs_msg =>
-    io.circe.parser.decode[Quote](sqs_msg.asInstanceOf[TextMessage].getText)
+import cats.effect.{IO, IOApp}
+import fs2.Stream
+import fs2.aws.sqs.{SQS, SqsConfig}
+import io.laserdisc.pure.sqs.tagless.Interpreter
+import software.amazon.awssdk.services.sqs.SqsAsyncClient
+
+import scala.concurrent.duration.*
+
+object SqsExample extends IOApp.Simple {
+  val queueUrl = "https://sqs.us-east-1.amazonaws.com/123456789012/my-queue"
+
+  def run: IO[Unit] =
+    Interpreter[IO].SqsAsyncClientOpResource(SqsAsyncClient.builder()).use { sqsOp =>
+      for {
+        // long polling: each receive waits up to 20s for messages, so there's no need to pause between receives
+        sqs <- SQS.createWithReceiveRequest[IO](SqsConfig(queueUrl, pollRate = Duration.Zero), sqsOp, _.waitTimeSeconds(20))
+        _   <- Stream("hello", "world").through(sqs.sendMessagePipe).compile.drain
+        _   <- sqs.sqsStream
+          .evalTap(msg => IO.println(msg.body()))
+          .through(sqs.deleteMessagePipe)
+          .take(2)
+          .compile
+          .drain
+      } yield ()
+    }
 }
-fs2.aws
-      .sqsStream[IO, Quote](
-        sqsConfig,
-        (config, callback) => SQSConsumerBuilder(config, callback))
-      .through(...)
-      .compile
-      .drain
-      .as(ExitCode.Success)
 ```
 
-Testing
-```scala
-//create stream for testing
-def stream(deferredListener: Deferred[IO, MessageListener]) =
-            aws.testkit
-              .sqsStream[IO, Quote](deferredListener)
-              .through(...)
-              .take(2)
-              .compile
-              .toList
-
-//create the program for testing the stream
-import io.circe.fs2.aws.examples.syntax._
-import io.circe.generic.auto._
-val quote = Quote(...)
-val program : IO[List[(Quote, MessageListener)]] = for {
-            d <- Deferred[IO, MessageListener]
-            r <- IO.racePair(stream(d), d.get).flatMap {
-              case Right((streamFiber, listener)) =>
-                //simulate SQS stream fan-in here
-                listener.onMessage(new SQSTextMessage(Printer.noSpaces.pretty(quote.asJson)))
-                streamFiber.join
-              case _ => IO(Nil)
-            }
-          } yield r
-
-//Assert results
-val result = program
-            .unsafeRunSync()
-result should be(...)
-```
-**TODO:** Stream send SQS messages
+- `SqsConfig(queueUrl, pollRate = 3.seconds, fetchMessageCount = 10)`: `fetchMessageCount` must be between 1 and 10. Only use
+  `pollRate = Duration.Zero` with long polling (per request, or the queue's `ReceiveMessageWaitTimeSeconds`); without it, the
+  stream busy-loops on empty receives.
+- `SQS.createWithReceiveRequest` also takes a function that customizes every `ReceiveMessageRequest`: `_.waitTimeSeconds(20)`
+  for long polling, `_.visibilityTimeout(...)` per receive, or
+  `_.messageSystemAttributeNames(MessageSystemAttributeName.APPROXIMATE_RECEIVE_COUNT)` to spot redeliveries. The queue URL and
+  message count always come from `SqsConfig`.
+- A receive hides up to `fetchMessageCount` messages at once, but `sqsStream` hands them over one at a time. If handling can
+  outlast the queue's visibility timeout, use `fetchMessageCount = 1`, or consume `sqsStreamBatched` (one chunk per receive)
+  and extend or delete each batch as a whole.
+- `changeMessageVisibilityPipe(timeout)` sets each message's timeout once, rounded up to whole seconds. It isn't a heartbeat:
+  to keep a message hidden during long processing, call it again before the timeout runs out.
 
 ## Support
 
