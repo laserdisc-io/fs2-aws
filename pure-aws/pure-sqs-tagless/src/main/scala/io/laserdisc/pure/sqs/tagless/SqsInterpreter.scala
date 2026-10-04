@@ -72,7 +72,7 @@ trait SqsInterpreter[M[_]] { outer =>
     override def changeMessageVisibilityBatch(
         a: ChangeMessageVisibilityBatchRequest
     ): Kleisli[M, SqsAsyncClient, ChangeMessageVisibilityBatchResponse] = eff(_.changeMessageVisibilityBatch(a))
-    override def close: Kleisli[M, SqsAsyncClient, Unit] = primitive(_.close)
+    override def close: Kleisli[M, SqsAsyncClient, Unit]                = primitive(_.close)
     override def createQueue(a: CreateQueueRequest): Kleisli[M, SqsAsyncClient, CreateQueueResponse] = eff(
       _.createQueue(a)
     )
@@ -239,7 +239,7 @@ trait SqsInterpreter[M[_]] { outer =>
     override def changeMessageVisibilityBatch(
         a: ChangeMessageVisibilityBatchRequest
     ): M[ChangeMessageVisibilityBatchResponse] = eff1(client.changeMessageVisibilityBatch(a))
-    override def close: M[Unit]                                                   = primitive1(client.close)
+    override def close: M[Unit]                = primitive1(client.close)
     override def createQueue(a: CreateQueueRequest): M[CreateQueueResponse]       = eff1(client.createQueue(a))
     override def deleteMessage(a: DeleteMessageRequest): M[DeleteMessageResponse] = eff1(client.deleteMessage(a))
     override def deleteMessageBatch(a: DeleteMessageBatchRequest): M[DeleteMessageBatchResponse] = eff1(

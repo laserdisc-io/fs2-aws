@@ -10,9 +10,11 @@ import software.amazon.awssdk.services.s3.S3Utilities
 import software.amazon.awssdk.services.s3.paginators.ListBucketsPublisher
 import software.amazon.awssdk.services.s3.paginators.ListDirectoryBucketsPublisher
 import software.amazon.awssdk.services.s3.paginators.ListMultipartUploadsPublisher
+import software.amazon.awssdk.services.s3.paginators.ListObjectAnnotationsPublisher
 import software.amazon.awssdk.services.s3.paginators.ListObjectVersionsPublisher
 import software.amazon.awssdk.services.s3.paginators.ListObjectsV2Publisher
 import software.amazon.awssdk.services.s3.paginators.ListPartsPublisher
+import software.amazon.awssdk.services.s3.presignedurl.AsyncPresignedUrlExtension
 import software.amazon.awssdk.services.s3.waiters.S3AsyncWaiter
 
 /** The effectful equivalents for operations detected from [[software.amazon.awssdk.services.s3.S3AsyncClient]]
@@ -44,6 +46,7 @@ trait S3AsyncClientOp[F[_]] {
   def deleteBucketTagging(a: DeleteBucketTaggingRequest): F[DeleteBucketTaggingResponse]
   def deleteBucketWebsite(a: DeleteBucketWebsiteRequest): F[DeleteBucketWebsiteResponse]
   def deleteObject(a: DeleteObjectRequest): F[DeleteObjectResponse]
+  def deleteObjectAnnotation(a: DeleteObjectAnnotationRequest): F[DeleteObjectAnnotationResponse]
   def deleteObjectTagging(a: DeleteObjectTaggingRequest): F[DeleteObjectTaggingResponse]
   def deleteObjects(a: DeleteObjectsRequest): F[DeleteObjectsResponse]
   def deletePublicAccessBlock(a: DeletePublicAccessBlockRequest): F[DeletePublicAccessBlockResponse]
@@ -73,6 +76,8 @@ trait S3AsyncClientOp[F[_]] {
   def getObject[ReturnT](a: GetObjectRequest, b: AsyncResponseTransformer[GetObjectResponse, ReturnT]): F[ReturnT]
   def getObject(a: GetObjectRequest, b: Path): F[GetObjectResponse]
   def getObjectAcl(a: GetObjectAclRequest): F[GetObjectAclResponse]
+  def getObjectAnnotation[ReturnT](a: GetObjectAnnotationRequest, b: AsyncResponseTransformer[GetObjectAnnotationResponse, ReturnT]): F[ReturnT]
+  def getObjectAnnotation(a: GetObjectAnnotationRequest, b: Path): F[GetObjectAnnotationResponse]
   def getObjectAttributes(a: GetObjectAttributesRequest): F[GetObjectAttributesResponse]
   def getObjectLegalHold(a: GetObjectLegalHoldRequest): F[GetObjectLegalHoldResponse]
   def getObjectLockConfiguration(a: GetObjectLockConfigurationRequest): F[GetObjectLockConfigurationResponse]
@@ -95,6 +100,8 @@ trait S3AsyncClientOp[F[_]] {
   def listDirectoryBucketsPaginator(a: ListDirectoryBucketsRequest): F[ListDirectoryBucketsPublisher]
   def listMultipartUploads(a: ListMultipartUploadsRequest): F[ListMultipartUploadsResponse]
   def listMultipartUploadsPaginator(a: ListMultipartUploadsRequest): F[ListMultipartUploadsPublisher]
+  def listObjectAnnotations(a: ListObjectAnnotationsRequest): F[ListObjectAnnotationsResponse]
+  def listObjectAnnotationsPaginator(a: ListObjectAnnotationsRequest): F[ListObjectAnnotationsPublisher]
   def listObjectVersions(a: ListObjectVersionsRequest): F[ListObjectVersionsResponse]
   def listObjectVersionsPaginator(a: ListObjectVersionsRequest): F[ListObjectVersionsPublisher]
   def listObjects(a: ListObjectsRequest): F[ListObjectsResponse]
@@ -102,6 +109,7 @@ trait S3AsyncClientOp[F[_]] {
   def listObjectsV2Paginator(a: ListObjectsV2Request): F[ListObjectsV2Publisher]
   def listParts(a: ListPartsRequest): F[ListPartsResponse]
   def listPartsPaginator(a: ListPartsRequest): F[ListPartsPublisher]
+  def presignedUrlExtension: F[AsyncPresignedUrlExtension]
   def putBucketAbac(a: PutBucketAbacRequest): F[PutBucketAbacResponse]
   def putBucketAccelerateConfiguration(a: PutBucketAccelerateConfigurationRequest): F[PutBucketAccelerateConfigurationResponse]
   def putBucketAcl(a: PutBucketAclRequest): F[PutBucketAclResponse]
@@ -124,6 +132,8 @@ trait S3AsyncClientOp[F[_]] {
   def putObject(a: PutObjectRequest, b: AsyncRequestBody): F[PutObjectResponse]
   def putObject(a: PutObjectRequest, b: Path): F[PutObjectResponse]
   def putObjectAcl(a: PutObjectAclRequest): F[PutObjectAclResponse]
+  def putObjectAnnotation(a: PutObjectAnnotationRequest, b: AsyncRequestBody): F[PutObjectAnnotationResponse]
+  def putObjectAnnotation(a: PutObjectAnnotationRequest, b: Path): F[PutObjectAnnotationResponse]
   def putObjectLegalHold(a: PutObjectLegalHoldRequest): F[PutObjectLegalHoldResponse]
   def putObjectLockConfiguration(a: PutObjectLockConfigurationRequest): F[PutObjectLockConfigurationResponse]
   def putObjectRetention(a: PutObjectRetentionRequest): F[PutObjectRetentionResponse]
@@ -134,8 +144,10 @@ trait S3AsyncClientOp[F[_]] {
   def selectObjectContent(a: SelectObjectContentRequest, b: SelectObjectContentResponseHandler): F[Void]
   def serviceClientConfiguration: F[S3ServiceClientConfiguration]
   def serviceName: F[String]
+  def updateBucketMetadataAnnotationTableConfiguration(a: UpdateBucketMetadataAnnotationTableConfigurationRequest): F[UpdateBucketMetadataAnnotationTableConfigurationResponse]
   def updateBucketMetadataInventoryTableConfiguration(a: UpdateBucketMetadataInventoryTableConfigurationRequest): F[UpdateBucketMetadataInventoryTableConfigurationResponse]
   def updateBucketMetadataJournalTableConfiguration(a: UpdateBucketMetadataJournalTableConfigurationRequest): F[UpdateBucketMetadataJournalTableConfigurationResponse]
+  def updateObjectEncryption(a: UpdateObjectEncryptionRequest): F[UpdateObjectEncryptionResponse]
   def uploadPart(a: UploadPartRequest, b: AsyncRequestBody): F[UploadPartResponse]
   def uploadPart(a: UploadPartRequest, b: Path): F[UploadPartResponse]
   def uploadPartCopy(a: UploadPartCopyRequest): F[UploadPartCopyResponse]
