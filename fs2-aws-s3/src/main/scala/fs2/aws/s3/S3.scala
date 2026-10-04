@@ -311,13 +311,13 @@ object S3 {
         val chunkSizeBytes = partSize * 1000000
 
         // Range must be in the form "bytes=0-500" -> https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.35
-        def go(offset: Long): Pull[F, Byte, Unit] =
+        def go(offset: Long, objectLength: Long): Pull[F, Byte, Unit] =
           fs2.Stream
             .eval {
               s3.getObject(
                 GetObjectRequest
                   .builder()
-                  .range(s"bytes=$offset-${offset + chunkSizeBytes}")
+                  .range(s"bytes=$offset-${math.min(offset + chunkSizeBytes - 1, objectLength - 1)}")
                   .bucket(bucket.value)
                   .key(key.value)
                   .build(),
@@ -340,12 +340,18 @@ object S3 {
             }
             .flatMap {
               case Some(o) =>
-                if (o.size < chunkSizeBytes) Pull.output(o)
-                else Pull.output(o) >> go(offset + o.size)
+                if (o.size < chunkSizeBytes || offset + o.size >= objectLength) Pull.output(o)
+                else Pull.output(o) >> go(offset + o.size, objectLength)
               case None => Pull.done
             }
 
-        go(0).stream
+        fs2.Stream
+          .eval(s3.headObject(HeadObjectRequest.builder().bucket(bucket.value).key(key.value).build()))
+          .flatMap { metadata =>
+            val objectLength = metadata.contentLength().longValue()
+            if (objectLength == 0) fs2.Stream.empty
+            else go(0, objectLength).stream
+          }
       }
 
     }
