@@ -93,6 +93,40 @@ class SqsSpec extends AnyWordSpec with Matchers {
         }
         .unsafeRunSync()
 
+    "emit each receive as one chunk" in
+      sqsOpResource
+        .use { sqsOp =>
+          for {
+            sqs     <- mkQueueAndClient(sqsOp, "batched-consume-test")
+            _       <- msgStream.through(sqs.sendMessagePipe).compile.drain
+            batches <- sqs.sqsStreamBatched.take(1).compile.toList
+            _ = batches.map(_.toList.map(_.body())) should be(List(allMsgs))
+          } yield ()
+        }
+        .unsafeRunSync()
+
+    "apply the receive request customizer" in
+      sqsOpResource
+        .use { sqsOp =>
+          for {
+            queueUrl <- mkQueue("receive-customizer-test", defaultVisibility = 1.hour)
+            sqs      <- SQS.createWithReceiveRequest[IO](
+              SqsConfig(queueUrl = queueUrl, pollRate = 500.milliseconds, fetchMessageCount = 5),
+              sqsOp,
+              _.visibilityTimeout(1)
+            )
+            _         <- msgStream.through(sqs.sendMessagePipe).compile.drain
+            firstPoll <- sqs.sqsStream.take(5).compile.toList
+            _ = firstPoll should have size 5 // sanity check
+
+            // the per-receive timeout overrides the queue's hour, so all five come back
+            _          <- IO.sleep(3.seconds)
+            secondPoll <- sqs.sqsStream.take(5).interruptAfter(5.seconds).compile.toList
+            _ = secondPoll.map(_.body()).toSet should be(allMsgs.toSet)
+          } yield ()
+        }
+        .unsafeRunSync()
+
   }
 
   def mkQueueAndClient(

@@ -1,4 +1,5 @@
 import TaglessGen.taglessGenSettings
+import software.amazon.awssdk.core.util.VersionInfo
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient
@@ -16,6 +17,18 @@ lazy val supportedScalaVersions = List(scala213, scala3)
 ThisBuild / crossScalaVersions := supportedScalaVersions
 ThisBuild / scalaVersion       := scala3
 ThisBuild / versionScheme      := Some("early-semver")
+
+// taglessGen reads the SDK from project/build.sbt, but the modules compile against V.AwsSdk.
+// The generated sources match the SDK that library users get only when the two versions are equal.
+// Vals in project/build.sbt aren't visible here, so VersionInfo reports the meta-build SDK version.
+Global / onLoad := (Global / onLoad).value.andThen { state =>
+  if (VersionInfo.SDK_VERSION != Dependencies.V.AwsSdk)
+    sys.error(
+      s"AwsSdk in project/build.sbt is ${VersionInfo.SDK_VERSION}, but V.AwsSdk in project/Dependencies.scala is " +
+        s"${Dependencies.V.AwsSdk}. Set both to the same version, then run `make generate-pure-aws`. See AGENTS.md."
+    )
+  state
+}
 
 lazy val root = (project in file("."))
   .aggregate(
