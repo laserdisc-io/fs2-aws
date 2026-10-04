@@ -14,6 +14,7 @@ This module provides the `SQS[F]` algebra:
 ```scala
 trait SQS[F[_]] {
     def sqsStream: Stream[F, Message]
+    def sqsStreamBatched: Stream[F, Chunk[Message]]
     def changeMessageVisibilityPipe(timeout: FiniteDuration): Pipe[F, Message, Message]
     def deleteMessagePipe: Pipe[F, Message, DeleteMessageResponse]
     def sendMessagePipe: Pipe[F, SQS.MsgBody, SendMessageResponse]
@@ -89,8 +90,38 @@ object SQSExample {
 
 ```
 
+### Long polling
+
+`SQS.createWithReceiveRequest` applies a function to every `ReceiveMessageRequest`. With long polling, each receive waits up to 20 seconds for messages, so there's no need to pause between receives:
+
+```scala mdoc:compile-only
+import cats.effect.*
+import fs2.aws.sqs.{SQS, SqsConfig}
+import io.laserdisc.pure.sqs.tagless.SqsInterpreter
+import scala.concurrent.duration.*
+
+val longPolling: IO[Unit] =
+  SqsInterpreter[IO].resource.use { sqsOp =>
+    SQS
+      .createWithReceiveRequest[IO](
+        SqsConfig("https://sqs.us-east-1.amazonaws.com/123456789012/my-queue", pollRate = Duration.Zero),
+        sqsOp,
+        _.waitTimeSeconds(20)
+      )
+      .flatMap { sqs =>
+        sqs.sqsStream
+          .evalTap(msg => IO.println(msg.body()))
+          .through(sqs.deleteMessagePipe)
+          .compile
+          .drain
+      }
+  }
+```
+
 ### Notes
 
-- `sqsStream` polls the queue at the configured `pollRate` (default 3 seconds) and emits raw SDK `Message`s, fetching up to `fetchMessageCount` messages per poll (default 10; must be 1 to 10).
+- `sqsStream` polls the queue at the configured `pollRate` (default 3 seconds) and emits raw SDK `Message`s, fetching up to `fetchMessageCount` messages per poll (default 10; must be 1 to 10). Only use `pollRate = Duration.Zero` with long polling (per request, or the queue's `ReceiveMessageWaitTimeSeconds`); without it, the stream busy-loops on empty receives.
+- Besides long polling, the `createWithReceiveRequest` function can set `_.visibilityTimeout(...)` per receive, or `_.messageSystemAttributeNames(MessageSystemAttributeName.APPROXIMATE_RECEIVE_COUNT)` to spot redeliveries. The queue URL and message count always come from `SqsConfig`.
+- A receive hides up to `fetchMessageCount` messages at once, but `sqsStream` hands them over one at a time. If handling can outlast the queue's visibility timeout, use `fetchMessageCount = 1`, or consume `sqsStreamBatched` (one chunk per receive) and extend or delete each batch as a whole.
 - Use `deleteMessagePipe` to acknowledge messages by deleting them from the queue.
-- Use `changeMessageVisibilityPipe(timeout)` to extend the visibility timeout of in-flight messages while you process them.
+- `changeMessageVisibilityPipe(timeout)` sets each message's timeout once, rounded up to whole seconds. It isn't a heartbeat: to keep a message hidden during long processing, call it again before the timeout runs out.

@@ -1,8 +1,9 @@
 generate-pure-aws:
-	sbt "project pure-cloudwatch-tagless" taglessGen
-	sbt "project pure-dynamodb-tagless" taglessGen
-	sbt "project pure-kinesis-tagless" taglessGen
-	sbt "project pure-s3-tagless" taglessGen
-	sbt "project pure-sns-tagless" taglessGen
-	sbt "project pure-sqs-tagless" taglessGen
-	sbt format
+	sbt \
+	  pure-cloudwatch-tagless/taglessGen \
+	  pure-dynamodb-tagless/taglessGen \
+	  pure-kinesis-tagless/taglessGen \
+	  pure-s3-tagless/taglessGen \
+	  pure-sns-tagless/taglessGen \
+	  pure-sqs-tagless/taglessGen \
+	  format

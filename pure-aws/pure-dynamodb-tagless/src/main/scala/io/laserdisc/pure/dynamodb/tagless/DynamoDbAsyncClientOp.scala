@@ -74,6 +74,7 @@ trait DynamoDbAsyncClientOp[F[_]] {
   def restoreTableToPointInTime(a: RestoreTableToPointInTimeRequest): F[RestoreTableToPointInTimeResponse]
   def scan(a: ScanRequest): F[ScanResponse]
   def scanPaginator(a: ScanRequest): F[ScanPublisher]
+  def searchVectors(a: SearchVectorsRequest): F[SearchVectorsResponse]
   def serviceClientConfiguration: F[DynamoDbServiceClientConfiguration]
   def serviceName: F[String]
   def tagResource(a: TagResourceRequest): F[TagResourceResponse]
