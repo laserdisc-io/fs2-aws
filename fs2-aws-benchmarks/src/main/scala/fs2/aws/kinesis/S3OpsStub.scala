@@ -6,6 +6,7 @@ import software.amazon.awssdk.core.async.{AsyncRequestBody, AsyncResponseTransfo
 import software.amazon.awssdk.services.s3.{S3ServiceClientConfiguration, S3Utilities}
 import software.amazon.awssdk.services.s3.model.*
 import software.amazon.awssdk.services.s3.paginators.*
+import software.amazon.awssdk.services.s3.presignedurl.AsyncPresignedUrlExtension
 import software.amazon.awssdk.services.s3.waiters.S3AsyncWaiter
 
 import java.nio.file.Path
@@ -353,5 +354,34 @@ class S3OpsStub extends S3AsyncClientOp[IO] {
   override def putBucketAbac(a: PutBucketAbacRequest): IO[PutBucketAbacResponse] = ???
 
   override def serviceClientConfiguration: IO[S3ServiceClientConfiguration] = ???
+
+  override def deleteObjectAnnotation(a: DeleteObjectAnnotationRequest): IO[DeleteObjectAnnotationResponse] = ???
+
+  override def getObjectAnnotation[ReturnT](
+      a: GetObjectAnnotationRequest,
+      b: AsyncResponseTransformer[GetObjectAnnotationResponse, ReturnT]
+  ): IO[ReturnT] = ???
+
+  override def getObjectAnnotation(a: GetObjectAnnotationRequest, b: Path): IO[GetObjectAnnotationResponse] = ???
+
+  override def listObjectAnnotations(a: ListObjectAnnotationsRequest): IO[ListObjectAnnotationsResponse] = ???
+
+  override def listObjectAnnotationsPaginator(a: ListObjectAnnotationsRequest): IO[ListObjectAnnotationsPublisher] =
+    ???
+
+  override def presignedUrlExtension: IO[AsyncPresignedUrlExtension] = ???
+
+  override def putObjectAnnotation(
+      a: PutObjectAnnotationRequest,
+      b: AsyncRequestBody
+  ): IO[PutObjectAnnotationResponse] = ???
+
+  override def putObjectAnnotation(a: PutObjectAnnotationRequest, b: Path): IO[PutObjectAnnotationResponse] = ???
+
+  override def updateBucketMetadataAnnotationTableConfiguration(
+      a: UpdateBucketMetadataAnnotationTableConfigurationRequest
+  ): IO[UpdateBucketMetadataAnnotationTableConfigurationResponse] = ???
+
+  override def updateObjectEncryption(a: UpdateObjectEncryptionRequest): IO[UpdateObjectEncryptionResponse] = ???
 
 }

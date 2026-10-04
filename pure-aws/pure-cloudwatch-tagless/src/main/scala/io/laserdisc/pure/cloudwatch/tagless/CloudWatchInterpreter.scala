@@ -14,6 +14,7 @@ import software.amazon.awssdk.services.cloudwatch.paginators.DescribeAlarmsPubli
 import software.amazon.awssdk.services.cloudwatch.paginators.DescribeAnomalyDetectorsPublisher
 import software.amazon.awssdk.services.cloudwatch.paginators.DescribeInsightRulesPublisher
 import software.amazon.awssdk.services.cloudwatch.paginators.GetMetricDataPublisher
+import software.amazon.awssdk.services.cloudwatch.paginators.ListAlarmMuteRulesPublisher
 import software.amazon.awssdk.services.cloudwatch.paginators.ListDashboardsPublisher
 import software.amazon.awssdk.services.cloudwatch.paginators.ListManagedInsightRulesPublisher
 import software.amazon.awssdk.services.cloudwatch.paginators.ListMetricStreamsPublisher
@@ -66,7 +67,13 @@ trait CloudWatchInterpreter[M[_]] { outer =>
   trait CloudWatchAsyncClientInterpreter extends CloudWatchAsyncClientOp[Kleisli[M, CloudWatchAsyncClient, *]] {
 
     // domain-specific operations are implemented in terms of `primitive`
-    override def close: Kleisli[M, CloudWatchAsyncClient, Unit] = primitive(_.close)
+    override def associateDatasetKmsKey(
+        a: AssociateDatasetKmsKeyRequest
+    ): Kleisli[M, CloudWatchAsyncClient, AssociateDatasetKmsKeyResponse] = eff(_.associateDatasetKmsKey(a))
+    override def close: Kleisli[M, CloudWatchAsyncClient, Unit]          = primitive(_.close)
+    override def deleteAlarmMuteRule(
+        a: DeleteAlarmMuteRuleRequest
+    ): Kleisli[M, CloudWatchAsyncClient, DeleteAlarmMuteRuleResponse] = eff(_.deleteAlarmMuteRule(a))
     override def deleteAlarms(a: DeleteAlarmsRequest): Kleisli[M, CloudWatchAsyncClient, DeleteAlarmsResponse] = eff(
       _.deleteAlarms(a)
     )
@@ -128,14 +135,23 @@ trait CloudWatchInterpreter[M[_]] { outer =>
     override def disableInsightRules(
         a: DisableInsightRulesRequest
     ): Kleisli[M, CloudWatchAsyncClient, DisableInsightRulesResponse] = eff(_.disableInsightRules(a))
+    override def disassociateDatasetKmsKey(
+        a: DisassociateDatasetKmsKeyRequest
+    ): Kleisli[M, CloudWatchAsyncClient, DisassociateDatasetKmsKeyResponse] = eff(_.disassociateDatasetKmsKey(a))
     override def enableAlarmActions(
         a: EnableAlarmActionsRequest
     ): Kleisli[M, CloudWatchAsyncClient, EnableAlarmActionsResponse] = eff(_.enableAlarmActions(a))
     override def enableInsightRules(
         a: EnableInsightRulesRequest
     ): Kleisli[M, CloudWatchAsyncClient, EnableInsightRulesResponse] = eff(_.enableInsightRules(a))
+    override def getAlarmMuteRule(
+        a: GetAlarmMuteRuleRequest
+    ): Kleisli[M, CloudWatchAsyncClient, GetAlarmMuteRuleResponse] = eff(_.getAlarmMuteRule(a))
     override def getDashboard(a: GetDashboardRequest): Kleisli[M, CloudWatchAsyncClient, GetDashboardResponse] = eff(
       _.getDashboard(a)
+    )
+    override def getDataset(a: GetDatasetRequest): Kleisli[M, CloudWatchAsyncClient, GetDatasetResponse] = eff(
+      _.getDataset(a)
     )
     override def getInsightRuleReport(
         a: GetInsightRuleReportRequest
@@ -155,6 +171,15 @@ trait CloudWatchInterpreter[M[_]] { outer =>
     override def getMetricWidgetImage(
         a: GetMetricWidgetImageRequest
     ): Kleisli[M, CloudWatchAsyncClient, GetMetricWidgetImageResponse] = eff(_.getMetricWidgetImage(a))
+    override def getOTelEnrichment(
+        a: GetOTelEnrichmentRequest
+    ): Kleisli[M, CloudWatchAsyncClient, GetOTelEnrichmentResponse] = eff(_.getOTelEnrichment(a))
+    override def listAlarmMuteRules(
+        a: ListAlarmMuteRulesRequest
+    ): Kleisli[M, CloudWatchAsyncClient, ListAlarmMuteRulesResponse] = eff(_.listAlarmMuteRules(a))
+    override def listAlarmMuteRulesPaginator(
+        a: ListAlarmMuteRulesRequest
+    ): Kleisli[M, CloudWatchAsyncClient, ListAlarmMuteRulesPublisher] = primitive(_.listAlarmMuteRulesPaginator(a))
     override def listDashboards: Kleisli[M, CloudWatchAsyncClient, ListDashboardsResponse] = eff(_.listDashboards)
     override def listDashboards(a: ListDashboardsRequest): Kleisli[M, CloudWatchAsyncClient, ListDashboardsResponse] =
       eff(_.listDashboards(a))
@@ -190,6 +215,9 @@ trait CloudWatchInterpreter[M[_]] { outer =>
     override def listTagsForResource(
         a: ListTagsForResourceRequest
     ): Kleisli[M, CloudWatchAsyncClient, ListTagsForResourceResponse] = eff(_.listTagsForResource(a))
+    override def putAlarmMuteRule(
+        a: PutAlarmMuteRuleRequest
+    ): Kleisli[M, CloudWatchAsyncClient, PutAlarmMuteRuleResponse] = eff(_.putAlarmMuteRule(a))
     override def putAnomalyDetector(
         a: PutAnomalyDetectorRequest
     ): Kleisli[M, CloudWatchAsyncClient, PutAnomalyDetectorResponse] = eff(_.putAnomalyDetector(a))
@@ -201,6 +229,9 @@ trait CloudWatchInterpreter[M[_]] { outer =>
     )
     override def putInsightRule(a: PutInsightRuleRequest): Kleisli[M, CloudWatchAsyncClient, PutInsightRuleResponse] =
       eff(_.putInsightRule(a))
+    override def putLogAlarm(a: PutLogAlarmRequest): Kleisli[M, CloudWatchAsyncClient, PutLogAlarmResponse] = eff(
+      _.putLogAlarm(a)
+    )
     override def putManagedInsightRules(
         a: PutManagedInsightRulesRequest
     ): Kleisli[M, CloudWatchAsyncClient, PutManagedInsightRulesResponse] = eff(_.putManagedInsightRules(a))
@@ -221,9 +252,15 @@ trait CloudWatchInterpreter[M[_]] { outer =>
     override def startMetricStreams(
         a: StartMetricStreamsRequest
     ): Kleisli[M, CloudWatchAsyncClient, StartMetricStreamsResponse] = eff(_.startMetricStreams(a))
+    override def startOTelEnrichment(
+        a: StartOTelEnrichmentRequest
+    ): Kleisli[M, CloudWatchAsyncClient, StartOTelEnrichmentResponse] = eff(_.startOTelEnrichment(a))
     override def stopMetricStreams(
         a: StopMetricStreamsRequest
     ): Kleisli[M, CloudWatchAsyncClient, StopMetricStreamsResponse] = eff(_.stopMetricStreams(a))
+    override def stopOTelEnrichment(
+        a: StopOTelEnrichmentRequest
+    ): Kleisli[M, CloudWatchAsyncClient, StopOTelEnrichmentResponse] = eff(_.stopOTelEnrichment(a))
     override def tagResource(a: TagResourceRequest): Kleisli[M, CloudWatchAsyncClient, TagResourceResponse] = eff(
       _.tagResource(a)
     )
@@ -234,7 +271,12 @@ trait CloudWatchInterpreter[M[_]] { outer =>
 
     def lens[E](f: E => CloudWatchAsyncClient): CloudWatchAsyncClientOp[Kleisli[M, E, *]] =
       new CloudWatchAsyncClientOp[Kleisli[M, E, *]] {
-        override def close: Kleisli[M, E, Unit] = Kleisli(e => primitive1(f(e).close))
+        override def associateDatasetKmsKey(
+            a: AssociateDatasetKmsKeyRequest
+        ): Kleisli[M, E, AssociateDatasetKmsKeyResponse] = Kleisli(e => eff1(f(e).associateDatasetKmsKey(a)))
+        override def close: Kleisli[M, E, Unit]          = Kleisli(e => primitive1(f(e).close))
+        override def deleteAlarmMuteRule(a: DeleteAlarmMuteRuleRequest): Kleisli[M, E, DeleteAlarmMuteRuleResponse] =
+          Kleisli(e => eff1(f(e).deleteAlarmMuteRule(a)))
         override def deleteAlarms(a: DeleteAlarmsRequest): Kleisli[M, E, DeleteAlarmsResponse] =
           Kleisli(e => eff1(f(e).deleteAlarms(a)))
         override def deleteAnomalyDetector(
@@ -286,12 +328,19 @@ trait CloudWatchInterpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).disableAlarmActions(a)))
         override def disableInsightRules(a: DisableInsightRulesRequest): Kleisli[M, E, DisableInsightRulesResponse] =
           Kleisli(e => eff1(f(e).disableInsightRules(a)))
+        override def disassociateDatasetKmsKey(
+            a: DisassociateDatasetKmsKeyRequest
+        ): Kleisli[M, E, DisassociateDatasetKmsKeyResponse] = Kleisli(e => eff1(f(e).disassociateDatasetKmsKey(a)))
         override def enableAlarmActions(a: EnableAlarmActionsRequest): Kleisli[M, E, EnableAlarmActionsResponse] =
           Kleisli(e => eff1(f(e).enableAlarmActions(a)))
         override def enableInsightRules(a: EnableInsightRulesRequest): Kleisli[M, E, EnableInsightRulesResponse] =
           Kleisli(e => eff1(f(e).enableInsightRules(a)))
+        override def getAlarmMuteRule(a: GetAlarmMuteRuleRequest): Kleisli[M, E, GetAlarmMuteRuleResponse] =
+          Kleisli(e => eff1(f(e).getAlarmMuteRule(a)))
         override def getDashboard(a: GetDashboardRequest): Kleisli[M, E, GetDashboardResponse] =
           Kleisli(e => eff1(f(e).getDashboard(a)))
+        override def getDataset(a: GetDatasetRequest): Kleisli[M, E, GetDatasetResponse] =
+          Kleisli(e => eff1(f(e).getDataset(a)))
         override def getInsightRuleReport(a: GetInsightRuleReportRequest): Kleisli[M, E, GetInsightRuleReportResponse] =
           Kleisli(e => eff1(f(e).getInsightRuleReport(a)))
         override def getMetricData(a: GetMetricDataRequest): Kleisli[M, E, GetMetricDataResponse] =
@@ -304,6 +353,13 @@ trait CloudWatchInterpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).getMetricStream(a)))
         override def getMetricWidgetImage(a: GetMetricWidgetImageRequest): Kleisli[M, E, GetMetricWidgetImageResponse] =
           Kleisli(e => eff1(f(e).getMetricWidgetImage(a)))
+        override def getOTelEnrichment(a: GetOTelEnrichmentRequest): Kleisli[M, E, GetOTelEnrichmentResponse] =
+          Kleisli(e => eff1(f(e).getOTelEnrichment(a)))
+        override def listAlarmMuteRules(a: ListAlarmMuteRulesRequest): Kleisli[M, E, ListAlarmMuteRulesResponse] =
+          Kleisli(e => eff1(f(e).listAlarmMuteRules(a)))
+        override def listAlarmMuteRulesPaginator(
+            a: ListAlarmMuteRulesRequest
+        ): Kleisli[M, E, ListAlarmMuteRulesPublisher] = Kleisli(e => primitive1(f(e).listAlarmMuteRulesPaginator(a)))
         override def listDashboards: Kleisli[M, E, ListDashboardsResponse] = Kleisli(e => eff1(f(e).listDashboards))
         override def listDashboards(a: ListDashboardsRequest): Kleisli[M, E, ListDashboardsResponse] =
           Kleisli(e => eff1(f(e).listDashboards(a)))
@@ -332,6 +388,8 @@ trait CloudWatchInterpreter[M[_]] { outer =>
           Kleisli(e => primitive1(f(e).listMetricsPaginator(a)))
         override def listTagsForResource(a: ListTagsForResourceRequest): Kleisli[M, E, ListTagsForResourceResponse] =
           Kleisli(e => eff1(f(e).listTagsForResource(a)))
+        override def putAlarmMuteRule(a: PutAlarmMuteRuleRequest): Kleisli[M, E, PutAlarmMuteRuleResponse] =
+          Kleisli(e => eff1(f(e).putAlarmMuteRule(a)))
         override def putAnomalyDetector(a: PutAnomalyDetectorRequest): Kleisli[M, E, PutAnomalyDetectorResponse] =
           Kleisli(e => eff1(f(e).putAnomalyDetector(a)))
         override def putCompositeAlarm(a: PutCompositeAlarmRequest): Kleisli[M, E, PutCompositeAlarmResponse] =
@@ -340,6 +398,8 @@ trait CloudWatchInterpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).putDashboard(a)))
         override def putInsightRule(a: PutInsightRuleRequest): Kleisli[M, E, PutInsightRuleResponse] =
           Kleisli(e => eff1(f(e).putInsightRule(a)))
+        override def putLogAlarm(a: PutLogAlarmRequest): Kleisli[M, E, PutLogAlarmResponse] =
+          Kleisli(e => eff1(f(e).putLogAlarm(a)))
         override def putManagedInsightRules(
             a: PutManagedInsightRulesRequest
         ): Kleisli[M, E, PutManagedInsightRulesResponse] = Kleisli(e => eff1(f(e).putManagedInsightRules(a)))
@@ -356,8 +416,12 @@ trait CloudWatchInterpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).setAlarmState(a)))
         override def startMetricStreams(a: StartMetricStreamsRequest): Kleisli[M, E, StartMetricStreamsResponse] =
           Kleisli(e => eff1(f(e).startMetricStreams(a)))
+        override def startOTelEnrichment(a: StartOTelEnrichmentRequest): Kleisli[M, E, StartOTelEnrichmentResponse] =
+          Kleisli(e => eff1(f(e).startOTelEnrichment(a)))
         override def stopMetricStreams(a: StopMetricStreamsRequest): Kleisli[M, E, StopMetricStreamsResponse] =
           Kleisli(e => eff1(f(e).stopMetricStreams(a)))
+        override def stopOTelEnrichment(a: StopOTelEnrichmentRequest): Kleisli[M, E, StopOTelEnrichmentResponse] =
+          Kleisli(e => eff1(f(e).stopOTelEnrichment(a)))
         override def tagResource(a: TagResourceRequest): Kleisli[M, E, TagResourceResponse] =
           Kleisli(e => eff1(f(e).tagResource(a)))
         override def untagResource(a: UntagResourceRequest): Kleisli[M, E, UntagResourceResponse] =
@@ -392,7 +456,13 @@ trait CloudWatchInterpreter[M[_]] { outer =>
   def create(client: CloudWatchAsyncClient): CloudWatchAsyncClientOp[M] = new CloudWatchAsyncClientOp[M] {
 
     // domain-specific operations are implemented in terms of `primitive`
-    override def close: M[Unit]                                                = primitive1(client.close)
+    override def associateDatasetKmsKey(a: AssociateDatasetKmsKeyRequest): M[AssociateDatasetKmsKeyResponse] = eff1(
+      client.associateDatasetKmsKey(a)
+    )
+    override def close: M[Unit] = primitive1(client.close)
+    override def deleteAlarmMuteRule(a: DeleteAlarmMuteRuleRequest): M[DeleteAlarmMuteRuleResponse] = eff1(
+      client.deleteAlarmMuteRule(a)
+    )
     override def deleteAlarms(a: DeleteAlarmsRequest): M[DeleteAlarmsResponse] = eff1(client.deleteAlarms(a))
     override def deleteAnomalyDetector(a: DeleteAnomalyDetectorRequest): M[DeleteAnomalyDetectorResponse] = eff1(
       client.deleteAnomalyDetector(a)
@@ -442,13 +512,19 @@ trait CloudWatchInterpreter[M[_]] { outer =>
     override def disableInsightRules(a: DisableInsightRulesRequest): M[DisableInsightRulesResponse] = eff1(
       client.disableInsightRules(a)
     )
+    override def disassociateDatasetKmsKey(a: DisassociateDatasetKmsKeyRequest): M[DisassociateDatasetKmsKeyResponse] =
+      eff1(client.disassociateDatasetKmsKey(a))
     override def enableAlarmActions(a: EnableAlarmActionsRequest): M[EnableAlarmActionsResponse] = eff1(
       client.enableAlarmActions(a)
     )
     override def enableInsightRules(a: EnableInsightRulesRequest): M[EnableInsightRulesResponse] = eff1(
       client.enableInsightRules(a)
     )
+    override def getAlarmMuteRule(a: GetAlarmMuteRuleRequest): M[GetAlarmMuteRuleResponse] = eff1(
+      client.getAlarmMuteRule(a)
+    )
     override def getDashboard(a: GetDashboardRequest): M[GetDashboardResponse] = eff1(client.getDashboard(a))
+    override def getDataset(a: GetDatasetRequest): M[GetDatasetResponse]       = eff1(client.getDataset(a))
     override def getInsightRuleReport(a: GetInsightRuleReportRequest): M[GetInsightRuleReportResponse] = eff1(
       client.getInsightRuleReport(a)
     )
@@ -464,6 +540,15 @@ trait CloudWatchInterpreter[M[_]] { outer =>
     )
     override def getMetricWidgetImage(a: GetMetricWidgetImageRequest): M[GetMetricWidgetImageResponse] = eff1(
       client.getMetricWidgetImage(a)
+    )
+    override def getOTelEnrichment(a: GetOTelEnrichmentRequest): M[GetOTelEnrichmentResponse] = eff1(
+      client.getOTelEnrichment(a)
+    )
+    override def listAlarmMuteRules(a: ListAlarmMuteRulesRequest): M[ListAlarmMuteRulesResponse] = eff1(
+      client.listAlarmMuteRules(a)
+    )
+    override def listAlarmMuteRulesPaginator(a: ListAlarmMuteRulesRequest): M[ListAlarmMuteRulesPublisher] = primitive1(
+      client.listAlarmMuteRulesPaginator(a)
     )
     override def listDashboards: M[ListDashboardsResponse]                           = eff1(client.listDashboards)
     override def listDashboards(a: ListDashboardsRequest): M[ListDashboardsResponse] = eff1(client.listDashboards(a))
@@ -492,6 +577,9 @@ trait CloudWatchInterpreter[M[_]] { outer =>
     override def listTagsForResource(a: ListTagsForResourceRequest): M[ListTagsForResourceResponse] = eff1(
       client.listTagsForResource(a)
     )
+    override def putAlarmMuteRule(a: PutAlarmMuteRuleRequest): M[PutAlarmMuteRuleResponse] = eff1(
+      client.putAlarmMuteRule(a)
+    )
     override def putAnomalyDetector(a: PutAnomalyDetectorRequest): M[PutAnomalyDetectorResponse] = eff1(
       client.putAnomalyDetector(a)
     )
@@ -500,6 +588,7 @@ trait CloudWatchInterpreter[M[_]] { outer =>
     )
     override def putDashboard(a: PutDashboardRequest): M[PutDashboardResponse]       = eff1(client.putDashboard(a))
     override def putInsightRule(a: PutInsightRuleRequest): M[PutInsightRuleResponse] = eff1(client.putInsightRule(a))
+    override def putLogAlarm(a: PutLogAlarmRequest): M[PutLogAlarmResponse]          = eff1(client.putLogAlarm(a))
     override def putManagedInsightRules(a: PutManagedInsightRulesRequest): M[PutManagedInsightRulesResponse] = eff1(
       client.putManagedInsightRules(a)
     )
@@ -516,8 +605,14 @@ trait CloudWatchInterpreter[M[_]] { outer =>
     override def startMetricStreams(a: StartMetricStreamsRequest): M[StartMetricStreamsResponse] = eff1(
       client.startMetricStreams(a)
     )
+    override def startOTelEnrichment(a: StartOTelEnrichmentRequest): M[StartOTelEnrichmentResponse] = eff1(
+      client.startOTelEnrichment(a)
+    )
     override def stopMetricStreams(a: StopMetricStreamsRequest): M[StopMetricStreamsResponse] = eff1(
       client.stopMetricStreams(a)
+    )
+    override def stopOTelEnrichment(a: StopOTelEnrichmentRequest): M[StopOTelEnrichmentResponse] = eff1(
+      client.stopOTelEnrichment(a)
     )
     override def tagResource(a: TagResourceRequest): M[TagResourceResponse]       = eff1(client.tagResource(a))
     override def untagResource(a: UntagResourceRequest): M[UntagResourceResponse] = eff1(client.untagResource(a))
