@@ -109,6 +109,7 @@
     <li class="level1 nav-leaf"><a href="#import">Import</a></li>
     <li class="level1 nav-leaf"><a href="#usage">Usage</a></li>
     <li class="level1 nav-leaf"><a href="#full-example">Full Example</a></li>
+    <li class="level1 nav-leaf"><a href="#long-polling">Long polling</a></li>
     <li class="level1 nav-leaf"><a href="#notes">Notes</a></li>
   </ul>
 
@@ -130,6 +131,7 @@
         <p>This module provides the <code>SQS[F]</code> algebra:</p>
         <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">trait</span><span> </span><span class="type-name">SQS</span><span>[</span><span class="type-name">F</span><span>[</span><span class="identifier">_</span><span>]] {
     </span><span class="keyword">def</span><span> </span><span class="declaration-name">sqsStream</span><span>: </span><span class="type-name">Stream</span><span>[</span><span class="type-name">F</span><span>, </span><span class="type-name">Message</span><span>]
+    </span><span class="keyword">def</span><span> </span><span class="declaration-name">sqsStreamBatched</span><span>: </span><span class="type-name">Stream</span><span>[</span><span class="type-name">F</span><span>, </span><span class="type-name">Chunk</span><span>[</span><span class="type-name">Message</span><span>]]
     </span><span class="keyword">def</span><span> </span><span class="declaration-name">changeMessageVisibilityPipe</span><span>(</span><span class="identifier">timeout</span><span>: </span><span class="type-name">FiniteDuration</span><span>): </span><span class="type-name">Pipe</span><span>[</span><span class="type-name">F</span><span>, </span><span class="type-name">Message</span><span>, </span><span class="type-name">Message</span><span>]
     </span><span class="keyword">def</span><span> </span><span class="declaration-name">deleteMessagePipe</span><span>: </span><span class="type-name">Pipe</span><span>[</span><span class="type-name">F</span><span>, </span><span class="type-name">Message</span><span>, </span><span class="type-name">DeleteMessageResponse</span><span>]
     </span><span class="keyword">def</span><span> </span><span class="declaration-name">sendMessagePipe</span><span>: </span><span class="type-name">Pipe</span><span>[</span><span class="type-name">F</span><span>, </span><span class="type-name">SQS</span><span>.</span><span class="type-name">MsgBody</span><span>, </span><span class="type-name">SendMessageResponse</span><span>]
@@ -197,11 +199,37 @@
     }
 }</span></code></pre>
         
+        <h3 id="long-polling" class="section"><a class="anchor-link left" href="#long-polling"><i class="icofont-laika link">&#xef71;</i></a>Long polling</h3>
+        <p><code>SQS.createWithReceiveRequest</code> applies a function to every <code>ReceiveMessageRequest</code>. With long polling, each receive waits up to 20 seconds for messages, so there&#39;s no need to pause between receives:</p>
+        <pre><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">cats</span><span>.</span><span class="identifier">effect</span><span>.*
+</span><span class="keyword">import</span><span> </span><span class="identifier">fs2</span><span>.</span><span class="identifier">aws</span><span>.</span><span class="identifier">sqs</span><span>.{</span><span class="type-name">SQS</span><span>, </span><span class="type-name">SqsConfig</span><span>}
+</span><span class="keyword">import</span><span> </span><span class="identifier">io</span><span>.</span><span class="identifier">laserdisc</span><span>.</span><span class="identifier">pure</span><span>.</span><span class="identifier">sqs</span><span>.</span><span class="identifier">tagless</span><span>.</span><span class="type-name">SqsInterpreter</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">scala</span><span>.</span><span class="identifier">concurrent</span><span>.</span><span class="identifier">duration</span><span>.*
+
+</span><span class="keyword">val</span><span> </span><span class="identifier">longPolling</span><span>: </span><span class="type-name">IO</span><span>[</span><span class="type-name">Unit</span><span>] =
+  </span><span class="type-name">SqsInterpreter</span><span>[</span><span class="type-name">IO</span><span>].</span><span class="identifier">resource</span><span>.</span><span class="identifier">use</span><span> { </span><span class="identifier">sqsOp</span><span> =&gt;
+    </span><span class="type-name">SQS</span><span>
+      .</span><span class="identifier">createWithReceiveRequest</span><span>[</span><span class="type-name">IO</span><span>](
+        </span><span class="type-name">SqsConfig</span><span>(</span><span class="string-literal">&quot;https://sqs.us-east-1.amazonaws.com/123456789012/my-queue&quot;</span><span>, </span><span class="identifier">pollRate</span><span> = </span><span class="type-name">Duration</span><span>.</span><span class="type-name">Zero</span><span>),
+        </span><span class="identifier">sqsOp</span><span>,
+        </span><span class="identifier">_</span><span>.</span><span class="identifier">waitTimeSeconds</span><span>(</span><span class="number-literal">20</span><span>)
+      )
+      .</span><span class="identifier">flatMap</span><span> { </span><span class="identifier">sqs</span><span> =&gt;
+        </span><span class="identifier">sqs</span><span>.</span><span class="identifier">sqsStream</span><span>
+          .</span><span class="identifier">evalTap</span><span>(</span><span class="identifier">msg</span><span> =&gt; </span><span class="type-name">IO</span><span>.</span><span class="identifier">println</span><span>(</span><span class="identifier">msg</span><span>.</span><span class="identifier">body</span><span>()))
+          .</span><span class="identifier">through</span><span>(</span><span class="identifier">sqs</span><span>.</span><span class="identifier">deleteMessagePipe</span><span>)
+          .</span><span class="identifier">compile</span><span>
+          .</span><span class="identifier">drain</span><span>
+      }
+  }</span></code></pre>
+        
         <h3 id="notes" class="section"><a class="anchor-link left" href="#notes"><i class="icofont-laika link">&#xef71;</i></a>Notes</h3>
         <ul>
-          <li><code>sqsStream</code> polls the queue at the configured <code>pollRate</code> (default 3 seconds) and emits raw SDK <code>Message</code>s, fetching up to <code>fetchMessageCount</code> messages per poll (default 10; must be 1 to 10).</li>
+          <li><code>sqsStream</code> polls the queue at the configured <code>pollRate</code> (default 3 seconds) and emits raw SDK <code>Message</code>s, fetching up to <code>fetchMessageCount</code> messages per poll (default 10; must be 1 to 10). Only use <code>pollRate = Duration.Zero</code> with long polling (per request, or the queue&#39;s <code>ReceiveMessageWaitTimeSeconds</code>); without it, the stream busy-loops on empty receives.</li>
+          <li>Besides long polling, the <code>createWithReceiveRequest</code> function can set <code>_.visibilityTimeout(...)</code> per receive, or <code>_.messageSystemAttributeNames(MessageSystemAttributeName.APPROXIMATE_RECEIVE_COUNT)</code> to spot redeliveries. The queue URL and message count always come from <code>SqsConfig</code>.</li>
+          <li>A receive hides up to <code>fetchMessageCount</code> messages at once, but <code>sqsStream</code> hands them over one at a time. If handling can outlast the queue&#39;s visibility timeout, use <code>fetchMessageCount = 1</code>, or consume <code>sqsStreamBatched</code> (one chunk per receive) and extend or delete each batch as a whole.</li>
           <li>Use <code>deleteMessagePipe</code> to acknowledge messages by deleting them from the queue.</li>
-          <li>Use <code>changeMessageVisibilityPipe(timeout)</code> to extend the visibility timeout of in-flight messages while you process them.</li>
+          <li><code>changeMessageVisibilityPipe(timeout)</code> sets each message&#39;s timeout once, rounded up to whole seconds. It isn&#39;t a heartbeat: to keep a message hidden during long processing, call it again before the timeout runs out.</li>
         </ul>
 
         

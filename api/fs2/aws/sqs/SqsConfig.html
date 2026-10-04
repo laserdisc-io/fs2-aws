@@ -19,7 +19,13 @@
     fetchMessageCount
    </dt>
    <dd class="body-medium">
-    <p>max number of messages to return in one query. Must be between 1 and 10. Visit <a href="https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_ReceiveMessage.html">Receive Message API</a> for more info</p>
+    <p>max number of messages to return in one query. Must be between 1 and 10. Visit <a href="https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_ReceiveMessage.html">Receive Message API</a> for more info A receive hides all its messages at once, but <code>sqsStream</code> hands them over one at a time, so a heartbeat around the current message leaves the rest of the batch to time out. If handling can outlast the queue's visibility timeout, use 1 or extend the whole batch (<code>sqsStreamBatched</code>).</p>
+   </dd>
+   <dt class="body-small">
+    pollRate
+   </dt>
+   <dd class="body-medium">
+    <p>interval between receive calls. Zero suits long polling (<code>_.waitTimeSeconds(20)</code> via <code>SQS.createWithReceiveRequest</code>, or the queue's <code>ReceiveMessageWaitTimeSeconds</code>), where each call waits for messages itself. Without long polling, zero makes the stream busy-loop on empty receives.</p>
    </dd>
   </dl>
   <h2 class="h500">Attributes</h2>
@@ -28,7 +34,7 @@
     Source
    </dt>
    <dd class="body-medium">
-    <a href="https://github.com/laserdisc-io/fs2-aws/blob/5f8217330507966ab622e54a6b91f56856191e63/fs2-aws-sqs/src/main/scala/fs2/aws/sqs/SqsConfig.scala#L8" target="_blank">SqsConfig.scala</a>
+    <a href="https://github.com/laserdisc-io/fs2-aws/blob/c8394c1a67a770c43c6b32ad8735673151437779/fs2-aws-sqs/src/main/scala/fs2/aws/sqs/SqsConfig.scala#L15" target="_blank">SqsConfig.scala</a>
    </dd>
    <dt class="body-small">
     Graph
