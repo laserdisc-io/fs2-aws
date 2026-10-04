@@ -210,8 +210,12 @@
         
         <h2 id="code-generation" class="section"><a class="anchor-link left" href="#code-generation"><i class="icofont-laika link">&#xef71;</i></a>Code generation</h2>
         <p>The sources are generated from the SDK client interfaces by the <code>taglessGen</code> sbt task
-        (see <code>project/TaglessGen.scala</code>). To regenerate after an SDK bump:</p>
+        (see <code>project/TaglessGen.scala</code>). The task reads the SDK version from <code>project/build.sbt</code>, not
+        from <code>project/Dependencies.scala</code>. To regenerate after an SDK bump, set <code>AwsSdk</code> in
+        <code>project/build.sbt</code> and <code>V.AwsSdk</code> in <code>project/Dependencies.scala</code> to the same version, then run:</p>
         <pre class="keep-together pdf epub"><code class="nohighlight"><span>make generate-pure-aws</span></code></pre>
+        <p>See <a href="https://github.com/laserdisc-io/fs2-aws/blob/main/AGENTS.md">AGENTS.md</a> for the full steps and
+        the CI checks.</p>
 
         
 <hr class="footer-rule"/>
