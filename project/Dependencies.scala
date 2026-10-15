@@ -6,7 +6,7 @@ object Dependencies {
 
   object V {
     val AwsSdk           = "2.54.16"
-    val Circe            = "0.14.16"
+    val Circe            = "0.14.17"
     val Munit            = "1.3.6"
     val Fs2              = "3.14.0"
     val Refined          = "0.11.4"
@@ -14,7 +14,7 @@ object Dependencies {
     val MockitoScalaTest = "1.17.5"
     val MockitoCore      = "5.23.0"
     val CE               = "3.7.1"
-    val Logback          = "1.6.3"
+    val Logback          = "1.6.5"
     val SLF4J            = "2.0.19"
     val Log4Cats         = "2.8.0"
   }
