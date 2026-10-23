@@ -33,48 +33,49 @@ object StreamScan {
           pageSize: Int
       ): Stream[F, Chunk[JMap[String, AttributeValue]]] =
         if (pageSize <= 0) Stream.raiseError[F](new IllegalArgumentException("pageSize must be greater than 0"))
-        else for {
-          dispatcher <- Stream.resource(Dispatcher.parallel[F])
-          queue      <- Stream.eval(Queue.bounded[F, Option[Chunk[JMap[String, AttributeValue]]]](1))
-          sub        <- Stream.eval(Ref[F].of[Option[Subscription]](None))
-          error      <- Stream.eval(Deferred[F, Throwable])
-          _          <- Stream.eval(
-            ddb
-              .scanPaginator(scanRequest.toBuilder().limit(pageSize).build())
-              .map { publisher =>
-                // Limit each DynamoDB response to pageSize items and request one response at a time.
-                // The bounded FS2 queue provides back pressure while a page is consumed.
-                publisher.subscribe(new Subscriber[ScanResponse] {
+        else
+          for {
+            dispatcher <- Stream.resource(Dispatcher.parallel[F])
+            queue      <- Stream.eval(Queue.bounded[F, Option[Chunk[JMap[String, AttributeValue]]]](1))
+            sub        <- Stream.eval(Ref[F].of[Option[Subscription]](None))
+            error      <- Stream.eval(Deferred[F, Throwable])
+            _          <- Stream.eval(
+              ddb
+                .scanPaginator(scanRequest.toBuilder().limit(pageSize).build())
+                .map { publisher =>
+                  // Limit each DynamoDB response to pageSize items and request one response at a time.
+                  // The bounded FS2 queue provides back pressure while a page is consumed.
+                  publisher.subscribe(new Subscriber[ScanResponse] {
 
-                  override def onSubscribe(s: Subscription): Unit =
-                    dispatcher
-                      .unsafeRunSync(
-                        sub.set(s.some) >> Async[F].delay(s.request(1))
-                      )
+                    override def onSubscribe(s: Subscription): Unit =
+                      dispatcher
+                        .unsafeRunSync(
+                          sub.set(s.some) >> Async[F].delay(s.request(1))
+                        )
 
-                  override def onNext(t: ScanResponse): Unit =
-                    dispatcher
-                      .unsafeRunSync(
-                        for {
-                          _ <- queue.offer(Chunk(t.items().asScala.toList*).some)
-                          s <- sub.get
-                          _ <- Async[F].delay(s.map(_.request(1)))
-                        } yield ()
-                      )
+                    override def onNext(t: ScanResponse): Unit =
+                      dispatcher
+                        .unsafeRunSync(
+                          for {
+                            _ <- queue.offer(Chunk(t.items().asScala.toList*).some)
+                            s <- sub.get
+                            _ <- Async[F].delay(s.map(_.request(1)))
+                          } yield ()
+                        )
 
-                  override def onError(t: Throwable): Unit =
-                    dispatcher.unsafeRunSync(error.complete(t) >> queue.offer(None))
+                    override def onError(t: Throwable): Unit =
+                      dispatcher.unsafeRunSync(error.complete(t) >> queue.offer(None))
 
-                  override def onComplete(): Unit =
-                    dispatcher.unsafeRunSync(queue.offer(None))
-                })
-              }
-          )
-          stream <- (Stream.fromQueueNoneTerminated(queue) ++ Stream.eval(error.tryGet).flatMap {
-            case Some(value) => Stream.raiseError[F](value)
-            case None        => Stream.empty
-          }).onFinalize(sub.get.flatMap(_.traverse_(s => Async[F].delay(s.cancel()))))
-        } yield stream
+                    override def onComplete(): Unit =
+                      dispatcher.unsafeRunSync(queue.offer(None))
+                  })
+                }
+            )
+            stream <- (Stream.fromQueueNoneTerminated(queue) ++ Stream.eval(error.tryGet).flatMap {
+              case Some(value) => Stream.raiseError[F](value)
+              case None        => Stream.empty
+            }).onFinalize(sub.get.flatMap(_.traverse_(s => Async[F].delay(s.cancel()))))
+          } yield stream
 
     }
 }

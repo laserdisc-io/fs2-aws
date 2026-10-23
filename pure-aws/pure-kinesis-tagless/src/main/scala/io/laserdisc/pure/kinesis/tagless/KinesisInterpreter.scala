@@ -202,6 +202,11 @@ trait KinesisInterpreter[M[_]] { outer =>
     override def updateStreamMode(
         a: UpdateStreamModeRequest
     ): Kleisli[M, KinesisAsyncClient, UpdateStreamModeResponse] = eff(_.updateStreamMode(a))
+    override def updateStreamRecordDistributionStrategy(
+        a: UpdateStreamRecordDistributionStrategyRequest
+    ): Kleisli[M, KinesisAsyncClient, UpdateStreamRecordDistributionStrategyResponse] = eff(
+      _.updateStreamRecordDistributionStrategy(a)
+    )
     override def updateStreamWarmThroughput(
         a: UpdateStreamWarmThroughputRequest
     ): Kleisli[M, KinesisAsyncClient, UpdateStreamWarmThroughputResponse]   = eff(_.updateStreamWarmThroughput(a))
@@ -325,6 +330,10 @@ trait KinesisInterpreter[M[_]] { outer =>
           Kleisli(e => eff1(f(e).updateShardCount(a)))
         override def updateStreamMode(a: UpdateStreamModeRequest): Kleisli[M, E, UpdateStreamModeResponse] =
           Kleisli(e => eff1(f(e).updateStreamMode(a)))
+        override def updateStreamRecordDistributionStrategy(
+            a: UpdateStreamRecordDistributionStrategyRequest
+        ): Kleisli[M, E, UpdateStreamRecordDistributionStrategyResponse] =
+          Kleisli(e => eff1(f(e).updateStreamRecordDistributionStrategy(a)))
         override def updateStreamWarmThroughput(
             a: UpdateStreamWarmThroughputRequest
         ): Kleisli[M, E, UpdateStreamWarmThroughputResponse]   = Kleisli(e => eff1(f(e).updateStreamWarmThroughput(a)))
@@ -468,6 +477,9 @@ trait KinesisInterpreter[M[_]] { outer =>
     override def updateStreamMode(a: UpdateStreamModeRequest): M[UpdateStreamModeResponse] = eff1(
       client.updateStreamMode(a)
     )
+    override def updateStreamRecordDistributionStrategy(
+        a: UpdateStreamRecordDistributionStrategyRequest
+    ): M[UpdateStreamRecordDistributionStrategyResponse] = eff1(client.updateStreamRecordDistributionStrategy(a))
     override def updateStreamWarmThroughput(
         a: UpdateStreamWarmThroughputRequest
     ): M[UpdateStreamWarmThroughputResponse]   = eff1(client.updateStreamWarmThroughput(a))

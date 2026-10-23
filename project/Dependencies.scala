@@ -5,17 +5,17 @@ import sbt.{Def, *}
 object Dependencies {
 
   object V {
-    val AwsSdk           = "2.54.20"
+    val AwsSdk           = "2.57.3"
     val Circe            = "0.14.17"
     val Munit            = "1.3.6"
     val Fs2              = "3.14.0"
     val Refined          = "0.11.4"
     val ScalaTest        = "3.2.20"
     val MockitoScalaTest = "1.17.5"
-    val MockitoCore      = "5.23.0"
+    val MockitoCore      = "5.24.0"
     val CE               = "3.7.1"
     val Logback          = "1.6.5"
-    val SLF4J            = "2.0.19"
+    val SLF4J            = "2.0.20"
     val Log4Cats         = "2.8.0"
   }
 
@@ -28,7 +28,7 @@ object Dependencies {
 
   val KinesisClient = libraryDependencies += "software.amazon.kinesis" % "amazon-kinesis-client" % "3.5.3"
 
-  val KinesisProducer = libraryDependencies += "software.amazon.kinesis" % "amazon-kinesis-producer" % "1.0.8"
+  val KinesisProducer = libraryDependencies += "software.amazon.kinesis" % "amazon-kinesis-producer" % "1.1.0"
 
   val newTypes = libraryDependencies += "io.monix" %% "newtypes-core" % "1.0.0"
 
@@ -40,7 +40,7 @@ object Dependencies {
   val Testing = libraryDependencies ++= (
     Seq(
       "org.scalameta" %% "munit"             % V.Munit,
-      "org.typelevel" %% "munit-cats-effect" % "2.2.0",
+      "org.typelevel" %% "munit-cats-effect" % "2.2.1",
       "org.scalatest" %% "scalatest"         % V.ScalaTest,
       "org.mockito"    % "mockito-core"      % V.MockitoCore,
       "org.typelevel" %% "cats-effect"       % V.CE,

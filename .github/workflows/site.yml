@@ -24,7 +24,7 @@ jobs:
           java-version: 21
 
       - name: Setup sbt
-        uses: sbt/setup-sbt@v1.5.9
+        uses: sbt/setup-sbt@v1
 
       - name: Generate site
         run: sbt siteDocs/tlSite
