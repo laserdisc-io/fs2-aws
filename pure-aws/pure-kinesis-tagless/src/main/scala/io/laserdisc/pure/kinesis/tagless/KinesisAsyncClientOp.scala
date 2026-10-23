@@ -64,6 +64,7 @@ trait KinesisAsyncClientOp[F[_]] {
   def updateMaxRecordSize(a: UpdateMaxRecordSizeRequest): F[UpdateMaxRecordSizeResponse]
   def updateShardCount(a: UpdateShardCountRequest): F[UpdateShardCountResponse]
   def updateStreamMode(a: UpdateStreamModeRequest): F[UpdateStreamModeResponse]
+  def updateStreamRecordDistributionStrategy(a: UpdateStreamRecordDistributionStrategyRequest): F[UpdateStreamRecordDistributionStrategyResponse]
   def updateStreamWarmThroughput(a: UpdateStreamWarmThroughputRequest): F[UpdateStreamWarmThroughputResponse]
   def waiter: F[KinesisAsyncWaiter]
 

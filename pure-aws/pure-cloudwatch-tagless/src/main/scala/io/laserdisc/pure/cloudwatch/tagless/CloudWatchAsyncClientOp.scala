@@ -21,12 +21,14 @@ trait CloudWatchAsyncClientOp[F[_]] {
 
   def associateDatasetKmsKey(a: AssociateDatasetKmsKeyRequest): F[AssociateDatasetKmsKeyResponse]
   def close: F[Unit]
+  def createResourceMetricsConfiguration(a: CreateResourceMetricsConfigurationRequest): F[CreateResourceMetricsConfigurationResponse]
   def deleteAlarmMuteRule(a: DeleteAlarmMuteRuleRequest): F[DeleteAlarmMuteRuleResponse]
   def deleteAlarms(a: DeleteAlarmsRequest): F[DeleteAlarmsResponse]
   def deleteAnomalyDetector(a: DeleteAnomalyDetectorRequest): F[DeleteAnomalyDetectorResponse]
   def deleteDashboards(a: DeleteDashboardsRequest): F[DeleteDashboardsResponse]
   def deleteInsightRules(a: DeleteInsightRulesRequest): F[DeleteInsightRulesResponse]
   def deleteMetricStream(a: DeleteMetricStreamRequest): F[DeleteMetricStreamResponse]
+  def deleteResourceMetricsConfiguration(a: DeleteResourceMetricsConfigurationRequest): F[DeleteResourceMetricsConfigurationResponse]
   def describeAlarmContributors(a: DescribeAlarmContributorsRequest): F[DescribeAlarmContributorsResponse]
   def describeAlarmHistory: F[DescribeAlarmHistoryResponse]
   def describeAlarmHistory(a: DescribeAlarmHistoryRequest): F[DescribeAlarmHistoryResponse]
@@ -56,6 +58,7 @@ trait CloudWatchAsyncClientOp[F[_]] {
   def getMetricStream(a: GetMetricStreamRequest): F[GetMetricStreamResponse]
   def getMetricWidgetImage(a: GetMetricWidgetImageRequest): F[GetMetricWidgetImageResponse]
   def getOTelEnrichment(a: GetOTelEnrichmentRequest): F[GetOTelEnrichmentResponse]
+  def getResourceMetricsConfiguration(a: GetResourceMetricsConfigurationRequest): F[GetResourceMetricsConfigurationResponse]
   def listAlarmMuteRules(a: ListAlarmMuteRulesRequest): F[ListAlarmMuteRulesResponse]
   def listAlarmMuteRulesPaginator(a: ListAlarmMuteRulesRequest): F[ListAlarmMuteRulesPublisher]
   def listDashboards: F[ListDashboardsResponse]
@@ -90,6 +93,8 @@ trait CloudWatchAsyncClientOp[F[_]] {
   def stopOTelEnrichment(a: StopOTelEnrichmentRequest): F[StopOTelEnrichmentResponse]
   def tagResource(a: TagResourceRequest): F[TagResourceResponse]
   def untagResource(a: UntagResourceRequest): F[UntagResourceResponse]
+  def updateOTelEnrichment(a: UpdateOTelEnrichmentRequest): F[UpdateOTelEnrichmentResponse]
+  def updateResourceMetricsConfiguration(a: UpdateResourceMetricsConfigurationRequest): F[UpdateResourceMetricsConfigurationResponse]
   def waiter: F[CloudWatchAsyncWaiter]
 
 }
