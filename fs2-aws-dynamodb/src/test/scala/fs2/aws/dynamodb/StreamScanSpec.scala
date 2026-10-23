@@ -40,17 +40,19 @@ class StreamScanSpec extends AnyWordSpec with Matchers with ScalaFutures {
                 )
                 .build()
             )
-            scanned <- StreamScan[IO](ddb)
+            chunks <- StreamScan[IO](ddb)
               .scanDynamoDB(ScanRequest.builder().tableName(tableName).build(), 3)
-              .unchunks
               .compile
-              .toList
-          } yield scanned.map(_.get("name").s()) should contain theSameElementsAs List(
-            "Dmytro",
-            "Barry",
-            "Ryan",
-            "Vlad"
-          )
+              .toVector
+          } yield {
+            chunks.forall(_.size <= 3) shouldBe true
+            chunks.flatMap(_.toList).map(_.get("name").s()) should contain theSameElementsAs List(
+              "Dmytro",
+              "Barry",
+              "Ryan",
+              "Vlad"
+            )
+          }
         }
         .unsafeToFuture()
         .futureValue
