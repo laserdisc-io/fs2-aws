@@ -16,7 +16,7 @@ Provides effectful and [FS2](https://fs2.io) streaming utilities for interacting
 
 <img src="docs/fs2-aws-logo.png" width="150" height="150" alt="fs2-aws logo"/>
 
-This project wraps the [AWS SDK v2](https://github.com/aws/aws-sdk-java-v2) S3, SQS, SNS, DynamoDB and Cloudwatch clients in purely functional, resource-safe APIs built
+This project wraps the [AWS SDK v2](https://github.com/aws/aws-sdk-java-v2) S3, SQS, SNS, DynamoDB, CloudWatch, Kinesis, Secrets Manager and SSM clients in purely functional, resource-safe APIs built
 on [cats-effect](https://typelevel.org/cats-effect/), and offers an FS2 streaming interface for common operations.
 
 In addition, the kinesis module provides FS2-streaming support for consuming and producing records via:

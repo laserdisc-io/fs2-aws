@@ -75,4 +75,4 @@ object DynamoDBExample {
 
 `scanDynamoDB` wraps the SDK's scan paginator in a bounded fs2 stream: at most `pageSize` records are requested (and buffered) at a time, so a large table scan can't exhaust memory. The stream emits raw DynamoDB items and terminates once the scan is exhausted.
 
-For a parallel scan across segments, see [`DynamoParallelScan`](https://github.com/laserdisc-io/fs2-aws/blob/main/fs2-aws-examples/src/main/scala/fs2/aws/examples/DynamoParallelScan.scala).
+For a parallel scan across segments, see [`DynamoParallelScan`](https://github.com/laserdisc-io/fs2-aws/blob/main/fs2-aws/fs2-aws-examples/src/main/scala/fs2/aws/examples/DynamoParallelScan.scala).

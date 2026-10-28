@@ -50,7 +50,7 @@ def records(
 
 Use `withMultiStreamTracker` instead of `withSingleStreamTracker` to consume several streams
 with one scheduler (see
-[`KinesisMultistreamExample`](https://github.com/laserdisc-io/fs2-aws/blob/main/fs2-aws-examples/src/main/scala/fs2/aws/examples/KinesisMultistreamExample.scala)).
+[`KinesisMultistreamExample`](https://github.com/laserdisc-io/fs2-aws/blob/main/fs2-aws/fs2-aws-examples/src/main/scala/fs2/aws/examples/KinesisMultistreamExample.scala)).
 
 The older `Kinesis.create(...)` factory + `readFromKinesisStream(appName, streamName)` API is
 still available and takes the same three SDK clients plus a `ClientVersionConfig`.
@@ -105,7 +105,7 @@ Consuming from and publishing to Kinesis in [LocalStack](https://localstack.clou
 Set the client `endpointOverride` (e.g. `http://localhost:4566`) and use `Polling` retrieval
 mode (LocalStack does not support `FanOut`). 
 
-See [`KinesisExampleNew`](https://github.com/laserdisc-io/fs2-aws/blob/main/fs2-aws-examples/src/main/scala/fs2/aws/examples/KinesisExampleNew.scala) for a complete runnable example.
+See [`KinesisExampleNew`](https://github.com/laserdisc-io/fs2-aws/blob/main/fs2-aws/fs2-aws-examples/src/main/scala/fs2/aws/examples/KinesisExampleNew.scala) for a complete runnable example.
 
 ## Testing
 

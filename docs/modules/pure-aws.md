@@ -17,6 +17,8 @@ client as a `cats.effect.Resource`).
 | `pure-kinesis-tagless` | `KinesisAsyncClient` | `KinesisAsyncClientOp[F]` | `KinesisInterpreter` |
 | `pure-dynamodb-tagless` | `DynamoDbAsyncClient` | `DynamoDbAsyncClientOp[F]` | `DynamoDbInterpreter` |
 | `pure-cloudwatch-tagless` | `CloudWatchAsyncClient` | `CloudWatchAsyncClientOp[F]` | `CloudWatchInterpreter` |
+| `pure-secretsmanager-tagless` | `SecretsManagerAsyncClient` | `SecretsManagerAsyncClientOp[F]` | `SecretsManagerInterpreter` |
+| `pure-ssm-tagless` | `SsmAsyncClient` | `SsmAsyncClientOp[F]` | `SsmInterpreter` |
 
 ### Import
 ```sbt
@@ -56,7 +58,7 @@ client rather than the algebra (e.g. to hand it to the KCL), use `clientResource
 `resource`.
 
 The interpreters also support `Kleisli`-based environment passing — see
-[`PureAWS.scala`](https://github.com/laserdisc-io/fs2-aws/blob/main/fs2-aws-examples/src/main/scala/fs2/aws/examples/PureAWS.scala)
+[`PureAWS.scala`](https://github.com/laserdisc-io/fs2-aws/blob/main/fs2-aws/fs2-aws-examples/src/main/scala/fs2/aws/examples/PureAWS.scala)
 for an example combining SQS and SNS both ways.
 
 ## Code generation

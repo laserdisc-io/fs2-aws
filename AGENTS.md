@@ -17,7 +17,7 @@ Notes for coding agents and contributors working in this repository.
 
 ## The pure-aws sources are generated
 
-The `pure-aws/pure-*-tagless` modules wrap six AWS SDK v2 async clients: CloudWatch, DynamoDB, Kinesis, S3, SNS and SQS. Each module has two generated files. For SQS, they are:
+The `pure-aws/pure-*-tagless` modules wrap eight AWS SDK v2 async clients: CloudWatch, DynamoDB, Kinesis, S3, SNS, SQS, Secrets Manager and SSM. Each module has two generated files. For SQS, they are:
 
 - `SqsAsyncClientOp.scala`, the tagless-final algebra
 - `SqsInterpreter.scala`, which implements the algebra over the SDK client

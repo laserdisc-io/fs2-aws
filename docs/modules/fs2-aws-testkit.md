@@ -35,7 +35,7 @@ val processor = testContext.getShardProcessors.head
 // processor.initialize(...); processor.processRecords(...)
 ```
 
-See [`NewKinesisConsumerSpec`](https://github.com/laserdisc-io/fs2-aws/blob/main/fs2-aws-kinesis/src/test/scala/fs2/aws/kinesis/NewKinesisConsumerSpec.scala)
+See [`NewKinesisConsumerSpec`](https://github.com/laserdisc-io/fs2-aws/blob/main/fs2-aws/fs2-aws-kinesis/src/test/scala/fs2/aws/kinesis/NewKinesisConsumerSpec.scala)
 for full patterns, including checkpointing assertions.
 
 ## Testing a producer: `TestKinesisProducerClient`

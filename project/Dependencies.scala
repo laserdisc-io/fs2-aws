@@ -5,7 +5,7 @@ import sbt.{Def, *}
 object Dependencies {
 
   object V {
-    val AwsSdk           = "2.57.3"
+    val AwsSdk           = "2.57.5"
     val Circe            = "0.14.17"
     val Munit            = "1.3.6"
     val Fs2              = "3.14.0"
@@ -54,15 +54,10 @@ object Dependencies {
     "io.circe" %% "circe-parser"  % V.Circe
   )
 
-  val ScalaTest = libraryDependencies += "org.scalatest" %% "scalatest"    % V.ScalaTest
-  val Mockito   = libraryDependencies += "org.mockito"    % "mockito-core" % V.MockitoCore
+  val ScalaTest = libraryDependencies += "org.scalatest" %% "scalatest" % V.ScalaTest
 
-//  // TODO: it seems that different modules require different versions - look into this
-//  def ScanamoCirce(version: String) = libraryDependencies ++= Seq(
-//    "io.laserdisc" %% "scanamo-circe" % version
-//  ).filterNot(_ => scalaVersion.value.startsWith("3."))
-//
-//
+  val Mockito = libraryDependencies += "org.mockito" % "mockito-core" % V.MockitoCore
+
   val Logging = libraryDependencies ++= Seq(
     "org.typelevel" %% "log4cats-slf4j" % V.Log4Cats
   ) ++ LogModules.LogBack ++ LogModules.LogImpl

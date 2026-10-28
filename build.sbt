@@ -1,12 +1,14 @@
 import TaglessGen.taglessGenSettings
+import sbtunidoc.ScalaUnidocPlugin
 import software.amazon.awssdk.core.util.VersionInfo
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient
 import software.amazon.awssdk.services.s3.S3AsyncClient
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerAsyncClient
 import software.amazon.awssdk.services.sns.SnsAsyncClient
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
-import sbtunidoc.ScalaUnidocPlugin
+import software.amazon.awssdk.services.ssm.SsmAsyncClient
 
 organization := "io.laserdisc"
 name         := "fs2-aws"
@@ -47,6 +49,8 @@ lazy val root = (project in file("."))
     `pure-cloudwatch-tagless`,
     `pure-dynamodb-tagless`,
     `pure-kinesis-tagless`,
+    `pure-secretsmanager-tagless`,
+    `pure-ssm-tagless`,
     siteDocs
   )
   .settings(
@@ -79,7 +83,7 @@ lazy val siteDocs = (project in file("site"))
     crossScalaVersions              := Nil
   )
 
-lazy val `fs2-aws-core` = (project in file("fs2-aws-core"))
+lazy val `fs2-aws-core` = (project in file("fs2-aws/fs2-aws-core"))
   .settings(
     name := "fs2-aws-core",
     Dependencies.Fs2Core,
@@ -89,7 +93,7 @@ lazy val `fs2-aws-core` = (project in file("fs2-aws-core"))
   )
   .settings(commonSettings)
 
-lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb"))
+lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws/fs2-aws-dynamodb"))
   .dependsOn(`fs2-aws-core`, `pure-dynamodb-tagless`)
   .settings(
     name                     := "fs2-aws-dynamodb",
@@ -100,7 +104,7 @@ lazy val `fs2-aws-dynamodb` = (project in file("fs2-aws-dynamodb"))
   )
   .settings(commonSettings)
 
-lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
+lazy val `fs2-aws-examples` = (project in file("fs2-aws/fs2-aws-examples"))
   .dependsOn(
     `fs2-aws-kinesis`,
     `fs2-aws-s3`,
@@ -120,7 +124,7 @@ lazy val `fs2-aws-examples` = (project in file("fs2-aws-examples"))
     publish / skip := true
   )
 
-lazy val `fs2-aws-s3` = (project in file("fs2-aws-s3"))
+lazy val `fs2-aws-s3` = (project in file("fs2-aws/fs2-aws-s3"))
   .settings(
     name := "fs2-aws-s3",
     Dependencies.Fs2Core,
@@ -133,7 +137,7 @@ lazy val `fs2-aws-s3` = (project in file("fs2-aws-s3"))
   .settings(commonSettings)
   .dependsOn(`pure-s3-tagless`)
 
-lazy val `fs2-aws-kinesis` = (project in file("fs2-aws-kinesis"))
+lazy val `fs2-aws-kinesis` = (project in file("fs2-aws/fs2-aws-kinesis"))
   .dependsOn(
     `fs2-aws-core`,
     `pure-cloudwatch-tagless`,
@@ -153,7 +157,7 @@ lazy val `fs2-aws-kinesis` = (project in file("fs2-aws-kinesis"))
   )
   .settings(commonSettings)
 
-lazy val `fs2-aws-sqs` = (project in file("fs2-aws-sqs"))
+lazy val `fs2-aws-sqs` = (project in file("fs2-aws/fs2-aws-sqs"))
   .settings(
     name := "fs2-aws-sqs",
     Dependencies.Fs2Core,
@@ -166,7 +170,7 @@ lazy val `fs2-aws-sqs` = (project in file("fs2-aws-sqs"))
   .settings(commonSettings)
   .dependsOn(`pure-sqs-tagless`)
 
-lazy val `fs2-aws-sns` = (project in file("fs2-aws-sns"))
+lazy val `fs2-aws-sns` = (project in file("fs2-aws/fs2-aws-sns"))
   .settings(
     name := "fs2-aws-sns",
     Dependencies.Fs2Core,
@@ -234,7 +238,25 @@ lazy val `pure-cloudwatch-tagless` = (project in file("pure-aws/pure-cloudwatch-
   )
   .settings(commonSettings)
 
-lazy val `fs2-aws-testkit` = (project in file("fs2-aws-testkit"))
+lazy val `pure-secretsmanager-tagless` = (project in file("pure-aws/pure-secretsmanager-tagless"))
+  .settings(
+    name := "pure-secretsmanager-tagless",
+    Dependencies.AWS("secretsmanager"),
+    Dependencies.CatsEffect,
+    taglessGenSettings[SecretsManagerAsyncClient]("secretsmanager")
+  )
+  .settings(commonSettings)
+
+lazy val `pure-ssm-tagless` = (project in file("pure-aws/pure-ssm-tagless"))
+  .settings(
+    name := "pure-ssm-tagless",
+    Dependencies.AWS("ssm"),
+    Dependencies.CatsEffect,
+    taglessGenSettings[SsmAsyncClient]("ssm")
+  )
+  .settings(commonSettings)
+
+lazy val `fs2-aws-testkit` = (project in file("fs2-aws/fs2-aws-testkit"))
   .dependsOn(`fs2-aws-kinesis`)
   .settings(
     name := "fs2-aws-testkit",
@@ -244,7 +266,7 @@ lazy val `fs2-aws-testkit` = (project in file("fs2-aws-testkit"))
   )
   .settings(commonSettings)
 
-lazy val `fs2-aws-benchmarks` = (project in file("fs2-aws-benchmarks"))
+lazy val `fs2-aws-benchmarks` = (project in file("fs2-aws/fs2-aws-benchmarks"))
   .dependsOn(`fs2-aws-kinesis`)
   .dependsOn(`fs2-aws-s3`)
   .dependsOn(`fs2-aws-testkit`)
