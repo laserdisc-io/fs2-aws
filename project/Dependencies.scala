@@ -5,7 +5,7 @@ import sbt.{Def, *}
 object Dependencies {
 
   object V {
-    val AwsSdk           = "2.57.5"
+    val AwsSdk           = "2.57.6"
     val Circe            = "0.14.17"
     val Munit            = "1.3.6"
     val Fs2              = "3.14.0"
@@ -17,12 +17,15 @@ object Dependencies {
     val Logback          = "1.6.6"
     val SLF4J            = "2.0.20"
     val Log4Cats         = "2.8.0"
+    val Ciris            = "3.15.2"
   }
 
   val Fs2Core = libraryDependencies ++= Seq(
     "co.fs2" %% "fs2-core" % V.Fs2,
     "co.fs2" %% "fs2-io"   % V.Fs2
   )
+
+  val Ciris = libraryDependencies += "is.cir" %% "ciris" % V.Ciris
 
   val CatsEffect = libraryDependencies += "org.typelevel" %% "cats-effect" % V.CE
 

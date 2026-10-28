@@ -2,7 +2,7 @@
 
 An FS2 Streams-based API for scanning AWS DynamoDB tables with back-pressure.
 
-@:include(_disclaimer.md)
+@:include(../_disclaimer.md)
 
 ### Import
 ```sbt
@@ -21,7 +21,7 @@ trait StreamScan[F[_]] {
 
 To use `StreamScan[F]`, you need an instance of `DynamoDbAsyncClientOp[F]`:
 * This is a Tagless-Final wrapper around the `DynamoDbAsyncClient`
-* You get this automatically as `fs2-aws-dynamodb` has a transitive dependency on `pure-dynamodb-tagless` (see [pure-aws](pure-aws.md)).
+* You get this automatically as `fs2-aws-dynamodb` has a transitive dependency on `pure-dynamodb-tagless` (see [pure-aws](../pure-aws.md)).
 
 The general usage pattern is as follows:
 
@@ -76,3 +76,16 @@ object DynamoDBExample {
 `scanDynamoDB` wraps the SDK's scan paginator in a bounded fs2 stream: at most `pageSize` records are requested (and buffered) at a time, so a large table scan can't exhaust memory. The stream emits raw DynamoDB items and terminates once the scan is exhausted.
 
 For a parallel scan across segments, see [`DynamoParallelScan`](https://github.com/laserdisc-io/fs2-aws/blob/main/fs2-aws/fs2-aws-examples/src/main/scala/fs2/aws/examples/DynamoParallelScan.scala).
+
+## Testing
+
+The DynamoDB algebra calls `DynamoDbAsyncClientOp[F]`. The `pure-dynamodb-tagless` test jar contains
+`MockDynamoDbAsyncClientOp[F]`, a stub where every method throws `NotImplementedError` until you override it.
+Add the test jar as a test dependency:
+
+```sbt
+libraryDependencies += "io.laserdisc" %% "pure-dynamodb-tagless" % "@VERSION@" % "tests"
+```
+
+`StreamScan` pages through results with `scanPaginator`, so override that method. It must return an
+SDK `ScanPublisher`.
