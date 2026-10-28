@@ -1,0 +1,72 @@
+package io.laserdisc.pure.kinesis.tagless
+
+import software.amazon.awssdk.services.kinesis.model.*
+
+import software.amazon.awssdk.services.kinesis.KinesisServiceClientConfiguration
+import software.amazon.awssdk.services.kinesis.paginators.ListChannelsPublisher
+import software.amazon.awssdk.services.kinesis.paginators.ListStreamConsumersPublisher
+import software.amazon.awssdk.services.kinesis.paginators.ListStreamsPublisher
+import software.amazon.awssdk.services.kinesis.waiters.KinesisAsyncWaiter
+
+/** A stub implementation of [[KinesisAsyncClientOp]], where all methods throw a NotImplementedError.  Intended to
+  * be overridden in tests with mock implementations of the methods under test.
+  */
+class MockKinesisAsyncClientOp[F[_]] extends KinesisAsyncClientOp[F] {
+
+  def addTagsToStream(a: AddTagsToStreamRequest): F[AddTagsToStreamResponse]                                                                      = ???
+  def close: F[Unit]                                                                                                                              = ???
+  def createChannel(a: CreateChannelRequest): F[CreateChannelResponse]                                                                            = ???
+  def createStream(a: CreateStreamRequest): F[CreateStreamResponse]                                                                               = ???
+  def decreaseStreamRetentionPeriod(a: DecreaseStreamRetentionPeriodRequest): F[DecreaseStreamRetentionPeriodResponse]                            = ???
+  def deleteChannel(a: DeleteChannelRequest): F[DeleteChannelResponse]                                                                            = ???
+  def deleteResourcePolicy(a: DeleteResourcePolicyRequest): F[DeleteResourcePolicyResponse]                                                       = ???
+  def deleteStream(a: DeleteStreamRequest): F[DeleteStreamResponse]                                                                               = ???
+  def deregisterStreamConsumer(a: DeregisterStreamConsumerRequest): F[DeregisterStreamConsumerResponse]                                           = ???
+  def describeAccountSettings(a: DescribeAccountSettingsRequest): F[DescribeAccountSettingsResponse]                                              = ???
+  def describeChannel(a: DescribeChannelRequest): F[DescribeChannelResponse]                                                                      = ???
+  def describeLimits: F[DescribeLimitsResponse]                                                                                                   = ???
+  def describeLimits(a: DescribeLimitsRequest): F[DescribeLimitsResponse]                                                                         = ???
+  def describeStream(a: DescribeStreamRequest): F[DescribeStreamResponse]                                                                         = ???
+  def describeStreamConsumer(a: DescribeStreamConsumerRequest): F[DescribeStreamConsumerResponse]                                                 = ???
+  def describeStreamSummary(a: DescribeStreamSummaryRequest): F[DescribeStreamSummaryResponse]                                                    = ???
+  def disableEnhancedMonitoring(a: DisableEnhancedMonitoringRequest): F[DisableEnhancedMonitoringResponse]                                        = ???
+  def enableEnhancedMonitoring(a: EnableEnhancedMonitoringRequest): F[EnableEnhancedMonitoringResponse]                                           = ???
+  def getRecords(a: GetRecordsRequest): F[GetRecordsResponse]                                                                                     = ???
+  def getResourcePolicy(a: GetResourcePolicyRequest): F[GetResourcePolicyResponse]                                                                = ???
+  def getShardIterator(a: GetShardIteratorRequest): F[GetShardIteratorResponse]                                                                   = ???
+  def increaseStreamRetentionPeriod(a: IncreaseStreamRetentionPeriodRequest): F[IncreaseStreamRetentionPeriodResponse]                            = ???
+  def listChannels(a: ListChannelsRequest): F[ListChannelsResponse]                                                                               = ???
+  def listChannelsPaginator(a: ListChannelsRequest): F[ListChannelsPublisher]                                                                     = ???
+  def listShards(a: ListShardsRequest): F[ListShardsResponse]                                                                                     = ???
+  def listStreamConsumers(a: ListStreamConsumersRequest): F[ListStreamConsumersResponse]                                                          = ???
+  def listStreamConsumersPaginator(a: ListStreamConsumersRequest): F[ListStreamConsumersPublisher]                                                = ???
+  def listStreams: F[ListStreamsResponse]                                                                                                         = ???
+  def listStreams(a: ListStreamsRequest): F[ListStreamsResponse]                                                                                  = ???
+  def listStreamsPaginator: F[ListStreamsPublisher]                                                                                               = ???
+  def listStreamsPaginator(a: ListStreamsRequest): F[ListStreamsPublisher]                                                                        = ???
+  def listTagsForResource(a: ListTagsForResourceRequest): F[ListTagsForResourceResponse]                                                          = ???
+  def listTagsForStream(a: ListTagsForStreamRequest): F[ListTagsForStreamResponse]                                                                = ???
+  def mergeShards(a: MergeShardsRequest): F[MergeShardsResponse]                                                                                  = ???
+  def putRecord(a: PutRecordRequest): F[PutRecordResponse]                                                                                        = ???
+  def putRecords(a: PutRecordsRequest): F[PutRecordsResponse]                                                                                     = ???
+  def putResourcePolicy(a: PutResourcePolicyRequest): F[PutResourcePolicyResponse]                                                                = ???
+  def registerStreamConsumer(a: RegisterStreamConsumerRequest): F[RegisterStreamConsumerResponse]                                                 = ???
+  def removeTagsFromStream(a: RemoveTagsFromStreamRequest): F[RemoveTagsFromStreamResponse]                                                       = ???
+  def serviceClientConfiguration: F[KinesisServiceClientConfiguration]                                                                            = ???
+  def serviceName: F[String]                                                                                                                      = ???
+  def splitShard(a: SplitShardRequest): F[SplitShardResponse]                                                                                     = ???
+  def startStreamEncryption(a: StartStreamEncryptionRequest): F[StartStreamEncryptionResponse]                                                    = ???
+  def stopStreamEncryption(a: StopStreamEncryptionRequest): F[StopStreamEncryptionResponse]                                                       = ???
+  def subscribeToShard(a: SubscribeToShardRequest, b: SubscribeToShardResponseHandler): F[Void]                                                   = ???
+  def tagResource(a: TagResourceRequest): F[TagResourceResponse]                                                                                  = ???
+  def untagResource(a: UntagResourceRequest): F[UntagResourceResponse]                                                                            = ???
+  def updateAccountSettings(a: UpdateAccountSettingsRequest): F[UpdateAccountSettingsResponse]                                                    = ???
+  def updateChannel(a: UpdateChannelRequest): F[UpdateChannelResponse]                                                                            = ???
+  def updateMaxRecordSize(a: UpdateMaxRecordSizeRequest): F[UpdateMaxRecordSizeResponse]                                                          = ???
+  def updateShardCount(a: UpdateShardCountRequest): F[UpdateShardCountResponse]                                                                   = ???
+  def updateStreamMode(a: UpdateStreamModeRequest): F[UpdateStreamModeResponse]                                                                   = ???
+  def updateStreamRecordDistributionStrategy(a: UpdateStreamRecordDistributionStrategyRequest): F[UpdateStreamRecordDistributionStrategyResponse] = ???
+  def updateStreamWarmThroughput(a: UpdateStreamWarmThroughputRequest): F[UpdateStreamWarmThroughputResponse]                                     = ???
+  def waiter: F[KinesisAsyncWaiter]                                                                                                               = ???
+
+}

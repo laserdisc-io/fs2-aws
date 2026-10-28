@@ -9,16 +9,16 @@ arbitrary effect `F[_]: Async` — every `CompletableFuture`-returning SDK metho
 `F`-returning method — plus an interpreter that builds instances (and manages the underlying
 client as a `cats.effect.Resource`).
 
-| Module | Wraps | Algebra | Interpreter |
-|---|---|---|---|
-| `pure-s3-tagless` | `S3AsyncClient` | `S3AsyncClientOp[F]` | `S3Interpreter` |
-| `pure-sqs-tagless` | `SqsAsyncClient` | `SqsAsyncClientOp[F]` | `SqsInterpreter` |
-| `pure-sns-tagless` | `SnsAsyncClient` | `SnsAsyncClientOp[F]` | `SnsInterpreter` |
-| `pure-kinesis-tagless` | `KinesisAsyncClient` | `KinesisAsyncClientOp[F]` | `KinesisInterpreter` |
-| `pure-dynamodb-tagless` | `DynamoDbAsyncClient` | `DynamoDbAsyncClientOp[F]` | `DynamoDbInterpreter` |
-| `pure-cloudwatch-tagless` | `CloudWatchAsyncClient` | `CloudWatchAsyncClientOp[F]` | `CloudWatchInterpreter` |
-| `pure-secretsmanager-tagless` | `SecretsManagerAsyncClient` | `SecretsManagerAsyncClientOp[F]` | `SecretsManagerInterpreter` |
-| `pure-ssm-tagless` | `SsmAsyncClient` | `SsmAsyncClientOp[F]` | `SsmInterpreter` |
+| Module | Wraps | Algebra | Interpreter | Mock (test jar) |
+|---|---|---|---|---|
+| `pure-s3-tagless` | `S3AsyncClient` | `S3AsyncClientOp[F]` | `S3Interpreter` | `MockS3AsyncClientOp` |
+| `pure-sqs-tagless` | `SqsAsyncClient` | `SqsAsyncClientOp[F]` | `SqsInterpreter` | `MockSqsAsyncClientOp` |
+| `pure-sns-tagless` | `SnsAsyncClient` | `SnsAsyncClientOp[F]` | `SnsInterpreter` | `MockSnsAsyncClientOp` |
+| `pure-kinesis-tagless` | `KinesisAsyncClient` | `KinesisAsyncClientOp[F]` | `KinesisInterpreter` | `MockKinesisAsyncClientOp` |
+| `pure-dynamodb-tagless` | `DynamoDbAsyncClient` | `DynamoDbAsyncClientOp[F]` | `DynamoDbInterpreter` | `MockDynamoDbAsyncClientOp` |
+| `pure-cloudwatch-tagless` | `CloudWatchAsyncClient` | `CloudWatchAsyncClientOp[F]` | `CloudWatchInterpreter` | `MockCloudWatchAsyncClientOp` |
+| `pure-secretsmanager-tagless` | `SecretsManagerAsyncClient` | `SecretsManagerAsyncClientOp[F]` | `SecretsManagerInterpreter` | `MockSecretsManagerAsyncClientOp` |
+| `pure-ssm-tagless` | `SsmAsyncClient` | `SsmAsyncClientOp[F]` | `SsmInterpreter` | `MockSsmAsyncClientOp` |
 
 ### Import
 ```sbt
@@ -72,6 +72,4 @@ from `project/Dependencies.scala`. To regenerate after an SDK bump, set `AwsSdk`
 make generate-pure-aws
 ```
 
-See [AGENTS.md](https://github.com/laserdisc-io/fs2-aws/blob/main/AGENTS.md) for the full steps and
-the CI checks.
 

@@ -1,0 +1,101 @@
+package io.laserdisc.pure.cloudwatch.tagless
+
+import software.amazon.awssdk.services.cloudwatch.model.*
+
+import software.amazon.awssdk.services.cloudwatch.CloudWatchServiceClientConfiguration
+import software.amazon.awssdk.services.cloudwatch.paginators.DescribeAlarmHistoryPublisher
+import software.amazon.awssdk.services.cloudwatch.paginators.DescribeAlarmsPublisher
+import software.amazon.awssdk.services.cloudwatch.paginators.DescribeAnomalyDetectorsPublisher
+import software.amazon.awssdk.services.cloudwatch.paginators.DescribeInsightRulesPublisher
+import software.amazon.awssdk.services.cloudwatch.paginators.GetMetricDataPublisher
+import software.amazon.awssdk.services.cloudwatch.paginators.ListAlarmMuteRulesPublisher
+import software.amazon.awssdk.services.cloudwatch.paginators.ListDashboardsPublisher
+import software.amazon.awssdk.services.cloudwatch.paginators.ListManagedInsightRulesPublisher
+import software.amazon.awssdk.services.cloudwatch.paginators.ListMetricStreamsPublisher
+import software.amazon.awssdk.services.cloudwatch.paginators.ListMetricsPublisher
+import software.amazon.awssdk.services.cloudwatch.waiters.CloudWatchAsyncWaiter
+
+/** A stub implementation of [[CloudWatchAsyncClientOp]], where all methods throw a NotImplementedError.  Intended to
+  * be overridden in tests with mock implementations of the methods under test.
+  */
+class MockCloudWatchAsyncClientOp[F[_]] extends CloudWatchAsyncClientOp[F] {
+
+  def associateDatasetKmsKey(a: AssociateDatasetKmsKeyRequest): F[AssociateDatasetKmsKeyResponse]                                     = ???
+  def close: F[Unit]                                                                                                                  = ???
+  def createResourceMetricsConfiguration(a: CreateResourceMetricsConfigurationRequest): F[CreateResourceMetricsConfigurationResponse] = ???
+  def deleteAlarmMuteRule(a: DeleteAlarmMuteRuleRequest): F[DeleteAlarmMuteRuleResponse]                                              = ???
+  def deleteAlarms(a: DeleteAlarmsRequest): F[DeleteAlarmsResponse]                                                                   = ???
+  def deleteAnomalyDetector(a: DeleteAnomalyDetectorRequest): F[DeleteAnomalyDetectorResponse]                                        = ???
+  def deleteDashboards(a: DeleteDashboardsRequest): F[DeleteDashboardsResponse]                                                       = ???
+  def deleteInsightRules(a: DeleteInsightRulesRequest): F[DeleteInsightRulesResponse]                                                 = ???
+  def deleteMetricStream(a: DeleteMetricStreamRequest): F[DeleteMetricStreamResponse]                                                 = ???
+  def deleteResourceMetricsConfiguration(a: DeleteResourceMetricsConfigurationRequest): F[DeleteResourceMetricsConfigurationResponse] = ???
+  def describeAlarmContributors(a: DescribeAlarmContributorsRequest): F[DescribeAlarmContributorsResponse]                            = ???
+  def describeAlarmHistory: F[DescribeAlarmHistoryResponse]                                                                           = ???
+  def describeAlarmHistory(a: DescribeAlarmHistoryRequest): F[DescribeAlarmHistoryResponse]                                           = ???
+  def describeAlarmHistoryPaginator: F[DescribeAlarmHistoryPublisher]                                                                 = ???
+  def describeAlarmHistoryPaginator(a: DescribeAlarmHistoryRequest): F[DescribeAlarmHistoryPublisher]                                 = ???
+  def describeAlarms: F[DescribeAlarmsResponse]                                                                                       = ???
+  def describeAlarms(a: DescribeAlarmsRequest): F[DescribeAlarmsResponse]                                                             = ???
+  def describeAlarmsForMetric(a: DescribeAlarmsForMetricRequest): F[DescribeAlarmsForMetricResponse]                                  = ???
+  def describeAlarmsPaginator: F[DescribeAlarmsPublisher]                                                                             = ???
+  def describeAlarmsPaginator(a: DescribeAlarmsRequest): F[DescribeAlarmsPublisher]                                                   = ???
+  def describeAnomalyDetectors(a: DescribeAnomalyDetectorsRequest): F[DescribeAnomalyDetectorsResponse]                               = ???
+  def describeAnomalyDetectorsPaginator(a: DescribeAnomalyDetectorsRequest): F[DescribeAnomalyDetectorsPublisher]                     = ???
+  def describeInsightRules(a: DescribeInsightRulesRequest): F[DescribeInsightRulesResponse]                                           = ???
+  def describeInsightRulesPaginator(a: DescribeInsightRulesRequest): F[DescribeInsightRulesPublisher]                                 = ???
+  def disableAlarmActions(a: DisableAlarmActionsRequest): F[DisableAlarmActionsResponse]                                              = ???
+  def disableInsightRules(a: DisableInsightRulesRequest): F[DisableInsightRulesResponse]                                              = ???
+  def disassociateDatasetKmsKey(a: DisassociateDatasetKmsKeyRequest): F[DisassociateDatasetKmsKeyResponse]                            = ???
+  def enableAlarmActions(a: EnableAlarmActionsRequest): F[EnableAlarmActionsResponse]                                                 = ???
+  def enableInsightRules(a: EnableInsightRulesRequest): F[EnableInsightRulesResponse]                                                 = ???
+  def getAlarmMuteRule(a: GetAlarmMuteRuleRequest): F[GetAlarmMuteRuleResponse]                                                       = ???
+  def getDashboard(a: GetDashboardRequest): F[GetDashboardResponse]                                                                   = ???
+  def getDataset(a: GetDatasetRequest): F[GetDatasetResponse]                                                                         = ???
+  def getInsightRuleReport(a: GetInsightRuleReportRequest): F[GetInsightRuleReportResponse]                                           = ???
+  def getMetricData(a: GetMetricDataRequest): F[GetMetricDataResponse]                                                                = ???
+  def getMetricDataPaginator(a: GetMetricDataRequest): F[GetMetricDataPublisher]                                                      = ???
+  def getMetricStatistics(a: GetMetricStatisticsRequest): F[GetMetricStatisticsResponse]                                              = ???
+  def getMetricStream(a: GetMetricStreamRequest): F[GetMetricStreamResponse]                                                          = ???
+  def getMetricWidgetImage(a: GetMetricWidgetImageRequest): F[GetMetricWidgetImageResponse]                                           = ???
+  def getOTelEnrichment(a: GetOTelEnrichmentRequest): F[GetOTelEnrichmentResponse]                                                    = ???
+  def getResourceMetricsConfiguration(a: GetResourceMetricsConfigurationRequest): F[GetResourceMetricsConfigurationResponse]          = ???
+  def listAlarmMuteRules(a: ListAlarmMuteRulesRequest): F[ListAlarmMuteRulesResponse]                                                 = ???
+  def listAlarmMuteRulesPaginator(a: ListAlarmMuteRulesRequest): F[ListAlarmMuteRulesPublisher]                                       = ???
+  def listDashboards: F[ListDashboardsResponse]                                                                                       = ???
+  def listDashboards(a: ListDashboardsRequest): F[ListDashboardsResponse]                                                             = ???
+  def listDashboardsPaginator: F[ListDashboardsPublisher]                                                                             = ???
+  def listDashboardsPaginator(a: ListDashboardsRequest): F[ListDashboardsPublisher]                                                   = ???
+  def listManagedInsightRules(a: ListManagedInsightRulesRequest): F[ListManagedInsightRulesResponse]                                  = ???
+  def listManagedInsightRulesPaginator(a: ListManagedInsightRulesRequest): F[ListManagedInsightRulesPublisher]                        = ???
+  def listMetricStreams(a: ListMetricStreamsRequest): F[ListMetricStreamsResponse]                                                    = ???
+  def listMetricStreamsPaginator(a: ListMetricStreamsRequest): F[ListMetricStreamsPublisher]                                          = ???
+  def listMetrics: F[ListMetricsResponse]                                                                                             = ???
+  def listMetrics(a: ListMetricsRequest): F[ListMetricsResponse]                                                                      = ???
+  def listMetricsPaginator: F[ListMetricsPublisher]                                                                                   = ???
+  def listMetricsPaginator(a: ListMetricsRequest): F[ListMetricsPublisher]                                                            = ???
+  def listTagsForResource(a: ListTagsForResourceRequest): F[ListTagsForResourceResponse]                                              = ???
+  def putAlarmMuteRule(a: PutAlarmMuteRuleRequest): F[PutAlarmMuteRuleResponse]                                                       = ???
+  def putAnomalyDetector(a: PutAnomalyDetectorRequest): F[PutAnomalyDetectorResponse]                                                 = ???
+  def putCompositeAlarm(a: PutCompositeAlarmRequest): F[PutCompositeAlarmResponse]                                                    = ???
+  def putDashboard(a: PutDashboardRequest): F[PutDashboardResponse]                                                                   = ???
+  def putInsightRule(a: PutInsightRuleRequest): F[PutInsightRuleResponse]                                                             = ???
+  def putLogAlarm(a: PutLogAlarmRequest): F[PutLogAlarmResponse]                                                                      = ???
+  def putManagedInsightRules(a: PutManagedInsightRulesRequest): F[PutManagedInsightRulesResponse]                                     = ???
+  def putMetricAlarm(a: PutMetricAlarmRequest): F[PutMetricAlarmResponse]                                                             = ???
+  def putMetricData(a: PutMetricDataRequest): F[PutMetricDataResponse]                                                                = ???
+  def putMetricStream(a: PutMetricStreamRequest): F[PutMetricStreamResponse]                                                          = ???
+  def serviceClientConfiguration: F[CloudWatchServiceClientConfiguration]                                                             = ???
+  def serviceName: F[String]                                                                                                          = ???
+  def setAlarmState(a: SetAlarmStateRequest): F[SetAlarmStateResponse]                                                                = ???
+  def startMetricStreams(a: StartMetricStreamsRequest): F[StartMetricStreamsResponse]                                                 = ???
+  def startOTelEnrichment(a: StartOTelEnrichmentRequest): F[StartOTelEnrichmentResponse]                                              = ???
+  def stopMetricStreams(a: StopMetricStreamsRequest): F[StopMetricStreamsResponse]                                                    = ???
+  def stopOTelEnrichment(a: StopOTelEnrichmentRequest): F[StopOTelEnrichmentResponse]                                                 = ???
+  def tagResource(a: TagResourceRequest): F[TagResourceResponse]                                                                      = ???
+  def untagResource(a: UntagResourceRequest): F[UntagResourceResponse]                                                                = ???
+  def updateOTelEnrichment(a: UpdateOTelEnrichmentRequest): F[UpdateOTelEnrichmentResponse]                                           = ???
+  def updateResourceMetricsConfiguration(a: UpdateResourceMetricsConfigurationRequest): F[UpdateResourceMetricsConfigurationResponse] = ???
+  def waiter: F[CloudWatchAsyncWaiter]                                                                                                = ???
+
+}

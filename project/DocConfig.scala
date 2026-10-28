@@ -5,8 +5,8 @@ import laika.config.SyntaxHighlighting
 import laika.helium.config.*
 import laika.sbt.LaikaPlugin.autoImport.*
 import laika.theme.config.Color
+import mdoc.MdocPlugin.autoImport.{mdoc, mdocVariables}
 import org.typelevel.sbt.TypelevelSitePlugin.autoImport.*
-import mdoc.MdocPlugin.autoImport.mdocVariables
 import sbt.*
 import sbt.Keys.{isSnapshot, version}
 import sbtdynver.DynVerPlugin.autoImport.dynverGitDescribeOutput
@@ -62,6 +62,8 @@ object DocConfig {
     mdocVariables += "VERSION" -> latestStableRelease.value.getOrElse(version.value),
     laikaIncludeAPI            := true,
     laikaExtensions += SyntaxHighlighting,
+    // the preview reads the mdoc output in site/target/mdoc, so generate it first
+    laikaPreview             := laikaPreview.dependsOn(mdoc.toTask("")).value,
     tlSiteIsTypelevelProject := None,
     tlSiteHelium             :=
       tlSiteHelium.value.all
@@ -92,16 +94,17 @@ object DocConfig {
         .pageNavigation(enabled = true, depth = 1, keepOnSmallScreens = false)
         .site
         .mainNavigation(
-          appendLinks =
-            Seq(
-              ThemeNavigationSection(
-                "Related Projects",
-                TextLink.external("https://github.com/aws/aws-sdk-java-v2", "aws-sdk-java-v2"),
-                TextLink.external("https://github.com/awslabs/amazon-kinesis-client", "amazon-kinesis-client"),
-                TextLink.external("https://github.com/awslabs/amazon-kinesis-producer", "amazon-kinesis-producer"),
-                TextLink.external("https://fs2.io", "fs2")
-              )
+          depth = 3,
+          appendLinks = Seq(
+            ThemeNavigationSection(
+              "Related Projects",
+              TextLink.external("https://github.com/aws/aws-sdk-java-v2", "aws-sdk-java-v2"),
+              TextLink.external("https://github.com/awslabs/amazon-kinesis-client", "amazon-kinesis-client"),
+              TextLink.external("https://github.com/awslabs/amazon-kinesis-producer", "amazon-kinesis-producer"),
+              TextLink.external("https://fs2.io", "fs2"),
+              TextLink.external("https://github.com/vlovgr/ciris", "ciris")
             )
+          )
         )
         .site
         .footer(
@@ -137,13 +140,9 @@ object DocConfig {
           linkPanel = Some(
             LinkPanel(
               "Documentation",
-              TextLink.internal(Root / "modules" / "fs2-aws-s3.md", "fs2-aws-s3"),
-              TextLink.internal(Root / "modules" / "fs2-aws-kinesis.md", "fs2-aws-kinesis"),
-              TextLink.internal(Root / "modules" / "fs2-aws-sqs.md", "fs2-aws-sqs"),
-              TextLink.internal(Root / "modules" / "fs2-aws-sns.md", "fs2-aws-sns"),
-              TextLink.internal(Root / "modules" / "fs2-aws-dynamodb.md", "fs2-aws-dynamodb"),
-              TextLink.internal(Root / "modules" / "fs2-aws-testkit.md", "fs2-aws-testkit"),
+              TextLink.external("modules/fs2-aws/index.html", "fs2-aws"),
               TextLink.internal(Root / "modules" / "pure-aws.md", "pure-aws"),
+              TextLink.internal(Root / "modules" / "ciris-aws.md", "ciris-aws"),
               TextLink.internal(Root / "migration.md", "Migrating to 7.x")
             )
           ),
@@ -161,8 +160,8 @@ object DocConfig {
             ),
             Teaser(
               "Batteries Included",
-              "Modules are published for Scala 2.13 and 3, alongside generated tagless-final wrappers " +
-                "for the AWS SDK v2 async clients."
+              "Modules are published for Scala 2.13 and 3. <br/> Tagless-final wrappers (and mocks) " +
+                "are generated for the AWS SDK v2 async clients. <br/>Ciris integration for loading secrets/parameters from AWS."
             )
           )
         )

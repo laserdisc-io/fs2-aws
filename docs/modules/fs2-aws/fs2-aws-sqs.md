@@ -2,7 +2,7 @@
 
 An FS2 Streams-based API for consuming and publishing AWS SQS messages.
 
-@:include(_disclaimer.md)
+@:include(../_disclaimer.md)
 
 ### Import
 ```sbt
@@ -25,7 +25,7 @@ trait SQS[F[_]] {
 
 To use `SQS[F]`, you need an instance of `SqsAsyncClientOp[F]`:
 * This is a Tagless-Final wrapper around the `SqsAsyncClient`
-* You get this automatically as `fs2-aws-sqs` has a transitive dependency on `pure-sqs-tagless` (see [pure-aws](pure-aws.md)).
+* You get this automatically as `fs2-aws-sqs` has a transitive dependency on `pure-sqs-tagless` (see [pure-aws](../pure-aws.md)).
 
 The general usage pattern is as follows:
 
@@ -125,3 +125,32 @@ val longPolling: IO[Unit] =
 - A receive hides up to `fetchMessageCount` messages at once, but `sqsStream` hands them over one at a time. If handling can outlast the queue's visibility timeout, use `fetchMessageCount = 1`, or consume `sqsStreamBatched` (one chunk per receive) and extend or delete each batch as a whole.
 - Use `deleteMessagePipe` to acknowledge messages by deleting them from the queue.
 - `changeMessageVisibilityPipe(timeout)` sets each message's timeout once, rounded up to whole seconds. It isn't a heartbeat: to keep a message hidden during long processing, call it again before the timeout runs out.
+
+## Testing
+
+The SQS algebra calls `SqsAsyncClientOp[F]`. The `pure-sqs-tagless` test jar contains
+`MockSqsAsyncClientOp[F]`, a stub where every method throws `NotImplementedError` until you override it.
+Add the test jar as a test dependency:
+
+```sbt
+libraryDependencies += "io.laserdisc" %% "pure-sqs-tagless" % "@VERSION@" % "tests"
+```
+
+Override the calls your code makes, then build the streaming algebra on top of the stub:
+
+```scala mdoc:compile-only
+import cats.effect.*
+import cats.syntax.all.*
+import fs2.aws.sqs.{SQS, SqsConfig}
+import io.laserdisc.pure.sqs.tagless.MockSqsAsyncClientOp
+import software.amazon.awssdk.services.sqs.model.{SendMessageRequest, SendMessageResponse}
+import scala.concurrent.duration.*
+
+val sqsOp = new MockSqsAsyncClientOp[IO] {
+  override def sendMessage(a: SendMessageRequest): IO[SendMessageResponse] =
+    IO.println(s"sent: ${a.messageBody()}").as(SendMessageResponse.builder().build())
+}
+
+SQS.create[IO](SqsConfig("https://sqs.us-east-1.amazonaws.com/123456789012/my-queue", pollRate = Duration.Zero), sqsOp)
+  .flatMap(sqs => fs2.Stream.emit("hello").covary[IO].through(sqs.sendMessagePipe).compile.drain)
+```

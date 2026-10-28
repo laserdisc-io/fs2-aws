@@ -2,7 +2,7 @@
 
 An FS2 Streams-based API for publishing messages to AWS SNS topics.
 
-@:include(_disclaimer.md)
+@:include(../_disclaimer.md)
 
 ### Import
 ```sbt
@@ -21,7 +21,7 @@ trait SNS[F[_]] {
 
 To use `SNS[F]`, you need an instance of `SnsAsyncClientOp[F]`:
 * This is a Tagless-Final wrapper around the `SnsAsyncClient`
-* You get this automatically as `fs2-aws-sns` has a transitive dependency on `pure-sns-tagless` (see [pure-aws](pure-aws.md)).
+* You get this automatically as `fs2-aws-sns` has a transitive dependency on `pure-sns-tagless` (see [pure-aws](../pure-aws.md)).
 
 The general usage pattern is as follows:
 
@@ -81,3 +81,35 @@ SNS.create[IO](snsOp, SnsSettings(concurrency = PosInt.unsafeFrom(20)))
 ```
 
 Because publishing is concurrent, responses may be emitted in a different order than the incoming message bodies.
+
+## Testing
+
+The SNS algebra calls `SnsAsyncClientOp[F]`. The `pure-sns-tagless` test jar contains
+`MockSnsAsyncClientOp[F]`, a stub where every method throws `NotImplementedError` until you override it.
+Add the test jar as a test dependency:
+
+```sbt
+libraryDependencies += "io.laserdisc" %% "pure-sns-tagless" % "@VERSION@" % "tests"
+```
+
+Override the calls your code makes, then build the streaming algebra on top of the stub:
+
+```scala mdoc:compile-only
+import cats.effect.*
+import cats.syntax.all.*
+import fs2.aws.sns.sns.*
+import io.laserdisc.pure.sns.tagless.MockSnsAsyncClientOp
+import software.amazon.awssdk.services.sns.model.{PublishRequest, PublishResponse}
+
+val snsOp = new MockSnsAsyncClientOp[IO] {
+  override def publish(a: PublishRequest): IO[PublishResponse] =
+    IO.println(s"published: ${a.message()}").as(PublishResponse.builder().build())
+}
+
+SNS.create[IO](snsOp).flatMap { sns =>
+  fs2.Stream.emit("hello").covary[IO]
+    .through(sns.publish("arn:aws:sns:us-east-1:123456789012:my-topic"))
+    .compile
+    .drain
+}
+```

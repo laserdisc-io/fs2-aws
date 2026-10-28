@@ -51,6 +51,8 @@ lazy val root = (project in file("."))
     `pure-kinesis-tagless`,
     `pure-secretsmanager-tagless`,
     `pure-ssm-tagless`,
+    `ciris-aws-secretsmanager`,
+    `ciris-aws-ssm`,
     siteDocs
   )
   .settings(
@@ -60,7 +62,14 @@ lazy val root = (project in file("."))
 
 lazy val siteDocs = (project in file("site"))
   .enablePlugins(TypelevelSitePlugin, ScalaUnidocPlugin)
-  .dependsOn(`fs2-aws-examples`)
+  .dependsOn(
+    `fs2-aws-examples`,
+    `ciris-aws-secretsmanager`,
+    `ciris-aws-ssm`,
+    `pure-s3-tagless`  % "compile->test",
+    `pure-sqs-tagless` % "compile->test",
+    `pure-sns-tagless` % "compile->test"
+  )
   .settings(
     DocConfig.FS2AWS,
     ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(
@@ -192,6 +201,7 @@ lazy val `pure-sqs-tagless` = (project in file("pure-aws/pure-sqs-tagless"))
     taglessGenSettings[SqsAsyncClient]("sqs")
   )
   .settings(commonSettings)
+  .settings(Test / packageBin / publishArtifact := true)
 
 lazy val `pure-s3-tagless` = (project in file("pure-aws/pure-s3-tagless"))
   .settings(
@@ -201,6 +211,7 @@ lazy val `pure-s3-tagless` = (project in file("pure-aws/pure-s3-tagless"))
     taglessGenSettings[S3AsyncClient]("s3")
   )
   .settings(commonSettings)
+  .settings(Test / packageBin / publishArtifact := true)
 
 lazy val `pure-sns-tagless` = (project in file("pure-aws/pure-sns-tagless"))
   .settings(
@@ -210,6 +221,7 @@ lazy val `pure-sns-tagless` = (project in file("pure-aws/pure-sns-tagless"))
     taglessGenSettings[SnsAsyncClient]("sns")
   )
   .settings(commonSettings)
+  .settings(Test / packageBin / publishArtifact := true)
 
 lazy val `pure-kinesis-tagless` = (project in file("pure-aws/pure-kinesis-tagless"))
   .settings(
@@ -219,6 +231,7 @@ lazy val `pure-kinesis-tagless` = (project in file("pure-aws/pure-kinesis-tagles
     taglessGenSettings[KinesisAsyncClient]("kinesis")
   )
   .settings(commonSettings)
+  .settings(Test / packageBin / publishArtifact := true)
 
 lazy val `pure-dynamodb-tagless` = (project in file("pure-aws/pure-dynamodb-tagless"))
   .settings(
@@ -228,6 +241,7 @@ lazy val `pure-dynamodb-tagless` = (project in file("pure-aws/pure-dynamodb-tagl
     taglessGenSettings[DynamoDbAsyncClient]("dynamodb")
   )
   .settings(commonSettings)
+  .settings(Test / packageBin / publishArtifact := true)
 
 lazy val `pure-cloudwatch-tagless` = (project in file("pure-aws/pure-cloudwatch-tagless"))
   .settings(
@@ -237,6 +251,7 @@ lazy val `pure-cloudwatch-tagless` = (project in file("pure-aws/pure-cloudwatch-
     taglessGenSettings[CloudWatchAsyncClient]("cloudwatch")
   )
   .settings(commonSettings)
+  .settings(Test / packageBin / publishArtifact := true)
 
 lazy val `pure-secretsmanager-tagless` = (project in file("pure-aws/pure-secretsmanager-tagless"))
   .settings(
@@ -246,6 +261,7 @@ lazy val `pure-secretsmanager-tagless` = (project in file("pure-aws/pure-secrets
     taglessGenSettings[SecretsManagerAsyncClient]("secretsmanager")
   )
   .settings(commonSettings)
+  .settings(Test / packageBin / publishArtifact := true)
 
 lazy val `pure-ssm-tagless` = (project in file("pure-aws/pure-ssm-tagless"))
   .settings(
@@ -253,6 +269,25 @@ lazy val `pure-ssm-tagless` = (project in file("pure-aws/pure-ssm-tagless"))
     Dependencies.AWS("ssm"),
     Dependencies.CatsEffect,
     taglessGenSettings[SsmAsyncClient]("ssm")
+  )
+  .settings(commonSettings)
+  .settings(Test / packageBin / publishArtifact := true)
+
+lazy val `ciris-aws-secretsmanager` = (project in file("ciris-aws/ciris-aws-secretsmanager"))
+  .dependsOn(`pure-secretsmanager-tagless` % "compile->compile;test->test")
+  .settings(
+    name := "ciris-aws-secretsmanager",
+    Dependencies.Ciris,
+    Dependencies.Testing
+  )
+  .settings(commonSettings)
+
+lazy val `ciris-aws-ssm` = (project in file("ciris-aws/ciris-aws-ssm"))
+  .dependsOn(`pure-ssm-tagless` % "compile->compile;test->test")
+  .settings(
+    name := "ciris-aws-ssm",
+    Dependencies.Ciris,
+    Dependencies.Testing
   )
   .settings(commonSettings)
 

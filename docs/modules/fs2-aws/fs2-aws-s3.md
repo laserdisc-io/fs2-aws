@@ -2,7 +2,7 @@
 
 An FS2 Streams-based API for common AWS S3 operations.
 
-@:include(_disclaimer.md)
+@:include(../_disclaimer.md)
 
 ### Import
 ```sbt
@@ -23,7 +23,7 @@ trait S3[F[_]] {
 
 To use `S3[F]`, you need an instance of `S3AsyncClientOp[F]`:
 * This is a Tagless-Final wrapper around the `S3AsyncClient`
-* You get this automatically as `fs2-aws-s3` has a transitive dependency on `pure-s3-tagless` (see [pure-aws](pure-aws.md)).
+* You get this automatically as `fs2-aws-s3` has a transitive dependency on `pure-s3-tagless` (see [pure-aws](../pure-aws.md)).
 
 The general usage pattern is as follows:
 
@@ -103,3 +103,30 @@ s3.readFileMultipart(bucket, key, partSize = PartSizeMB.unsafeFrom(5))
 
 `uploadFileMultipart` optionally verifies the ETag returned by S3 (see `S3.MultipartETagValidation`) and supports request customisation via `AwsRequestModifier`.
 
+## Testing
+
+The S3 algebra calls `S3AsyncClientOp[F]`. The `pure-s3-tagless` test jar contains
+`MockS3AsyncClientOp[F]`, a stub where every method throws `NotImplementedError` until you override it.
+Add the test jar as a test dependency:
+
+```sbt
+libraryDependencies += "io.laserdisc" %% "pure-s3-tagless" % "@VERSION@" % "tests"
+```
+
+Override the calls your code makes, then build the streaming algebra on top of the stub:
+
+```scala mdoc:compile-only
+import cats.effect.*
+import cats.syntax.all.*
+import fs2.aws.s3.S3
+import fs2.aws.s3.models.Models.{BucketName, FileKey}
+import io.laserdisc.pure.s3.tagless.MockS3AsyncClientOp
+import software.amazon.awssdk.services.s3.model.{DeleteObjectRequest, DeleteObjectResponse}
+
+val s3Op = new MockS3AsyncClientOp[IO] {
+  override def deleteObject(a: DeleteObjectRequest): IO[DeleteObjectResponse] =
+    IO.println(s"deleting ${a.key()}").as(DeleteObjectResponse.builder().build())
+}
+
+S3.create[IO](s3Op).delete(BucketName.unsafeFrom("test-bucket"), FileKey.unsafeFrom("file.txt"))
+```

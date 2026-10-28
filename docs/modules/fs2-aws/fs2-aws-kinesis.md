@@ -3,7 +3,7 @@
 Consume AWS Kinesis streams as fs2 streams via the [Kinesis Client Library (KCL)](https://docs.aws.amazon.com/streams/latest/dev/shared-throughput-kcl-consumers.html),
 and publish to Kinesis via the [Kinesis Producer Library (KPL)](https://docs.aws.amazon.com/streams/latest/dev/developing-producers-with-kpl.html).
 
-@:include(_disclaimer.md)
+@:include(../_disclaimer.md)
 
 ### Import
 ```sbt
@@ -60,7 +60,7 @@ still available and takes the same three SDK clients plus a `ClientVersionConfig
 KCL 3.x changed the lease-coordination protocol, so to prevent accidental misconfiguration for existing applications, the `ClientVersionConfig` must be explicitly set.
 
 * For a new application, use `CLIENT_VERSION_CONFIG_3X`. 
-* For an existing application, see the [KCL 2.x-to-3.x migration guide](https://docs.aws.amazon.com/streams/latest/dev/kcl-migration-from-2-3.html) (and also the fs2-aws [v7 migration notes](../migration.md))
+* For an existing application, see the [KCL 2.x-to-3.x migration guide](https://docs.aws.amazon.com/streams/latest/dev/kcl-migration-from-2-3.html) (and also the fs2-aws [v7 migration notes](../../migration.md))
 
 ### Checkpointing records
 
@@ -111,3 +111,7 @@ See [`KinesisExampleNew`](https://github.com/laserdisc-io/fs2-aws/blob/main/fs2-
 
 See [fs2-aws-testkit](fs2-aws-testkit.md) for test doubles for both the consumer and the producer.
 
+## Testing
+
+`Kinesis` takes the KCL and DynamoDB/CloudWatch SDK clients rather than the tagless algebras, so the
+`pure-*` mocks don't apply. Use [fs2-aws-testkit](fs2-aws-testkit.md) instead.

@@ -10,25 +10,27 @@ import scala.reflect.ClassTag
 
 object TaglessGen {
 
-  lazy val taglessGenDir     = settingKey[File]("directory where tagless-final algebras go")
-  lazy val taglessGenPackage = settingKey[String]("package where tagless-final algebras go")
-  lazy val taglessGenRenames = settingKey[Map[Class[?], String]]("map of imports that must be renamed")
-  lazy val taglessGen        = taskKey[Seq[File]]("generate tagless-final algebras")
-  lazy val taglessAwsService =
+  lazy val taglessGenSrcDir     = settingKey[File]("directory where tagless-final algebras go")
+  lazy val taglessGenTestSrcDir = settingKey[File]("directory where mock tagless-final algebras go")
+  lazy val taglessGenPackage    = settingKey[String]("package where tagless-final algebras go")
+  lazy val taglessGenRenames    = settingKey[Map[Class[?], String]]("map of imports that must be renamed")
+  lazy val taglessGen           = taskKey[Seq[File]]("generate tagless-final algebras")
+  lazy val taglessAwsService    =
     taskKey[String]("What aws service generate algebras, must match the package name  ex [s3, sqs, sns, kinesis]")
 
   def taglessGenSettings[T](awsSvcId: String)(implicit ct: ClassTag[T]) = Seq(
-    taglessGenDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / awsSvcId / "tagless",
-    taglessGenPackage := s"io.laserdisc.pure.$awsSvcId.tagless",
-    taglessAwsService := awsSvcId,
-    taglessGenRenames := Map(classOf[java.sql.Array] -> "SqlArray"),
-    taglessGen        :=
+    taglessGenSrcDir     := (Compile / scalaSource).value / "io" / "laserdisc" / "pure" / awsSvcId / "tagless",
+    taglessGenTestSrcDir := (Test / scalaSource).value / "io" / "laserdisc" / "pure" / awsSvcId / "tagless",
+    taglessGenPackage    := s"io.laserdisc.pure.$awsSvcId.tagless",
+    taglessAwsService    := awsSvcId,
+    taglessGenRenames    := Map(classOf[java.sql.Array] -> "SqlArray"),
+    taglessGen           :=
       new TaglessGen[T](
         taglessGenPackage.value,
         taglessGenRenames.value,
         state.value.log,
         taglessAwsService.value
-      ).gen(baseDirectory.value, taglessGenDir.value)
+      ).gen(baseDirectory.value, taglessGenSrcDir.value, taglessGenTestSrcDir.value)
   )
 
 }
@@ -177,6 +179,9 @@ class TaglessGen[T](
       if (cargs.isEmpty) s"def $mname: F[$ret]"
       else s"def $mname$ctparams(${cargs.mkString(", ")}): F[$ret]"
 
+    // Mock implementation of the algebra method, every body is `???`
+    def mockImpl: String = s"$visitor = ???"
+
     def stub: String =
       if (cargs.isEmpty) s"""def $mname: F[$ret] = sys.error("Not implemented: $mname")"""
       else
@@ -313,6 +318,30 @@ class TaglessGen[T](
     |""".trim.stripMargin
   }
 
+  // A concrete, unimplemented version of the algebra for T, e.g. MockSqsAsyncClientOp[F]
+  val mockName: String = s"Mock${clientSimpleName.stripSuffix("AsyncClient")}AsyncClientOp"
+
+  val mock: String = {
+    val opname = s"${clientSimpleName}Op"
+    s"""
+    |package $pkg
+    |
+    |import software.amazon.awssdk.services.$awsService.model.*
+    |
+    |${referenceImports.mkString("\n")}
+    |
+    |/**
+    | * A stub implementation of [[$opname]], where all methods throw a NotImplementedError.  Intended to
+    | * be overridden in tests with mock implementations of the methods under test.
+    | */
+    |class $mockName[F[_]] extends $opname[F] {
+    |
+    |${ctors.map(_.mockImpl).mkString("\n").indentLevels(1)}
+    |
+    |}
+    |""".trim.stripMargin
+  }
+
   // Import for the IO type for a carrer type, with renaming
   def ioImport(c: Class[?]): String = {
     val sn = c.getSimpleName
@@ -441,32 +470,38 @@ class TaglessGen[T](
        |}
        |""".trim.stripMargin
 
-  def gen(projectbase: File, base: File): Seq[java.io.File] = {
+  def gen(projectbase: File, srcBase: File, testSrcBase: File): Seq[java.io.File] = {
 
-    def writeFile(fileName: String, content: String): File = {
-      val file = new File(base, fileName)
+    def writeFile(dir: File, fileName: String, content: String): File = {
+      val file = new File(dir, fileName)
       val pw   = new PrintWriter(file)
       pw.println(content)
       pw.close()
       file
     }
 
-    base.mkdirs()
+    srcBase.mkdirs()
+    testSrcBase.mkdirs()
 
-    val op = writeFile(s"${clientSimpleName}Op.scala", module);
-    val ki = writeFile(s"$interpreterName.scala", kleisliInterpreter);
+    val op = writeFile(srcBase, s"${clientSimpleName}Op.scala", module);
+    val ki = writeFile(srcBase, s"$interpreterName.scala", kleisliInterpreter);
+    val mk = writeFile(testSrcBase, s"$mockName.scala", mock);
 
     // locally clear out the old pre-7.x interpreter if it exists
-    new File(base, "Interpreter.scala").delete()
+    new File(srcBase, "Interpreter.scala").delete()
+
+    val srcBaseRel     = srcBase.relativeTo(projectbase).getOrElse(srcBase)
+    val testSrcBaseRel = testSrcBase.relativeTo(projectbase).getOrElse(testSrcBase)
 
     log.info(s"""Generating Tagless Algebra for $awsService:
-        |   SDK Client: $clientSimpleName
-        |       Output: ${base.relativeTo(projectbase).getOrElse(base)}
-        |    Generated: ${op.getName}, impl:${ki.getName}
+        | - AWS Client: $clientSimpleName
+        |    Interface: $srcBaseRel/${op.getName}
+        |         Impl: $srcBaseRel/${ki.getName}
+        |         Mock: $testSrcBaseRel/${mk.getName}
         |
         |""".stripMargin)
 
-    List(op, ki)
+    List(op, ki, mk)
   }
 
 }

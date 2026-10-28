@@ -15,7 +15,7 @@ If you were using the v1 SDK directly in your application, you should migrate to
 
 ## Kinesis Client Library (KCL) 2.x → 3.x
 
-[`fs2-aws-kinesis`](modules/fs2-aws-kinesis.md) now builds on KCL 3.x, which changes how workers coordinate leases and
+[`fs2-aws-kinesis`](modules/fs2-aws/fs2-aws-kinesis.md) now builds on KCL 3.x, which changes how workers coordinate leases and
 rebalance load across consumers.
 
 Upgrading to the KCL 3.x for an existing application requires you to deploy your consumer nodes in a sequence of 'compatibility modes' 
@@ -27,7 +27,7 @@ To do this, consumers must be configured with a particular [ClientVersionConfig]
 * Read the official [KCL 2.x-to-3.x migration guide](https://docs.aws.amazon.com/streams/latest/dev/kcl-migration-from-2-3.html) to understand the implications of each mode.
 * The KCL 3.x also needs additional DynamoDB and CloudWatch IAM permissions. 
 
-Once you have determined your upgrade path, instantiate the [kinesis client](modules/fs2-aws-kinesis.md) as follows (for example, using the final `CLIENT_VERSION_CONFIG_3X`):
+Once you have determined your upgrade path, instantiate the [kinesis client](modules/fs2-aws/fs2-aws-kinesis.md) as follows (for example, using the final `CLIENT_VERSION_CONFIG_3X`):
 
 ```scala
 import software.amazon.kinesis.coordinator.CoordinatorConfig.ClientVersionConfig.*
@@ -57,7 +57,7 @@ It has no v2 equivalent, and the `fs2-aws-dynamodb` streams consumer has been re
 While we may add a DynamoDB Streams API client here in the future, if you want to use fs2-aws to consume DynamoDB Streams, you must either: 
 
 - stay on fs2-aws 6.x
-- migrate to [Kinesis Data Streams for DynamoDB](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/kds.html) and consume it with [`fs2-aws-kinesis`](modules/fs2-aws-kinesis.md).
+- migrate to [Kinesis Data Streams for DynamoDB](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/kds.html) and consume it with [`fs2-aws-kinesis`](modules/fs2-aws/fs2-aws-kinesis.md).
 
 ## `pure-aws`: interpreter renames
 
