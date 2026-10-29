@@ -83,18 +83,21 @@
   <ul class="nav-list">
     <li class="level1 nav-leaf"><a href="../migration.html">Migrating from 6.x to 7.x</a></li>
     <li class="level1 nav-header">modules</li>
-    <li class="level2 nav-leaf"><a href="fs2-aws-dynamodb.html">fs2-aws-dynamodb</a></li>
-    <li class="level2 nav-leaf"><a href="fs2-aws-kinesis.html">fs2-aws-kinesis</a></li>
-    <li class="level2 nav-leaf"><a href="fs2-aws-s3.html">fs2-aws-s3</a></li>
-    <li class="level2 nav-leaf"><a href="fs2-aws-sns.html">fs2-aws-sns</a></li>
-    <li class="level2 nav-leaf"><a href="fs2-aws-sqs.html">fs2-aws-sqs</a></li>
-    <li class="level2 nav-leaf"><a href="fs2-aws-testkit.html">fs2-aws-testkit</a></li>
+    <li class="level2 nav-node"><a href="fs2-aws/">fs2-aws</a></li>
+    <li class="level3 nav-leaf"><a href="fs2-aws/fs2-aws-sns.html">fs2-aws-sns</a></li>
+    <li class="level3 nav-leaf"><a href="fs2-aws/fs2-aws-kinesis.html">fs2-aws-kinesis</a></li>
+    <li class="level3 nav-leaf"><a href="fs2-aws/fs2-aws-testkit.html">fs2-aws-testkit</a></li>
+    <li class="level3 nav-leaf"><a href="fs2-aws/fs2-aws-s3.html">fs2-aws-s3</a></li>
+    <li class="level3 nav-leaf"><a href="fs2-aws/fs2-aws-sqs.html">fs2-aws-sqs</a></li>
+    <li class="level3 nav-leaf"><a href="fs2-aws/fs2-aws-dynamodb.html">fs2-aws-dynamodb</a></li>
     <li class="level2 active nav-leaf"><a href="#">pure-aws</a></li>
+    <li class="level2 nav-leaf"><a href="ciris-aws.html">ciris-aws</a></li>
     <li class="level1 nav-header">Related Projects</li>
     <li class="level2 nav-leaf"><a href="https://github.com/aws/aws-sdk-java-v2">aws-sdk-java-v2</a></li>
     <li class="level2 nav-leaf"><a href="https://github.com/awslabs/amazon-kinesis-client">amazon-kinesis-client</a></li>
     <li class="level2 nav-leaf"><a href="https://github.com/awslabs/amazon-kinesis-producer">amazon-kinesis-producer</a></li>
     <li class="level2 nav-leaf"><a href="https://fs2.io">fs2</a></li>
+    <li class="level2 nav-leaf"><a href="https://github.com/vlovgr/ciris">ciris</a></li>
   </ul>
 
 </nav>
@@ -134,6 +137,7 @@
               <th>Wraps</th>
               <th>Algebra</th>
               <th>Interpreter</th>
+              <th>Mock (test jar)</th>
             </tr>
           </thead>
           <tbody>
@@ -142,48 +146,56 @@
               <td><code>S3AsyncClient</code></td>
               <td><code>S3AsyncClientOp[F]</code></td>
               <td><code>S3Interpreter</code></td>
+              <td><code>MockS3AsyncClientOp</code></td>
             </tr>
             <tr>
               <td><code>pure-sqs-tagless</code></td>
               <td><code>SqsAsyncClient</code></td>
               <td><code>SqsAsyncClientOp[F]</code></td>
               <td><code>SqsInterpreter</code></td>
+              <td><code>MockSqsAsyncClientOp</code></td>
             </tr>
             <tr>
               <td><code>pure-sns-tagless</code></td>
               <td><code>SnsAsyncClient</code></td>
               <td><code>SnsAsyncClientOp[F]</code></td>
               <td><code>SnsInterpreter</code></td>
+              <td><code>MockSnsAsyncClientOp</code></td>
             </tr>
             <tr>
               <td><code>pure-kinesis-tagless</code></td>
               <td><code>KinesisAsyncClient</code></td>
               <td><code>KinesisAsyncClientOp[F]</code></td>
               <td><code>KinesisInterpreter</code></td>
+              <td><code>MockKinesisAsyncClientOp</code></td>
             </tr>
             <tr>
               <td><code>pure-dynamodb-tagless</code></td>
               <td><code>DynamoDbAsyncClient</code></td>
               <td><code>DynamoDbAsyncClientOp[F]</code></td>
               <td><code>DynamoDbInterpreter</code></td>
+              <td><code>MockDynamoDbAsyncClientOp</code></td>
             </tr>
             <tr>
               <td><code>pure-cloudwatch-tagless</code></td>
               <td><code>CloudWatchAsyncClient</code></td>
               <td><code>CloudWatchAsyncClientOp[F]</code></td>
               <td><code>CloudWatchInterpreter</code></td>
+              <td><code>MockCloudWatchAsyncClientOp</code></td>
             </tr>
             <tr>
               <td><code>pure-secretsmanager-tagless</code></td>
               <td><code>SecretsManagerAsyncClient</code></td>
               <td><code>SecretsManagerAsyncClientOp[F]</code></td>
               <td><code>SecretsManagerInterpreter</code></td>
+              <td><code>MockSecretsManagerAsyncClientOp</code></td>
             </tr>
             <tr>
               <td><code>pure-ssm-tagless</code></td>
               <td><code>SsmAsyncClient</code></td>
               <td><code>SsmAsyncClientOp[F]</code></td>
               <td><code>SsmInterpreter</code></td>
+              <td><code>MockSsmAsyncClientOp</code></td>
             </tr>
           </tbody>
         </table>
@@ -226,8 +238,6 @@
         from <code>project/Dependencies.scala</code>. To regenerate after an SDK bump, set <code>AwsSdk</code> in
         <code>project/build.sbt</code> and <code>V.AwsSdk</code> in <code>project/Dependencies.scala</code> to the same version, then run:</p>
         <pre class="keep-together pdf epub"><code class="nohighlight"><span>make generate-pure-aws</span></code></pre>
-        <p>See <a href="https://github.com/laserdisc-io/fs2-aws/blob/main/AGENTS.md">AGENTS.md</a> for the full steps and
-        the CI checks.</p>
 
         
 <hr class="footer-rule"/>
