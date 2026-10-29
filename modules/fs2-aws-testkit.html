@@ -148,7 +148,7 @@
 </span><span class="comment">// in parallel with running `consume`, feed records through the captured processor:
 </span><span class="keyword">val</span><span> </span><span class="identifier">processor</span><span> = </span><span class="identifier">testContext</span><span>.</span><span class="identifier">getShardProcessors</span><span>.</span><span class="identifier">head</span><span>
 </span><span class="comment">// processor.initialize(...); processor.processRecords(...)</span></code></pre>
-        <p>See <a href="https://github.com/laserdisc-io/fs2-aws/blob/main/fs2-aws-kinesis/src/test/scala/fs2/aws/kinesis/NewKinesisConsumerSpec.scala"><code>NewKinesisConsumerSpec</code></a>
+        <p>See <a href="https://github.com/laserdisc-io/fs2-aws/blob/main/fs2-aws/fs2-aws-kinesis/src/test/scala/fs2/aws/kinesis/NewKinesisConsumerSpec.scala"><code>NewKinesisConsumerSpec</code></a>
         for full patterns, including checkpointing assertions.</p>
         
         <h2 id="testing-a-producer-testkinesisproducerclient" class="section"><a class="anchor-link left" href="#testing-a-producer-testkinesisproducerclient"><i class="icofont-laika link">&#xef71;</i></a>Testing a producer: <code>TestKinesisProducerClient</code></h2>

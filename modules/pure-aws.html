@@ -173,6 +173,18 @@
               <td><code>CloudWatchAsyncClientOp[F]</code></td>
               <td><code>CloudWatchInterpreter</code></td>
             </tr>
+            <tr>
+              <td><code>pure-secretsmanager-tagless</code></td>
+              <td><code>SecretsManagerAsyncClient</code></td>
+              <td><code>SecretsManagerAsyncClientOp[F]</code></td>
+              <td><code>SecretsManagerInterpreter</code></td>
+            </tr>
+            <tr>
+              <td><code>pure-ssm-tagless</code></td>
+              <td><code>SsmAsyncClient</code></td>
+              <td><code>SsmAsyncClientOp[F]</code></td>
+              <td><code>SsmInterpreter</code></td>
+            </tr>
           </tbody>
         </table>
         
@@ -205,7 +217,7 @@
         client rather than the algebra (e.g. to hand it to the KCL), use <code>clientResource</code> instead of
         <code>resource</code>.</p>
         <p>The interpreters also support <code>Kleisli</code>-based environment passing — see
-        <a href="https://github.com/laserdisc-io/fs2-aws/blob/main/fs2-aws-examples/src/main/scala/fs2/aws/examples/PureAWS.scala"><code>PureAWS.scala</code></a>
+        <a href="https://github.com/laserdisc-io/fs2-aws/blob/main/fs2-aws/fs2-aws-examples/src/main/scala/fs2/aws/examples/PureAWS.scala"><code>PureAWS.scala</code></a>
         for an example combining SQS and SNS both ways.</p>
         
         <h2 id="code-generation" class="section"><a class="anchor-link left" href="#code-generation"><i class="icofont-laika link">&#xef71;</i></a>Code generation</h2>

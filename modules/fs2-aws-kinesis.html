@@ -165,7 +165,7 @@
     .</span><span class="identifier">map</span><span>(</span><span class="identifier">_</span><span>.</span><span class="identifier">flatMap</span><span>(</span><span class="type-name">Stream</span><span>.</span><span class="identifier">chunk</span><span>)) </span><span class="comment">// the stream emits Chunk[CommittableRecord]</span></code></pre>
         <p>Use <code>withMultiStreamTracker</code> instead of <code>withSingleStreamTracker</code> to consume several streams
         with one scheduler (see
-        <a href="https://github.com/laserdisc-io/fs2-aws/blob/main/fs2-aws-examples/src/main/scala/fs2/aws/examples/KinesisMultistreamExample.scala"><code>KinesisMultistreamExample</code></a>).</p>
+        <a href="https://github.com/laserdisc-io/fs2-aws/blob/main/fs2-aws/fs2-aws-examples/src/main/scala/fs2/aws/examples/KinesisMultistreamExample.scala"><code>KinesisMultistreamExample</code></a>).</p>
         <p>The older <code>Kinesis.create(...)</code> factory + <code>readFromKinesisStream(appName, streamName)</code> API is
         still available and takes the same three SDK clients plus a <code>ClientVersionConfig</code>.</p>
         
@@ -208,7 +208,7 @@
         <p>Consuming from and publishing to Kinesis in <a href="https://localstack.cloud/">LocalStack</a> works. 
         Set the client <code>endpointOverride</code> (e.g. <code>http://localhost:4566</code>) and use <code>Polling</code> retrieval
         mode (LocalStack does not support <code>FanOut</code>). </p>
-        <p>See <a href="https://github.com/laserdisc-io/fs2-aws/blob/main/fs2-aws-examples/src/main/scala/fs2/aws/examples/KinesisExampleNew.scala"><code>KinesisExampleNew</code></a> for a complete runnable example.</p>
+        <p>See <a href="https://github.com/laserdisc-io/fs2-aws/blob/main/fs2-aws/fs2-aws-examples/src/main/scala/fs2/aws/examples/KinesisExampleNew.scala"><code>KinesisExampleNew</code></a> for a complete runnable example.</p>
         
         <h2 id="testing" class="section"><a class="anchor-link left" href="#testing"><i class="icofont-laika link">&#xef71;</i></a>Testing</h2>
         <p>See <a href="fs2-aws-testkit.html">fs2-aws-testkit</a> for test doubles for both the consumer and the producer.</p>

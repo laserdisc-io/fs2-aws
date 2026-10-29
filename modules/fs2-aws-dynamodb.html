@@ -181,7 +181,7 @@
         
         <h3 id="notes" class="section"><a class="anchor-link left" href="#notes"><i class="icofont-laika link">&#xef71;</i></a>Notes</h3>
         <p><code>scanDynamoDB</code> wraps the SDK&#39;s scan paginator in a bounded fs2 stream: at most <code>pageSize</code> records are requested (and buffered) at a time, so a large table scan can&#39;t exhaust memory. The stream emits raw DynamoDB items and terminates once the scan is exhausted.</p>
-        <p>For a parallel scan across segments, see <a href="https://github.com/laserdisc-io/fs2-aws/blob/main/fs2-aws-examples/src/main/scala/fs2/aws/examples/DynamoParallelScan.scala"><code>DynamoParallelScan</code></a>.</p>
+        <p>For a parallel scan across segments, see <a href="https://github.com/laserdisc-io/fs2-aws/blob/main/fs2-aws/fs2-aws-examples/src/main/scala/fs2/aws/examples/DynamoParallelScan.scala"><code>DynamoParallelScan</code></a>.</p>
 
         
 <hr class="footer-rule"/>
